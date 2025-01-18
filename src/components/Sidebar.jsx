@@ -11,7 +11,7 @@ const Sidebar = ({ onHoverChange }) => {
 
   // Menu structure with nested subtopics
   const menuItems = [
-    { icon: MdSpaceDashboard, label: "Dashboard", link: "/", subItems: [] },
+    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard", subItems: [] },
     {
       icon: IoIosListBox,
       label: "Dummy",
@@ -19,11 +19,11 @@ const Sidebar = ({ onHoverChange }) => {
         {
           label: "Dummy",
           subItems: [
-            { label: "Dummy", link: "/" },
-            { label: "Dummy", link: "/" },
+            { label: "Dummy", link: "/dashboard" },
+            { label: "Dummy", link: "/dashboard" },
           ],
         },
-        { label: "Dummy", link: "/" },
+        { label: "Dummy", link: "/dashboard" },
       ],
     },
   ];

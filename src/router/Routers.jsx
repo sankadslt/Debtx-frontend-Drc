@@ -1,20 +1,20 @@
 import { Routes, Route } from "react-router-dom";
 
+import Login from "../components/Login";
+import Register from "../components/Register";
+import ProtectedRoute from "../components/ProtectedRoute";
+import Unauthorized from "../components/Unauthorized";
+
 import Dashboard from "../pages/Dashboard";
 import PrototypeA from "../assets/prototype/prototypeA";
 import PrototypeB from "../assets/prototype/prototypeB";
 import PrototypeC from "../assets/prototype/prototypeC";
 
-
 import RecoveryOfficerRequests from "../pages/Request/additiional_request_log";
-
 
 import ForwardMediationBoard from "../pages/Request/ForwardMediationBoard";
 import ValidityPeriodExtension from "../pages/Request/ValidityPeriodExtension";
 import RequestResponseLog from "../pages/Request/RequestResponseLog";
-
-
-
 
 import Case_List from "../pages/Incident/Case_List";
 import Incident_List from "../pages/Incident/Incident_List";
@@ -24,8 +24,6 @@ import SupBulkUploadLog from "../pages/Incident/sup_bulk_upload_LOG";
 import Incident_Register_Bulk_Upload from "../pages/Incident/Incident_Register_Bulk_Upload";
 import Incident_File_Download from "../pages/Incident/Incident_File_Download";
 import PageButton from "../pages/Incident/page_button";
-
-
 
  {/* Distribute Imports */}
  import AssignDRC from "../pages/Distribute/AssignDRC";
@@ -40,7 +38,6 @@ import PageButton from "../pages/Incident/page_button";
  import ReAssignDRC from "../pages/Distribute/ReAssignDRC";
  import DistributeDummy from "../pages/Distribute/DistributeDummy";
  import DistributeTORO from "../pages/Distribute/DistributeTORO";
-
 
 import Dummy from "../pages/DRC/Dummy";
 import AssignedCaseListforDRC from "../pages/DRC/Assigned case list for DRC";
@@ -58,80 +55,58 @@ import CustomerNegotiation from "../pages/DRC/Cus_Nego_Customer_Negotiation";
 const Routers = () => {
   return (
     <Routes>
+
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/unauthorized" element={<Unauthorized/>} />
+
       {/* Prototype Routes */}
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/prototypeA" element={<PrototypeA />} />
-      <Route path="/prototypeB" element={<PrototypeB />} />
-      <Route path="/prototypeC" element={<PrototypeC />} />
+      <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRoles={['superadmin']} />} />
+      <Route path="/prototypeA" element={<ProtectedRoute element={<PrototypeA />} allowedRoles={['superadmin']} />} />
+      <Route path="/prototypeB" element={<ProtectedRoute element={<PrototypeB />} allowedRoles={['superadmin']} />} />
+      <Route path="/prototypeC" element={<ProtectedRoute element={<PrototypeC />} allowedRoles={['superadmin']} />} />
 
+      <Route path="/additional_request_log" element={<ProtectedRoute element={<RecoveryOfficerRequests />} allowedRoles={['superadmin']} />} />
 
-      <Route path="/additional_request_log" element={<RecoveryOfficerRequests />} />
+      <Route path="/drc/mediation-board" element={<ProtectedRoute element={<ForwardMediationBoard />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/period-extension" element={<ProtectedRoute element = {<ValidityPeriodExtension/>} allowedRoles={['superadmin']} />} />
+      <Route path="/drs/logs/reuest-response-logs" element={<ProtectedRoute element = {<RequestResponseLog/>} allowedRoles={['superadmin']} />}/>
 
+      {/* incient team4 */}
+      <Route path="/incident" element={<ProtectedRoute element={<PageButton />} allowedRoles={['superadmin']} />} />
+      <Route path="/Incident/Case_List" element={<ProtectedRoute element={<Case_List />} allowedRoles={['superadmin']} />} />
+      <Route path="/Incident/Incident_List" element={<ProtectedRoute element={<Incident_List />} allowedRoles={['superadmin']} />} />
+      <Route path="/Incident/Case_Details" element={<ProtectedRoute element={<CaseDetails />} allowedRoles={['superadmin']} />} />
+      <Route path="/incident/register" element={<ProtectedRoute element={<Incident_Register_Individual />} allowedRoles={['superadmin']} />} />
+      <Route path="/incident/upload-log" element={<ProtectedRoute element={<SupBulkUploadLog />} allowedRoles={['superadmin']} />} />
+      <Route path="/incident/register-bulk" element={<ProtectedRoute element={<Incident_Register_Bulk_Upload />} allowedRoles={['superadmin']} />} />
+      <Route path="/incident/file-download" element={<ProtectedRoute element={<Incident_File_Download />} allowedRoles={['superadmin']} />} />
 
-      <Route path="/drc/mediation-board" element={<ForwardMediationBoard />} />
-      <Route path="/drc/period-extension" element = {<ValidityPeriodExtension/>}/>
-      <Route path="/drs/logs/reuest-response-logs" element = {<RequestResponseLog/>}/>
-
-
-{/* incient team4 */}
-      <Route path="/incident" element={<PageButton />} />
-      <Route path="/Incident/Case_List" element={<Case_List />} />
-      <Route path="/Incident/Incident_List" element={<Incident_List />} />
-      <Route path="/Incident/Case_Details" element={<CaseDetails />} />
-      <Route path="/incident/register" element={<Incident_Register_Individual />} />
-      <Route path="/incident/upload-log" element={<SupBulkUploadLog />} />
-      <Route path="/incident/register-bulk" element={<Incident_Register_Bulk_Upload />} />
-      <Route path="/incident/file-download" element={<Incident_File_Download />} />
-
-
-
-      
      {/* Distribute Routes */}
-     <Route path="/pages/Distribute/AssignDRC" element={<AssignDRC/>} />
-     <Route path="/pages/Distribute/AssignDRCForCollectCPE" element={<AssignDRCForCollectCPE/>} />
-     <Route path="/pages/Distribute/AssignDRCsLOG" element={<AssignDRCsLOG />} />
-     <Route path="/pages/Distribute/AssignedDRCSummary" element={<AssignedDRCSummary />} />
-     <Route path="/pages/Distribute/AssignedDRCSummaryCollectCPE" element={<AssignedDRCSummaryCollectCPE/>} />
-     <Route path="/pages/Distribute/DistributionPreparationBulkUpload" element={<DistributionPreparationBulkUpload />} />
-     <Route path="/pages/Distribute/DistributionPreparationOnlyCPECollect" element={<DistributionPreparationOnlyCPECollect />} />
-     <Route path="/pages/Distribute/DRCAssignManagerApproval" element={<DRCAssignManagerApproval />} />
-     <Route path="/pages/Distribute/IncidentFilter" element={<IncidentFilter />} />
-     <Route path="/pages/Distribute/DistributeDummy" element={<DistributeDummy />} />
-     <Route path="/pages/Distribute/ReAssignDRC" element={<ReAssignDRC />} />
-     <Route path="/pages/Distribute/DistributeTORO" element={<DistributeTORO />} />
-
+     <Route path="/pages/Distribute/AssignDRC" element={<ProtectedRoute element={<AssignDRC/>} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/AssignDRCForCollectCPE" element={<ProtectedRoute element={<AssignDRCForCollectCPE/>} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/AssignDRCsLOG" element={<ProtectedRoute element={<AssignDRCsLOG />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/AssignedDRCSummary" element={<ProtectedRoute element={<AssignedDRCSummary />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/AssignedDRCSummaryCollectCPE" element={<ProtectedRoute element={<AssignedDRCSummaryCollectCPE/>} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/DistributionPreparationBulkUpload" element={<ProtectedRoute element={<DistributionPreparationBulkUpload />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/DistributionPreparationOnlyCPECollect" element={<ProtectedRoute element={<DistributionPreparationOnlyCPECollect />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/DRCAssignManagerApproval" element={<ProtectedRoute element={<DRCAssignManagerApproval />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/IncidentFilter" element={<ProtectedRoute element={<IncidentFilter />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/DistributeDummy" element={<ProtectedRoute element={<DistributeDummy />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/ReAssignDRC" element={<ProtectedRoute element={<ReAssignDRC />} allowedRoles={['superadmin']} />} />
+     <Route path="/pages/Distribute/DistributeTORO" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin']} />} />
 
       {/* DRC Routes */}
-      <Route path="/dummy" element={<Dummy />} />
-      <Route
-        path="/drc/assigned-case-list-for-drc"
-        element={<AssignedCaseListforDRC />}
-      />
-      <Route path="/drc/ro-monitoring-arrears" element={<RO_Monitoring />} />
-      <Route path="/pages/DRC/Re-AssignRo" element={<Re_AssignRo />} />
-      <Route
-        path="/pages/DRC/Mediation Board Response"
-        element={<Mediation_board_response />}
-      />
-      <Route
-        path="/drc/ro-s-assigned-case-log"
-        element={<ROsAssignedcaseLog />}
-      />
-      <Route
-        path="/drc/mediation-board-case-list"
-        element={<MediationBoardcaselist />}
-      />
-      <Route path="/drc/assigned-ro-case-log" element={<AssignedROcaselog />} />
-      <Route
-        path="/pages/DRC/EditCustomerProfile"
-        element={<EditCustomerProfile />}
-      />
-      <Route
-        path="/drc/customer-negotiation"
-        element={<CustomerNegotiation />}
-      />
-
-
+      <Route path="/dummy" element={<ProtectedRoute element={<Dummy />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/assigned-case-list-for-drc" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin']} />} />
+      <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} />
+      <Route path="/pages/DRC/Mediation Board Response" element={<ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/mediation-board-case-list" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/assigned-ro-case-log" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} />
+      <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin']} />} />
 
     </Routes>
   );
