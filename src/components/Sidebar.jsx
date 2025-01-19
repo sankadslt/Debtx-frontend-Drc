@@ -14,13 +14,14 @@ const Sidebar = ({ onHoverChange }) => {
     { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard", subItems: [] },
     {
       icon: IoIosListBox,
-      label: "Dummy",
+      label: "DRC",
       subItems: [
         {
-          label: "Dummy New UIs",
+          label: "DRC",
           subItems: [
-            { label: "New UIs", link: "/dummy-page" },
-            { label: "Dummy", link: "/dashboard" },
+            { label: "Assigned Case List for DRC", link: "/drc/assigned-case-list-for-drc" },
+            { label: "Distribute To RO", link: "/pages/Distribute/DistributeTORO" },
+            { label: "Assigned R0 Case Log", link: "/drc/assigned-ro-case-log" },
           ],
         },
         { label: "Dummy", link: "/dashboard" },
