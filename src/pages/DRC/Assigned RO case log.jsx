@@ -8,10 +8,13 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes:  The following page conatins the code for the Assigned RO case log Screen */
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
+import { useParams } from "react-router-dom"; // Import useParams
+
+import { getRTOMsByDRCID } from "../../services/rtom/RtomService"; 
 
 export default function AssignedROcaselog() {
     //dummy data for table
@@ -117,6 +120,8 @@ export default function AssignedROcaselog() {
             endDate: "06/03/2024",
         },
     ];
+    const [rtoms, setRtoms] = useState([]);
+    const [selectedRTOM, setSelectedRTOM] = useState("");
 
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState(""); // State for search query
@@ -132,13 +137,63 @@ export default function AssignedROcaselog() {
     const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
-    // Filter state for Amount, Account No, Case ID, Status, and Date
+    // Filter state for Amount, Case ID, Status, and Date
+    const [filterRTOM, setFilterRTOM] = useState(""); // RTOM
     const [filterAmount, setFilterAmount] = useState("");
-    const [filterAccountNo, setFilterAccountNo] = useState("");
+    
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+
+
+
+    // Use useParams hook to get the drc_id from the URL
+    const { drc_id } = useParams();
+
+    useEffect(() => {
+
+        console.log("Route parameter drc_id :", drc_id );
+        const fetchData = async () => {
+            try {
+                if (drc_id) {
+                    const payload = parseInt(drc_id, 10); // Convert drc_id to number
+
+                    // Fetch RTOMs by DRC ID
+                    const rtomsList = await getRTOMsByDRCID(payload);
+                    setRtoms(rtomsList); // Set RTOMs to state
+
+                    const response = await listHandlingCasesByDRC(payload);
+
+                    if (response && Array.isArray(response.data)) {
+                        setData(response.data);
+                        setFilteredData(response.data);
+                    } else {
+                        setError("No data found.");
+                    }
+                } else {
+                    setError("DRC ID not found in URL.(try http://localhost:5173/pages/Distribute/DistributeTORO/200 )");
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setError("Failed to fetch data. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        
+        fetchData();
+       
+    }, [drc_id]); // Including drc_id to the Dependency array
+
+
+
+
+
+
+
+
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -232,74 +287,74 @@ export default function AssignedROcaselog() {
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
-            <div className="mb-8">
+
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case log</h1>
-            </div>
-            <div className="flex flex-col items-end justify-end gap-4">
-                <div className="flex gap-7 p">
-                    <div className="flex gap-4">
-                    <div className="flex gap-4">
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className={`${GlobalStyle.selectBox} h-[43px]`}
-                            >
-                                <option value="" disabled >RTOM</option>
-                                <option value="RTOM 01">RTOM 01</option>
-                                <option value="RTOM 02">RTOM 02</option>
-                                <option value="RTOM 03">RTOM 03</option>
-                                <option value="RTOM 04">RTOM 04</option>
-                            </select>
-                        </div>
 
-                        <div className="flex gap-4">
-                            <select
-                                value={filterAmount}
-                                onChange={(e) => setFilterAmount(e.target.value)}
-                                className={`${GlobalStyle.selectBox} h-[43px]`}
-                            >
-                                <option value="" disabled >Arrears band</option>
-                                <option value="5-10">5,000 - 10,000</option>
-                                <option value="10-25">10,000 - 25,000</option>
-                                <option value="25-50">25,000 - 50,000</option>
-                                <option value="50-100">50,000 - 100,000</option>
-                                <option value="100+"> Above 100,000</option>
-                            </select>
-                        </div>
-                        
-                        <div className="flex flex-col mb-4">
-                            <div className={GlobalStyle.datePickerContainer}>
-                                <label className={GlobalStyle.dataPickerDate}>Date</label>
-                                <DatePicker
-                                    selected={fromDate}
-                                    onChange={(date) => setFromDate(date)}
-                                    dateFormat="dd/MM/yyyy"
-                                    placeholderText="dd/MM/yyyy"
-                                    className={GlobalStyle.inputText}
-                                />
-                                <DatePicker
-                                    selected={toDate}
-                                    onChange={(date) => setToDate(date)}
-                                    dateFormat="dd/MM/yyyy"
-                                    placeholderText="dd/MM/yyyy"
-                                    className={GlobalStyle.inputText}
-                                />
-                            </div>
-                        </div>
-                    </div>
+            <div className="flex items-center justify-end gap-4 mt-20 mb-4">
 
 
+
+                {/* RTOM Select Dropdown */}
+                <select
+                    className={GlobalStyle.selectBox}
+                    value={selectedRTOM}
+                    onChange={(e) => setSelectedRTOM(e.target.value)}
+                >
+                    <option value="">RTOM</option>
+                    {rtoms.length > 0 ? (
+                        rtoms.map((rtom) => (
+                            <option key={rtom.rtom_id} value={rtom.area_name}>
+                                {rtom.area_name} {/* Ensure this is the correct name for the RTOM area */}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No RTOMs found</option>
+                    )}
+                </select>
+
+
+
+                <select
+                    value={filterAmount}
+                    onChange={(e) => setFilterAmount(e.target.value)}
+                    className={`${GlobalStyle.selectBox} h-[43px]`}
+                >
+                    <option value="" disabled >Arrears band</option>
+                    <option value="5-10">5,000 - 10,000</option>
+                    <option value="10-25">10,000 - 25,000</option>
+                    <option value="25-50">25,000 - 50,000</option>
+                    <option value="50-100">50,000 - 100,000</option>
+                    <option value="100+"> Above 100,000</option>
+                </select>
+
+
+
+                <div className={GlobalStyle.datePickerContainer}>
+                    <label className={GlobalStyle.dataPickerDate}>Date</label>
+                    <DatePicker
+                        selected={fromDate}
+                        onChange={(date) => setFromDate(date)}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="dd/MM/yyyy"
+                        className={GlobalStyle.inputText}
+                    />
+                    <DatePicker
+                        selected={toDate}
+                        onChange={(date) => setToDate(date)}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="dd/MM/yyyy"
+                        className={GlobalStyle.inputText}
+                    />
                 </div>
 
 
-                <div className="flex justify-end gap-5 ">
-                    <button
-                        onClick={filterData}
-                        className={`${GlobalStyle.buttonPrimary}`}
-                    >
-                        Filter
-                    </button>
-                </div>
+                <button
+                    onClick={filterData}
+                    className={`${GlobalStyle.buttonPrimary}`}
+                >
+                    Filter
+                </button>
+
             </div>
 
             {/* Search Section */}

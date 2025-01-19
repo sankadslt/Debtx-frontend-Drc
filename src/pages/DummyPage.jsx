@@ -10,6 +10,9 @@ const Dummy = () => {
           2.2 Distribute To RO
         </Link>
        
+        <Link className={`${GlobalStyle.buttonPrimary}`} to="/drc/assigned-ro-case-log">
+          2.3 Assigned RO case log
+        </Link>
       </div>
     </div>
   );
