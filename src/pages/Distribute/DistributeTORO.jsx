@@ -20,6 +20,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService"; 
+import { assignROToCase } from "../../services/case/CaseService";
 
 
 const DistributeTORO = () => {
@@ -163,32 +164,40 @@ const filteredDataBySearch = filteredData.filter((row) =>
 
   // Select All Logic
   const handleSelectAll = () => {
-  const isSelectedAll = !selectAll;
-  setSelectAll(isSelectedAll);
-
-  if (isSelectedAll) {
-    // Add all rows to the selected set and log their RTOM Areas
-    const allSelected = new Set(currentData.map((_, index) => index));
-    setSelectedRows(allSelected);
-    currentData.forEach((row) => console.log("Selected RTOM Area (Select All):", row.area));
-  } else {
-    // Deselect all rows
-    setSelectedRows(new Set());
-  }
-};
+    const isSelectedAll = !selectAll;
+    setSelectAll(isSelectedAll);
+  
+    if (isSelectedAll) {
+      // Add all rows to the selected set and log their RTOM Areas and Case IDs
+      const allSelected = new Set(currentData.map((_, index) => index));
+      setSelectedRows(allSelected);
+  
+      currentData.forEach((row) => {
+        console.log("Selected RTOM Area (Select All):", row.area);
+        console.log("Selected Case ID (Select All):", row.case_id);
+      });
+    } else {
+      // Deselect all rows
+      setSelectedRows(new Set());
+    }
+  };
+  
    //Rows with boxes are checked
-const handleRowSelect = (index) => {
-  const newSelectedRows = new Set(selectedRows);
-
-  if (newSelectedRows.has(index)) {
-    newSelectedRows.delete(index);
-  } else {
-    newSelectedRows.add(index);
-    console.log("Selected RTOM Area:", currentData[index].area); // Log the RTOM Area for the selected row
-  }
-
-  setSelectedRows(newSelectedRows);
-};
+   const handleRowSelect = (index) => {
+    const newSelectedRows = new Set(selectedRows);
+  
+    if (newSelectedRows.has(index)) {
+      newSelectedRows.delete(index);
+    } else {
+      newSelectedRows.add(index);
+      const selectedRow = currentData[index]; // Get the selected row data
+      console.log("Selected RTOM Area:", selectedRow.area); // Log RTOM Area
+      console.log("Selected Case ID:", selectedRow.case_id); // Log Case ID
+    }
+  
+    setSelectedRows(newSelectedRows);
+  };
+  
 
   // Filter Recovery Officers based on selected RTOM Areas
 const filteredOfficers = recoveryOfficers.filter((officer) => {
@@ -199,15 +208,37 @@ const filteredOfficers = recoveryOfficers.filter((officer) => {
   return officer.rtoms_for_ro.some(area => selectedAreas.includes(area.name));
 });
 
-  const handleSubmit = () => {
-    if (selectedRows.size > 0) {
-      // Alert message when selected rows are present
-      alert("Successfully Submitd!");
-    } else {
-      // Alert if no rows are selected
-      alert("Please select at least one row to Submit.");
-    }
-  };
+const handleSubmit = async () => {
+  // Get the selected Case IDs
+  const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index].case_id);
+
+  if (selectedCaseIds.length === 0) {
+    // Alert if no rows are selected
+    alert("Please select at least one row to submit.");
+    return;
+  }
+
+  if (!selectedRO) {
+    // Alert if no Recovery Officer is selected
+    alert("Please select a Recovery Officer to assign.");
+    return;
+  }
+
+  try {
+    // Make the API request
+    const response = await assignROToCase(selectedCaseIds, selectedRO);
+
+    // Notify success
+    alert("Recovery Officer successfully assigned to the selected cases!");
+
+    console.log("API Response:", response);
+  } catch (error) {
+    // Handle errors and notify failure
+    console.error("Error submitting data:", error);
+    alert("Failed to assign Recovery Officer. Please try again.");
+  }
+};
+
   
 
   if (loading) return <div>Loading...</div>;
@@ -331,10 +362,7 @@ const filteredOfficers = recoveryOfficers.filter((officer) => {
          <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
          <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
          <td className={GlobalStyle.tableData}> {item.case_status?.[0]?.expired_dtm && item.case_status[0].expired_dtm !== ""  ? new Date(item.case_status[0].expired_dtm).toLocaleDateString("en-CA")  : "N/A"} </td>
-         <td className={GlobalStyle.tableData}> 
-  {item.drc?.[0]?.recovery_officers?.[0]?.name || "N/A"}
-</td>
-
+         <td className={GlobalStyle.tableData}> {item.drc?.[0]?.recovery_officers?.[0]?.name || "N/A"} </td>
         </tr>
       ))}
      </tbody>
@@ -380,27 +408,40 @@ const filteredOfficers = recoveryOfficers.filter((officer) => {
        </label>
 
     {/* Recovery Officer (RO) Select Dropdown */}
-    <select
-        id="ro-select"
-        className={GlobalStyle.selectBox}
-        value={selectedRO}
-        onChange={(e) => setSelectedRO(e.target.value)}
-    >
-       <option value="" disabled hidden>
-         Select RO
-       </option>
+   <select
+    id="ro-select"
+    className={GlobalStyle.selectBox}
+    value={selectedRO}
+    onChange={(e) => {
+        const selectedName = e.target.value;
+        setSelectedRO(selectedName);
+
+        // Find the officer with the selected name
+        const selectedOfficer = filteredOfficers.find(officer => officer.ro_name === selectedName);
+        
+        if (selectedOfficer) {
+            console.log("Selected Officer ID:", selectedOfficer.ro_id); // Log the officer's ID
+        } else {
+            console.log("No officer found with the selected name.");
+        }
+    }}
+>
+    <option value="" disabled hidden>
+        Select RO
+    </option>
     {filteredOfficers.length > 0 ? (
-      filteredOfficers.map((officer) => (
-        <option key={officer.ro_id} value={officer.ro_name}>
-          {officer.ro_name}
-        </option>
-      ))
+        filteredOfficers.map((officer) => (
+            <option key={officer.ro_id} value={officer.ro_name}>
+                {officer.ro_name}
+            </option>
+        ))
     ) : (
-      <option value="" disabled>
-        No officers match the selected areas
-      </option>
+        <option value="" disabled>
+            No officers match the selected areas
+        </option>
     )}
-  </select>
+</select>
+
 
   {/* Submit Button */}
     <button

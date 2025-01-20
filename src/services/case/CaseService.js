@@ -17,3 +17,16 @@ export const listHandlingCasesByDRC = async (drcId) => {
   }
 };
 
+// Assign Recovery Officer to Case
+export const assignROToCase = async (caseIds, roId) => {
+  try {
+    const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
+      case_ids: caseIds,
+      ro_id: roId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error assigning Recovery Officer to cases:", error.response?.data || error.message);
+    throw error;
+  }
+};
