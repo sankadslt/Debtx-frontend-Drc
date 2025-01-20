@@ -337,8 +337,8 @@ const handleSubmit = async () => {
            <th className={GlobalStyle.tableHeader}>Amount</th>
            <th className={GlobalStyle.tableHeader}>Action</th>
            <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-           <th className={GlobalStyle.tableHeader}>Expire Date</th>
            <th className={GlobalStyle.tableHeader}>RO</th>
+           <th className={GlobalStyle.tableHeader}>Expire Date</th>
          </tr>
        </thead>
        <tbody>
@@ -361,8 +361,8 @@ const handleSubmit = async () => {
          <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
          <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
          <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.case_status?.[0]?.expired_dtm && item.case_status[0].expired_dtm !== ""  ? new Date(item.case_status[0].expired_dtm).toLocaleDateString("en-CA")  : "N/A"} </td>
          <td className={GlobalStyle.tableData}> {item.drc?.[0]?.recovery_officers?.[0]?.name || "N/A"} </td>
+         <td className={GlobalStyle.tableData}> {item.case_status?.[0]?.expired_dtm && item.case_status[0].expired_dtm !== ""  ? new Date(item.case_status[0].expired_dtm).toLocaleDateString("en-CA")  : "N/A"} </td> 
         </tr>
       ))}
      </tbody>
