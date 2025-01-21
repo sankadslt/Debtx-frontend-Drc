@@ -467,7 +467,7 @@ const handleSubmit = async () => {
         })
     ) : (
         <option value="" disabled>
-            No officers available for the selected areas
+            No officers available 
         </option>
     )}
 </select>
