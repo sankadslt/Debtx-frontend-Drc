@@ -18,10 +18,10 @@ import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { roassignedbydrc } from "../../services/Ro/RO.js";
+import { listAllActiveRosByDRCID } from "../../services/case/CaseService";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService"; 
 import { assignROToCase } from "../../services/case/CaseService";
-
+import Swal from 'sweetalert2';
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -74,23 +74,37 @@ const DistributeTORO = () => {
       }
     };
   
+   
     const fetchRecoveryOfficers = async () => {
       try {
         if (drc_id) {
-          const officers = await roassignedbydrc(drc_id);
-          setRecoveryOfficers(officers);
+          // Convert drc_id to a number
+          const numericDrcId = Number(drc_id);
+    
+          // Collect RTOM Areas from selected rows
+          const selectedAreas = Array.from(selectedRows).map((index) => currentData[index]?.area);
+    
+          // Fetch Recovery Officers for each RTOM Area
+          const officers = await Promise.all(
+            selectedAreas.map((area) => listAllActiveRosByDRCID(numericDrcId, area))
+          );
+    
+          // Flatten the array of officer lists
+          const flattenedOfficers = officers.flat();
+          setRecoveryOfficers(flattenedOfficers);
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200 )");
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200)");
         }
       } catch (error) {
         console.error("Error fetching recovery officers:", error);
         setError("Failed to fetch recovery officers.");
       }
     };
-  
-    fetchData();
-    fetchRecoveryOfficers();
-  }, [drc_id]); // Including drc_id to the Dependency array
+    
+
+  fetchData();
+  fetchRecoveryOfficers();
+}, [drc_id, selectedRows]); // Including drc_id to the Dependency array
   
   
    // Filter Function
@@ -200,27 +214,37 @@ const filteredDataBySearch = filteredData.filter((row) =>
   
 
   // Filter Recovery Officers based on selected RTOM Areas
-const filteredOfficers = recoveryOfficers.filter((officer) => {
-  // Get RTOM areas of the selected rows
-  const selectedAreas = Array.from(selectedRows).map((index) => currentData[index].area);
-
-  // Check if any of the officer's RTOM areas match the selected areas
-  return officer.rtoms_for_ro.some(area => selectedAreas.includes(area.name));
-});
+  const filteredOfficers = recoveryOfficers.filter((officer) => {
+    // Get RTOM areas of the selected rows
+    const selectedAreas = Array.from(selectedRows).map((index) => currentData[index].area);
+  
+    // Check if officer.rtoms_for_ro exists and is an array
+    return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
+           officer.rtoms_for_ro.some(area => selectedAreas.includes(area.name));
+  });
+  
 
 const handleSubmit = async () => {
   // Get the selected Case IDs
   const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index].case_id);
 
   if (selectedCaseIds.length === 0) {
-    // Alert if no rows are selected
-    alert("Please select at least one row to submit.");
+    // SweetAlert if no rows are selected
+    Swal.fire({
+      icon: 'warning',
+      title: 'No rows selected',
+      text: 'Please select at least one row to submit.',
+    });
     return;
   }
 
   if (!selectedRO) {
-    // Alert if no Recovery Officer is selected
-    alert("Please select a Recovery Officer to assign.");
+    // SweetAlert if no Recovery Officer is selected
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Recovery Officer selected',
+      text: 'Please select a Recovery Officer to assign.',
+    });
     return;
   }
 
@@ -228,17 +252,25 @@ const handleSubmit = async () => {
     // Make the API request
     const response = await assignROToCase(selectedCaseIds, selectedRO);
 
-    // Notify success
-    alert("Recovery Officer successfully assigned to the selected cases!");
+    // SweetAlert success message
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: 'Recovery Officer successfully assigned to the selected cases!',
+    });
 
     console.log("API Response:", response);
   } catch (error) {
-    // Handle errors and notify failure
+    // SweetAlert error message
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to assign Recovery Officer. Please try again.',
+    });
+
     console.error("Error submitting data:", error);
-    alert("Failed to assign Recovery Officer. Please try again.");
   }
 };
-
   
 
   if (loading) return <div>Loading...</div>;
@@ -408,40 +440,37 @@ const handleSubmit = async () => {
        </label>
 
     {/* Recovery Officer (RO) Select Dropdown */}
-   <select
+    <select
     id="ro-select"
     className={GlobalStyle.selectBox}
     value={selectedRO}
     onChange={(e) => {
         const selectedName = e.target.value;
         setSelectedRO(selectedName);
-
-        // Find the officer with the selected name
-        const selectedOfficer = filteredOfficers.find(officer => officer.ro_name === selectedName);
-        
-        if (selectedOfficer) {
-            console.log("Selected Officer ID:", selectedOfficer.ro_id); // Log the officer's ID
-        } else {
-            console.log("No officer found with the selected name.");
-        }
     }}
 >
     <option value="" disabled hidden>
         Select RO
     </option>
-    {filteredOfficers.length > 0 ? (
-        filteredOfficers.map((officer) => (
-            <option key={officer.ro_id} value={officer.ro_name}>
-                {officer.ro_name}
-            </option>
-        ))
+    {recoveryOfficers && recoveryOfficers.length > 0 ? (
+        // Flatten all officers into a single array
+        [...new Set(recoveryOfficers.flatMap(response => response.data.map(officer => officer.ro_name)))].map((ro_name) => {
+            const officer = recoveryOfficers.flatMap(response => response.data).find(o => o.ro_name === ro_name);
+            return (
+                <option
+                    key={`${officer.ro_id}-${officer.ro_name}`}
+                    value={officer.ro_name}
+                >
+                    {officer.ro_name}
+                </option>
+            );
+        })
     ) : (
         <option value="" disabled>
-            No officers match the selected areas
+            No officers available for the selected areas
         </option>
     )}
 </select>
-
 
   {/* Submit Button */}
     <button

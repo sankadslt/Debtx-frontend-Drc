@@ -30,3 +30,37 @@ export const assignROToCase = async (caseIds, roId) => {
     throw error;
   }
 };
+
+
+// List All Active ROs By DRC and RTOM
+export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
+  try {
+    if (!drcId || !rtomArea) {
+      throw new Error("drcId and rtomArea are required parameters.");
+    }
+
+    console.log("Sending request with DRC ID:", drcId, "and RTOM Area:", rtomArea);
+
+    const response = await axios.post(`${URL}/List_All_Active_ROs_By_DRC`, 
+      {
+        drc_id: drcId,
+        rtom_area: rtomArea,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log("API response:", response.data); // Log the response data
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching active Recovery Officers:", error.toJSON ? error.toJSON() : error);
+    throw error;
+  }
+};
+
+
+
