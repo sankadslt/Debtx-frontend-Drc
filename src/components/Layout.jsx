@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import Routers from "../router/Routers";
+import BgImg from "../assets/images/bg.png";
 
 const Layout = () => {
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -11,7 +12,7 @@ const Layout = () => {
       <div
         className="absolute inset-0 bg-black opacity-20"
         style={{
-          backgroundImage: `url('/src/assets/images/bg.png')`,
+          backgroundImage: `url(${BgImg})`,
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
           backgroundAttachment: "fixed",
