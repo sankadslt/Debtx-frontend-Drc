@@ -8,13 +8,15 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes:  The following page conatins the code for the Assigned RO case log Screen */
 
-import { useState,useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
+import { AiFillEye} from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { useParams } from "react-router-dom"; // Import useParams
 
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService"; 
+
+import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 
 export default function AssignedROcaselog() {
     //dummy data for table
@@ -140,7 +142,7 @@ export default function AssignedROcaselog() {
     // Filter state for Amount, Case ID, Status, and Date
     const [filterRTOM, setFilterRTOM] = useState(""); // RTOM
     const [filterAmount, setFilterAmount] = useState("");
-    
+
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
@@ -153,7 +155,7 @@ export default function AssignedROcaselog() {
 
     useEffect(() => {
 
-        console.log("Route parameter drc_id :", drc_id );
+        console.log("Route parameter drc_id :", drc_id);
         const fetchData = async () => {
             try {
                 if (drc_id) {
@@ -182,9 +184,9 @@ export default function AssignedROcaselog() {
             }
         };
 
-        
+
         fetchData();
-       
+
     }, [drc_id]); // Including drc_id to the Dependency array
 
 
@@ -288,7 +290,7 @@ export default function AssignedROcaselog() {
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
 
-            <h1 className={GlobalStyle.headingLarge}>Assigned RO case log</h1>
+            <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
 
@@ -399,6 +401,9 @@ export default function AssignedROcaselog() {
                             <th scope="col" className={GlobalStyle.tableHeader}>
                                 End Date
                             </th>
+                            <th scope="col" className={GlobalStyle.tableHeader}>
+
+                            </th>
 
                         </tr>
                     </thead>
@@ -425,6 +430,27 @@ export default function AssignedROcaselog() {
                                 <td className={GlobalStyle.tableData}>{item.assignedRO}</td>
                                 <td className={GlobalStyle.tableData}>{item.assignedDate}</td>
                                 <td className={GlobalStyle.tableData}>{item.endDate}</td>
+                                <td className={GlobalStyle.tableData}>
+                                    <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+                                        <AiFillEye 
+                                            onClick={() => console.log("")}
+                                            style={{ cursor: "pointer", marginRight: "8px" }}
+                                        />
+                                        <FaEdit
+                                            onClick={() => console.log("Edit clicked")}
+                                            style={{ cursor: "pointer", marginRight: "8px" }}
+                                        />
+                                        <button
+                                            className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                                            style={{
+                                                whiteSpace: "nowrap", // Prevents text from wrapping
+                                            }}
+                                        >
+                                            Re-Assign
+                                        </button>
+                                    </div>
+                                </td>
 
                             </tr>
                         ))}
