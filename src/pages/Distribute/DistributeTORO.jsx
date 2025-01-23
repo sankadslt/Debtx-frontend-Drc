@@ -18,9 +18,10 @@ import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { listAllActiveRosByDRCID } from "../../services/case/CaseService";
+import { getActiveRODetailsByDrcID  } from "../../services/Ro/RO";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService"; 
 import { assignROToCase } from "../../services/case/CaseService";
+import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import Swal from 'sweetalert2';
 
 const DistributeTORO = () => {
@@ -30,7 +31,6 @@ const DistributeTORO = () => {
   const [error, setError] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
-  const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [filteredData, setFilteredData] = useState([]);
@@ -41,9 +41,24 @@ const DistributeTORO = () => {
   const navigate = useNavigate();
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [arrearsBands, setArrearsBands] = useState([]);
+  const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
 
   // Use useParams hook to get the drc_id from the URL
   const { drc_id } = useParams();
+
+  useEffect(() => {
+    const getArrearsBands = async () => {
+      try {
+        const bands = await fetchAllArrearsBands(); // Fetch arrears bands
+        setArrearsBands(bands); // Set the arrears bands to state
+      } catch (error) {
+        console.error("Error fetching arrears bands:", error);
+      }
+    };
+
+    getArrearsBands(); // Call the function to fetch data when the component mounts
+  }, []); // Empty dependency array to run only once on mount
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,20 +93,18 @@ const DistributeTORO = () => {
     const fetchRecoveryOfficers = async () => {
       try {
         if (drc_id) {
-          // Convert drc_id to a number
-          const numericDrcId = Number(drc_id);
-    
-          // Collect RTOM Areas from selected rows
-          const selectedAreas = Array.from(selectedRows).map((index) => currentData[index]?.area);
-    
-          // Fetch Recovery Officers for each RTOM Area
-          const officers = await Promise.all(
-            selectedAreas.map((area) => listAllActiveRosByDRCID(numericDrcId, area))
-          );
-    
-          // Flatten the array of officer lists
-          const flattenedOfficers = officers.flat();
-          setRecoveryOfficers(flattenedOfficers);
+          const numericDrcId = Number(drc_id); // Convert drc_id to a number
+  
+          // Fetch recovery officers using drc_id
+          const response = await getActiveRODetailsByDrcID(numericDrcId);
+  
+          // Extract ro_name and rtoms_for_ro from response
+          const officers = response.data.map((officer) => ({
+            ro_name: officer.ro_name,
+            rtoms_for_ro: officer.rtoms_for_ro,
+          }));
+  
+          setRecoveryOfficers(officers);
         } else {
           setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200)");
         }
@@ -100,11 +113,10 @@ const DistributeTORO = () => {
         setError("Failed to fetch recovery officers.");
       }
     };
-    
-
-  fetchData();
-  fetchRecoveryOfficers();
-}, [drc_id, selectedRows]); // Including drc_id to the Dependency array
+  
+    fetchData();
+    fetchRecoveryOfficers();
+  }, [drc_id]); // Including drc_id to the dependency array
   
   
    // Filter Function
@@ -301,20 +313,22 @@ const handleSubmit = async () => {
       </select>
 
   {/* Arrears Band Select Dropdown */}
-           <select
-              className={GlobalStyle.selectBox}
-              value={selectedArrearsBand}
-              onChange={(e) => setSelectedArrearsBand(e.target.value)}
-           >
-     <option value="">Arrears Band</option>
-       {["5,000 - 10,000", "10,000 - 25,000", "25,000 - 50,000", "50,000 - 100,000", ">100,000"].map(
-            (band) => (
-        <option key={band} value={band}>
-             {band}
-        </option>
-       )
-      )}
-    </select>
+  <select
+          className={GlobalStyle.selectBox}
+          value={selectedArrearsBand}
+          onChange={(e) => setSelectedArrearsBand(e.target.value)}
+        >
+          <option value="">Arrears Band</option>
+          {arrearsBands.length > 0 ? (
+            arrearsBands.map((band) => (
+              <option key={band} value={band}>
+                {band}
+              </option>
+            ))
+          ) : (
+            <option value="">Loading...</option>
+          )}
+        </select>
 
       {/* Date Picker */}
      <div className="flex flex-col mb-4">
@@ -441,36 +455,36 @@ const handleSubmit = async () => {
 
     {/* Recovery Officer (RO) Select Dropdown */}
     <select
-    id="ro-select"
-    className={GlobalStyle.selectBox}
-    value={selectedRO}
-    onChange={(e) => {
-        const selectedName = e.target.value;
-        setSelectedRO(selectedName);
-    }}
+  id="ro-select"
+  className={GlobalStyle.selectBox}
+  value={selectedRO}
+  onChange={(e) => {
+    const selectedName = e.target.value;
+    setSelectedRO(selectedName);
+  }}
 >
-    <option value="" disabled hidden>
-        Select RO
-    </option>
-    {recoveryOfficers && recoveryOfficers.length > 0 ? (
-        // Flatten all officers into a single array
-        [...new Set(recoveryOfficers.flatMap(response => response.data.map(officer => officer.ro_name)))].map((ro_name) => {
-            const officer = recoveryOfficers.flatMap(response => response.data).find(o => o.ro_name === ro_name);
-            return (
-                <option
-                    key={`${officer.ro_id}-${officer.ro_name}`}
-                    value={officer.ro_name}
-                >
-                    {officer.ro_name}
-                </option>
-            );
-        })
-    ) : (
-        <option value="" disabled>
-            No officers available 
+  <option value="" disabled hidden>
+    Select RO
+  </option>
+  {recoveryOfficers && recoveryOfficers.length > 0 ? (
+    recoveryOfficers.map((officer, index) => {
+      // Format the display as "ro_name - rtoms_for_ro.name"
+      const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+      const displayName = `${officer.ro_name} - ${rtomsNames}`;
+
+      return (
+        <option key={`ro-${index}`} value={officer.ro_name}>
+          {displayName}
         </option>
-    )}
+      );
+    })
+  ) : (
+    <option value="" disabled>
+      No officers available
+    </option>
+  )}
 </select>
+
 
   {/* Submit Button */}
     <button

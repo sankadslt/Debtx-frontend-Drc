@@ -62,5 +62,14 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
   }
 };
 
-
+// Fetch all arrears bands
+export const fetchAllArrearsBands = async () => {
+  try {
+    const response = await axios.get(URL); // Using GET request as per your controller
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error("Error fetching arrears bands:", error.response?.data || error.message);
+    throw error; // Re-throw the error for further handling
+  }
+};
 
