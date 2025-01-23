@@ -17,3 +17,59 @@ export const listHandlingCasesByDRC = async (drcId) => {
   }
 };
 
+// Assign Recovery Officer to Case
+export const assignROToCase = async (caseIds, roId) => {
+  try {
+    const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
+      case_ids: caseIds,
+      ro_id: roId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error assigning Recovery Officer to cases:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// List All Active ROs By DRC and RTOM
+export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
+  try {
+    if (!drcId || !rtomArea) {
+      throw new Error("drcId and rtomArea are required parameters.");
+    }
+
+    console.log("Sending request with DRC ID:", drcId, "and RTOM Area:", rtomArea);
+
+    const response = await axios.post(`${URL}/List_All_Active_ROs_By_DRC`, 
+      {
+        drc_id: drcId,
+        rtom_area: rtomArea,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log("API response:", response.data); // Log the response data
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching active Recovery Officers:", error.toJSON ? error.toJSON() : error);
+    throw error;
+  }
+};
+
+// Fetch all arrears bands
+export const fetchAllArrearsBands = async () => {
+  try {
+    const response = await axios.get(URL); // Using GET request as per your controller
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error("Error fetching arrears bands:", error.response?.data || error.message);
+    throw error; // Re-throw the error for further handling
+  }
+};
+

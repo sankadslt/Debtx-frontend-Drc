@@ -156,3 +156,28 @@ export const roassignedbydrc = async (drc_id) => {
         throw new Error(error.response?.data?.message || 'Error fetching RO data');
     }
 };
+
+
+/**
+ * Retrieve active Recovery Officers by DRC ID
+ * @param {number} drcId - The ID of the Debt Recovery Company.
+ * @returns {Promise<object>} - The API response containing the list of active recovery officers.
+ * @throws {Error} - Throws an error if the request fails.
+ */
+export const getActiveRODetailsByDrcID = async (drcId) => {
+    try {
+      const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, {
+        drc_id: drcId,
+      });
+  
+      if (response.data.status === "success") {
+        return response.data;
+      } else {
+        console.error(response.data.message);
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error retrieving active recovery officers:", error.message);
+      throw error;
+    }
+  };
