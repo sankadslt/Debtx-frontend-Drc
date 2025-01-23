@@ -62,14 +62,23 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
   }
 };
 
+
 // Fetch all arrears bands
 export const fetchAllArrearsBands = async () => {
   try {
-    const response = await axios.get(URL); // Using GET request as per your controller
-    return response.data; // Return the response data
+    const response = await axios.get(`${URL}/getAllArrearsBands`);
+    const data = response.data.data;
+    
+    // Exclude the _id key and return only arrears bands
+    const arrearsBands = Object.entries(data)
+      .filter(([key]) => key !== "_id") // Exclude _id
+      .map(([, value]) => value); // Extract only the values
+
+    return arrearsBands; // Return only the arrears bands
   } catch (error) {
     console.error("Error fetching arrears bands:", error.response?.data || error.message);
-    throw error; // Re-throw the error for further handling
+    throw error;
   }
 };
+
 

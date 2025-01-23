@@ -48,17 +48,18 @@ const DistributeTORO = () => {
   const { drc_id } = useParams();
 
   useEffect(() => {
-    const getArrearsBands = async () => {
+    const fetchArrearsBands = async () => {
       try {
-        const bands = await fetchAllArrearsBands(); // Fetch arrears bands
+        const bands = await fetchAllArrearsBands();
         setArrearsBands(bands); // Set the arrears bands to state
       } catch (error) {
         console.error("Error fetching arrears bands:", error);
       }
     };
-
-    getArrearsBands(); // Call the function to fetch data when the component mounts
-  }, []); // Empty dependency array to run only once on mount
+  
+    fetchArrearsBands();
+  }, []);
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -314,21 +315,22 @@ const handleSubmit = async () => {
 
   {/* Arrears Band Select Dropdown */}
   <select
-          className={GlobalStyle.selectBox}
-          value={selectedArrearsBand}
-          onChange={(e) => setSelectedArrearsBand(e.target.value)}
-        >
-          <option value="">Arrears Band</option>
-          {arrearsBands.length > 0 ? (
-            arrearsBands.map((band) => (
-              <option key={band} value={band}>
-                {band}
-              </option>
-            ))
-          ) : (
-            <option value="">Loading...</option>
-          )}
-        </select>
+  className={GlobalStyle.selectBox}
+  value={selectedArrearsBand}
+  onChange={(e) => setSelectedArrearsBand(e.target.value)}
+>
+  <option value="">Arrears Band</option>
+  {arrearsBands.length > 0 ? (
+    arrearsBands.map((band, index) => (
+      <option key={index} value={band}>
+        {band}
+      </option>
+    ))
+  ) : (
+    <option value="">Loading...</option>
+  )}
+</select>
+
 
       {/* Date Picker */}
      <div className="flex flex-col mb-4">
