@@ -327,10 +327,6 @@ const filteredDataBySearch = filteredData.filter((row) =>
   )}
 </select>
 
-
-
-
-
   {/* Arrears Band Select Dropdown */}
   <select
   className={GlobalStyle.selectBox}
@@ -348,8 +344,6 @@ const filteredDataBySearch = filteredData.filter((row) =>
     <option value="">Loading...</option>
   )}
 </select>
-
-
 
       {/* Date Picker */}
      <div className="flex flex-col mb-4">
