@@ -24,6 +24,7 @@ import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import Swal from 'sweetalert2';
 
+
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
   const [data, setData] = useState([]);
@@ -43,116 +44,108 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsBands, setArrearsBands] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
+  
 
   // Use useParams hook to get the drc_id from the URL
   const { drc_id } = useParams();
 
   useEffect(() => {
-    const getArrearsBands = async () => {
+    const fetchArrearsBands = async () => {
       try {
-        const bands = await fetchAllArrearsBands(); // Fetch arrears bands
-        setArrearsBands(bands); // Set the arrears bands to state
+        const bands = await fetchAllArrearsBands();
+        setArrearsBands(bands);
       } catch (error) {
         console.error("Error fetching arrears bands:", error);
       }
     };
-
-    getArrearsBands(); // Call the function to fetch data when the component mounts
-  }, []); // Empty dependency array to run only once on mount
-
+    fetchArrearsBands();
+  }, []);
+  
+  // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (drc_id) {
-          const payload = parseInt(drc_id, 10); // Convert drc_id to number
+          const payload = parseInt(drc_id, 10);
   
-          // Fetch RTOMs by DRC ID
+          // Fetch RTOMs
           const rtomsList = await getRTOMsByDRCID(payload);
-          setRtoms(rtomsList); // Set RTOMs to state
+          setRtoms(rtomsList);
   
-          const response = await listHandlingCasesByDRC(payload);
-  
-          if (response && Array.isArray(response.data)) {
-            setData(response.data);
-            setFilteredData(response.data);
-          } else {
-            setError("No data found.");
-          }
         } else {
-          setError("DRC ID not found in URL.(try http://localhost:5173/pages/Distribute/DistributeTORO/200 )");
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200)");
         }
-      } catch (err) {
-        console.error("Error fetching data:", err);
+      } catch (error) {
+        console.error("Error fetching data:", error);
         setError("Failed to fetch data. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
   
-   
     const fetchRecoveryOfficers = async () => {
       try {
         if (drc_id) {
-          const numericDrcId = Number(drc_id); // Convert drc_id to a number
-  
-          // Fetch recovery officers using drc_id
+          const numericDrcId = Number(drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
-  
-          // Extract ro_name and rtoms_for_ro from response
+    
+          // Map recovery officers with ro_id and other details
           const officers = response.data.map((officer) => ({
+            ro_id: officer.ro_id, // Include ro_id
             ro_name: officer.ro_name,
             rtoms_for_ro: officer.rtoms_for_ro,
           }));
-  
           setRecoveryOfficers(officers);
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200)");
+          setError("DRC ID not found in URL.");
         }
       } catch (error) {
         console.error("Error fetching recovery officers:", error);
         setError("Failed to fetch recovery officers.");
       }
     };
-  
+    
     fetchData();
     fetchRecoveryOfficers();
-  }, [drc_id]); // Including drc_id to the dependency array
+    
+  }, [drc_id]);
   
+  const handleFilter = async () => {
+    try {
+      // Clear existing data (reset the table)
+      setFilteredData([]); // Empty the data before making the API request
+      
+      // Create the payload with the filter data
+      const payload = {
+        drc_id: Number(drc_id), // Convert drc_id to a number
+        rtom: selectedRTOM, // Selected RTOM area
+        recovery_officer: selectedRO, // Selected Recovery Officer
+        arrears_band: selectedArrearsBand, // Selected Arrears Band
+        from_date: fromDate ? fromDate.toISOString() : null, // From date
+        to_date: toDate ? toDate.toISOString() : null, // To date
+      };
   
-   // Filter Function
-  const handleFilter = () => {
-    const filtered = data.filter((item) => {
-      // RTOM Area Filter
-      const rtomValid = !selectedRTOM || item.area?.includes(selectedRTOM);
+      // Log the request body (payload) to the console
+      console.log("Request Payload:", payload);
   
-      // Arrears Band Filter
-      const arrearsBandValid = !selectedArrearsBand || (() => {
-        // Remove commas and convert to numbers
-        const bandRange = selectedArrearsBand
-          .split(" - ")
-          .map((v) => parseFloat(v.replace(/,/g, ""))); // Remove commas and parse as floats
-        const amount = parseFloat(item.current_arrears_amount?.toString().replace(/,/g, "")) || 0; // Remove commas from the amount
+      // Call the listHandlingCasesByDRC function with the payload
+      const response = await listHandlingCasesByDRC(payload);
   
-        return bandRange.length === 2
-          ? amount >= bandRange[0] && amount <= bandRange[1]
-          : bandRange.length === 1 && amount > bandRange[0];
-      })();
+      // Log the response data
+      console.log("API Response:", response);
   
-      // Date Filters
-      const dateValid = !fromDate || (
-        item.last_payment_dtm && new Date(item.last_payment_dtm) >= new Date(fromDate)
-      );
-      const expireDateValid = !toDate || (
-        item.case_status?.[0]?.expired_dtm && new Date(item.case_status[0].expired_dtm) <= new Date(toDate)
-      );
-  
-      return rtomValid && arrearsBandValid && dateValid && expireDateValid;
-    });
-  
-    setFilteredData(filtered);
-    setCurrentPage(1); // Reset to the first page after filtering
+      // If the response contains 'data' and we get an array of cases
+      if (response.data && Array.isArray(response.data)) {
+        // Set the data in state
+        setFilteredData(response.data);
+      } else {
+        console.error("No valid cases data found in response.");
+      }
+    } catch (error) {
+      console.error("Error filtering cases:", error);
+      // Handle any error that may occur
+    }
   };
-  
 
 //Search Logic
 const searchInNestedObject = (obj, query) => {
@@ -236,57 +229,60 @@ const filteredDataBySearch = filteredData.filter((row) =>
   });
   
 
-const handleSubmit = async () => {
-  // Get the selected Case IDs
-  const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index].case_id);
-
-  if (selectedCaseIds.length === 0) {
-    // SweetAlert if no rows are selected
-    Swal.fire({
-      icon: 'warning',
-      title: 'No rows selected',
-      text: 'Please select at least one row to submit.',
-    });
-    return;
-  }
-
-  if (!selectedRO) {
-    // SweetAlert if no Recovery Officer is selected
-    Swal.fire({
-      icon: 'warning',
-      title: 'No Recovery Officer selected',
-      text: 'Please select a Recovery Officer to assign.',
-    });
-    return;
-  }
-
-  try {
-    // Make the API request
-    const response = await assignROToCase(selectedCaseIds, selectedRO);
-
-    // SweetAlert success message
-    Swal.fire({
-      icon: 'success',
-      title: 'Success',
-      text: 'Recovery Officer successfully assigned to the selected cases!',
-    });
-
-    console.log("API Response:", response);
-  } catch (error) {
-    // SweetAlert error message
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Failed to assign Recovery Officer. Please try again.',
-    });
-
-    console.error("Error submitting data:", error);
-  }
-};
+  const handleSubmit = async () => {
+    try {
+      // Extract selected case IDs
+      const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
   
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+      if (selectedCaseIds.length === 0) {
+        Swal.fire("Error", "No cases selected!", "error");
+        return;
+      }
+  
+      // Extract RTOM Area from selected rows
+      const selectedAreas = Array.from(selectedRows).map((index) => currentData[index]?.area);
+      console.log("Selected Areas:", selectedAreas);
+  
+      // Normalize selected areas for comparison
+      const normalizedSelectedAreas = selectedAreas.map((area) => area?.toLowerCase().trim());
+  
+      // Find recovery officer for the selected location
+      const selectedOfficer = filteredOfficers.find((officer) =>
+        officer.rtoms_for_ro.some((rtom) =>
+          normalizedSelectedAreas.includes(rtom.name?.toLowerCase().trim())
+        )
+      );
+      console.log("Selected Officer:", selectedOfficer);
+  
+      if (!selectedOfficer) {
+        Swal.fire("Error", "No recovery officer available for the selected areas!", "error");
+        return;
+      }
+  
+      // Prepare the payload (correct structure)
+      const payload = {
+        case_ids: selectedCaseIds, // Correctly structure case_ids as an array
+        ro_id: selectedOfficer.ro_id, // Correctly set ro_id
+      };
+  
+      // Log the payload being sent to the API
+      console.log("Payload being sent to API:", JSON.stringify(payload));
+  
+      // Use the custom assignROToCase function with axios
+      const response = await assignROToCase(selectedCaseIds, selectedOfficer.ro_id);
+  
+      if (response.status === 'success') {
+        Swal.fire("Success", "Cases assigned successfully!", "success");
+      } else {
+        Swal.fire("Error", response.message, "error");
+      }
+  
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+    }
+  };
+  
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -295,40 +291,59 @@ const handleSubmit = async () => {
       <div className="flex items-center justify-end gap-4 mt-20 mb-4"> 
 
       {/* RTOM Select Dropdown */}
-            <select
-          className={GlobalStyle.selectBox}
-          value={selectedRTOM}
-          onChange={(e) => setSelectedRTOM(e.target.value)}
-        >
-            <option value="">RTOM</option>
-             {rtoms.length > 0 ? (
-               rtoms.map((rtom) => (
-            <option key={rtom.rtom_id} value={rtom.area_name}>
-              {rtom.area_name} {/* Ensure this is the correct name for the RTOM area */}
-            </option>
-         ))
-      ) : (
-           <option disabled>No RTOMs found</option>
-         )}
-      </select>
+      <select
+  className={GlobalStyle.selectBox}
+  value={selectedRTOM}
+  onChange={(e) => {
+    const selectedAreaName = e.target.value;
+    setSelectedRTOM(selectedAreaName);
+
+    // Loop through the recovery officers to find matching area name in rtoms_for_ro
+    const matchingROs = recoveryOfficers.filter(officer =>
+      officer.rtoms_for_ro.some(rtom => rtom.name === selectedAreaName)
+    );
+
+    if (matchingROs.length > 0) {
+      matchingROs.forEach(officer => {
+        const matchingRTOM = officer.rtoms_for_ro.find(rtom => rtom.name === selectedAreaName);
+        if (matchingRTOM) {
+          console.log(`RO Name for ${selectedAreaName}: ${officer.ro_name}`);
+        }
+      });
+    } else {
+      console.log(`No matching recovery officer found for ${selectedAreaName}`);
+    }
+  }}
+>
+  <option value="">RTOM</option>
+  {rtoms.length > 0 ? (
+    rtoms.map((rtom) => (
+      <option key={rtom.rtom_id} value={rtom.area_name}>
+        {rtom.area_name}
+      </option>
+    ))
+  ) : (
+    <option disabled>No RTOMs found</option>
+  )}
+</select>
 
   {/* Arrears Band Select Dropdown */}
   <select
-          className={GlobalStyle.selectBox}
-          value={selectedArrearsBand}
-          onChange={(e) => setSelectedArrearsBand(e.target.value)}
-        >
-          <option value="">Arrears Band</option>
-          {arrearsBands.length > 0 ? (
-            arrearsBands.map((band) => (
-              <option key={band} value={band}>
-                {band}
-              </option>
-            ))
-          ) : (
-            <option value="">Loading...</option>
-          )}
-        </select>
+  className={GlobalStyle.selectBox}
+  value={selectedArrearsBand}
+  onChange={(e) => setSelectedArrearsBand(e.target.value)}
+>
+  <option value="">Arrears Band</option>
+  {arrearsBands.length > 0 ? (
+    arrearsBands.map((band, index) => (
+      <option key={index} value={band.key}>
+        {band.value}
+      </option>
+    ))
+  ) : (
+    <option value="">Loading...</option>
+  )}
+</select>
 
       {/* Date Picker */}
      <div className="flex flex-col mb-4">
@@ -372,48 +387,55 @@ const handleSubmit = async () => {
   </div>
 
       {/* Table Section */}
-    <div className={GlobalStyle.tableContainer}>
-      <table className={GlobalStyle.table}>
-        <thead className={GlobalStyle.thead}>
-          <tr>
-           <th className={GlobalStyle.tableHeader}></th>
-           <th className={GlobalStyle.tableHeader}>Status</th>
-           <th className={GlobalStyle.tableHeader}>Case ID</th>
-           <th className={GlobalStyle.tableHeader}>Date</th>
-           <th className={GlobalStyle.tableHeader}>Amount</th>
-           <th className={GlobalStyle.tableHeader}>Action</th>
-           <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-           <th className={GlobalStyle.tableHeader}>RO</th>
-           <th className={GlobalStyle.tableHeader}>Expire Date</th>
-         </tr>
-       </thead>
-       <tbody>
-         {currentData.map((item, index) => (
-           <tr
-             key={item._id || index} // Use _id if available
-             className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-           >
-          <td className="text-center">
-            <input
-              type="checkbox"
-              checked={selectedRows.has(index)}
-              onChange={() => handleRowSelect(index)}
-              className="mx-auto"
-            />
-          </td>
-         <td className={GlobalStyle.tableData}> {item.case_status?.[0]?.case_status || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.case_status && item.case_status[0] && item.case_status[0].created_dtm  ? new Date(item.case_status[0].created_dtm).toLocaleDateString("en-CA")  : "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.drc?.[0]?.recovery_officers?.[0]?.name || "N/A"} </td>
-         <td className={GlobalStyle.tableData}> {item.case_status?.[0]?.expired_dtm && item.case_status[0].expired_dtm !== ""  ? new Date(item.case_status[0].expired_dtm).toLocaleDateString("en-CA")  : "N/A"} </td> 
+      <div className={GlobalStyle.tableContainer}>
+  <table className={GlobalStyle.table}>
+    <thead className={GlobalStyle.thead}>
+      <tr>
+        <th className={GlobalStyle.tableHeader}></th>
+        <th className={GlobalStyle.tableHeader}>Status</th>
+        <th className={GlobalStyle.tableHeader}>Case ID</th>
+        <th className={GlobalStyle.tableHeader}>Date</th>
+        <th className={GlobalStyle.tableHeader}>Amount</th>
+        <th className={GlobalStyle.tableHeader}>Action</th>
+        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+        <th className={GlobalStyle.tableHeader}>RO</th>
+        <th className={GlobalStyle.tableHeader}>Expire Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentData && currentData.length > 0 ? (
+        currentData.map((item, index) => (
+          <tr
+            key={item.case_id || index} // Use case_id if available, else fallback to index
+            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+          >
+            <td className="text-center">
+              <input
+                type="checkbox"
+                checked={selectedRows.has(index)}
+                onChange={() => handleRowSelect(index)}
+                className="mx-auto"
+              />
+            </td>
+            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.current_arreas_amount || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {new Date(item.expire_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="9" className="text-center">No cases available</td>
         </tr>
-      ))}
-     </tbody>
+      )}
+    </tbody>
   </table>
- </div>
+</div>
+
 
     {/* Pagination Section */}
     <div className={GlobalStyle.navButtonContainer}>
