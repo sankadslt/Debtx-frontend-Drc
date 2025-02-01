@@ -14,12 +14,37 @@ import React, { useState } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
 
 export default function MediationBoardcaselist() {
+  const [fromDate, setFromDate] = useState(null); //for date
+  const [toDate, setToDate] = useState(null); // for date
+  const [error, setError] = useState(""); // for error message
   const [currentPage, setCurrentPage] = useState(0); // For managing the current page
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const rowsPerPage = 7; // Number of rows per page
+
+  // validation for date
+  const handleFromDateChange = (date) => {
+    if (toDate && date > toDate) {
+      setError("The 'From' date cannot be later than the 'To' date.");
+    } else {
+      setError("");
+      setFromDate(date);
+    }
+  };
+
+  // validation for date
+  const handleToDateChange = (date) => {
+    if (fromDate && date < fromDate) {
+      setError("The 'To' date cannot be earlier than the 'From' date.");
+    } else {
+      setError("");
+      setToDate(date);
+    }
+  };
+
 
   //dummy data for table
   const data = [
@@ -95,6 +120,46 @@ export default function MediationBoardcaselist() {
     <div className={GlobalStyle.fontPoppins}>
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
+
+      {/* Filter Section */}
+      <div className="flex justify-end gap-10 my-6 items-center">
+        {/* Source Dropdown */}
+        <div className="flex items-center gap-4">
+        <select className={GlobalStyle.selectBox}>
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+        </div>
+
+        {/* Date Picker Section */}
+        <div className="flex items-center gap-4">
+          <label>Date:</label>
+          <DatePicker
+            selected={fromDate}
+            onChange={handleFromDateChange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="dd/MM/yyyy"
+            className={GlobalStyle.inputText}
+          />
+          <DatePicker
+            selected={toDate}
+            onChange={handleToDateChange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="dd/MM/yyyy"
+            className={GlobalStyle.inputText}
+          />
+          {error && <span className={GlobalStyle.errorText}>{error}</span>}
+        </div>
+
+        {/* Filter Button */}
+        <button
+          className={`${GlobalStyle.buttonPrimary} h-[35px]`}
+          onClick={() => {}}
+        >
+          Filter
+        </button>
+      </div>
 
       {/* Table Section */}
       <div className="flex flex-col">
