@@ -2,275 +2,208 @@
 Created Date: 2024-01-08
 Created By: Chamath (chamathjayasanka20@gmail.com)
 Last Modified Date:2025-01-08
+Last Modified Date:2025-02-01
+Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
 Version: node 20
 ui number : 2.15
 Dependencies: tailwind css
 Related Files: (routes)
 Notes:  The following page conatins the code for the Mediation Board case list Screen */
 
-
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
-
-
+import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function MediationBoardcaselist() {
-
+  const [currentPage, setCurrentPage] = useState(0); // For managing the current page
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(0);  // For managing the current page
-  const rowsPerPage = 8;  // Number of rows per page
-
-  
+  const rowsPerPage = 7; // Number of rows per page
 
   //dummy data for table
   const data = [
     {
-      date: "05/16/2024",
-      status: "open",
       caseId: "C001",
+      status: "pending",
+      date: "05/16/2024",
       name: "Silva Perera",
       contactNo: "0112345678",
       rtom: "RTOM 01",
       action: "Arrears Collect",
     },
     {
-      date: "05/17/2024",
-      status: "closed",
       caseId: "C002",
+      status: "pending",
+      date: "05/17/2024",
       name: "Kamal Fernando",
       contactNo: "0112233445",
       rtom: "RTOM 02",
       action: "Payment Follow-Up",
     },
     {
-      date: "05/18/2024",
-      status: "open",
-      caseId: "C003",
-      name: "Nimal Jayasuriya",
-      contactNo: "0113344556",
-      rtom: "RTOM 03",
-      action: "Address Verification",
-    },
-    {
-      date: "05/19/2024",
+      caseId: "C001",
       status: "pending",
-      caseId: "C004",
-      name: "Sunil De Silva",
-      contactNo: "0114455667",
-      rtom: "RTOM 04",
-      action: "Legal Notice",
-    },
-    {
-      date: "05/20/2024",
-      status: "closed",
-      caseId: "C005",
-      name: "Ruwan Ekanayake",
-      contactNo: "0115566778",
+      date: "05/16/2024",
+      name: "Silva Perera",
+      contactNo: "0112345678",
       rtom: "RTOM 01",
-      action: "Dispute Resolution",
-    },
-    {
-      date: "05/21/2024",
-      status: "open",
-      caseId: "C006",
-      name: "Saman Priyadarshana",
-      contactNo: "0116677889",
-      rtom: "RTOM 02",
-      action: "Payment Follow-Up",
-    },
-    {
-      date: "05/22/2024",
-      status: "closed",
-      caseId: "C007",
-      name: "Anura Kumara",
-      contactNo: "0117788990",
-      rtom: "RTOM 03",
-      action: "Address Verification",
-    },
-    {
-      date: "05/23/2024",
-      status: "open",
-      caseId: "C008",
-      name: "Kasun Wijesinghe",
-      contactNo: "0118899001",
-      rtom: "RTOM 04",
       action: "Arrears Collect",
     },
     {
-      date: "05/24/2024",
+      caseId: "C002",
       status: "pending",
-      caseId: "C009",
-      name: "Mahesh Senanayake",
-      contactNo: "0119900112",
-      rtom: "RTOM 01",
-      action: "Legal Notice",
-    },
-    {
-      date: "05/25/2024",
-      status: "closed",
-      caseId: "C010",
-      name: "Nirosha Abeysinghe",
-      contactNo: "0111011123",
-      rtom: "RTOM 02",
-      action: "Dispute Resolution",
-    },
-    {
-      date: "05/26/2024",
-      status: "open",
-      caseId: "C011",
-      name: "Kavindu Pathirana",
-      contactNo: "0111122334",
-      rtom: "RTOM 03",
-      action: "Payment Follow-Up",
-    },
-    {
-      date: "05/27/2024",
-      status: "pending",
-      caseId: "C012",
-      name: "Dilshan Perera",
+      date: "05/17/2024",
+      name: "Kamal Fernando",
       contactNo: "0112233445",
-      rtom: "RTOM 04",
-      action: "Address Verification",
-    },
-    {
-      date: "05/28/2024",
-      status: "closed",
-      caseId: "C013",
-      name: "Chamika Bandara",
-      contactNo: "0113344556",
-      rtom: "RTOM 01",
-      action: "Arrears Collect",
-    },
-    {
-      date: "05/29/2024",
-      status: "open",
-      caseId: "C014",
-      name: "Harsha Silva",
-      contactNo: "0114455667",
       rtom: "RTOM 02",
       action: "Payment Follow-Up",
-    },
-    {
-      date: "05/30/2024",
-      status: "closed",
-      caseId: "C015",
-      name: "Lasith Malinga",
-      contactNo: "0115566778",
-      rtom: "RTOM 03",
-      action: "Dispute Resolution",
     },
   ];
+
+  //search fuction
+  const filteredData = data.filter((row) =>
+    Object.values(row)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
   const handleOpen = () => {
     alert("Open button clicked");
   };
- 
 
-  const pages = Math.ceil(data.length / rowsPerPage);
+  const pages = Math.ceil(filteredData.length / rowsPerPage);
 
   const handlePrevPage = () => {
-    if (currentPage > 0) setCurrentPage(currentPage - 1);
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const handleNextPage = () => {
-    if (currentPage < pages - 1) setCurrentPage(currentPage + 1);
+    if (currentPage < pages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const startIndex = currentPage * rowsPerPage;
-  const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   return (
-    <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
+    <div className={GlobalStyle.fontPoppins}>
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
 
-      <div className="flex flex-col items-end justify-end gap-4 mt-8"></div>
-      <div className={GlobalStyle.tableContainer}>
-        <table className={GlobalStyle.table}>
-          <thead className={GlobalStyle.thead}>
-            <tr >
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                Date
-              </th>
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                Status
-              </th>
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                Case ID
-              </th>
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                Name
-              </th>
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                Contact No
-              </th>
-              <th scope="col" className={GlobalStyle.tableHeader}>
-                RTOM
-              </th>
-              
-              <th scope="col" className={GlobalStyle.tableHeader}>
+      {/* Table Section */}
+      <div className="flex flex-col">
+        {/* Search Bar Section */}
+        <div className="mb-4 flex justify-start">
+          <div className={GlobalStyle.searchBarContainer}>
+            <input
+              type="text"
+              placeholder=""
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={GlobalStyle.inputSearch}
+            />
+            <FaSearch className={GlobalStyle.searchBarIcon} />
+          </div>
+        </div>
 
-              </th>
-            </tr>
-          </thead>
+        <div className={GlobalStyle.tableContainer}>
+          <table className={GlobalStyle.table}>
+            <thead className={GlobalStyle.thead}>
+              <tr>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Case ID
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Status
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Date
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Name
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Contact No
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  RTOM
+                </th>
 
-          <tbody>
-            
-          {paginatedData.map((item, index) => (
-              <tr
-              key={index}
-              className={`${
-                index % 2 === 0
-                  ? "bg-white bg-opacity-75"
-                  : "bg-gray-50 bg-opacity-50"
-              } border-b`}
-            >
-                <td className={GlobalStyle.tableData}>{item.date}</td>
-                <td className={GlobalStyle.tableData}>{item.status}</td>
-                <td className={GlobalStyle.tableData}>
-                  <a href={`#${item.caseId}`} className="hover:underline">
-                    {item.caseId}
-                  </a>
-                </td>
-                <td className={GlobalStyle.tableData}>{item.name}</td>
-                <td className={GlobalStyle.tableData}>{item.contactNo}</td>
-                <td className={GlobalStyle.tableData}>{item.rtom}</td>
-                
-                <td className={GlobalStyle.tableData}>
-                  <button className={`${GlobalStyle.button} ${GlobalStyle.buttonPrimary}`} style={{ marginRight: '10px' }} onClick={handleOpen}>
-                    Open
-                  </button>
-                  
-                </td>
+                <th scope="col" className={GlobalStyle.tableHeader}></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedData.map((row, index) => (
+                <tr
+                  key={index}
+                  className={`${
+                    index % 2 === 0
+                      ? "bg-white bg-opacity-75"
+                      : "bg-gray-50 bg-opacity-50"
+                  } border-b`}
+                >
+                  <td className={GlobalStyle.tableData}>
+                    <a href={`#${row.caseId}`} className="hover:underline">
+                      {row.caseId}
+                    </a>
+                  </td>
+                  <td className={GlobalStyle.tableData}>{row.status}</td>
+                  <td className={GlobalStyle.tableData}>{row.date}</td>
+                  <td className={GlobalStyle.tableData}>{row.name}</td>
+                  <td className={GlobalStyle.tableData}>{row.contactNo}</td>
+                  <td className={GlobalStyle.tableData}>{row.rtom}</td>
+
+                  <td className={GlobalStyle.tableData}>
+                    <button
+                      className={`${GlobalStyle.button} ${GlobalStyle.buttonPrimary}`}
+                      style={{ marginRight: "10px" }}
+                      onClick={handleOpen}
+                    >
+                      Open
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {paginatedData.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    No results found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination Controls */}
-      <div className={GlobalStyle.navButtonContainer}>
-        <button 
-          onClick={handlePrevPage} 
-          className={GlobalStyle.navButton}
-          disabled={currentPage === 0}>
-          <FaArrowLeft /> 
-        </button>
-
-        <span>
+      {/* Navigation Buttons */}
+      {filteredData.length > rowsPerPage && (
+        <div className={GlobalStyle.navButtonContainer}>
+          <button
+            className={GlobalStyle.navButton}
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+          >
+            <FaArrowLeft />
+          </button>
+          <span>
             Page {currentPage + 1} of {pages}
           </span>
-        <button 
-          onClick={handleNextPage} 
-          className={GlobalStyle.navButton}
-          disabled={currentPage === pages - 1}>
-           <FaArrowRight />
-        </button>
-      </div>
-
+          <button
+            className={GlobalStyle.navButton}
+            onClick={handleNextPage}
+            disabled={currentPage === pages - 1}
+          >
+            <FaArrowRight />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
