@@ -17,12 +17,13 @@ export const listHandlingCasesByDRC = async (payload) => {
       throw new Error(response.data.message);
     }
 
-    // Format the response data if needed
+    // Format the response data including status
     const formattedCases = response.data.data.map((caseData) => {
       return {
         case_id: caseData.case_id,
+        status: caseData.status, // Added status field
         created_dtm: caseData.created_dtm,
-        current_arrears_amount: caseData.current_arrears_amount,
+        current_arrears_amount: caseData.current_arreas_amount, 
         area: caseData.area,
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
