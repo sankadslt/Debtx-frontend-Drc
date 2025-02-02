@@ -19,50 +19,50 @@ import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/cas
 
 export default function AssignedCaseListforDRC() {
     // Data for the table
-  const data = [
-    {
-      caseId: "C001",
-      status: "Pending",
-      date: "2024.11.05",
-      amount: "15,000",
-      action: "Arrears Collect",
-      rtomArea: "Kegalle",
-      expiredate: "2024.12.20",
-      ro:"Silva Perera"
+  // const data = [
+  //   {
+  //     caseId: "C001",
+  //     status: "Pending",
+  //     date: "2024.11.05",
+  //     amount: "15,000",
+  //     action: "Arrears Collect",
+  //     rtomArea: "Kegalle",
+  //     expiredate: "2024.12.20",
+  //     ro:"Silva Perera"
       
-    },
+  //   },
     
-    {
-      caseId: "C002",
-      status: "Pending",
-      date: "2024.11.05",
-      amount: "50,000",
-      action: "Arrears Collect",
-      rtomArea: "Colombo",
-      expiredate: "2024.11.20",
-      ro:"P.B.Silva"
-    },
-    {
-      caseId: "C003",
-      status: "Pending",
-      date: "2025.01.01",
-      amount: "30,000",
-      action: "Arrears Collect",
-      rtomArea: "Kegalle",
-      expiredate: "2025.02.10",
-      ro:"Silva Perera"
-    },
-      {
-      caseId: "C004",
-      status: "Pending",
-      date: "2025.01.01",
-      amount: "15,000",
-      action: "Arrears Collect",
-      rtomArea: "Kegalle",
-      expiredate: "2025.01.20",
-      ro:"P.B.Silva"
-      },
-  ];
+  //   {
+  //     caseId: "C002",
+  //     status: "Pending",
+  //     date: "2024.11.05",
+  //     amount: "50,000",
+  //     action: "Arrears Collect",
+  //     rtomArea: "Colombo",
+  //     expiredate: "2024.11.20",
+  //     ro:"P.B.Silva"
+  //   },
+  //   {
+  //     caseId: "C003",
+  //     status: "Pending",
+  //     date: "2025.01.01",
+  //     amount: "30,000",
+  //     action: "Arrears Collect",
+  //     rtomArea: "Kegalle",
+  //     expiredate: "2025.02.10",
+  //     ro:"Silva Perera"
+  //   },
+  //     {
+  //     caseId: "C004",
+  //     status: "Pending",
+  //     date: "2025.01.01",
+  //     amount: "15,000",
+  //     action: "Arrears Collect",
+  //     rtomArea: "Kegalle",
+  //     expiredate: "2025.01.20",
+  //     ro:"P.B.Silva"
+  //     },
+  // ];
 
   const {drc_id} =useParams();
 
@@ -74,8 +74,8 @@ export default function AssignedCaseListforDRC() {
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
-  const [filteredData, setFilteredData] = useState(data);
-  const [filterValue, setFilterValue] = useState(""); // This holds the filter value for the Arreas Amount Filter 
+  const [filteredData, setFilteredData] = useState([]);
+  // const [filterValue, setFilterValue] = useState(""); // This holds the filter value for the Arreas Amount Filter 
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,6 +84,14 @@ export default function AssignedCaseListforDRC() {
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+
+  const handlePrevNext = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    } else if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   // Filter state
   // const [filterRO, setRO] = useState(""); 
@@ -95,15 +103,17 @@ export default function AssignedCaseListforDRC() {
       try {
         const arrearsAmounts =await fetchAllArrearsBands();        
         setArrearsAmounts(arrearsAmounts);
+
+        if (drc_id) {
+          const roData =await roassignedbydrc(drc_id);
+          setRoList(roData);
+        }
+
       } catch (error) {
         console.log("Data fetching failed : " , error);
         setArrearsAmounts([]);
       }
       
-      if (drc_id) {
-        const roData =await roassignedbydrc(drc_id);
-        setRoList(roData);
-      }
     }
     fetchData();
     
@@ -134,6 +144,8 @@ export default function AssignedCaseListforDRC() {
       const response =await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
+        console.log(response);
+        
         setFilteredData(response);
       } else {
           console.error("No valid cases data found in response.");
@@ -257,11 +269,6 @@ export default function AssignedCaseListforDRC() {
           </button>
       </div>
 
-        
-        
-    
-      
-
       {/* Search Section */}
       <div className="flex justify-start mt-10 mb-4">
         <div className={GlobalStyle.searchBarContainer}>
@@ -291,28 +298,64 @@ export default function AssignedCaseListforDRC() {
             </tr>
           </thead>
           <tbody>
-            {filteredDataBySearch.map((item, index) => (
-              <tr
-                key={item.case_id || index}
-                className={
-                  index % 2 === 0
-                    ? GlobalStyle.tableRowEven
-                    : GlobalStyle.tableRowOdd
-                }
-              >
-                <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
-                <td className={GlobalStyle.tableData}>{item.status}</td>
-                <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
-                <td className={GlobalStyle.tableData}>{item.current_arreas_amount || "N/A"}</td>
-                <td className={GlobalStyle.tableData}>{item.action}</td>
-                <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
-                <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
-                <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                
-              </tr>
-            ))}
+            {filteredDataBySearch && filteredDataBySearch.length > 0 ? (
+              filteredDataBySearch.map((item, index) => (
+                <tr
+                  key={item.case_id || index}
+                  className={
+                    index % 2 === 0
+                      ? GlobalStyle.tableRowEven
+                      : GlobalStyle.tableRowOdd
+                  }
+                >
+                  <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.status || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.action || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>
+                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 
+                        ? new Date(item.expire_dtm).toLocaleDateString("en-CA") 
+                        : "N/A"
+                    }
+                  </td>
+                  <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                  
+                </tr>
+              ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className="text-center">No cases available</td>
+                </tr>
+            )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Section */}
+      <div className={GlobalStyle.navButtonContainer}>
+        <button
+          onClick={() => handlePrevNext("prev")}
+          disabled={currentPage === 1}
+          className={`${GlobalStyle.navButton} ${
+            currentPage === 1 ? "cursor-not-allowed" : ""
+        }`}
+        >
+        <FaArrowLeft />
+          </button>
+          <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePrevNext("next")}
+            disabled={currentPage === totalPages}
+            className={`${GlobalStyle.navButton} ${
+          currentPage === totalPages ? "cursor-not-allowed" : ""
+          }`}
+        >
+        <FaArrowRight />
+        </button>
       </div>
       
 
