@@ -312,7 +312,7 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}>{item.status || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
-                  <td className={GlobalStyle.tableData}>{item.action || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 
