@@ -103,7 +103,7 @@ export const suspendRTOM = async (rtom_id, rtom_end_date, reason) => {
       throw error;
     }
 };
-
+/*
 // Fetch RTOMs based on DRC ID
 export const getRTOMsByDRCID = async (drc_id) => {
   try {
@@ -122,4 +122,25 @@ export const getRTOMsByDRCID = async (drc_id) => {
       console.error("Error fetching RTOMs for DRC:", error.message);
       throw error;
   }
+};
+*/
+
+
+export const getRTOMsByDRCID = async (drc_id) => {
+    try {
+        const response = await axios.post(`${URL}/List_All_RTOM_Ownned_By_DRC`, {
+            drc_id: drc_id
+        });
+
+        if (response.data?.status === "success" && response.data?.data) {
+            console.log("RTOMs:", response.data.data); // Log RTOM data
+            return response.data.data; // Return RTOM data
+        } else {
+            console.error("API Error:", response.data?.message || "Unexpected response structure");
+            return []; // Return an empty array instead of throwing an error
+        }
+    } catch (error) {
+        console.error("Error fetching RTOMs for DRC:", error.response?.data || error.message);
+        return []; // Return an empty array in case of error to prevent breaking UI
+    }
 };
