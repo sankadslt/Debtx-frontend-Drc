@@ -7,13 +7,36 @@ const URL = `${BASE_URL}/case`;
 // List Handling Cases By DRC
 export const listHandlingCasesByDRC = async (payload) => {
   try {
+    if (!payload.drc_id) {
+      throw new Error("DRC ID is required.");
+    }
+
     const response = await axios.post(`${URL}/List_Handling_Cases_By_DRC`, payload);
-    return response.data;
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data if needed
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        created_dtm: caseData.created_dtm,
+        current_arrears_amount: caseData.current_arrears_amount,
+        area: caseData.area,
+        remark: caseData.remark || null,
+        expire_dtm: caseData.expire_dtm,
+        ro_name: caseData.ro_name || null,
+      };
+    });
+
+    return formattedCases;
   } catch (error) {
     console.error("Error retrieving handling cases by DRC:", error.response?.data || error.message);
     throw error;
   }
 };
+
 
 // Assign Recovery Officer to Case
 export const assignROToCase = async (caseIds, roId) => {

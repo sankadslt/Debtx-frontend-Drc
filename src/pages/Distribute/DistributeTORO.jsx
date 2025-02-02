@@ -73,7 +73,7 @@ const DistributeTORO = () => {
           setRtoms(rtomsList);
   
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/200)");
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/5001)");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -112,40 +112,38 @@ const DistributeTORO = () => {
   
   const handleFilter = async () => {
     try {
-      // Clear existing data (reset the table)
-      setFilteredData([]); // Empty the data before making the API request
-      
-      // Create the payload with the filter data
-      const payload = {
-        drc_id: Number(drc_id), // Convert drc_id to a number
-        rtom: selectedRTOM, // Selected RTOM area
-        recovery_officer: selectedRO, // Selected Recovery Officer
-        arrears_band: selectedArrearsBand, // Selected Arrears Band
-        from_date: fromDate ? fromDate.toISOString() : null, // From date
-        to_date: toDate ? toDate.toISOString() : null, // To date
-      };
-  
-      // Log the request body (payload) to the console
-      console.log("Request Payload:", payload);
-  
-      // Call the listHandlingCasesByDRC function with the payload
-      const response = await listHandlingCasesByDRC(payload);
-  
-      // Log the response data
-      console.log("API Response:", response);
-  
-      // If the response contains 'data' and we get an array of cases
-      if (response.data && Array.isArray(response.data)) {
-        // Set the data in state
-        setFilteredData(response.data);
-      } else {
-        console.error("No valid cases data found in response.");
-      }
+        setFilteredData([]); // Clear previous results
+
+        const formatDate = (date) => {
+            if (!date) return null;
+            const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            return offsetDate.toISOString().split('T')[0];
+        };
+
+        if (!selectedRO) {
+        }
+
+        const payload = {
+            drc_id: Number(drc_id),
+            rtom: selectedRTOM,
+            arrears_band: selectedArrearsBand,
+            ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+            from_date: formatDate(fromDate),
+            to_date: formatDate(toDate),
+        };
+
+        const response = await listHandlingCasesByDRC(payload);
+
+        if (Array.isArray(response)) {
+            setFilteredData(response);
+        } else {
+            console.error("No valid cases data found in response.");
+        }
     } catch (error) {
-      console.error("Error filtering cases:", error);
-      // Handle any error that may occur
+        console.error("Error filtering cases:", error);
     }
-  };
+};
+
 
 //Search Logic
 const searchInNestedObject = (obj, query) => {
@@ -192,8 +190,6 @@ const filteredDataBySearch = filteredData.filter((row) =>
       setSelectedRows(allSelected);
   
       currentData.forEach((row) => {
-        console.log("Selected RTOM Area (Select All):", row.area);
-        console.log("Selected Case ID (Select All):", row.case_id);
       });
     } else {
       // Deselect all rows
@@ -230,58 +226,53 @@ const filteredDataBySearch = filteredData.filter((row) =>
   
 
   const handleSubmit = async () => {
-    try {
-      // Extract selected case IDs
-      const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
-  
-      if (selectedCaseIds.length === 0) {
-        Swal.fire("Error", "No cases selected!", "error");
-        return;
-      }
-  
-      // Extract RTOM Area from selected rows
-      const selectedAreas = Array.from(selectedRows).map((index) => currentData[index]?.area);
-      console.log("Selected Areas:", selectedAreas);
-  
-      // Normalize selected areas for comparison
-      const normalizedSelectedAreas = selectedAreas.map((area) => area?.toLowerCase().trim());
-  
-      // Find recovery officer for the selected location
-      const selectedOfficer = filteredOfficers.find((officer) =>
-        officer.rtoms_for_ro.some((rtom) =>
-          normalizedSelectedAreas.includes(rtom.name?.toLowerCase().trim())
-        )
-      );
-      console.log("Selected Officer:", selectedOfficer);
-  
-      if (!selectedOfficer) {
-        Swal.fire("Error", "No recovery officer available for the selected areas!", "error");
-        return;
-      }
-  
-      // Prepare the payload (correct structure)
-      const payload = {
-        case_ids: selectedCaseIds, // Correctly structure case_ids as an array
-        ro_id: selectedOfficer.ro_id, // Correctly set ro_id
-      };
-  
-      // Log the payload being sent to the API
-      console.log("Payload being sent to API:", JSON.stringify(payload));
-  
-      // Use the custom assignROToCase function with axios
-      const response = await assignROToCase(selectedCaseIds, selectedOfficer.ro_id);
-  
-      if (response.status === 'success') {
-        Swal.fire("Success", "Cases assigned successfully!", "success");
-      } else {
-        Swal.fire("Error", response.message, "error");
-      }
-  
-    } catch (error) {
-      console.error("Error in handleSubmit:", error);
-      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+  try {
+    // Ensure selectedRO is available (the value from the dropdown)
+    const selectedRtom = selectedRO; // The selected RO name from the dropdown
+    if (!selectedRtom) {
+      Swal.fire("Error", "No Recovery Officer selected!", "error");
+      return;
     }
-  };
+
+    // Find the corresponding Recovery Officer object from recoveryOfficers
+    const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
+
+    if (!selectedOfficer) {
+      Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+      return;
+    }
+
+    // Get the ro_id of the selected officer
+    const ro_id = selectedOfficer.ro_id;
+
+    if (!ro_id) {
+      Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+      return;
+    }
+
+    // Get selected case IDs from the rows selected (assuming selectedRows is an array of indices)
+    const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
+
+    if (selectedCaseIds.length === 0) {
+      Swal.fire("Error", "No cases selected!", "error");
+      return;
+    }
+
+    // Call the API to assign the cases with separate parameters (caseIds and roId)
+    const response = await assignROToCase(selectedCaseIds, ro_id);
+
+    if (response.status === 'success') {
+      Swal.fire("Success", "Cases assigned successfully!", "success");
+    } else {
+      Swal.fire("Error", response.message, "error");
+    }
+
+  } catch (error) {
+    console.error("Error in handleSubmit:", error);
+    Swal.fire("Error", "An error occurred while assigning cases.", "error");
+  }
+};
+
   
 
   return (
@@ -290,27 +281,26 @@ const filteredDataBySearch = filteredData.filter((row) =>
 
       <div className="flex items-center justify-end gap-4 mt-20 mb-4"> 
 
-      {/* RTOM Select Dropdown */}
-      <select
+{/* RTOM Select Dropdown */}
+<select
   className={GlobalStyle.selectBox}
   value={selectedRTOM}
   onChange={(e) => {
     const selectedAreaName = e.target.value;
     setSelectedRTOM(selectedAreaName);
 
-    // Loop through the recovery officers to find matching area name in rtoms_for_ro
+    // Find matching recovery officers for the selected RTOM
     const matchingROs = recoveryOfficers.filter(officer =>
       officer.rtoms_for_ro.some(rtom => rtom.name === selectedAreaName)
     );
 
     if (matchingROs.length > 0) {
-      matchingROs.forEach(officer => {
-        const matchingRTOM = officer.rtoms_for_ro.find(rtom => rtom.name === selectedAreaName);
-        if (matchingRTOM) {
-          console.log(`RO Name for ${selectedAreaName}: ${officer.ro_name}`);
-        }
-      });
+      const firstMatchingRO = matchingROs[0]; // Get the first matching officer
+      // If you want to automatically select an RO, you can set it here
+      // setSelectedRO(firstMatchingRO.ro_id); 
     } else {
+      // Do not reset RO automatically if no match
+      // setSelectedRO(""); // Reset selected RO if no match
       console.log(`No matching recovery officer found for ${selectedAreaName}`);
     }
   }}
@@ -326,6 +316,7 @@ const filteredDataBySearch = filteredData.filter((row) =>
     <option disabled>No RTOMs found</option>
   )}
 </select>
+
 
   {/* Arrears Band Select Dropdown */}
   <select
@@ -476,18 +467,23 @@ const filteredDataBySearch = filteredData.filter((row) =>
        </label>
 
     {/* Recovery Officer (RO) Select Dropdown */}
-    <select
+   <select
   id="ro-select"
   className={GlobalStyle.selectBox}
-  value={selectedRO}
+  value={selectedRO || ""}  // Keep the placeholder as default value when nothing is selected
   onChange={(e) => {
     const selectedName = e.target.value;
-    setSelectedRO(selectedName);
+    if (selectedName) {
+      setSelectedRO(selectedName);  // Update selected RO if the option is valid
+    }
   }}
 >
-  <option value="" disabled hidden>
+  {/* Placeholder Option */}
+  <option value="" disabled>
     Select RO
   </option>
+  
+  {/* Options for Recovery Officers */}
   {recoveryOfficers && recoveryOfficers.length > 0 ? (
     recoveryOfficers.map((officer, index) => {
       // Format the display as "ro_name - rtoms_for_ro.name"
@@ -506,7 +502,6 @@ const filteredDataBySearch = filteredData.filter((row) =>
     </option>
   )}
 </select>
-
 
   {/* Submit Button */}
     <button
