@@ -64,7 +64,7 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
 
     console.log("Sending request with DRC ID:", drcId, "and RTOM Area:", rtomArea);
 
-    const response = await axios.post(`${URL}/List_All_Active_ROs_By_DRC`, 
+    const response = await axios.post(`${URL}/List_All_Active_ROs_By_DRC`,
       {
         drc_id: drcId,
         rtom_area: rtomArea,
@@ -104,5 +104,23 @@ export const fetchAllArrearsBands = async () => {
   }
 };
 
+// Fetch assigned RO case logs with the filter payload using axios
+export const fetchAssignedRoCaseLogs = async (payload) => {
+  console.log('Filter payload:', payload); // Log the filter payload
+  try {
+    // Send the filter data to the backend via POST request using axios
+    const response = await axios.post(`${URL}/List_Handling_Cases_By_DRC`, payload);
 
+    if (response.data) {
+      console.log('Filtered data:', response.data);
+      return response.data; // Return the filtered data
+    } else {
+      console.error('Failed to fetch data');
+      return []; // Return an empty array if the request fails
+    }
+  } catch (error) {
+    console.error('Error during filtering:', error);
+    return []; // Return an empty array in case of error
+  }
+};
 
