@@ -124,25 +124,33 @@ export default function MediationBoardcaselist() {
       <div className="flex flex-col items-end my-4 gap-2">
         {/* Top - Right Side Dropdowns */}
         <div className="flex items-center gap-2">
-          {/* Source Dropdown */}
+          {/* Rtom Dropdown */}
           <select className={GlobalStyle.selectBox}>
             <option value="option1">Rtom</option>
-            <option value="option2">Option 1</option>
-            <option value="option3">Option 2</option>
+            <option value="option2">Rtom 1</option>
+            <option value="option3">Rtom 2</option>
           </select>
 
           {/* Action Type Dropdown */}
           <select className={GlobalStyle.selectBox}>
-            <option value="option1">Action Type</option>
-            <option value="option2">Option 1</option>
-            <option value="option3">Option 2</option>
+            <option value="">Action Type</option>
+            <option value="option1">Arrears Collect</option>
+            <option value="option2">Arrears and CPE Collect</option>
+            <option value="option3">CPE Collect</option>
           </select>
 
           {/* Status Dropdown */}
           <select className={GlobalStyle.selectBox}>
             <option value="option1">Status</option>
-            <option value="option2">Option 1</option>
-            <option value="option3">Option 2</option>
+            <option value="option2">FMB</option>
+            <option value="option3">MB_Negotiation</option>
+            <option value="option4">MB_Request_Customer-Info</option>
+            <option value="option5">MB_Handover_Customer-Info</option>
+            <option value="option6">MB_Settle_Pending</option>
+            <option value="option7">MB_Settle_Open-Pending</option>
+            <option value="option8">MB_Settle_Active</option>
+            <option value="option9">FMB_Failed_with_Non-Settlement</option>
+            <option value="option10">FMB_Failed</option>
           </select>
         </div>
 
