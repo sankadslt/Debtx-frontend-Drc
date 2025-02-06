@@ -126,9 +126,29 @@ export default function MediationBoardcaselist() {
         <div className="flex items-center gap-2">
           {/* Rtom Dropdown */}
           <select className={GlobalStyle.selectBox}>
-            <option value="option1">Rtom</option>
-            <option value="option2">Rtom 1</option>
-            <option value="option3">Rtom 2</option>
+            <option value="">Rtom</option>
+            <option value="option2">AD</option>
+            <option value="option3">AG</option>
+            <option value="option3">AP</option>
+            <option value="option3">AW</option>
+            <option value="option3">BC</option>
+            <option value="option3">BD</option>
+            <option value="option3">BW</option>
+            <option value="option3">CE</option>
+            <option value="option3">DB</option>
+            <option value="option3">EB</option>
+            <option value="option3">CW</option>
+            <option value="option3">GA</option>
+            <option value="option3">GL</option>
+            <option value="option3">GP</option>
+            <option value="option3">GQ</option>
+            <option value="option3">HB</option>
+            <option value="option3">HK</option>
+            <option value="option3">HO</option>
+            <option value="option3">HR</option>
+            <option value="option3">HT</option>
+            <option value="option3">JA</option>
+            <option value="option3">KA</option>
           </select>
 
           {/* Action Type Dropdown */}
