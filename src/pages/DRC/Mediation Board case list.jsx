@@ -45,7 +45,6 @@ export default function MediationBoardcaselist() {
     }
   };
 
-
   //dummy data for table
   const data = [
     {
@@ -53,36 +52,36 @@ export default function MediationBoardcaselist() {
       status: "pending",
       date: "05/16/2024",
       name: "Silva Perera",
-      contactNo: "0112345678",
       rtom: "RTOM 01",
-      action: "Arrears Collect",
+      callingRound: "1",
+      nextCallingDate: "05/17/2024",
     },
     {
       caseId: "C002",
       status: "pending",
       date: "05/17/2024",
       name: "Kamal Fernando",
-      contactNo: "0112233445",
       rtom: "RTOM 02",
-      action: "Payment Follow-Up",
+      callingRound: "1",
+      nextCallingDate: "05/17/2024",
     },
     {
       caseId: "C001",
       status: "pending",
       date: "05/16/2024",
       name: "Silva Perera",
-      contactNo: "0112345678",
       rtom: "RTOM 01",
-      action: "Arrears Collect",
+      callingRound: "1",
+      nextCallingDate: "05/17/2024",
     },
     {
       caseId: "C002",
       status: "pending",
       date: "05/17/2024",
       name: "Kamal Fernando",
-      contactNo: "0112233445",
       rtom: "RTOM 02",
-      action: "Payment Follow-Up",
+      callingRound: "1",
+      nextCallingDate: "05/17/2024",
     },
   ];
 
@@ -122,18 +121,33 @@ export default function MediationBoardcaselist() {
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
 
       {/* Filter Section */}
-      <div className="flex justify-end gap-10 my-6 items-center">
-        {/* Source Dropdown */}
-        <div className="flex items-center gap-4">
-        <select className={GlobalStyle.selectBox}>
-          <option value="option1">Option 1</option>
-          <option value="option2">Option 2</option>
-          <option value="option3">Option 3</option>
-        </select>
+      <div className="flex flex-col items-end my-4 gap-2">
+        {/* Top - Right Side Dropdowns */}
+        <div className="flex items-center gap-2">
+          {/* Source Dropdown */}
+          <select className={GlobalStyle.selectBox}>
+            <option value="option1">Rtom</option>
+            <option value="option2">Option 1</option>
+            <option value="option3">Option 2</option>
+          </select>
+
+          {/* Action Type Dropdown */}
+          <select className={GlobalStyle.selectBox}>
+            <option value="option1">Action Type</option>
+            <option value="option2">Option 1</option>
+            <option value="option3">Option 2</option>
+          </select>
+
+          {/* Status Dropdown */}
+          <select className={GlobalStyle.selectBox}>
+            <option value="option1">Status</option>
+            <option value="option2">Option 1</option>
+            <option value="option3">Option 2</option>
+          </select>
         </div>
 
-        {/* Date Picker Section */}
-        <div className="flex items-center gap-4">
+        {/* Bottom - Date Pickers & Filter Button (Aligned Right) */}
+        <div className="flex items-center gap-2">
           <label>Date:</label>
           <DatePicker
             selected={fromDate}
@@ -150,15 +164,12 @@ export default function MediationBoardcaselist() {
             className={GlobalStyle.inputText}
           />
           {error && <span className={GlobalStyle.errorText}>{error}</span>}
-        </div>
 
-        {/* Filter Button */}
-        <button
-          className={`${GlobalStyle.buttonPrimary} h-[35px]`}
-          onClick={() => {}}
-        >
-          Filter
-        </button>
+          {/* Filter Button */}
+          <button className={`${GlobalStyle.buttonPrimary} h-[35px]`}>
+            Filter
+          </button>
+        </div>
       </div>
 
       {/* Table Section */}
@@ -191,15 +202,17 @@ export default function MediationBoardcaselist() {
                   Date
                 </th>
                 <th scope="col" className={GlobalStyle.tableHeader}>
-                  Name
-                </th>
-                <th scope="col" className={GlobalStyle.tableHeader}>
-                  Contact No
+                  Ro Name
                 </th>
                 <th scope="col" className={GlobalStyle.tableHeader}>
                   RTOM
                 </th>
-
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Calling Round
+                </th>
+                <th scope="col" className={GlobalStyle.tableHeader}>
+                  Next Calling Date
+                </th>
                 <th scope="col" className={GlobalStyle.tableHeader}></th>
               </tr>
             </thead>
@@ -221,8 +234,10 @@ export default function MediationBoardcaselist() {
                   <td className={GlobalStyle.tableData}>{row.status}</td>
                   <td className={GlobalStyle.tableData}>{row.date}</td>
                   <td className={GlobalStyle.tableData}>{row.name}</td>
-                  <td className={GlobalStyle.tableData}>{row.contactNo}</td>
                   <td className={GlobalStyle.tableData}>{row.rtom}</td>
+                  <td className={GlobalStyle.tableData}>{row.callingRound}</td>
+                  <td className={GlobalStyle.tableData}>{row.nextCallingDate}</td>
+                  
 
                   <td className={GlobalStyle.tableData}>
                     <button
