@@ -1,7 +1,8 @@
 /*Purpose: This template is used for the 2.4.1- RO Monitoring (Arrears) and 2.4.2- RO Monitoring (CPE)
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-01-07
+Last Modified Date: 2025-01-07 by Nimesh
+
 Version: node 20
 ui number : 2.4.1 and  2.4.2
 Dependencies: tailwind css
@@ -12,10 +13,18 @@ Notes: The following page conatins the code for both the UI's */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
+import { FaChevronDown } from "react-icons/fa6";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Customer Negotiation"); // Active tab
+
+    const [openIndex, setOpenIndex] =useState(null); //State for accordion
+    const equipmentList =[
+        "Equipment 1",
+        "Equipment 2",
+        "Equipment 3",
+    ];
 
     // Data for the table in "CPE Collect"
     const cpeData = [
@@ -34,6 +43,11 @@ export default function RO_Monitoring_CPE() {
     const handleTabClick = (tab) => {
         setActiveTab(tab);
     };
+
+    //Accordion handler
+    const handleAccordion = (index) => {
+        setOpenIndex(openIndex === index ? null : index);
+    }
 
     return (
         <div className={GlobalStyle.fontPoppins}>
@@ -70,14 +84,35 @@ export default function RO_Monitoring_CPE() {
                                 <p className="mb-2"><strong>Case ID:</strong></p>
                                 <p className="mb-2"><strong>Customer Ref:</strong></p>
                                 <p className="mb-2"><strong>Account no:</strong></p>
-                                <p className="mb-2"><strong>Telephone No:</strong></p>
-                                <p className="mb-2"><strong>Service Type:</strong></p>
-                                <p className="mb-2"><strong>Service Address:</strong></p>
-                                <p className="mb-2"><strong>Service Status:</strong></p>
                             </div>
                         </div>
+                                
+                        {equipmentList.map((title, index) => (
+                            <div key={index} className="overflow-hidden">
+                            <button
+                                className="flex justify-between w-full p-2 bg-slate-900 text-white mb-4"
+                                onClick={() => handleAccordion(index)}
+                            >
+                                <span>{title}</span>
+                                <span className={`${openIndex === index ? "rotate-180" : "rotate-0"}`}>
+                                <FaChevronDown className="w-4 h-4" />
+                                </span>
+                            </button>
+                            <div className={`transition-[max-height] duration-300 overflow-hidden ${openIndex === index ? "max-h-50" : "max-h-0"}`}>
+                                <div className="flex flex-col items-center justify-center mb-4">
+                                    <div className={`${GlobalStyle.cardContainer}`}>
+                                        <p className="mb-2"><strong>Product No:</strong></p>
+                                        <p className="mb-2"><strong>Service Type:</strong></p>
+                                        <p className="mb-2"><strong>Service Address:</strong></p>
+                                        <p className="mb-2"><strong>Service Status:</strong></p>
+                                    </div>
+                                </div>  
+                            </div>
+                        </div>
+                        ))}
+                        
 
-                        {/* Table Section */}
+                        {/* Table for Last Negotiation Details */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
                         <div className={GlobalStyle.tableContainer}>
                             <table className={GlobalStyle.table}>
@@ -162,6 +197,7 @@ export default function RO_Monitoring_CPE() {
                                 </tbody>
                             </table>
                         </div>
+
                         {/* Content for the Settlement Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Settlement Details</h2>
                         {/* Table Section */}
