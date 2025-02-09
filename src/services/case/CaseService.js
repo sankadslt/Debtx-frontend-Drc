@@ -124,3 +124,45 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
+
+
+
+export const listAllDRCMediationBoardCases = async (payload) => {
+  try {
+    const { 
+      drc_id, 
+      rtom, 
+      ro_id, 
+      action_type, 
+      from_date, 
+      to_date, 
+      case_current_status 
+    } = payload;
+
+    if (!drc_id) {
+      throw new Error("DRC ID is required.");
+    }
+
+    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, {
+      drc_id,
+      ...(rtom && { rtom }),
+      ...(ro_id && { ro_id }),
+      ...(action_type && { action_type }),
+      ...(from_date && { from_date }),
+      ...(to_date && { to_date }),
+      ...(case_current_status && { case_current_status }),
+    });
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message || "Failed to retrieve cases");
+    }
+
+    return response.data.data || [];
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message;
+    console.error("Error retrieving DRC Mediation Board cases:", errorMessage);
+    throw new Error(errorMessage);
+  }
+};
+
+

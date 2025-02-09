@@ -57,7 +57,7 @@ const Routers = () => {
       <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} />
       <Route path="/pages/DRC/Mediation Board Response" element={<ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin']} />} />
       <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} />
-      <Route path="/drc/mediation-board-case-list" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin']} />} />
+      <Route path="/drc/mediation-board-case-list/:drc_id" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin']} />} />
       <Route path="/drc/assigned-ro-case-log/:drc_id" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} />
       <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin']} />} />
       <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin']} />} />
