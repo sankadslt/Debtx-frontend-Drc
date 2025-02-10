@@ -381,7 +381,7 @@ export default function AssignedROcaselog() {
                                     <td className={GlobalStyle.tableData}>
                                         <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <AiFillEye
-                                                onClick={() => console.log("View clicked")}
+                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${drc_id}/${item.case_id}`)}
                                                 style={{ cursor: "pointer", marginRight: "8px" }}
                                             />
                                             <FaEdit

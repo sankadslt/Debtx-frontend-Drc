@@ -124,3 +124,41 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+  try {
+    if (!payload.drc_id || !payload.case_id) {
+      throw new Error("DRC ID and Case ID are required.");
+    }
+
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    const formattedData = {
+      caseDetails: {
+        case_id: response.data.data.formattedCaseDetails.case_id,
+        customer_ref: response.data.data.formattedCaseDetails.customer_ref,
+        account_no: response.data.data.formattedCaseDetails.account_no,
+        current_arrears_amount: response.data.data.formattedCaseDetails.current_arrears_amount,
+        last_payment_date: response.data.data.formattedCaseDetails.last_payment_date,
+        ref_products: response.data.data.formattedCaseDetails.ref_products || [],
+      },
+      settlementData: response.data.data.settlementData,
+      paymentData: response.data.data.paymentData,
+      additionalData: {
+        ro_negotiation: response.data.data.formattedCaseDetails.ro_negotiation,
+        ro_requests: response.data.data.formattedCaseDetails.ro_requests,
+      }
+    };
+
+    return formattedData;
+  } catch (error) {
+    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+
