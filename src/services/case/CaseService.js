@@ -87,7 +87,7 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
 
 
 // Fetch all arrears bands
-export const fetchAllArrearsBands = async () => {
+export const  fetchAllArrearsBands = async () => {
   try {
     const response = await axios.get(`${URL}/getAllArrearsBands`);
     const data = response.data.data;
@@ -104,7 +104,7 @@ export const fetchAllArrearsBands = async () => {
   }
 };
 
-// Fetch assigned RO case logs with the filter payload using axios
+/* // Fetch assigned RO case logs with the filter payload using axios
 export const fetchAssignedRoCaseLogs = async (payload) => {
   console.log('Filter payload:', payload); // Log the filter payload
   try {
@@ -123,4 +123,76 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
     return []; // Return an empty array in case of error
   }
 };
+ */
 
+
+/* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
+  try {
+    if (!drcId || !caseId) {
+      return { status: "error", message: "drcId and caseId are required parameters." };
+    }
+
+    console.log("Fetching case details for DRC ID:", drcId, "and Case ID:", caseId);
+
+    const response = await axios.post(
+      `${URL}/List_Behaviors_Of_Case_During_DRC`,
+      { drc_id: drcId, case_id: caseId },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching case details:", error);
+
+    if (error.response) {
+      // The request was made, but the server responded with an error status
+      return {
+        status: "error",
+        message: error.response.data.message || "An error occurred on the server.",
+        errors: error.response.data.errors || {},
+        statusCode: error.response.status,
+      };
+    } else if (error.request) {
+      // The request was made but no response was received
+      return { status: "error", message: "No response from server. Please try again later." };
+    } else {
+      // Something happened in setting up the request
+      return { status: "error", message: error.message || "An unexpected error occurred." };
+    }
+  }
+};
+ */
+
+// List Behaviors Of Case During DRC
+export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
+  try {
+    if (!drcId || !caseId) {
+      throw new Error("DRC ID and Case ID are required.");
+    }
+
+    const response = await axios.post(
+      `${URL}/List_Behaviors_Of_Case_During_DRC`,
+      { drc_id: drcId, case_id: caseId }
+    );
+    console.log("API Response:", response.data);
+
+   
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+   
+    return response.data;
+
+  } catch (error) {
+    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
+    
+    // Return an error response if something goes wrong
+    return {
+      status: "error",
+      message: error.response?.data.message || error.message || "An unexpected error occurred.",
+      errors: error.response?.data.errors || {},
+    };
+  }
+};

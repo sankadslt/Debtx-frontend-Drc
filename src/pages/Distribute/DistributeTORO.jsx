@@ -120,9 +120,6 @@ const DistributeTORO = () => {
             return offsetDate.toISOString().split('T')[0];
         };
 
-        if (!selectedRO) {
-        }
-
         const payload = {
             drc_id: Number(drc_id),
             rtom: selectedRTOM,
@@ -131,6 +128,7 @@ const DistributeTORO = () => {
             from_date: formatDate(fromDate),
             to_date: formatDate(toDate),
         };
+        
 
         const response = await listHandlingCasesByDRC(payload);
 
