@@ -60,12 +60,7 @@ export default function ROsAssignedcaselog() {
     setCurrentPage(0);
   };
 
-  const filteredDataBySearch = paginatedData.filter((row) =>
-    Object.values(row)
-      .join(" ")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+ 
 
   const pages = Math.ceil(cases.length / rowsPerPage);
   const startIndex = currentPage * rowsPerPage;
