@@ -18,51 +18,7 @@ import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
 
 export default function AssignedCaseListforDRC() {
-    // Data for the table
-  // const data = [
-  //   {
-  //     caseId: "C001",
-  //     status: "Pending",
-  //     date: "2024.11.05",
-  //     amount: "15,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2024.12.20",
-  //     ro:"Silva Perera"
-      
-  //   },
-    
-  //   {
-  //     caseId: "C002",
-  //     status: "Pending",
-  //     date: "2024.11.05",
-  //     amount: "50,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Colombo",
-  //     expiredate: "2024.11.20",
-  //     ro:"P.B.Silva"
-  //   },
-  //   {
-  //     caseId: "C003",
-  //     status: "Pending",
-  //     date: "2025.01.01",
-  //     amount: "30,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2025.02.10",
-  //     ro:"Silva Perera"
-  //   },
-  //     {
-  //     caseId: "C004",
-  //     status: "Pending",
-  //     date: "2025.01.01",
-  //     amount: "15,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2025.01.20",
-  //     ro:"P.B.Silva"
-  //     },
-  // ];
+  
 
   const {drc_id} =useParams();
 
@@ -312,7 +268,7 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}>{item.status || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
-                  <td className={GlobalStyle.tableData}>{item.action || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 

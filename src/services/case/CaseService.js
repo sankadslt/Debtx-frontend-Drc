@@ -87,7 +87,7 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
 
 
 // Fetch all arrears bands
-export const  fetchAllArrearsBands = async () => {
+export const fetchAllArrearsBands = async () => {
   try {
     const response = await axios.get(`${URL}/getAllArrearsBands`);
     const data = response.data.data;
@@ -104,7 +104,7 @@ export const  fetchAllArrearsBands = async () => {
   }
 };
 
-/* // Fetch assigned RO case logs with the filter payload using axios
+// Fetch assigned RO case logs with the filter payload using axios
 export const fetchAssignedRoCaseLogs = async (payload) => {
   console.log('Filter payload:', payload); // Log the filter payload
   try {
@@ -123,7 +123,45 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
     return []; // Return an empty array in case of error
   }
 };
- */
+
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+  try {
+    if (!payload.drc_id || !payload.case_id) {
+      throw new Error("DRC ID and Case ID are required.");
+    }
+
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    const formattedData = {
+      caseDetails: {
+        case_id: response.data.data.formattedCaseDetails.case_id,
+        customer_ref: response.data.data.formattedCaseDetails.customer_ref,
+        account_no: response.data.data.formattedCaseDetails.account_no,
+        current_arrears_amount: response.data.data.formattedCaseDetails.current_arrears_amount,
+        last_payment_date: response.data.data.formattedCaseDetails.last_payment_date,
+        ref_products: response.data.data.formattedCaseDetails.ref_products || [],
+      },
+      settlementData: response.data.data.settlementData,
+      paymentData: response.data.data.paymentData,
+      additionalData: {
+        ro_negotiation: response.data.data.formattedCaseDetails.ro_negotiation,
+        ro_requests: response.data.data.formattedCaseDetails.ro_requests,
+      }
+    };
+
+    return formattedData;
+  } catch (error) {
+    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+ 
 
 
 /* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {

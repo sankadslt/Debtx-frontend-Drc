@@ -388,7 +388,7 @@ export default function AssignedROcaselog() {
                                         </a>
                                     </td>
                                     <td className={GlobalStyle.tableData}>{item.status}</td>
-                                    <td className={GlobalStyle.tableData}>{item.current_arreas_amount}</td>
+                                    <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
                                     <td className={GlobalStyle.tableData}>{item.area}</td>
                                     <td className={GlobalStyle.tableData}>{item.remark}</td>
                                     <td className={GlobalStyle.tableData}>{item.ro_name}</td>
@@ -397,7 +397,7 @@ export default function AssignedROcaselog() {
                                     <td className={GlobalStyle.tableData}>
                                         <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <AiFillEye
-                                                onClick={() => console.log("View clicked")}
+                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${drc_id}/${item.case_id}`)}
                                                 style={{ cursor: "pointer", marginRight: "8px" }}
                                             />
                                             <FaEdit
