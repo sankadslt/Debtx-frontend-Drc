@@ -36,7 +36,7 @@ const Navbar = () => {
       }
 
       setUserData({
-        id: decoded.id,
+        id: decoded.user_id,
         name: decoded.username,
         email: decoded.email,
         role: decoded.role,

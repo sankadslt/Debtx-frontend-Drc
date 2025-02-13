@@ -21,6 +21,9 @@ const Login = () => {
       const response = await loginUser({ email, password });
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("user", JSON.stringify(response.user));
+
+     // console.log("Logged in successfully. Token:", response.accessToken);
+
       navigate("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
@@ -35,6 +38,8 @@ const Login = () => {
       setSocialLoading(""); // Reset after simulating login
     }, 2000); // Simulating a delay
   };
+
+  
 
   return (
     <div className="flex justify-center  items-center">
