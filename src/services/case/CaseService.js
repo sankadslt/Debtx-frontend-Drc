@@ -128,6 +128,7 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
 
 
 export const listAllDRCMediationBoardCases = async (payload) => {
+
   try {
     const { 
       drc_id, 
@@ -156,8 +157,10 @@ export const listAllDRCMediationBoardCases = async (payload) => {
     if (response.data.status === "error") {
       throw new Error(response.data.message || "Failed to retrieve cases");
     }
-
+    console.log("response.data.data",response.data.data[0].mediation_details.next_calling_dtm.split("T")[0]);
     return response.data.data || [];
+    
+    
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message;
     console.error("Error retrieving DRC Mediation Board cases:", errorMessage);

@@ -313,7 +313,6 @@ Notes:  The following page conatins the code for the Mediation Board case list
 //   );
 // }
 
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
@@ -370,13 +369,12 @@ export default function MediationBoardCaselist() {
       ...prev,
       [name]: value
     }));
-    setError(""); // Clear any previous errors
+    setError("");
   };
 
   // Fetch cases data
   const fetchCases = async () => {
     try {
-      // Validate that at least one filter is set
       const hasActiveFilters = 
         filters.rtom || 
         filters.action_type || 
@@ -394,7 +392,7 @@ export default function MediationBoardCaselist() {
       
       const payload = {
         drc_id,
-        ...(filters.rtom && { rtom: filters.rtom }), // Fixed typo here
+        ...(filters.rtom && { rtom: filters.rtom }),
         ...(filters.action_type && { action_type: filters.action_type }),
         ...(filters.status && { case_current_status: filters.status }),
         ...(fromDate && { from_date: fromDate.toISOString() }),
@@ -413,7 +411,6 @@ export default function MediationBoardCaselist() {
     }
   };
 
-  // Handle filter button click
   const handleFilterClick = () => {
     if (!drc_id) {
       setError("DRC ID is required");
@@ -445,7 +442,6 @@ export default function MediationBoardCaselist() {
     setCurrentPage(prev => Math.min(pages - 1, prev + 1));
   };
 
-  // Remove initial fetch on component mount
   useEffect(() => {
     const fetchRTOMs = async () => {
       try {
@@ -465,84 +461,77 @@ export default function MediationBoardCaselist() {
     fetchRTOMs();
   }, [drc_id]);
 
-
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
 
-      <div className="flex flex-col items-end my-4 gap-2">
-        <div className="flex items-center gap-2">
-          <select 
-            name="rtom"
-            value={filters.rtom}
-            onChange={handleFilterChange}
-            className={GlobalStyle.selectBox}
-          >
-            <option value="">Rtom</option>
-            {rtoms.map((rtom) => (
-              <option key={rtom.area_name
-              } value={rtom.area_name}>
-                {rtom.area_name}
-              </option>
-            ))}
-          </select>
+      <div className="flex items-center justify-end my-4 gap-2">
+        <select 
+          name="rtom"
+          value={filters.rtom}
+          onChange={handleFilterChange}
+          className={GlobalStyle.selectBox}
+        >
+          <option value="">Rtom</option>
+          {rtoms.map((rtom) => (
+            <option key={rtom.area_name} value={rtom.area_name}>
+              {rtom.area_name}
+            </option>
+          ))}
+        </select>
 
-          <select 
-            name="action_type"
-            value={filters.action_type}
-            onChange={handleFilterChange}
-            className={GlobalStyle.selectBox}
-          >
-            <option value="">Action Type</option>
-            <option value="Arrears Collect">Arrears Collect</option>
-            <option value="Arrears and CPE Collect">Arrears and CPE Collect</option>
-            <option value="CPE Collect">CPE Collect</option>
-          </select>
+        <select 
+          name="action_type"
+          value={filters.action_type}
+          onChange={handleFilterChange}
+          className={GlobalStyle.selectBox}
+        >
+          <option value="">Action Type</option>
+          <option value="Arrears Collect">Arrears Collect</option>
+          <option value="Arrears and CPE Collect">Arrears and CPE Collect</option>
+          <option value="CPE Collect">CPE Collect</option>
+        </select>
 
-          <select 
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            className={GlobalStyle.selectBox}
-          >
-            <option value="">Status</option>
-            <option value="FMB">FMB</option>
-            <option value="MB_Negotiation">MB_Negotiation</option>
-            <option value="MB_Request_Customer-Info">MB_Request_Customer-Info</option>
-            <option value="MB_Handover_Customer-Info">MB_Handover_Customer-Info</option>
-            <option value="MB_Settle_Pending">MB_Settle_Pending</option>
-            <option value="MB_Settle_Open-Pending">MB_Settle_Open-Pending</option>
-            <option value="IMB_Settle_Active">IMB_Settle_Active</option>
-            <option value="FMB_Failed_with_Non-Settlement">FMB_Failed_with_Non-Settlement</option>
-            <option value="FMB_Failed">FMB_Failed</option>
-          </select>
-        </div>
+        <select 
+          name="status"
+          value={filters.status}
+          onChange={handleFilterChange}
+          className={GlobalStyle.selectBox}
+        >
+          <option value="">Status</option>
+          <option value="FMB">FMB</option>
+          <option value="MB_Negotiation">MB_Negotiation</option>
+          <option value="MB_Request_Customer-Info">MB_Request_Customer-Info</option>
+          <option value="MB_Handover_Customer-Info">MB_Handover_Customer-Info</option>
+          <option value="MB_Settle_Pending">MB_Settle_Pending</option>
+          <option value="MB_Settle_Open-Pending">MB_Settle_Open-Pending</option>
+          <option value="IMB_Settle_Active">IMB_Settle_Active</option>
+          <option value="FMB_Failed">FMB_Failed</option>
+        </select>
 
-        <div className="flex items-center gap-2">
-          <label>Date:</label>
-          <DatePicker
-            selected={fromDate}
-            onChange={handleFromDateChange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
-          <DatePicker
-            selected={toDate}
-            onChange={handleToDateChange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
-          
-          <button 
-            className={`${GlobalStyle.buttonPrimary} h-[35px]`}
-            onClick={handleFilterClick}
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Filter'}
-          </button>
-        </div>
+        <label className={GlobalStyle.dataPickerDate}>Date</label>
+        <DatePicker
+          selected={fromDate}
+          onChange={handleFromDateChange}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="dd/MM/yyyy"
+          className={GlobalStyle.inputText}
+        />
+        <DatePicker
+          selected={toDate}
+          onChange={handleToDateChange}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="dd/MM/yyyy"
+          className={GlobalStyle.inputText}
+        />
+        
+        <button 
+          className={GlobalStyle.buttonPrimary}
+          onClick={handleFilterClick}
+          disabled={loading}
+        >
+          {loading ? 'Filter' : 'Filter'}
+        </button>
       </div>
 
       {error && <div className="text-red-500 mb-4">{error}</div>}
@@ -554,7 +543,6 @@ export default function MediationBoardCaselist() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
               className={GlobalStyle.inputSearch}
             />
             <FaSearch className={GlobalStyle.searchBarIcon} />
@@ -589,10 +577,15 @@ export default function MediationBoardCaselist() {
                     {new Date(row.created_dtm).toLocaleDateString()}
                   </td>
                   <td className={GlobalStyle.tableData}>{row.ro_name}</td>
-                  <td className={GlobalStyle.tableData}>{row.rtom}</td>
-                  <td className={GlobalStyle.tableData}>{}</td>
+                  <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>
-                    {/* {new Date(row.expire_dtm).toLocaleDateString()} */}
+                    {row.mediation_board?.length || 1}
+                  </td>
+                  <td className={GlobalStyle.tableData}>
+                    {row.mediation_details?.next_calling_dtm ? 
+                      new Date(row.mediation_details.next_calling_dtm).toLocaleDateString()
+                      : 'N/A'
+                    }
                   </td>
                   <td className={GlobalStyle.tableData}>
                     <button
