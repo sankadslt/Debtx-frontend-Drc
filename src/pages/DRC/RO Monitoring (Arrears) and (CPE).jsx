@@ -92,21 +92,17 @@ export default function RO_Monitoring_CPE() {
                         {/* Card Section */}
                         <div className="flex flex-col items-center justify-center mb-4">                        
                             <div className={`${GlobalStyle.cardContainer}`}>
-                                {cusNegotiationData?.caseDetails ? (
-                                    <>  
-                                        <p className="mb-2">
-                                            <strong>Case ID:</strong> {cusNegotiationData.caseDetails.case_id || "N/A"}
-                                        </p>
-                                        <p className="mb-2">
-                                            <strong>Customer Ref:</strong> {cusNegotiationData.caseDetails.customer_ref || "N/A"}
-                                        </p>
-                                        <p className="mb-2">
-                                            <strong>Account no:</strong> {cusNegotiationData.caseDetails.account_no || "N/A"}
-                                        </p>  
-                                    </>
-                                ) : (
-                                    <p>Loading Case Details...</p>
-                                )}                                              
+                                {[
+                                    { label: "Case ID", value: cusNegotiationData.caseDetails.case_id },
+                                    { label: "Customer Ref", value: cusNegotiationData.caseDetails.customer_ref },
+                                    { label: "Account No", value: cusNegotiationData.caseDetails.account_no },
+                                ].map((item, index) => (
+                                    <p key={index} className="mb-2 flex items-center">
+                                        <strong className="w-40 text-left">{item.label}</strong>
+                                        <span className="w-6 text-center">:</span>
+                                        <span className="flex-1">{item.value || "N/A"}</span>
+                                    </p>
+                                ))}
                             </div>
                         </div>
                               
@@ -124,11 +120,20 @@ export default function RO_Monitoring_CPE() {
                                 <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-50" : "max-h-0"}`}>
                                     <div className="flex flex-col items-center justify-center">
                                         <div className={`${GlobalStyle.cardContainer}`}>
-                                            <p className="mb-2"><strong>Product Label:</strong> {product.product_label}</p>
-                                            <p className="mb-2"><strong>Service Type:</strong> {product.service}</p>
-                                            <p className="mb-2"><strong>Service Address:</strong> {product.service_address}</p>
-                                            <p className="mb-2"><strong>Service Status:</strong> {product.product_status}</p>
-                                        </div>                                  
+                                            {[
+                                                { label: "Product Label", value: product.product_label },
+                                                { label: "Service Type", value: product.service },
+                                                { label: "Service Address", value: product.service_address },
+                                                { label: "Service Status", value: product.product_status },
+                                            ].map((item, index) => (
+                                                <p key={index} className="mb-2 flex items-center">
+                                                    <strong className="w-40 text-left">{item.label}</strong>
+                                                    <span className="w-6 text-center">:</span>
+                                                    <span className="flex-1">{item.value}</span>
+                                                </p>
+                                            ))}
+                                        </div>
+                            
                                     </div> 
                                     {/* Table for Last Negotiation Details */}
                                     <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
@@ -200,30 +205,21 @@ export default function RO_Monitoring_CPE() {
                 {/* Content for "Customer Negotiation" */}
                 {activeTab === "Customer Negotiation" && (
                     <>
-                        
-                        {/* Card Section */}
+
                         <div className={`${GlobalStyle.cardContainer}`}>
-                            {cusNegotiationData?.caseDetails ? (
-                                <>  
-                                    <p className="mb-2">
-                                        <strong>Case ID:</strong> {cusNegotiationData.caseDetails.case_id || "N/A"}
-                                    </p>
-                                    <p className="mb-2">
-                                        <strong>Customer Ref:</strong> {cusNegotiationData.caseDetails.customer_ref || "N/A"}
-                                    </p>
-                                    <p className="mb-2">
-                                        <strong>Account no:</strong> {cusNegotiationData.caseDetails.account_no || "N/A"}
-                                    </p>
-                                    <p className="mb-2">
-                                        <strong>Arrears Amount:</strong> {cusNegotiationData.caseDetails.current_arrears_amount || "N/A"}
-                                    </p>
-                                    <p className="mb-2">
-                                        <strong>Last Payment Date:</strong> {new Date(cusNegotiationData.caseDetails.last_payment_date).toLocaleDateString("en-CA") || "N/A"}
-                                    </p>    
-                                </>
-                            ) : (
-                                <p>Loading Case Details...</p>
-                            )}                                              
+                            {[
+                                { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id},
+                                { label: "Customer Ref", value: cusNegotiationData?.caseDetails?.customer_ref },
+                                { label: "Account No", value: cusNegotiationData?.caseDetails?.account_no },
+                                { label: "Arrears Amount", value: cusNegotiationData?.caseDetails?.current_arrears_amount },
+                                { label: "Last Payment Date", value: new Date(cusNegotiationData?.caseDetails?.last_payment_date).toLocaleDateString("en-CA")},
+                            ].map((item, index) => (
+                                <p key={index} className="mb-2 flex items-center">
+                                    <strong className="w-40 text-left">{item.label}</strong>
+                                    <span className="w-6 text-center">:</span>
+                                    <span className="flex-1">{item.value || "N/A"}</span>
+                                </p>
+                            ))}
                         </div>
 
                         {/* Content for the Last Negotiation Detail Section */}
