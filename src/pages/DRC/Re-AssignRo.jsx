@@ -12,7 +12,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { List_Behaviors_Of_Case_During_DRC } from "../../services/case/CaseService";
-import { getActiveRODetailsByDrcID  } from "../../services/Ro/RO";
+import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 
 export default function Re_AssignRo() {
 
@@ -109,30 +109,29 @@ export default function Re_AssignRo() {
     };
 
     const fetchRecoveryOfficers = async () => {
-          try {
-            if (drc_id) {
-              const numericDrcId = Number(drc_id);
-              const response = await getActiveRODetailsByDrcID(numericDrcId);
-        
-              // Map recovery officers with ro_id and other details
-              const officers = response.data.map((officer) => ({
-                ro_id: officer.ro_id, // Include ro_id
-                ro_name: officer.ro_name,
-                rtoms_for_ro: officer.rtoms_for_ro,
-              }));
-              setRecoveryOfficers(officers);
-            } else {
-              setError("DRC ID not found in URL.");
-            }
-          } catch (error) {
-            console.error("Error fetching recovery officers:", error);
-            setError("Failed to fetch recovery officers.");
-          }
-        };
+      try {
+        if (drc_id) {
+          const numericDrcId = Number(drc_id);
+          const response = await getActiveRODetailsByDrcID(numericDrcId);
+
+          // Map recovery officers with ro_id and other details
+          const officers = response.data.map((officer) => ({
+            ro_id: officer.ro_id, // Include ro_id
+            ro_name: officer.ro_name,
+            rtoms_for_ro: officer.rtoms_for_ro,
+          }));
+          setRecoveryOfficers(officers);
+        } else {
+          setError("DRC ID not found in URL.");
+        }
+      } catch (error) {
+        console.error("Error fetching recovery officers:", error);
+        setError("Failed to fetch recovery officers.");
+      }
+    };
 
     fetchData();
     fetchRecoveryOfficers();
-    
 
 
 
@@ -144,7 +143,8 @@ export default function Re_AssignRo() {
 
 
 
-    
+
+
   }, [drc_id, case_id]);
 
 
@@ -159,7 +159,31 @@ export default function Re_AssignRo() {
       </div>
       {/* card box*/}
 
-      <div className={`${GlobalStyle.cardContainer}`}>
+
+
+      <div className={`${GlobalStyle.cardContainer || ""}`}>
+        {[
+          { label: "Case ID", value: caseDetails?.caseId },
+          { label: "Customer Ref", value: caseDetails?.customerRef },
+          { label: "Account No", value: caseDetails?.accountNo },
+          { label: "Arrears Amount", value: caseDetails?.arrearsAmount },
+          {
+            label: "Last Payment Date",
+            value: caseDetails?.lastPaymentDate
+              ? new Date(caseDetails.lastPaymentDate).toLocaleDateString("en-CA")
+              : "N/A"
+          },
+        ].map((item, index) => (
+          <p key={index} className="mb-2 flex items-center">
+            <strong className="w-40 text-left">{item.label}</strong>
+            <span className="w-6 text-center">:</span>
+            <span className="flex-1">{item.value || "N/A"}</span>
+          </p>
+        ))}
+      </div>
+
+
+      {/* <div className={`${GlobalStyle.cardContainer}`}>
         <p className="mb-2">
           <strong>Case ID: {caseDetails.caseId}</strong>
         </p>
@@ -175,7 +199,7 @@ export default function Re_AssignRo() {
         <p className="mb-2">
           <strong>Last Payment Date: {caseDetails.lastPaymentDate}</strong>{" "}
         </p>
-      </div>
+      </div> */}
 
 
       {/* remark box */}
@@ -277,7 +301,7 @@ export default function Re_AssignRo() {
       {/* dropdown */}
       <div className="flex   gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
-      
+
         <select
           id="ro-select"
           className={`${GlobalStyle.selectBox}`}
@@ -297,7 +321,7 @@ export default function Re_AssignRo() {
             recoveryOfficers.map((officer, index) => {
               const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
               const displayName = `${officer.ro_name} - ${rtomsNames}`;
-      
+
               return (
                 <option key={`ro-${index}`} value={officer.ro_name}>
                   {displayName}
@@ -310,10 +334,10 @@ export default function Re_AssignRo() {
             </option>
           )}
         </select>
-      
-      
 
-        </div>
+
+
+      </div>
 
 
 
