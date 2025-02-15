@@ -8,121 +8,33 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes:  The following page conatins the code for the Assigned RO case log Screen */
 
-import { useState } from "react";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
+import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
+import { useParams } from "react-router-dom"; 
 
+
+
+import { fetchAllArrearsBands } from "../../services/case/CaseService";
+import { fetchAssignedRoCaseLogs } from "../../services/case/CaseService";
+import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+
+import { useNavigate } from "react-router-dom";
 export default function AssignedROcaselog() {
-    //dummy data for table
-    const data = [
-        {
-            assignedDate: "05/16/2024",
-            status: "open",
-            caseId: "C001",
-            amount: "50,000",
-            rtomArea: "colombo",
-            action: "Arrears Collect",
-            assignedRO: "Nimal Perera",
-            endDate: "05/20/2024",
-        },
-        {
-            assignedDate: "05/17/2024",
-            status: "closed",
-            caseId: "C002",
-            amount: "75,000",
-            rtomArea: "kegalle",
-            action: "Payment Follow-Up",
-            assignedRO: "Saman Kumara",
-            endDate: "05/25/2024",
-        },
-        {
-            assignedDate: "05/18/2024",
-            status: "open",
-            caseId: "C003",
-            amount: "30,000",
-            rtomArea: "kegalle",
-            action: "Address Verification",
-            assignedRO: "Kamal Fernando",
-            endDate: "05/23/2024",
-        },
-        {
-            assignedDate: "05/19/2024",
-            status: "pending",
-            caseId: "C004",
-            amount: "45,000",
-            rtomArea: "colombo",
-            action: "Legal Notice",
-            assignedRO: "Sunil De Silva",
-            endDate: "05/26/2024",
-        },
-        {
-            assignedDate: "05/20/2024",
-            status: "closed",
-            caseId: "C005",
-            amount: "60,000",
-            rtomArea: "colombo",
-            action: "Dispute Resolution",
-            assignedRO: "Ruwan Ekanayake",
-            endDate: "05/27/2024",
-        },
-        {
-            assignedDate: "05/21/2024",
-            status: "open",
-            caseId: "C006",
-            amount: "40,000",
-            rtomArea: "kegalle",
-            action: "Payment Follow-Up",
-            assignedRO: "Saman Priyadarshana",
-            endDate: "05/29/2024",
-        },
-        {
-            assignedDate: "05/22/2024",
-            status: "closed",
-            caseId: "C007",
-            amount: "25,000",
-            rtomArea: "colombo",
-            action: "Address Verification",
-            assignedRO: "Anura Kumara",
-            endDate: "05/30/2024",
-        },
-        {
-            assignedDate: "05/23/2024",
-            status: "open",
-            caseId: "C008",
-            amount: "55,000",
-            rtomArea: "kegalle",
-            action: "Arrears Collect",
-            assignedRO: "Kasun Wijesinghe",
-            endDate: "06/01/2024",
-        },
-        {
-            assignedDate: "05/24/2024",
-            status: "pending",
-            caseId: "C009",
-            amount: "35,000",
-            rtomArea: "colombo",
-            action: "Legal Notice",
-            assignedRO: "Mahesh Senanayake",
-            endDate: "06/02/2024",
-        },
-        {
-            assignedDate: "05/25/2024",
-            status: "closed",
-            caseId: "C010",
-            amount: "70,000",
-            rtomArea: "colombo",
-            action: "Dispute Resolution",
-            assignedRO: "Nirosha Abeysinghe",
-            endDate: "06/03/2024",
-        },
-    ];
+
+    const navigate = useNavigate(); // Initialize the navigate function
+
+    const [rtoms, setRtoms] = useState([]);
+    const [selectedRTOM, setSelectedRTOM] = useState("");
+    const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
 
     // State for search query and filtered data
-    const [searchQuery, setSearchQuery] = useState(""); // State for search query
-    const [filteredData, setFilteredData] = useState(data);
-    const [filterType, setFilterType] = useState(""); // This will hold the filter type (Account No or Case ID)
-    const [filterValue, setFilterValue] = useState(""); // This holds the filter value based on selected filter type
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filteredData, setFilteredData] = useState([]);
+    const [filterType, setFilterType] = useState("");
+    const [filterValue, setFilterValue] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -132,13 +44,104 @@ export default function AssignedROcaselog() {
     const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
-    // Filter state for Amount, Account No, Case ID, Status, and Date
+    // Filter state for Amount, Case ID, Status, and Date
+    const [filterRTOM, setFilterRTOM] = useState(""); // RTOM
     const [filterAmount, setFilterAmount] = useState("");
-    const [filterAccountNo, setFilterAccountNo] = useState("");
+    const [arrearsBands, setArrearsBands] = useState([]);
+
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+
+
+
+    // Use useParams hook to get the drc_id from the URL
+    const { drc_id } = useParams();
+
+
+    useEffect(() => {
+        const getArrearsBands = async () => {
+            try {
+                const bands = await fetchAllArrearsBands();
+                console.log("Arrears bands:", bands);
+                setArrearsBands(bands);
+            } catch (error) {
+                console.error("Error fetching arrears bands:", error);
+            }
+        };
+
+        getArrearsBands();
+    }, []);
+
+
+
+    useEffect(() => {
+
+        console.log("Route parameter drc_id :", drc_id);
+        const fetchData = async () => {
+            try {
+                if (drc_id) {
+                    const payload = parseInt(drc_id, 10); // Convert drc_id to number
+
+                    // Fetch RTOMs by DRC ID
+                    const rtomsList = await getRTOMsByDRCID(payload);
+                    setRtoms(rtomsList); // Set RTOMs to state
+
+                }
+
+            } catch (error) {
+                console.error("Error fetching RTOMs:", error);
+            }
+        };
+
+        fetchData();
+
+    }, [drc_id]); // Including drc_id to the Dependency array
+
+
+
+
+
+
+
+
+
+
+    // Handle filter function
+    const handleFilter = async () => {
+        try {
+
+            const payload = {
+                drc_id: drc_id, 
+
+                arrears_band: filterAmount, 
+                from_date: fromDate ? fromDate.toISOString().split("T")[0] : null, // Convert Date to 'YYYY-MM-DD' format
+                to_date: toDate ? toDate.toISOString().split("T")[0] : null 
+            };
+            console.log('Sending filter payload:', payload); // Log the payload before sending for debugging
+            // Fetch filtered data from the API using the payload
+            const AssignedRoCaseLogs = await fetchAssignedRoCaseLogs(payload);
+
+
+            // Log the response
+            console.log('Response from API:', AssignedRoCaseLogs); //for debugging
+
+            // Set the filtered data (assuming setFilteredData updates the state or UI)
+            setFilteredlogData(AssignedRoCaseLogs.data);
+
+
+            console.log("Filtered data updated:", filteredlogData); //for debugging
+
+
+
+        } catch (error) {
+            console.error('Error in handleFilter:', error);
+        }
+    };
+
+
+
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -164,14 +167,13 @@ export default function AssignedROcaselog() {
 
         if (fromDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
-                return itemDate >= fromDate;
+                const itemDate = new Date(item.date); 
             });
         }
 
         if (toDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
+                const itemDate = new Date(item.date); 
                 return itemDate <= toDate;
             });
         }
@@ -212,7 +214,7 @@ export default function AssignedROcaselog() {
         }
         if (toDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
+                const itemDate = new Date(item.date); 
                 return itemDate <= toDate;
             });
         }
@@ -222,84 +224,86 @@ export default function AssignedROcaselog() {
     };
 
     // Search Section
-    const filteredDataBySearch = currentData.filter((row) =>
+    const filteredDataBySearch = filteredlogData.filter((row) =>
         Object.values(row)
-            .join(" ")
+            .join(" ") // Join all values in a row to form a single string
             .toLowerCase()
-            .includes(searchQuery.toLowerCase())
+            .includes(searchQuery.toLowerCase()) // Match with the search query
     );
 
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
-            <div className="mb-8">
-            <h1 className={GlobalStyle.headingLarge}>Assigned RO case log</h1>
-            </div>
-            <div className="flex flex-col items-end justify-end gap-4">
-                <div className="flex gap-7 p">
-                    <div className="flex gap-4">
-                    <div className="flex gap-4">
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className={`${GlobalStyle.selectBox} h-[43px]`}
-                            >
-                                <option value="" disabled >RTOM</option>
-                                <option value="RTOM 01">RTOM 01</option>
-                                <option value="RTOM 02">RTOM 02</option>
-                                <option value="RTOM 03">RTOM 03</option>
-                                <option value="RTOM 04">RTOM 04</option>
-                            </select>
-                        </div>
 
-                        <div className="flex gap-4">
-                            <select
-                                value={filterAmount}
-                                onChange={(e) => setFilterAmount(e.target.value)}
-                                className={`${GlobalStyle.selectBox} h-[43px]`}
-                            >
-                                <option value="" disabled >Arrears band</option>
-                                <option value="5-10">5,000 - 10,000</option>
-                                <option value="10-25">10,000 - 25,000</option>
-                                <option value="25-50">25,000 - 50,000</option>
-                                <option value="50-100">50,000 - 100,000</option>
-                                <option value="100+"> Above 100,000</option>
-                            </select>
-                        </div>
-                        
-                        <div className="flex flex-col mb-4">
-                            <div className={GlobalStyle.datePickerContainer}>
-                                <label className={GlobalStyle.dataPickerDate}>Date</label>
-                                <DatePicker
-                                    selected={fromDate}
-                                    onChange={(date) => setFromDate(date)}
-                                    dateFormat="dd/MM/yyyy"
-                                    placeholderText="dd/MM/yyyy"
-                                    className={GlobalStyle.inputText}
-                                />
-                                <DatePicker
-                                    selected={toDate}
-                                    onChange={(date) => setToDate(date)}
-                                    dateFormat="dd/MM/yyyy"
-                                    placeholderText="dd/MM/yyyy"
-                                    className={GlobalStyle.inputText}
-                                />
-                            </div>
-                        </div>
-                    </div>
+            <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
+
+            <div className="flex items-center justify-end gap-4 mt-20 mb-4">
 
 
+
+                {/* RTOM Select Dropdown */}
+                <select
+                    className={GlobalStyle.selectBox}
+                    value={selectedRTOM}
+                    onChange={(e) => setSelectedRTOM(e.target.value)}
+                >
+                    <option value="">RTOM</option>
+                    {rtoms.length > 0 ? (
+                        rtoms.map((rtom) => (
+                            <option key={rtom.rtom_id} value={rtom.area_name}>
+                                {rtom.area_name} {/* Ensure this is the correct name for the RTOM area */}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No RTOMs found</option>
+                    )}
+                </select>
+
+
+
+                <select
+                    value={filterAmount}
+                    onChange={(e) => setFilterAmount(e.target.value)}
+                    className={`${GlobalStyle.selectBox} h-[43px] border rounded px-2`}
+                >
+                    <option value="" disabled>
+                        Arrears band
+                    </option>
+                    {arrearsBands.map(({ key, value }) => (
+                        <option key={key} value={key}>
+                            {value}
+                        </option>
+                    ))}
+                </select>
+
+
+
+                <div className={GlobalStyle.datePickerContainer}>
+                    <label className={GlobalStyle.dataPickerDate}>Date</label>
+                    <DatePicker
+                        selected={fromDate}
+                        onChange={(date) => setFromDate(date)}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="dd/MM/yyyy"
+                        className={GlobalStyle.inputText}
+                    />
+                    <DatePicker
+                        selected={toDate}
+                        onChange={(date) => setToDate(date)}
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="dd/MM/yyyy"
+                        className={GlobalStyle.inputText}
+                    />
                 </div>
 
 
-                <div className="flex justify-end gap-5 ">
-                    <button
-                        onClick={filterData}
-                        className={`${GlobalStyle.buttonPrimary}`}
-                    >
-                        Filter
-                    </button>
-                </div>
+                <button
+                    onClick={handleFilter}
+                    className={`${GlobalStyle.buttonPrimary}`}
+                >
+                    Filter
+                </button>
+
             </div>
 
             {/* Search Section */}
@@ -314,6 +318,8 @@ export default function AssignedROcaselog() {
                     <FaSearch className={GlobalStyle.searchBarIcon} />
                 </div>
             </div>
+
+
 
             {/* Table Section */}
             <div className={GlobalStyle.tableContainer}>
@@ -344,35 +350,60 @@ export default function AssignedROcaselog() {
                             <th scope="col" className={GlobalStyle.tableHeader}>
                                 End Date
                             </th>
+                            <th scope="col" className={GlobalStyle.tableHeader}>
+
+                            </th>
 
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredDataBySearch.map((item, index) => (
-                            <tr
-                                key={index}
-                                className={`${index % 2 === 0
-                                    ? "bg-white bg-opacity-75"
-                                    : "bg-gray-50 bg-opacity-50"
-                                    } border-b`}
-                            >
-
-
-                                <td className={GlobalStyle.tableData}>
-                                    <a href={`#${item.caseId}`} className="hover:underline">
-                                        {item.caseId}
-                                    </a>
-                                </td>
-                                <td className={GlobalStyle.tableData}>{item.status}</td>
-                                <td className={GlobalStyle.tableData}>{item.amount}</td>
-                                <td className={GlobalStyle.tableData}>{item.rtomArea}</td>
-                                <td className={GlobalStyle.tableData}>{item.action}</td>
-                                <td className={GlobalStyle.tableData}>{item.assignedRO}</td>
-                                <td className={GlobalStyle.tableData}>{item.assignedDate}</td>
-                                <td className={GlobalStyle.tableData}>{item.endDate}</td>
-
+                        {filteredDataBySearch.length > 0 ? (
+                            filteredDataBySearch.map((item, index) => (
+                                <tr
+                                    key={index}
+                                    className={`${index % 2 === 0
+                                        ? "bg-white bg-opacity-75"
+                                        : "bg-gray-50 bg-opacity-50"
+                                        } border-b`}
+                                >
+                                    <td className={GlobalStyle.tableData}>
+                                        <a href={`#${item.case_id}`} className="hover:underline">
+                                            {item.case_id}
+                                        </a>
+                                    </td>
+                                    <td className={GlobalStyle.tableData}>{item.status}</td>
+                                    <td className={GlobalStyle.tableData}>{item.current_arreas_amount}</td>
+                                    <td className={GlobalStyle.tableData}>{item.area}</td>
+                                    <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                    <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                                    <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString()}</td>
+                                    <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
+                                    <td className={GlobalStyle.tableData}>
+                                        <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <AiFillEye
+                                                onClick={() => console.log("View clicked")}
+                                                style={{ cursor: "pointer", marginRight: "8px" }}
+                                            />
+                                            <FaEdit
+                                                onClick={() => console.log("Edit clicked")}
+                                                style={{ cursor: "pointer", marginRight: "8px" }}
+                                            />
+                                            <button
+                                                className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                                                style={{ whiteSpace: "nowrap" }}
+                                                onClick={() => navigate("/pages/DRC/Re-AssignRo")}
+                                            >
+                                                Re-Assign
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="9" className={GlobalStyle.tableData}>No data available</td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>
