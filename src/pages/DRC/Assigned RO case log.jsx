@@ -13,15 +13,16 @@ import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
 import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
-import { useParams } from "react-router-dom"; 
+import { useParams } from "react-router-dom";
 
 
 
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
-import { fetchAssignedRoCaseLogs } from "../../services/case/CaseService";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 
+import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
+import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+
 export default function AssignedROcaselog() {
 
     const navigate = useNavigate(); // Initialize the navigate function
@@ -111,24 +112,39 @@ export default function AssignedROcaselog() {
     // Handle filter function
     const handleFilter = async () => {
         try {
+            setFilteredData([]); // Clear previous results
+
+            // Format the date to 'YYYY-MM-DD' format
+            const formatDate = (date) => {
+                if (!date) return null;
+                const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                return offsetDate.toISOString().split('T')[0];
+            };
 
             const payload = {
-                drc_id: drc_id, 
-
-                arrears_band: filterAmount, 
-                from_date: fromDate ? fromDate.toISOString().split("T")[0] : null, // Convert Date to 'YYYY-MM-DD' format
-                to_date: toDate ? toDate.toISOString().split("T")[0] : null 
+                drc_id: Number(drc_id), // Convert drc_id to number
+                rtom: selectedRTOM,
+                arrears_band: filterAmount,
+                from_date: formatDate(fromDate),
+                to_date: formatDate(toDate),
             };
             console.log('Sending filter payload:', payload); // Log the payload before sending for debugging
             // Fetch filtered data from the API using the payload
-            const AssignedRoCaseLogs = await fetchAssignedRoCaseLogs(payload);
+            const AssignedRoCaseLogs = await listHandlingCasesByDRC(payload);
+
+
+            if (Array.isArray(AssignedRoCaseLogs)) {
+                setFilteredlogData(AssignedRoCaseLogs.data);
+            } else {
+                console.error("No valid cases data found in response.");
+            }
 
 
             // Log the response
             console.log('Response from API:', AssignedRoCaseLogs); //for debugging
 
             // Set the filtered data (assuming setFilteredData updates the state or UI)
-            setFilteredlogData(AssignedRoCaseLogs.data);
+            setFilteredlogData(AssignedRoCaseLogs);
 
 
             console.log("Filtered data updated:", filteredlogData); //for debugging
@@ -136,7 +152,7 @@ export default function AssignedROcaselog() {
 
 
         } catch (error) {
-            console.error('Error in handleFilter:', error);
+            console.error("Error filtering cases:", error);
         }
     };
 
@@ -167,13 +183,13 @@ export default function AssignedROcaselog() {
 
         if (fromDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); 
+                const itemDate = new Date(item.date);
             });
         }
 
         if (toDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); 
+                const itemDate = new Date(item.date);
                 return itemDate <= toDate;
             });
         }
@@ -214,7 +230,7 @@ export default function AssignedROcaselog() {
         }
         if (toDate) {
             tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); 
+                const itemDate = new Date(item.date);
                 return itemDate <= toDate;
             });
         }
@@ -372,7 +388,7 @@ export default function AssignedROcaselog() {
                                         </a>
                                     </td>
                                     <td className={GlobalStyle.tableData}>{item.status}</td>
-                                    <td className={GlobalStyle.tableData}>{item.current_arreas_amount}</td>
+                                    <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
                                     <td className={GlobalStyle.tableData}>{item.area}</td>
                                     <td className={GlobalStyle.tableData}>{item.remark}</td>
                                     <td className={GlobalStyle.tableData}>{item.ro_name}</td>
@@ -381,7 +397,7 @@ export default function AssignedROcaselog() {
                                     <td className={GlobalStyle.tableData}>
                                         <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <AiFillEye
-                                                onClick={() => console.log("View clicked")}
+                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${drc_id}/${item.case_id}`)}
                                                 style={{ cursor: "pointer", marginRight: "8px" }}
                                             />
                                             <FaEdit
@@ -391,7 +407,7 @@ export default function AssignedROcaselog() {
                                             <button
                                                 className={`${GlobalStyle.buttonPrimary} mx-auto`}
                                                 style={{ whiteSpace: "nowrap" }}
-                                                onClick={() => navigate("/pages/DRC/Re-AssignRo")}
+                                                onClick={() => navigate(`/pages/DRC/Re-AssignRo/${drc_id}/${item.case_id}`)}
                                             >
                                                 Re-Assign
                                             </button>
