@@ -120,9 +120,6 @@ const DistributeTORO = () => {
             return offsetDate.toISOString().split('T')[0];
         };
 
-        if (!selectedRO) {
-        }
-
         const payload = {
             drc_id: Number(drc_id),
             rtom: selectedRTOM,
@@ -131,6 +128,7 @@ const DistributeTORO = () => {
             from_date: formatDate(fromDate),
             to_date: formatDate(toDate),
         };
+        
 
         const response = await listHandlingCasesByDRC(payload);
 
@@ -337,7 +335,7 @@ const filteredDataBySearch = filteredData.filter((row) =>
 </select>
 
       {/* Date Picker */}
-     <div className="flex flex-col mb-4">
+     <div className="flex flex-col ">
      <div className={GlobalStyle.datePickerContainer}>
         <label className={GlobalStyle.dataPickerDate}>Date</label>
          <DatePicker
@@ -503,9 +501,14 @@ const filteredDataBySearch = filteredData.filter((row) =>
   )}
 </select>
 
+
+
   {/* Submit Button */}
     <button
-      onClick={handleSubmit}
+      onClick={() => { 
+        handleSubmit(); 
+        navigate(`/drc/assigned-ro-case-log/${drc_id}`); 
+      }}
       className={GlobalStyle.buttonPrimary}
       disabled={selectedRows.size === 0} // Disable if no rows are selected
     >

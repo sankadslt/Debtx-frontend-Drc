@@ -22,6 +22,8 @@ const Sidebar = ({ onHoverChange }) => {
             { label: "Assigned Case List for DRC", link: "/drc/assigned-case-list-for-drc" },
             { label: "Distribute To RO", link: "/pages/Distribute/DistributeTORO" },
             { label: "Assigned R0 Case Log", link: "/drc/assigned-ro-case-log" },
+            { label: "RO Monitoring (Arrears) and (CPE)", link: "/drc/ro-monitoring-arrears" },
+            { label: "Re-Assign-Ro", link: "/pages/DRC/Re-AssignRo" },
           ],
         },
         { label: "Dummy", link: "/dashboard" },
