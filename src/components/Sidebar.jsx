@@ -1,20 +1,52 @@
 import { Link, useLocation } from "react-router-dom";
 import { MdSpaceDashboard } from "react-icons/md";
 import { IoIosListBox } from "react-icons/io";
-
 import { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../services/auth/authService";
 
 const Sidebar = ({ onHoverChange }) => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+   // Load user role from accessToken
+   const loadUserRole = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserRole(null);
+      return;
+    }
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+
+      setUserRole(decoded.role);
+    } catch (error) {
+      console.error("Invalid token:", error);
+      setUserRole(null);
+    }
+  };
+
+  useEffect(() => {
+    loadUserRole();
+  }, [localStorage.getItem("accessToken")]);
 
   // Menu structure with nested subtopics
   const menuItems = [
-    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard", subItems: [] },
+    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard",roles: ["superadmin", "admin", "user"], subItems: [] },
     {
       icon: IoIosListBox,
       label: "DRC",
+      roles: ["superadmin", "admin", "user"],
       subItems: [
         {
           label: "DRC",
@@ -31,10 +63,9 @@ const Sidebar = ({ onHoverChange }) => {
     },
   ];
 
-  // Update expanded items when path changes
-  useEffect(() => {
-    setExpandedItems([]);
-  }, [location.pathname]);
+ 
+  // Filter menu items based on user role
+  const filteredMenuItems = userRole ? menuItems.filter(item => item.roles.includes(userRole)) : [];
 
   // Handle submenu toggle on click
   const handleClick = (level, index) => {
@@ -105,7 +136,7 @@ const Sidebar = ({ onHoverChange }) => {
     >
       {/* Menu Items */}
       <ul className="flex flex-col gap-4 px-4">
-        {menuItems.map((item, index) => {
+        {filteredMenuItems.map((item, index) => {
           const isActive = activePath && activePath[0] === index;
           return (
             <li key={index}>
