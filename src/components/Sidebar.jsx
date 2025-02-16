@@ -11,8 +11,8 @@ const Sidebar = ({ onHoverChange }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-   // Load user role from accessToken
-   const loadUserRole = async () => {
+  // Load user role from accessToken
+  const loadUserRole = async () => {
     let token = localStorage.getItem("accessToken");
     if (!token) {
       setUserRole(null);
@@ -40,9 +40,9 @@ const Sidebar = ({ onHoverChange }) => {
     loadUserRole();
   }, [localStorage.getItem("accessToken")]);
 
-  // Menu structure with nested subtopics
+  // Menu structure with nested subtopics and roles for each sub-item
   const menuItems = [
-    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard",roles: ["superadmin", "admin", "user"], subItems: [] },
+    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard", roles: ["superadmin", "admin", "user"], subItems: [] },
     {
       icon: IoIosListBox,
       label: "DRC",
@@ -50,30 +50,40 @@ const Sidebar = ({ onHoverChange }) => {
       subItems: [
         {
           label: "DRC",
+          roles: ["superadmin", "admin"],
           subItems: [
-            { label: "Assigned Case List for DRC", link: "/drc/assigned-case-list-for-drc" },
-            { label: "Distribute To RO", link: "/pages/Distribute/DistributeTORO" },
-            { label: "Assigned R0 Case Log", link: "/drc/assigned-ro-case-log" },
+            { label: "Assigned Case List for DRC", link: "/drc/assigned-case-list-for-drc", roles: ["superadmin", "admin"] },
+            { label: "Distribute To RO", link: "/pages/Distribute/DistributeTORO", roles: ["superadmin"] },
+            { label: "Assigned RO Case Log", link: "/drc/assigned-ro-case-log", roles: ["admin", "user"] },
           ],
         },
-        { label: "Dummy", link: "/dashboard" },
+        { label: "Dummy", link: "/dashboard", roles: ["superadmin"] },
       ],
     },
   ];
 
- 
   // Filter menu items based on user role
   const filteredMenuItems = userRole ? menuItems.filter(item => item.roles.includes(userRole)) : [];
 
   // Handle submenu toggle on click
-  const handleClick = (level, index) => {
+  const handleClick = (level, index, hasSubItems) => {
     const updatedExpandedItems = [...expandedItems];
-    if (updatedExpandedItems[level] === index) {
-      updatedExpandedItems.splice(level);
+
+    // Collapse all submenus if clicking a link
+    if (!hasSubItems) {
+      setIsHovered(false);
+      onHoverChange(false);
+      updatedExpandedItems.splice(0);
     } else {
-      updatedExpandedItems[level] = index;
-      updatedExpandedItems.splice(level + 1);
+      // Toggle submenu on click if it has subitems
+      if (updatedExpandedItems[level] === index) {
+        updatedExpandedItems.splice(level);
+      } else {
+        updatedExpandedItems[level] = index;
+        updatedExpandedItems.splice(level + 1);
+      }
     }
+
     setExpandedItems(updatedExpandedItems);
   };
 
@@ -92,29 +102,29 @@ const Sidebar = ({ onHoverChange }) => {
   // Find the active path to highlight the correct menu item
   const activePath = findActivePath(menuItems, location.pathname);
 
-  // Render subitems recursively
+  // Render subitems recursively, filter based on user role
   const renderSubItems = (subItems, level) => {
     return (
       <ul className={`ml-8 mt-2 space-y-2 ${!isHovered ? "hidden" : ""}`}>
-        {subItems.map((subItem, subIndex) => {
-          const isExpanded = expandedItems[level] === subIndex;
-          return (
-            <li key={subIndex}>
-              <Link
-                to={subItem.link || "#"}
-                onClick={() => handleClick(level, subIndex)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium transition"
-              >
-                {subItem.label}
-              </Link>
-              {isExpanded && subItem.subItems && (
-                <div className="ml-4">
-                  {renderSubItems(subItem.subItems, level + 1)}
-                </div>
-              )}
-            </li>
-          );
-        })}
+        {subItems
+          .filter(subItem => subItem.roles.includes(userRole)) // Filter sub-items based on user role
+          .map((subItem, subIndex) => {
+            const isExpanded = expandedItems[level] === subIndex;
+            return (
+              <li key={subIndex}>
+                <Link
+                  to={subItem.link || "#"}
+                  onClick={() => handleClick(level, subIndex, !!subItem.subItems)}
+                  className="block px-3 py-2 rounded-lg text-sm font-medium transition"
+                >
+                  {subItem.label}
+                </Link>
+                {isExpanded && subItem.subItems && (
+                  <div className="ml-4">{renderSubItems(subItem.subItems, level + 1)}</div>
+                )}
+              </li>
+            );
+          })}
       </ul>
     );
   };
@@ -140,21 +150,15 @@ const Sidebar = ({ onHoverChange }) => {
             <li key={index}>
               <Link
                 to={item.link || "#"}
-                onClick={() => handleClick(0, index)}
+                onClick={() => handleClick(0, index, !!item.subItems)}
                 className={`flex items-center gap-x-4 px-3 py-2 rounded-lg text-base font-medium transition ${
                   isActive ? "bg-blue-400 shadow-lg" : "hover:bg-blue-400"
                 }`}
               >
-                <item.icon
-                  className={`w-6 h-6 ${
-                    isActive ? "text-white" : "text-white"
-                  }`} // Change the icon color for active item
-                />
+                <item.icon className="w-6 h-6 text-white" />
                 {isHovered && <span>{item.label}</span>}
               </Link>
-              {expandedItems[0] === index && item.subItems && (
-                <div>{renderSubItems(item.subItems, 1)}</div>
-              )}
+              {expandedItems[0] === index && item.subItems && <div>{renderSubItems(item.subItems, 1)}</div>}
             </li>
           );
         })}
@@ -164,6 +168,9 @@ const Sidebar = ({ onHoverChange }) => {
 };
 
 export default Sidebar;
+
+
+
 
 
 
