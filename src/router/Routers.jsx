@@ -4,6 +4,7 @@ import Login from "../components/Login";
 import Register from "../components/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Unauthorized from "../components/Unauthorized";
+import UserProfile from "../pages/userProfile";
 
 import Dashboard from "../pages/Dashboard";
 import PrototypeA from "../assets/prototype/prototypeA";
@@ -36,6 +37,7 @@ const Routers = () => {
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/unauthorized" element={<Unauthorized/>} />
+     <Route path="/user-profile" element={<UserProfile />} />
 
       <Route path="/dummy-page" element={<ProtectedRoute element={<DummyPage />} allowedRoles={['superadmin']} />} />
 
