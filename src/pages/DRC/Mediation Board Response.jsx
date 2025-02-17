@@ -798,24 +798,33 @@
 // export default MediationBoardResponse;
 
 
-
-import React, { useState } from "react";
+// src/components/MediationBoardResponse.jsx
+import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
+import { getCaseDetailsbyMediationBoard } from "../../services/case/CaseService";
+import { useParams } from "react-router-dom";
+import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
 
 const MediationBoardResponse = () => {
+  const { caseId, drcId } = useParams(); // Get parameters from URL
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Consolidated case details
   const [caseDetails, setCaseDetails] = useState({
     caseId: "",
     customerRef: "",
     accountNo: "",
     arrearsAmount: "",
     lastPaymentDate: "",
+    callingRound: 0
   });
 
-  const [callingRound, setCallingRound] = useState(3); // Example value, should be set based on actual data
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
 
+  // Form state
   const [formData, setFormData] = useState({
     request: "Task With SLT",
     customerRepresented: "",
@@ -834,6 +843,40 @@ const MediationBoardResponse = () => {
 
   const [showResponseHistory, setShowResponseHistory] = useState(false);
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
+
+  // Fetch case details when component mounts
+  useEffect(() => {
+    const fetchCaseDetails = async () => {
+      if (!caseId || !drcId) {
+        setError("Case ID and DRC ID are required");
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const data = await getCaseDetailsbyMediationBoard(caseId, drcId);
+        
+        setCaseDetails({
+          caseId: data.case_id || "",
+          customerRef: data.customer_ref || "",
+          accountNo: data.account_no || "",
+          arrearsAmount: data.current_arrears_amount || "",
+          lastPaymentDate: data.last_payment_date 
+            ? format(new Date(data.last_payment_date), 'yyyy-MM-dd')
+            : "",
+          callingRound: data.mediation_board || 0
+        });
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching case details:", error);
+        setError(error.message || "Failed to fetch case details");
+        setIsLoading(false);
+      }
+    };
+
+    fetchCaseDetails();
+  }, [caseId, drcId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -855,9 +898,43 @@ const MediationBoardResponse = () => {
     setNextCallingDate(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    
+    // Basic validation
+    if (formData.customerRepresented === "") {
+      alert("Please select whether customer is represented");
+      return;
+    }
+    
+    if (formData.customerRepresented === "Yes" && formData.settle === "") {
+      alert("Please select whether customer agrees to settle");
+      return;
+    }
+    
+    if (showFailReasonFields && !formData.failReason) {
+      alert("Please select a fail reason");
+      return;
+    }
+    
+    try {
+      // Here you would typically call an API to save the form data
+      console.log("Form submitted:", { 
+        ...formData,
+        handoverNonSettlement,
+        nextCallingDate,
+        caseId,
+        drcId 
+      });
+      
+      // Simulate successful submission
+      alert("Form submitted successfully!");
+      
+      // Optional: Reset form or redirect
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to submit form. Please try again.");
+    }
   };
 
   // Show additional fields when customer is represented and agrees to settle
@@ -868,6 +945,30 @@ const MediationBoardResponse = () => {
   const showFailReasonFields =
     formData.customerRepresented === "Yes" && formData.settle === "No";
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <span className="ml-2">Loading case details...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
+        <h2 className="text-lg font-bold mb-2">Error</h2>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <div className="mb-8">
@@ -875,35 +976,7 @@ const MediationBoardResponse = () => {
       </div>
 
       {/* Case Details Card */}
-      {/* <div className={`${GlobalStyle.cardContainer}`}>
-        <div className="space-y-2">
-          <div className="flex">
-            <span className="w-48 font-semibold">Case ID:</span>
-            <span className="text-gray-700">{caseDetails.caseId}</span>
-          </div>
-          <div className="flex">
-            <span className="w-48 font-semibold">Customer Ref:</span>
-            <span className="text-gray-700">{caseDetails.customerRef}</span>
-          </div>
-          <div className="flex">
-            <span className="w-48 font-semibold">Account no:</span>
-            <span className="text-gray-700">{caseDetails.accountNo}</span>
-          </div>
-          <div className="flex">
-            <span className="w-48 font-semibold">Arrears Amount:</span>
-            <span className="text-gray-700">{caseDetails.arrearsAmount}</span>
-          </div>
-          <div className="flex">
-            <span className="w-48 font-semibold">Last Payment Date:</span>
-            <span className="text-gray-700">{caseDetails.lastPaymentDate}</span>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Case Details Card */}
-      <div
-        className={`${GlobalStyle.cardContainer}`}
-      >
+      <div className={GlobalStyle.cardContainer}>
         <table className="w-full">
           <tbody>
             <tr className="flex items-start py-1">
@@ -935,70 +1008,16 @@ const MediationBoardResponse = () => {
         </table>
       </div>
 
-      {/* Calling Details Card */}
-      {/* <div className={`${GlobalStyle.cardContainer}`}>
-        <div className="space-y-2">
-          <div className="flex">
-            <span className=" font-semibold">Calling Round :</span>
-            <span className="text-gray-700">{callingRound}</span>
-          </div>
-
-          {callingRound === 3 && (
-            <div className="flex items-center">
-              <span className=" font-semibold">Handover Non-Settlement :</span>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="handoverNonSettlement"
-                    value="Yes"
-                    checked={handoverNonSettlement === "Yes"}
-                    onChange={handleHandoverChange}
-                    className="mr-2"
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="handoverNonSettlement"
-                    value="No"
-                    checked={handoverNonSettlement === "No"}
-                    onChange={handleHandoverChange}
-                    className="mr-2"
-                  />
-                  No
-                </label>
-              </div>
-            </div>
-          )}
-
-          {(callingRound < 3 ||
-            (callingRound === 3 && handoverNonSettlement === "No")) && (
-            <div className="flex items-center">
-              <span className="w-48 font-semibold">Next Calling Date:</span>
-              <input
-                type="date"
-                value={nextCallingDate}
-                onChange={handleNextCallingDateChange}
-                className="p-2 border rounded-md w-72"
-                disabled={callingRound === 3 && handoverNonSettlement === "Yes"}
-              />
-            </div>
-          )}
-        </div>
-      </div> */}
-
-      <div className={`${GlobalStyle.cardContainer}`}>
+      <div className={GlobalStyle.cardContainer}>
         <table className="w-full">
           <tbody>
             <tr className="flex items-start py-1">
               <td className="font-semibold w-48">Calling Round</td>
               <td className="px-4 font-semibold">:</td>
-              <td className="text-gray-700">{callingRound}</td>
+              <td className="text-gray-700">{caseDetails.callingRound}</td>
             </tr>
 
-            {callingRound === 3 && (
+            {caseDetails.callingRound === 3 && (
               <tr className="flex items-start py-1">
                 <td className="font-semibold w-48">Handover Non-Settlement</td>
                 <td className="px-4 font-semibold">:</td>
@@ -1012,6 +1031,7 @@ const MediationBoardResponse = () => {
                         checked={handoverNonSettlement === "Yes"}
                         onChange={handleHandoverChange}
                         className="mr-2"
+                        aria-label="Yes for handover non-settlement"
                       />
                       Yes
                     </label>
@@ -1023,6 +1043,7 @@ const MediationBoardResponse = () => {
                         checked={handoverNonSettlement === "No"}
                         onChange={handleHandoverChange}
                         className="mr-2"
+                        aria-label="No for handover non-settlement"
                       />
                       No
                     </label>
@@ -1031,8 +1052,8 @@ const MediationBoardResponse = () => {
               </tr>
             )}
 
-            {(callingRound < 3 ||
-              (callingRound === 3 && handoverNonSettlement === "No")) && (
+            {(caseDetails.callingRound < 3 ||
+              (caseDetails.callingRound === 3 && handoverNonSettlement === "No")) && (
               <tr className="flex items-start py-1">
                 <td className="font-semibold w-48">Next Calling Date</td>
                 <td className="px-4 font-semibold">:</td>
@@ -1043,8 +1064,9 @@ const MediationBoardResponse = () => {
                     onChange={handleNextCallingDateChange}
                     className="p-2 border rounded-md w-72"
                     disabled={
-                      callingRound === 3 && handoverNonSettlement === "Yes"
+                      caseDetails.callingRound === 3 && handoverNonSettlement === "Yes"
                     }
+                    aria-label="Next calling date"
                   />
                 </td>
               </tr>
@@ -1062,6 +1084,7 @@ const MediationBoardResponse = () => {
             value={formData.request}
             onChange={handleInputChange}
             className={GlobalStyle.selectBox}
+            aria-label="Request type"
           >
             <option value="Task With SLT">Task With SLT</option>
             <option value="Request Settlement Plan">
@@ -1078,7 +1101,7 @@ const MediationBoardResponse = () => {
         </div>
 
         <div className="flex items-center">
-          <span className=" font-semibold">Customer Represented:</span>
+          <span className="font-semibold">Customer Represented:</span>
           <div className="flex gap-4">
             <label className="flex items-center">
               <input
@@ -1088,6 +1111,7 @@ const MediationBoardResponse = () => {
                 checked={formData.customerRepresented === "Yes"}
                 onChange={handleInputChange}
                 className="mr-2"
+                aria-label="Yes for customer represented"
               />
               Yes
             </label>
@@ -1099,6 +1123,7 @@ const MediationBoardResponse = () => {
                 checked={formData.customerRepresented === "No"}
                 onChange={handleInputChange}
                 className="mr-2"
+                aria-label="No for customer represented"
               />
               No
             </label>
@@ -1113,6 +1138,7 @@ const MediationBoardResponse = () => {
             onChange={handleInputChange}
             className={GlobalStyle.remark}
             rows="5"
+            aria-label="Comment"
           />
         </div>
 
@@ -1128,6 +1154,7 @@ const MediationBoardResponse = () => {
                   checked={formData.settle === "Yes"}
                   onChange={handleInputChange}
                   className="mr-2"
+                  aria-label="Yes for settle"
                 />
                 Yes
               </label>
@@ -1139,6 +1166,7 @@ const MediationBoardResponse = () => {
                   checked={formData.settle === "No"}
                   onChange={handleInputChange}
                   className="mr-2"
+                  aria-label="No for settle"
                 />
                 No
               </label>
@@ -1154,6 +1182,7 @@ const MediationBoardResponse = () => {
               value={formData.failReason}
               onChange={handleInputChange}
               className="w-72 p-2 border rounded-md"
+              aria-label="Fail reason"
             >
               <option value="">Select Response</option>
               <option value="reason1">Reason 1</option>
@@ -1173,6 +1202,7 @@ const MediationBoardResponse = () => {
                 value={formData.settlementCount}
                 onChange={handleInputChange}
                 className="w-72 p-2 border rounded-md"
+                aria-label="Settlement count"
               />
             </div>
 
@@ -1184,6 +1214,7 @@ const MediationBoardResponse = () => {
                 value={formData.initialAmount}
                 onChange={handleInputChange}
                 className="w-72 p-2 border rounded-md"
+                aria-label="Initial amount"
               />
             </div>
 
@@ -1196,6 +1227,7 @@ const MediationBoardResponse = () => {
                 onChange={handleInputChange}
                 className="w-20 p-2 border rounded-md"
                 min="0"
+                aria-label="Calendar month"
               />
             </div>
 
@@ -1209,6 +1241,7 @@ const MediationBoardResponse = () => {
                   value={formData.durationFrom}
                   onChange={handleInputChange}
                   className="w-32 p-2 border rounded-md"
+                  aria-label="Duration from"
                 />
                 <span>To:</span>
                 <input
@@ -1217,6 +1250,7 @@ const MediationBoardResponse = () => {
                   value={formData.durationTo}
                   onChange={handleInputChange}
                   className="w-32 p-2 border rounded-md"
+                  aria-label="Duration to"
                 />
               </div>
             </div>
@@ -1229,246 +1263,29 @@ const MediationBoardResponse = () => {
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-md"
                 rows="4"
+                aria-label="Remark"
               />
             </div>
           </>
         )}
 
         <div className="flex justify-end mt-6">
-          <button type="submit" className={`${GlobalStyle.buttonPrimary}`}>
+          <button 
+            type="submit" 
+            className={GlobalStyle.buttonPrimary}
+            aria-label="Submit form"
+          >
             Submit
           </button>
         </div>
       </form>
 
-      {/* <form onSubmit={handleSubmit}>
-        <table className="w-full">
-          <tbody className="space-y-6">
-            <tr className="flex items-start py-1">
-              <td className="font-semibold w-48">Request</td>
-              <td className="px-2 font-semibold">:</td>
-              <td>
-                <select
-                  name="request"
-                  value={formData.request}
-                  onChange={handleInputChange}
-                  className={GlobalStyle.selectBox}
-                >
-                  <option value="Task With SLT">Task With SLT</option>
-                  <option value="Request Settlement Plan">
-                    Request Settlement Plan
-                  </option>
-                  <option value="Request Period Extend">
-                    Request Period Extend
-                  </option>
-                  <option value="Request Customer Further Information">
-                    Request Customer Further Information
-                  </option>
-                  <option value="Customer Request Service">
-                    Customer Request Service
-                  </option>
-                </select>
-              </td>
-            </tr>
-
-            <tr className="flex items-start py-1">
-              <td className="font-semibold w-48">Customer Represented</td>
-              <td className="px-2 font-semibold">:</td>
-              <td>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="customerRepresented"
-                      value="Yes"
-                      checked={formData.customerRepresented === "Yes"}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="customerRepresented"
-                      value="No"
-                      checked={formData.customerRepresented === "No"}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    No
-                  </label>
-                </div>
-              </td>
-            </tr>
-
-            <tr className="flex items-start py-1">
-              <td className="font-semibold w-48">Comment</td>
-              <td className="px-2 font-semibold">:</td>
-              <td>
-                <textarea
-                  name="comment"
-                  value={formData.comment}
-                  onChange={handleInputChange}
-                  className={GlobalStyle.remark}
-                  rows="5"
-                />
-              </td>
-            </tr>
-
-            {formData.customerRepresented === "Yes" && (
-              <tr className="flex items-start py-1">
-                <td className="font-semibold w-48">Settle</td>
-                <td className="px-2 font-semibold">:</td>
-                <td>
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="settle"
-                        value="Yes"
-                        checked={formData.settle === "Yes"}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      Yes
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="settle"
-                        value="No"
-                        checked={formData.settle === "No"}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      No
-                    </label>
-                  </div>
-                </td>
-              </tr>
-            )}
-
-            {showFailReasonFields && (
-              <tr className="flex items-start py-1">
-                <td className="font-semibold w-48">Fail Reason</td>
-                <td className="px-2 font-semibold">:</td>
-                <td>
-                  <select
-                    name="failReason"
-                    value={formData.failReason}
-                    onChange={handleInputChange}
-                    className="w-72 p-2 border rounded-md"
-                  >
-                    <option value="">Select Response</option>
-                    <option value="reason1">Reason 1</option>
-                    <option value="reason2">Reason 2</option>
-                    <option value="reason3">Reason 3</option>
-                  </select>
-                </td>
-              </tr>
-            )}
-
-            {showSettlementFields && (
-              <>
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Settlement Count</td>
-                  <td className="px-2 font-semibold">:</td>
-                  <td>
-                    <input
-                      type="text"
-                      name="settlementCount"
-                      value={formData.settlementCount}
-                      onChange={handleInputChange}
-                      className="w-72 p-2 border rounded-md"
-                    />
-                  </td>
-                </tr>
-
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Initial Amount</td>
-                  <td className="px-2 font-semibold">:</td>
-                  <td>
-                    <input
-                      type="text"
-                      name="initialAmount"
-                      value={formData.initialAmount}
-                      onChange={handleInputChange}
-                      className="w-72 p-2 border rounded-md"
-                    />
-                  </td>
-                </tr>
-
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Calendar Month</td>
-                  <td className="px-2 font-semibold">:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="calendarMonth"
-                      value={formData.calendarMonth}
-                      onChange={handleInputChange}
-                      className="w-20 p-2 border rounded-md"
-                      min="0"
-                    />
-                  </td>
-                </tr>
-
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Duration</td>
-                  <td className="px-2 font-semibold">:</td>
-                  <td>
-                    <div className="flex items-center space-x-4">
-                      <span>From:</span>
-                      <input
-                        type="text"
-                        name="durationFrom"
-                        value={formData.durationFrom}
-                        onChange={handleInputChange}
-                        className="w-32 p-2 border rounded-md"
-                      />
-                      <span>To:</span>
-                      <input
-                        type="text"
-                        name="durationTo"
-                        value={formData.durationTo}
-                        onChange={handleInputChange}
-                        className="w-32 p-2 border rounded-md"
-                      />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Remark</td>
-                  <td className="px-2 font-semibold">:</td>
-                  <td>
-                    <textarea
-                      name="remark"
-                      value={formData.remark}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border rounded-md"
-                      rows="4"
-                    />
-                  </td>
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
-
-        <div className="flex justify-end mt-6">
-          <button type="submit" className={`${GlobalStyle.buttonPrimary}`}>
-            Submit
-          </button>
-        </div>
-      </form> */}
-
       <div className="mt-6">
         <button
           type="button"
           onClick={() => setShowResponseHistory(!showResponseHistory)}
-          className={`${GlobalStyle.buttonPrimary}`}
+          className={GlobalStyle.buttonPrimary}
+          aria-label="Toggle response history"
         >
           Response History
         </button>
@@ -1476,12 +1293,17 @@ const MediationBoardResponse = () => {
 
       {/* Response History Popup */}
       {showResponseHistory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-2/3 relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div className="bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-auto relative">
             {/* Close Button with X Icon */}
             <button
               className="absolute top-4 right-4 text-gray-700 hover:text-gray-900"
               onClick={() => setShowResponseHistory(false)}
+              aria-label="Close response history"
             >
               <X size={24} />
             </button>
@@ -1640,4 +1462,3 @@ const MediationBoardResponse = () => {
 };
 
 export default MediationBoardResponse;
-
