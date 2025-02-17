@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FaBell, FaCog, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaBell, FaCog, FaUser, FaSignOutAlt, FaTasks } from "react-icons/fa";
 import profileImage from "../assets/images/profile.jpg";
 import logo from "../assets/images/logo.png";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +79,98 @@ const Navbar = () => {
     };
   }, [isDropdownOpen]);
 
+  const [taskData, setTaskData] = useState([]);
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isTaskListOpen, setIsTaskListOpen] = useState(false);
+  const [visibleTasks, setVisibleTasks] = useState(10);
+
+  const taskListRef = useRef(null);
+
+  const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
+
+  const toggleTaskList = () => setIsTaskListOpen((prev) => !prev);
+
+  const pendingTasksCount = taskData.filter((task) => !task.completed).length;
+
+  const markTaskAsDoneAndNavigate = async (id, url) => {
+    try {
+      // Make a PATCH request to update the task completion status
+      const response = await fetch(`http://localhost:5000/api/taskList/task/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          completed: true,
+        }),
+      });
+
+      if (response.ok) {
+        // If the task was updated successfully in the database, update the local state
+        setTaskData((prev) =>
+          prev.map((task) => (task._id === id ? { ...task, completed: true } : task))
+        );
+
+        // Navigate to the task's details page
+        navigate(url);
+      } else {
+        console.error("Failed to update task status in database");
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
+  };
+
+  const handleTaskClick = (id, url) => {
+    const task = taskData.find((task) => task._id === id);
+  
+    if (!task) {
+      console.error("Task not found:", id);
+      return;
+    }
+
+    if (!task.completed) {
+      markTaskAsDoneAndNavigate(id, url);
+    } else {
+      navigate(url);
+    }
+  };
+
+  const loadMoreTasks = () => {
+    setVisibleTasks((prev) => prev + 10);
+  };
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const limit = 10;
+        const skip = 0;
+        const response = await fetch(`http://localhost:5000/api/taskList/task?limit=${limit}&skip=${skip}`);
+        const data = await response.json();
+        setTaskData(data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks();
+
+    const handleClickOutside = (event) => {
+      if (
+        taskListRef.current &&
+        !taskListRef.current.contains(event.target) &&
+        !event.target.closest(".task-button")
+      ) {
+        setIsTaskListOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <nav className="bg-white px-6 py-4 flex justify-between items-center shadow-md fixed top-0 left-0 w-full z-50 font-poppins">
       <div className="flex items-center gap-4">
@@ -89,6 +181,63 @@ const Navbar = () => {
           <FaBell className="w-6 h-6 text-green-500 bg-white rounded-full p-1 shadow-md cursor-pointer" />
           <div className="absolute top-0 right-0 bg-red-500 w-3 h-3 rounded-full"></div>
         </div>
+
+        <div className="relative">
+          <button
+            onClick={toggleTaskList}
+            className="task-button bg-teal-700 text-white py-1 px-3 rounded-full flex items-center gap-2"
+          >
+            <FaTasks />
+            <span>{pendingTasksCount}</span>
+          </button>
+
+          {isTaskListOpen && (
+            <div
+              ref={taskListRef}
+              className="absolute top-12 right-0 w-[420px] bg-gray-800 text-white rounded-lg shadow-lg p-4"
+            >
+              <p className="text-lg font-semibold text-center mb-4">
+                Task List
+              </p>
+              <ul
+                className="divide-y divide-gray-700 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+                onScroll={(e) => {
+                  const { scrollTop, scrollHeight, clientHeight } = e.target;
+                  if (scrollTop + clientHeight >= scrollHeight) {
+                    loadMoreTasks();
+                  }
+                }}
+              >
+                {taskData.slice(0, visibleTasks).map((task) => (
+                  <li
+                    key={task._id}
+                    className="flex items-center justify-between py-3 px-2 hover:bg-gray-700 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-3 h-3 rounded-full ${
+                          task.completed ? "bg-green-500" : "bg-red-500"
+                        }`}
+                      ></span>
+                      <span>{task.task}</span>
+                    </div>
+                    <button
+                      onClick={() => handleTaskClick(task._id, task.url)}
+                      className={`text-xs font-semibold py-1 px-2 rounded-md ${
+                        task.completed
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
+                    >
+                      {task.completed ? "Done" : "Mark as Read"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
         <FaCog className="w-6 h-6 text-blue-500 bg-white rounded-full p-1 shadow-md cursor-pointer" />
         <div className="relative" ref={dropdownRef}>
           <div
