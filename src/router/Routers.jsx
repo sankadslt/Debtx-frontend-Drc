@@ -49,7 +49,11 @@ const Routers = () => {
 
      {/* Distribute Routes */}
      
-     <Route path="/pages/Distribute/DistributeTORO/:drc_id" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin']} />} />
+      <Route path="/pages/Distribute/DistributeTORO/:drc_id" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/pages/Distribute/DistributeTORO" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/pages/Distribute/DistributeTORO/:drc_id/:case_id" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/pages/Distribute/DistributeTORO/:drc_id/:case_id/:ro_id" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/pages/Distribute/DistributeTORO/:drc_id/:case_id/:ro_id/:case_type" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
 
       {/* DRC Routes */}
       <Route path="/dummy" element={<ProtectedRoute element={<Dummy />} allowedRoles={['superadmin']} />} />
