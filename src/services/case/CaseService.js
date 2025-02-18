@@ -169,3 +169,38 @@ export const listAllDRCMediationBoardCases = async (payload) => {
 };
 
 
+// get CaseDetails for MediationBoard
+
+
+export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
+  try {
+    if (!case_id || !drc_id) {
+      throw new Error("Both Case ID and DRC ID are required.");
+    }
+    
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
+      case_id: case_id,
+      drc_id: drc_id,
+    });
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+    
+    // Format the response to include only required fields
+    const caseDetails = {
+      case_id: response.data.data.case_id,
+      customer_ref: response.data.data.customer_ref,
+      account_no: response.data.data.account_no,
+      current_arrears_amount: response.data.data.current_arrears_amount,
+      last_payment_date: response.data.data.last_payment_date,
+      mediation_board: response.data.data.calling_round,
+    };
+    
+    return caseDetails;
+  } catch (error) {
+    console.error("Error retrieving case details for mediation board:", 
+      error.response?.data || error.message);
+    throw error;
+  }
+};
