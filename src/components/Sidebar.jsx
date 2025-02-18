@@ -55,7 +55,8 @@ const Sidebar = ({ onHoverChange }) => {
             { label: "Assigned Case List for DRC", link: "/drc/assigned-case-list-for-drc", roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] },
             { label: "Distribute To RO", link: "/pages/Distribute/DistributeTORO", roles: ["superadmin, admin", 'drc_admin', 'drc_user'] },
             { label: "Assigned RO Case Log", link: "/drc/assigned-ro-case-log", roles: ["admin", "user", "drc_admin", 'drc_user'] },
-            { label: "RO Monitoring (Arrears) and (CPE)", link: "/drc/ro-monitoring-arrears", roles: ["superadmin"]}
+            { label: "RO Monitoring (Arrears) and (CPE)", link: "/drc/ro-monitoring-arrears", roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] },
+            { label: "Re-Assign-Ro", link: "/pages/DRC/Re-AssignRo", roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] },
           ],
         },
         { label: "Dummy", link: "/dashboard", roles: ["superadmin"] },
