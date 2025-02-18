@@ -11,11 +11,11 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { List_Behaviors_Of_Case_During_DRC } from "../../services/case/CaseService";
+import { assignROToCase, List_Behaviors_Of_Case_During_DRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
+import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
-
 
   const { drc_id, case_id } = useParams();
   const [selectedRO, setSelectedRO] = useState("");
@@ -33,12 +33,8 @@ export default function Re_AssignRo() {
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
   const [settlementDetails, setSettlementDetails] = useState({});
 
-
-
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,24 +129,59 @@ export default function Re_AssignRo() {
     fetchData();
     fetchRecoveryOfficers();
 
-
-
-
-
-
-
-
-
-
-
-
-
   }, [drc_id, case_id]);
 
+  const handleSubmit = async () => {
+    try {
+      // Ensure selectedRO is available (the value from the dropdown)
+      const selectedRtom = selectedRO; // The selected RO name from the dropdown
+      if (!selectedRtom) {
+        Swal.fire("Error", "No Recovery Officer selected!", "error");
+        return;
+      }
+  
+      // Find the corresponding Recovery Officer object from recoveryOfficers
+      const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
+  
+      if (!selectedOfficer) {
+        Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+        return;
+      }
+  
+      // Get the ro_id of the selected officer
+      const ro_id = selectedOfficer.ro_id;
+  
+      if (!ro_id) {
+        Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+        return;
+      }
+  
+      const assigned_by ="System"; //hardcoded assignedBy
 
-  const handleSubmit = () => {
-    alert("Submit button clicked");
-  }
+       // Ensure case_id is wrapped in an array
+      const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
+
+      // Call the API to assign the cases with separate parameters (caseIds and roId)
+      const response = await assignROToCase(caseIdsArray, ro_id, drc_id, assigned_by);
+      console.log("response: ", response);
+
+       // Check if there are any failed cases
+      if (response.details?.failed_cases?.length > 0) {
+        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        return;
+      }
+      
+      if (response.status === 'success') {
+        Swal.fire("Success", "Cases assigned successfully!", "success");
+      } else {
+        Swal.fire("Error", response.message, "error");
+      }
+  
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+    }
+  };
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
@@ -158,8 +189,6 @@ export default function Re_AssignRo() {
         <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
       </div>
       {/* card box*/}
-
-
 
       <div className={`${GlobalStyle.cardContainer || ""}`}>
         {[
