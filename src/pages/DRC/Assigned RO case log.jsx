@@ -6,7 +6,7 @@ Version: node 20
 ui number : 2.3
 Dependencies: tailwind css
 Related Files: (routes)
-Notes:  The following page conatins the code for the Assigned RO case log Screen */
+Notes: The following page conatins the code for the Assigned RO case log Screen */
 
 import { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
