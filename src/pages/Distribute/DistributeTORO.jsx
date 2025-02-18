@@ -296,6 +296,31 @@ const DistributeTORO = () => {
     }
   };
 
+  const getStatusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case "open no agent":
+        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+      case "open with agent":
+        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+      case "negotiation settle pending":
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+      case "negotiation settle open pending":
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+      case "negotiation settle active":
+        return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+      case "fmb":
+        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+      case "fmb settle pending":
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+      case "fmb settle open pending":
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+      case "fmb settle active":
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+      default:
+        return <span className="text-gray-500">N/A</span>;
+    }
+  };
+
 
 
   return (
@@ -431,7 +456,7 @@ const DistributeTORO = () => {
                       className="mx-auto"
                     />
                   </td>
-                  <td className={GlobalStyle.tableData}> {item.status || "N/A"} </td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
