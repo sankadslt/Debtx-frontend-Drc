@@ -280,8 +280,10 @@ const DistributeTORO = () => {
         return;
       }
 
+      const assigned_by = "System"; // Assign the cases by the system
+
       // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(selectedCaseIds, ro_id);
+      const response = await assignROToCase(selectedCaseIds, ro_id, assigned_by);
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
