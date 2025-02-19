@@ -127,7 +127,6 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
 
 // get CaseDetails for MediationBoard
 
-
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
     if (!case_id || !drc_id) {
@@ -160,3 +159,25 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
     throw error;
   }
 };
+
+
+// List All Active Mediation Board Response
+
+export const ListActiveMediationResponse = async () => {
+  try {    
+    const response = await axios.get(`${URL}/List_Active_Mediation_Response`);
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+    if(response.data.status === "success"){
+      return response.data.data;
+    }
+  } catch (error) {
+    console.error("Error retrieving case details for mediation board:", 
+    error.response?.data || error.message);
+    throw error;
+  }
+};
+
+

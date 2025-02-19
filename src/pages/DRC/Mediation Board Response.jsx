@@ -802,7 +802,7 @@
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
-import { getCaseDetailsbyMediationBoard } from "../../services/case/CaseService";
+import { getCaseDetailsbyMediationBoard, ListActiveMediationResponse } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
 
@@ -820,7 +820,7 @@ const MediationBoardResponse = () => {
     lastPaymentDate: "",
     callingRound: 0
   });
-
+  const [failReasons, setFailReasons] = useState([]);
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
 
@@ -855,6 +855,7 @@ const MediationBoardResponse = () => {
       
       try {
         const data = await getCaseDetailsbyMediationBoard(caseId, drcId);
+        const failReasonsList = await ListActiveMediationResponse();
         
         setCaseDetails({
           caseId: data.case_id || "",
@@ -866,7 +867,7 @@ const MediationBoardResponse = () => {
             : "",
           callingRound: data.mediation_board || 0
         });
-        
+        setFailReasons(failReasonsList);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching case details:", error);
@@ -1185,9 +1186,13 @@ const MediationBoardResponse = () => {
               aria-label="Fail reason"
             >
               <option value="">Select Response</option>
-              <option value="reason1">Reason 1</option>
-              <option value="reason2">Reason 2</option>
-              <option value="reason3">Reason 3</option>
+              {/* <option value="reason1">Mediation Board User Not Agree To Settle</option>
+              <option value="reason2">Installment Default</option>
+              <option value="reason3">Mediation Board Customer Available Not Agree To Settle</option>
+               */}
+              {failReasons.map((failReason, index)=>(
+                <option key={index} value={failReason.mediation_description}>{failReason.mediation_description}</option>
+              ))}
             </select>
           </div>
         )}
