@@ -134,6 +134,7 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 
     const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
 
+
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
@@ -162,8 +163,6 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   }
 };
 
-
- 
 
 
 /* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
