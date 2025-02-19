@@ -40,11 +40,13 @@ export const listHandlingCasesByDRC = async (payload) => {
 
 
 // Assign Recovery Officer to Case
-export const assignROToCase = async (caseIds, roId) => {
+export const assignROToCase = async (caseIds, roId, drcId, assignedBy) => {
   try {
     const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
       case_ids: caseIds,
       ro_id: roId,
+      drc_id: drcId,
+      assigned_by: assignedBy
     });
     return response.data;
   } catch (error) {
@@ -124,69 +126,112 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-
-
-// Get Case Details by Case ID
-export const drcCaseDetails = async (caseId) => {
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   try {
-    // Check if caseId is missing
-    if (!caseId) {
-      throw new Error("Case ID is required.");
+    if (!payload.drc_id || !payload.case_id) {
+      throw new Error("DRC ID and Case ID are required.");
     }
-    // Send a POST request to fetch case details
-    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
-       case_id: caseId
-    });
-    // Check if the response indicates an error
+
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+
+
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
 
-    console.log(response.data)
-    console.log('response.data.data', response.data.data)
-    // Map the response data to a structured caseDetails object
-    const caseDetails = {
-      case_id: response.data.caseId,
-      customer_ref: response.data.customerRef,
-      account_no: response.data.accountNo,
-      current_arrears_amount: response.data.arrearsAmount,
-      last_payment_date: response.data.lastPaymentDate,
-      contact_Details: response.data.contactDetails,
-      full_Address: response.data.fullAddress,
-      nic: response.data.nic,
+    const formattedData = {
+      caseDetails: {
+        case_id: response.data.data.formattedCaseDetails.case_id,
+        customer_ref: response.data.data.formattedCaseDetails.customer_ref,
+        account_no: response.data.data.formattedCaseDetails.account_no,
+        current_arrears_amount: response.data.data.formattedCaseDetails.current_arrears_amount,
+        last_payment_date: response.data.data.formattedCaseDetails.last_payment_date,
+        ref_products: response.data.data.formattedCaseDetails.ref_products || [],
+      },
+      settlementData: response.data.data.settlementData,
+      paymentData: response.data.data.paymentData,
+      additionalData: {
+        ro_negotiation: response.data.data.formattedCaseDetails.ro_negotiation,
+        ro_requests: response.data.data.formattedCaseDetails.ro_requests,
+      }
     };
 
-    return caseDetails;
+    return formattedData;
   } catch (error) {
-    console.error("Error retrieving case details by ID:", error.response?.data || error.message);
+    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
     throw error;
   }
 };
 
-// Update Customer Profile
-export const updateCustomerContacts = async (caseData) => {
+
+
+/* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
   try {
-    // Check if caseData or case_id is missing
-    if (!caseData || !caseData.case_id) {
-      throw new Error("Case ID and data are required.");
+    if (!drcId || !caseId) {
+      return { status: "error", message: "drcId and caseId are required parameters." };
     }
 
-    // Check if either contact or remark is provided
-    if (!caseData.contact && !caseData.remark) {
-      throw new Error("Either contact or remark is required.");
-    }
+    console.log("Fetching case details for DRC ID:", drcId, "and Case ID:", caseId);
 
-    console.log('caseData', caseData)
-    // Send a POST request to update customer contacts
-    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
-    console.log("Update Response:", response);
-    return response;
+    const response = await axios.post(
+      `${URL}/List_Behaviors_Of_Case_During_DRC`,
+      { drc_id: drcId, case_id: caseId },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("API Response:", response.data);
+    return response.data;
   } catch (error) {
-    console.error("Error updating customer contacts:", error.response?.data || error.message);
-    throw error;
+    console.error("Error fetching case details:", error);
+
+    if (error.response) {
+      // The request was made, but the server responded with an error status
+      return {
+        status: "error",
+        message: error.response.data.message || "An error occurred on the server.",
+        errors: error.response.data.errors || {},
+        statusCode: error.response.status,
+      };
+    } else if (error.request) {
+      // The request was made but no response was received
+      return { status: "error", message: "No response from server. Please try again later." };
+    } else {
+      // Something happened in setting up the request
+      return { status: "error", message: error.message || "An unexpected error occurred." };
+    }
   }
 };
+ */
 
+// List Behaviors Of Case During DRC
+export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
+  try {
+    if (!drcId || !caseId) {
+      throw new Error("DRC ID and Case ID are required.");
+    }
 
+    const response = await axios.post(
+      `${URL}/List_Behaviors_Of_Case_During_DRC`,
+      { drc_id: drcId, case_id: caseId }
+    );
+    console.log("API Response:", response.data);
 
+   
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
 
+   
+    return response.data;
+
+  } catch (error) {
+    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
+    
+    // Return an error response if something goes wrong
+    return {
+      status: "error",
+      message: error.response?.data.message || error.message || "An unexpected error occurred.",
+      errors: error.response?.data.errors || {},
+    };
+  }
+};
