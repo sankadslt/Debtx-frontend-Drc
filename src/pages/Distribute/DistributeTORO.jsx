@@ -106,6 +106,7 @@ const DistributeTORO = () => {
             rtoms_for_ro: officer.rtoms_for_ro,
           }));
           setRecoveryOfficers(officers);
+          console.log("Recovery Officers:", response.data);
         } else {
           setError("DRC ID not found in URL.");
         }
@@ -280,10 +281,35 @@ const DistributeTORO = () => {
         return;
       }
 
-      const assigned_by = "System"; // Assign the cases by the system
+      const assigned_by = "DRC"; // Assign cases by DRC
 
       // Call the API to assign the cases with separate parameters (caseIds and roId)
       const response = await assignROToCase(selectedCaseIds, ro_id, assigned_by);
+      console.log("Assign RO response:", response);
+
+
+
+
+       // Check if there are any failed cases
+      if (response.details?.failed_cases?.length > 0) {
+        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        return;
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
@@ -298,7 +324,7 @@ const DistributeTORO = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
+const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
         return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
@@ -322,8 +348,6 @@ const DistributeTORO = () => {
         return <span className="text-gray-500">N/A</span>;
     }
   };
-
-
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -429,53 +453,53 @@ const DistributeTORO = () => {
 
       {/* Table Section */}
       <div className={GlobalStyle.tableContainer}>
-        <table className={GlobalStyle.table}>
-          <thead className={GlobalStyle.thead}>
-            <tr>
-              <th className={GlobalStyle.tableHeader}></th>
-              <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Case ID</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
-              <th className={GlobalStyle.tableHeader}>Amount</th>
-              <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-              <th className={GlobalStyle.tableHeader}>RO</th>
-              <th className={GlobalStyle.tableHeader}>Expire Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData && currentData.length > 0 ? (
-              currentData.map((item, index) => (
-                <tr
-                  key={item.case_id || index} // Use case_id if available, else fallback to index
-                  className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-                >
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.has(index)}
-                      onChange={() => handleRowSelect(index)}
-                      className="mx-auto"
-                    />
-                  </td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center">No cases available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+  <table className={GlobalStyle.table}>
+    <thead className={GlobalStyle.thead}>
+      <tr>
+        <th className={GlobalStyle.tableHeader}></th>
+        <th className={GlobalStyle.tableHeader}>Status</th>
+        <th className={GlobalStyle.tableHeader}>Case ID</th>
+        <th className={GlobalStyle.tableHeader}>Date</th>
+        <th className={GlobalStyle.tableHeader}>Amount</th>
+        <th className={GlobalStyle.tableHeader}>Action</th>
+        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+        <th className={GlobalStyle.tableHeader}>RO</th>
+        <th className={GlobalStyle.tableHeader}>Expire Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentData && currentData.length > 0 ? (
+        currentData.map((item, index) => (
+          <tr
+            key={item.case_id || index} // Use case_id if available, else fallback to index
+            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+          >
+            <td className="text-center">
+              <input
+                type="checkbox"
+                checked={selectedRows.has(index)}
+                onChange={() => handleRowSelect(index)}
+                className="mx-auto"
+              />
+            </td>
+            <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="9" className="text-center">No cases available</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
 
       {/* Pagination Section */}
