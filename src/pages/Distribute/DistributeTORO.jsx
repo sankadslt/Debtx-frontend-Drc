@@ -281,8 +281,35 @@ const DistributeTORO = () => {
         return;
       }
 
+      const assigned_by = "DRC"; // Assign cases by DRC
+
       // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(selectedCaseIds, ro_id);
+      const response = await assignROToCase(selectedCaseIds, ro_id, assigned_by);
+      console.log("Assign RO response:", response);
+
+
+
+
+       // Check if there are any failed cases
+      if (response.details?.failed_cases?.length > 0) {
+        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        return;
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
