@@ -11,7 +11,7 @@ Related Files: (routes)
 Notes: This page includes a filter and a table */
 
 
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
@@ -22,6 +22,7 @@ import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
+import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -237,25 +238,18 @@ const DistributeTORO = () => {
 
   const handleSubmit = async () => {
     try {
-      // Ensure selectedRO is available (the value from the dropdown)
-      const selectedRtom = selectedRO; // The selected RO name from the dropdown
-      console.log("Selected RTOM:", selectedRtom);
-
+      const selectedRtom = selectedRO;
+      
       if (!selectedRO) {
         Swal.fire("Error", "No Recovery Officer selected!", "error");
         return;
       }
 
-      console.log("Selected rows:", selectedRows);
-      // Ensure that at least one row is selected
-      if (!selectedRows || selectedRows.size === 0) {  // Check if Set is empty
+      if (!selectedRows || selectedRows.size === 0) {
         Swal.fire("Error", "Please select at least one row before submitting!", "error");
         return;
       }
 
-
-
-      // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
 
       if (!selectedOfficer) {
@@ -263,7 +257,6 @@ const DistributeTORO = () => {
         return;
       }
 
-      // Get the ro_id of the selected officer
       const ro_id = selectedOfficer.ro_id;
 
       if (!ro_id) {
@@ -271,9 +264,6 @@ const DistributeTORO = () => {
         return;
       }
 
-
-
-      // Get selected case IDs from the rows selected (assuming selectedRows is an array of indices)
       const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
 
       if (selectedCaseIds.length === 0) {
@@ -281,35 +271,23 @@ const DistributeTORO = () => {
         return;
       }
 
-      const assigned_by = "DRC"; // Assign cases by DRC
+      const userId = await getLoggedUserId();
 
-      // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(selectedCaseIds, ro_id, assigned_by);
-      console.log("Assign RO response:", response);
+      // Create the payload object with all required parameters
+      const assignmentPayload = {
+        caseIds: selectedCaseIds,
+        drcId: drc_id,
+        roId: ro_id,
+        assigned_by: userId, // Include assigned_by in the payload
+      };
 
+      // Update the API call to pass the complete payload
+      const response = await assignROToCase(assignmentPayload);
 
-
-
-       // Check if there are any failed cases
       if (response.details?.failed_cases?.length > 0) {
         Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
         return;
       }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
@@ -574,8 +552,6 @@ const getStatusIcon = (status) => {
             </option>
           )}
         </select>
-
-
 
         {/* Submit Button */}
         <button
