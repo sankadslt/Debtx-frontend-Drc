@@ -1,7 +1,8 @@
 /*Purpose: This template is used for the 2.1- Assigned case list for DRC
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-01-07
+Last Modified Date: 2025-02-18
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
 Version: node 20
 ui number : 2.1
 Dependencies: tailwind css
@@ -17,6 +18,18 @@ import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
 
+//Status Icons
+import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
+import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
+import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
+import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
+import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
+import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
+import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+
+
 export default function AssignedCaseListforDRC() {
 
   const {drc_id} =useParams();
@@ -30,7 +43,6 @@ export default function AssignedCaseListforDRC() {
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [filteredData, setFilteredData] = useState([]);
-  // const [filterValue, setFilterValue] = useState(""); // This holds the filter value for the Arreas Amount Filter 
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,6 +52,7 @@ export default function AssignedCaseListforDRC() {
   const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
+  //Handle Pagination
   const handlePrevNext = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -49,7 +62,6 @@ export default function AssignedCaseListforDRC() {
   };
 
   // Filter state
-  // const [filterRO, setRO] = useState(""); 
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
@@ -69,7 +81,7 @@ export default function AssignedCaseListforDRC() {
         setArrearsAmounts([]);
       }
       
-    }
+    }    
     fetchData();
     
   }, [drc_id]);
@@ -111,35 +123,6 @@ export default function AssignedCaseListforDRC() {
     }
   }
 
-  // // Filtering the data based on filter the date and other filters
-  // const filterData = () => {
-  //   let tempData = data;
-  //   if (filterValue) {
-  //     tempData = tempData.filter((item) =>
-  //       item.amount.includes(filterValue)
-  //     );
-  //   }
-  //   if (filterRO) {
-  //     tempData = tempData.filter((item) =>
-  //       item.ro.includes(filterRO)
-  //     );
-  //   }
-  //   if (fromDate) {
-  //       tempData = tempData.filter((item) => {
-  //         const itemDate = new Date(item.date);
-  //         return itemDate >= fromDate;
-  //       });
-  //     }
-  //     if (toDate) {
-  //       tempData = tempData.filter((item) => {
-  //         const itemExpireDate = new Date(item.expiredate);
-  //         return itemExpireDate <= toDate;
-  //       });
-  //     }
-  //   setFilteredData(tempData);
-    
-  // };
-
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
     Object.values(row)
@@ -148,27 +131,37 @@ export default function AssignedCaseListforDRC() {
       .includes(searchQuery.toLowerCase())
   );
 
+  const getStatusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case "open no agent":
+        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+      case "open with agent":
+        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+      case "negotiation settle pending":
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+      case "negotiation settle open pending":
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+      case "negotiation settle active":
+        return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+      case "fmb":
+        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+      case "fmb settle pending":
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+      case "fmb settle open pending":
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+      case "fmb settle active":
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+      default:
+        return <span className="text-gray-500">N/A</span>;
+    }
+  };
+  
   return (
     <div className={GlobalStyle.fontPoppins}>
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Case List</h1>
       
       <div className="flex gap-4 items-center flex-wrap mt-4 ">
-        {/* <input
-          type="text"
-          value={filterValue}
-          onChange={(e) => setFilterValue(e.target.value)}
-          placeholder="Enter Arrears Amount"
-          className={GlobalStyle.inputText}
-        />
-        <input
-          type="text"
-          value={filterRO}
-          onChange={(e) => setRO(e.target.value)}
-          placeholder="Enter RO"
-          className={GlobalStyle.inputText}
-        /> */}
-
         {/* Dropdown for Arrears Amount */}
         <select
           className={GlobalStyle.selectBox}
@@ -221,7 +214,7 @@ export default function AssignedCaseListforDRC() {
             className={`${GlobalStyle.buttonPrimary}`}
           >
             Filter
-          </button>
+        </button>
       </div>
 
       {/* Search Section */}
@@ -264,7 +257,7 @@ export default function AssignedCaseListforDRC() {
                   }
                 >
                   <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
-                  <td className={GlobalStyle.tableData}>{item.status || "N/A"}</td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
 

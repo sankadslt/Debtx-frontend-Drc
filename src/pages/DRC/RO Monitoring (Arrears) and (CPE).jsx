@@ -1,8 +1,8 @@
 /*Purpose: This template is used for the 2.4.1- RO Monitoring (Arrears) and 2.4.2- RO Monitoring (CPE)
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-01-07 by Nimesh
-
+Last Modified Date: 2025-02-18
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
 Version: node 20
 ui number : 2.4.1 and  2.4.2
 Dependencies: tailwind css
@@ -93,9 +93,9 @@ export default function RO_Monitoring_CPE() {
                         <div className="flex flex-col items-center justify-center mb-4">                        
                             <div className={`${GlobalStyle.cardContainer}`}>
                                 {[
-                                    { label: "Case ID", value: cusNegotiationData.caseDetails.case_id },
-                                    { label: "Customer Ref", value: cusNegotiationData.caseDetails.customer_ref },
-                                    { label: "Account No", value: cusNegotiationData.caseDetails.account_no },
+                                    { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id },
+                                    { label: "Customer Ref", value: cusNegotiationData?.caseDetails?.customer_ref },
+                                    { label: "Account No", value: cusNegotiationData?.caseDetails?.account_no },
                                 ].map((item, index) => (
                                     <p key={index} className="mb-2 flex items-center">
                                         <strong className="w-40 text-left">{item.label}</strong>
@@ -125,6 +125,7 @@ export default function RO_Monitoring_CPE() {
                                                 { label: "Service Type", value: product.service },
                                                 { label: "Service Address", value: product.service_address },
                                                 { label: "Service Status", value: product.product_status },
+                                                { label: "Ownership", value: product.product_ownership },
                                             ].map((item, index) => (
                                                 <p key={index} className="mb-2 flex items-center">
                                                     <strong className="w-40 text-left">{item.label}</strong>
@@ -205,7 +206,6 @@ export default function RO_Monitoring_CPE() {
                 {/* Content for "Customer Negotiation" */}
                 {activeTab === "Customer Negotiation" && (
                     <>
-
                         <div className={`${GlobalStyle.cardContainer}`}>
                             {[
                                 { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id},
@@ -255,69 +255,60 @@ export default function RO_Monitoring_CPE() {
 
                         {/* Content for the Settlement Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Settlement Details</h2>
-                        {/* Table Section */}
-                        {cusNegotiationData?.settlementData ? (
-                            <div className={GlobalStyle.tableContainer}>
-                                <table className={GlobalStyle.table}>
-                                    <thead className={GlobalStyle.thead}>
-                                        <tr>
-                                            <th className={GlobalStyle.tableHeader}>Created Date</th>
-                                            <th className={GlobalStyle.tableHeader}>Status</th>
-                                            <th className={GlobalStyle.tableHeader}>Expired On</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className={GlobalStyle.tableRowEven}>
-                                            <td className={GlobalStyle.tableData}>
-                                                {new Date(cusNegotiationData.settlementData.created_dtm).toLocaleDateString("en-CA") || "N/A"}
-                                            </td>
-                                            <td className={GlobalStyle.tableData}>
-                                                {cusNegotiationData.settlementData.settlement_status}
-                                            </td>
-                                            <td className={GlobalStyle.tableData}>
-                                                {new Date(cusNegotiationData.settlementData.expire_date).toLocaleDateString("en-CA") || "N/A"}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            ) : (
-                            <p>Loading Settlement Data...</p>
-                            )
-                        }
-
+                        {/* Table Section */}                     
+                        <div className={GlobalStyle.tableContainer}>
+                            <table className={GlobalStyle.table}>
+                                <thead className={GlobalStyle.thead}>
+                                    <tr>
+                                        <th className={GlobalStyle.tableHeader}>Created Date</th>
+                                        <th className={GlobalStyle.tableHeader}>Status</th>
+                                        <th className={GlobalStyle.tableHeader}>Expired On</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className={GlobalStyle.tableRowEven}>
+                                        <td className={GlobalStyle.tableData}>
+                                            {new Date(cusNegotiationData?.settlementData?.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>
+                                            {cusNegotiationData?.settlementData?.settlement_status}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>
+                                            {new Date(cusNegotiationData?.settlementData?.expire_date).toLocaleDateString("en-CA") || "N/A"}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
                         {/* Content for the Payment Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Payment Details</h2>
                         {/* Table Section */}
-                        {cusNegotiationData?.paymentData ? (
-                            <div className={GlobalStyle.tableContainer}>
-                                <table className={GlobalStyle.table}>
-                                    <thead className={GlobalStyle.thead}>
-                                        <tr>
-                                            <th className={GlobalStyle.tableHeader}>Date</th>
-                                            <th className={GlobalStyle.tableHeader}>Paid Amount</th>
-                                            <th className={GlobalStyle.tableHeader}>Settled Balance</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className={GlobalStyle.tableRowEven}>
-                                            <td className={GlobalStyle.tableData}>
-                                                {new Date(cusNegotiationData.paymentData.created_dtm).toLocaleDateString("en-CA") || "N/A"}
-                                            </td>
-                                            <td className={GlobalStyle.tableData}>
-                                                {cusNegotiationData.paymentData.bill_paid_amount}
-                                            </td>
-                                            <td className={GlobalStyle.tableData}>
-                                                {cusNegotiationData.paymentData.settled_balance}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            ) : (
-                            <p>Loading Settlement Data...</p>
-                            )
-                        }
+                        
+                        <div className={GlobalStyle.tableContainer}>
+                            <table className={GlobalStyle.table}>
+                                <thead className={GlobalStyle.thead}>
+                                    <tr>
+                                        <th className={GlobalStyle.tableHeader}>Date</th>
+                                        <th className={GlobalStyle.tableHeader}>Paid Amount</th>
+                                        <th className={GlobalStyle.tableHeader}>Settled Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className={GlobalStyle.tableRowEven}>
+                                        <td className={GlobalStyle.tableData}>
+                                            {new Date(cusNegotiationData?.paymentData?.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>
+                                            {cusNegotiationData?.paymentData?.bill_paid_amount}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>
+                                            {cusNegotiationData?.paymentData?.settled_balance}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         {/* Content for the Requests Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Requested Additional Details</h2>

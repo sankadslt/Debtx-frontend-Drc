@@ -2,8 +2,8 @@
 Created Date: 2025-01-08
 Created By: Geeth (eshaneperera@gmail.com)
 Last Modified Date: 2025-01-08
-Modified Date: 2025-01-12
-Modified By: Geeth(eshaneperera@gmail.com)
+Modified Date: 2025-02-18
+Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com)
 Version: node 20
 ui number : 2.2
 Dependencies: tailwind css
@@ -24,6 +24,16 @@ import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import Swal from 'sweetalert2';
 
+//Status Icons
+import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
+import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
+import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
+import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
+import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
+import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
+import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -96,6 +106,7 @@ const DistributeTORO = () => {
             rtoms_for_ro: officer.rtoms_for_ro,
           }));
           setRecoveryOfficers(officers);
+          console.log("Recovery Officers:", response.data);
         } else {
           setError("DRC ID not found in URL.");
         }
@@ -286,7 +297,30 @@ const DistributeTORO = () => {
     }
   };
 
-
+const getStatusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case "open no agent":
+        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+      case "open with agent":
+        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+      case "negotiation settle pending":
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+      case "negotiation settle open pending":
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+      case "negotiation settle active":
+        return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+      case "fmb":
+        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+      case "fmb settle pending":
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+      case "fmb settle open pending":
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+      case "fmb settle active":
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+      default:
+        return <span className="text-gray-500">N/A</span>;
+    }
+  };
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -392,53 +426,53 @@ const DistributeTORO = () => {
 
       {/* Table Section */}
       <div className={GlobalStyle.tableContainer}>
-        <table className={GlobalStyle.table}>
-          <thead className={GlobalStyle.thead}>
-            <tr>
-              <th className={GlobalStyle.tableHeader}></th>
-              <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Case ID</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
-              <th className={GlobalStyle.tableHeader}>Amount</th>
-              <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-              <th className={GlobalStyle.tableHeader}>RO</th>
-              <th className={GlobalStyle.tableHeader}>Expire Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData && currentData.length > 0 ? (
-              currentData.map((item, index) => (
-                <tr
-                  key={item.case_id || index} // Use case_id if available, else fallback to index
-                  className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-                >
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.has(index)}
-                      onChange={() => handleRowSelect(index)}
-                      className="mx-auto"
-                    />
-                  </td>
-                  <td className={GlobalStyle.tableData}> {item.status || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center">No cases available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+  <table className={GlobalStyle.table}>
+    <thead className={GlobalStyle.thead}>
+      <tr>
+        <th className={GlobalStyle.tableHeader}></th>
+        <th className={GlobalStyle.tableHeader}>Status</th>
+        <th className={GlobalStyle.tableHeader}>Case ID</th>
+        <th className={GlobalStyle.tableHeader}>Date</th>
+        <th className={GlobalStyle.tableHeader}>Amount</th>
+        <th className={GlobalStyle.tableHeader}>Action</th>
+        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+        <th className={GlobalStyle.tableHeader}>RO</th>
+        <th className={GlobalStyle.tableHeader}>Expire Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentData && currentData.length > 0 ? (
+        currentData.map((item, index) => (
+          <tr
+            key={item.case_id || index} // Use case_id if available, else fallback to index
+            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+          >
+            <td className="text-center">
+              <input
+                type="checkbox"
+                checked={selectedRows.has(index)}
+                onChange={() => handleRowSelect(index)}
+                className="mx-auto"
+              />
+            </td>
+            <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="9" className="text-center">No cases available</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
 
       {/* Pagination Section */}
