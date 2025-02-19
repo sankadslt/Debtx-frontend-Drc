@@ -235,3 +235,65 @@ export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
     };
   }
 };
+
+
+// Get Case Details by Case ID
+export const drcCaseDetails = async (caseId) => {
+  try {
+    // Check if caseId is missing
+    if (!caseId) {
+      throw new Error("Case ID is required.");
+    }
+    // Send a POST request to fetch case details
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
+       case_id: caseId
+    });
+    // Check if the response indicates an error
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    console.log(response.data)
+    console.log('response.data.data', response.data.data)
+    // Map the response data to a structured caseDetails object
+    const caseDetails = {
+      case_id: response.data.caseId,
+      customer_ref: response.data.customerRef,
+      account_no: response.data.accountNo,
+      current_arrears_amount: response.data.arrearsAmount,
+      last_payment_date: response.data.lastPaymentDate,
+      contact_Details: response.data.contactDetails,
+      full_Address: response.data.fullAddress,
+      nic: response.data.nic,
+    };
+  return caseDetails;
+  } catch (error) {
+    console.error("Error retrieving case details by ID:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// Update Customer Profile
+export const updateCustomerContacts = async (caseData) => {
+  try {
+    // Check if caseData or case_id is missing
+    if (!caseData || !caseData.case_id) {
+      throw new Error("Case ID and data are required.");
+    }
+
+    // Check if either contact or remark is provided
+    if (!caseData.contact && !caseData.remark) {
+      throw new Error("Either contact or remark is required.");
+    }
+
+    console.log('caseData', caseData)
+    // Send a POST request to update customer contacts
+    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
+    console.log("Update Response:", response);
+    return response;
+  } catch (error) {
+    console.error("Error updating customer contacts:", error.response?.data || error.message);
+    throw error;
+  }
+};
