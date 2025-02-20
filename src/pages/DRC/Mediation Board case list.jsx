@@ -299,7 +299,7 @@ export default function MediationBoardCaselist() {
         <button
           className={GlobalStyle.buttonPrimary}
           onClick={handleFilterClick}
-          disabled={loading}
+         
         >
           {loading ? "Filter" : "Filter"}
         </button>
