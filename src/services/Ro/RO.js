@@ -181,3 +181,21 @@ export const getActiveRODetailsByDrcID = async (drcId) => {
       throw error;
     }
   };
+
+  // Fetch all cases assigned to a DRC
+  export const listDRCAllCases = async ({ drc_id, ro_id, From_DAT, TO_DAT, case_current_status }) => {
+    try {
+      const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, {
+        drc_id,
+        ro_id,
+        From_DAT,
+        TO_DAT,
+        case_current_status,
+      });
+  
+      return response.data; // Returning the API response
+    } catch (error) {
+      console.error("Error fetching DRC all cases:", error.response?.data || error.message);
+      throw error;
+    }
+  };
