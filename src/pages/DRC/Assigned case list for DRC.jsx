@@ -37,6 +37,7 @@ export default function AssignedCaseListforDRC() {
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
+  const [drc_id, setDrcId] = useState(null);
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +76,7 @@ export default function AssignedCaseListforDRC() {
     };
 
     fetchUserData();
-  }, []);
+  }, [user?.drc_id]);
 
   useEffect(() => {
     const fetchData =async () => {
