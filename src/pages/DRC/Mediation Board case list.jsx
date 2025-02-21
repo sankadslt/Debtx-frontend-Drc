@@ -299,7 +299,7 @@ export default function MediationBoardCaselist() {
         <button
           className={GlobalStyle.buttonPrimary}
           onClick={handleFilterClick}
-          disabled={loading}
+         
         >
           {loading ? "Filter" : "Filter"}
         </button>
@@ -354,7 +354,7 @@ export default function MediationBoardCaselist() {
                   <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                   <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>
-                  {row.mediation_board_count || 0}
+                    {row.mediation_board_count || 0}
                   </td>
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_details?.next_calling_dtm
