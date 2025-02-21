@@ -28,7 +28,6 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { getUserData } from "../../services/auth/authService.js";
 
 export default function AssignedCaseListforDRC() {
   const [user, setUser] = useState(null);

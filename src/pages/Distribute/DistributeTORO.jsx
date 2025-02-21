@@ -35,7 +35,6 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { getUserData } from "../../services/auth/authService.js";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -503,97 +502,27 @@ const getStatusIcon = (status) => {
     </tbody>
   </table>
 </div>
-
-
-    {/* Pagination Section */}
-    <div className={GlobalStyle.navButtonContainer}>
-      <button
-        onClick={() => handlePrevNext("prev")}
-        disabled={currentPage === 1}
-        className={`${GlobalStyle.navButton} ${
-          currentPage === 1 ? "cursor-not-allowed" : ""
-      }`}
-      >
-     <FaArrowLeft />
-      </button>
-      <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-        Page {currentPage} of {totalPages}
-      </span>
-      <button
-        onClick={() => handlePrevNext("next")}
-        disabled={currentPage === totalPages}
-        className={`${GlobalStyle.navButton} ${
-       currentPage === totalPages ? "cursor-not-allowed" : ""
-      }`}
-    >
-     <FaArrowRight />
-   </button>
- </div>
-
-   {/* Select All Data Checkbox and Submit Button */}
-    <div className="flex justify-end gap-4 mt-4">
-     {/* Select All Data Checkbox */}
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          className="rounded-lg"
-          checked={selectAll}
-          onChange={handleSelectAll}
-        />
-            Select All Data
-       </label>
-
-    {/* Recovery Officer (RO) Select Dropdown */}
-   <select
-  id="ro-select"
-  className={GlobalStyle.selectBox}
-  value={selectedRO || ""}  // Keep the placeholder as default value when nothing is selected
-  onChange={(e) => {
-    const selectedName = e.target.value;
-    if (selectedName) {
-      setSelectedRO(selectedName);  // Update selected RO if the option is valid
-    }
-  }}
->
-  {/* Placeholder Option */}
-  <option value="" disabled>
-    Select RO
-  </option>
-  
-  {/* Options for Recovery Officers */}
-  {recoveryOfficers && recoveryOfficers.length > 0 ? (
-    recoveryOfficers.map((officer, index) => {
-      // Format the display as "ro_name - rtoms_for_ro.name"
-      const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-      const displayName = `${officer.ro_name} - ${rtomsNames}`;
-
-      return (
-        <option key={`ro-${index}`} value={officer.ro_name}>
-          {displayName}
-        </option>
-      );
-    })
-  ) : (
-    <option value="" disabled>
-      No officers available
-    </option>
-  )}
-</select>
-
-
-
-  {/* Submit Button */}
-    <button
-      onClick={() => { 
-        handleSubmit(); 
-        navigate(`/drc/assigned-ro-case-log`); 
-      }}
-      className={GlobalStyle.buttonPrimary}
-      disabled={selectedRows.size === 0} // Disable if no rows are selected
-    >
-      Submit
-    </button>
-  </div>
+      {/* Pagination Section */}
+      <div className={GlobalStyle.navButtonContainer}>
+        <button
+          onClick={() => handlePrevNext("prev")}
+          disabled={currentPage === 1}
+          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+            }`}
+        >
+          <FaArrowLeft />
+        </button>
+        <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePrevNext("next")}
+          disabled={currentPage === totalPages}
+          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
+            }`}
+        >
+          <FaArrowRight />
+        </button>
       </div>
 
       {/* Select All Data Checkbox and Submit Button */}

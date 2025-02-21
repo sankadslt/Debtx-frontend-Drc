@@ -14,9 +14,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getLoggedUserId } from "../../services/auth/authService";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
-import { getUserData } from "../../services/auth/authService";
 
 export default function Re_AssignRo() {
 
