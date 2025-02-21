@@ -124,23 +124,3 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-// List all DRC Negotiation Cases
-export const listDRCAllCases = async (payload) => {
-  try {
-    if (!payload.drc_id || !payload.ro_id || !payload.From_DAT || !payload.TO_DAT) {
-      throw new Error("drc_id, ro_id, From_DAT, and TO_DAT are required.");
-    }
-
-    const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, payload);
-    
-    if (response.data.status === "error") {
-      throw new Error(response.data.message);
-    }
-
-    return response.data.data; // Return case data
-  } catch (error) {
-    console.error("Error retrieving DRC negotiation cases:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
