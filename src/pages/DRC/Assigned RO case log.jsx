@@ -15,9 +15,6 @@ import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { useParams } from "react-router-dom";
-
-
-
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";

@@ -43,7 +43,7 @@ const Routers = () => {
       <Route path="/dummy-page" element={<ProtectedRoute element={<DummyPage />} allowedRoles={['superadmin']} />} />
 
       {/* Prototype Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRoles={['superadmin']} />} />
+      <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
       <Route path="/prototypeA" element={<ProtectedRoute element={<PrototypeA />} allowedRoles={['superadmin']} />} />
       <Route path="/prototypeB" element={<ProtectedRoute element={<PrototypeB />} allowedRoles={['superadmin']} />} />
       <Route path="/prototypeC" element={<ProtectedRoute element={<PrototypeC />} allowedRoles={['superadmin']} />} />

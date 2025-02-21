@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
+import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
@@ -179,13 +180,20 @@ export default function Re_AssignRo() {
         return
       }
   
-      const assigned_by ="System"; //hardcoded assignedBy
+      const userId = await getLoggedUserId();
 
        // Ensure case_id is wrapped in an array
       const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
 
+      const assignmentPayload = {
+        caseIds: caseIdsArray,
+        drcId: drc_id,
+        roId: ro_id,
+        assigned_by: userId, // Include assigned_by in the payload
+      };
+
       // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(caseIdsArray, ro_id, drc_id, assigned_by);
+      const response = await assignROToCase(assignmentPayload);
       console.log("response: ", response);
 
        // Check if there are any failed cases

@@ -68,7 +68,7 @@ export default function AssignedCaseListforDRC() {
   useEffect(() => {
     const fetchData =async () => {
       try {
-        const arrearsAmounts =await fetchAllArrearsBands();        
+        const arrearsAmounts = await fetchAllArrearsBands();        
         setArrearsAmounts(arrearsAmounts);
 
         if (drc_id) {

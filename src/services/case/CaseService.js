@@ -163,9 +163,6 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 };
 
 
- 
-
-
 /* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
   try {
     if (!drcId || !caseId) {
