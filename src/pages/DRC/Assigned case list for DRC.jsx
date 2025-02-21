@@ -28,12 +28,12 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { getUserData } from "../../services/auth/authService.js";
 
 
 export default function AssignedCaseListforDRC() {
-
-  const {drc_id} =useParams();
-
+  const [user, setUser] = useState(null);
+  
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] =useState("");
@@ -66,13 +66,27 @@ export default function AssignedCaseListforDRC() {
   const [toDate, setToDate] = useState(null);
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
     const fetchData =async () => {
       try {
         const arrearsAmounts =await fetchAllArrearsBands();        
         setArrearsAmounts(arrearsAmounts);
 
-        if (drc_id) {
-          const roData =await roassignedbydrc(drc_id);
+        if (user?.drc_id) {
+          const roData =await roassignedbydrc(user?.drc_id);
           setRoList(roData);
         }
 
@@ -84,7 +98,7 @@ export default function AssignedCaseListforDRC() {
     }    
     fetchData();
     
-  }, [drc_id]);
+  }, [user?.drc_id]);
 
   // Handle filtering cases
   const handleFilter =async () => {
@@ -98,7 +112,7 @@ export default function AssignedCaseListforDRC() {
       };
 
       const payload ={
-        drc_id: Number(drc_id),
+        drc_id: Number(user?.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "", // Ensure it's properly assigned
         from_date: formatDate(fromDate),

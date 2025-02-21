@@ -14,12 +14,7 @@ import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
 import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
-import { useParams } from "react-router-dom";
-
-
-
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
-
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
@@ -34,6 +29,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { getUserData } from "../../services/auth/authService.js";
 
 
 export default function AssignedROcaselog() {
@@ -70,8 +66,23 @@ export default function AssignedROcaselog() {
 
 
 
-    // Use useParams hook to get the drc_id from the URL
-    const { drc_id } = useParams();
+    const [user, setUser] =useState(null);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+          try {
+            const userData = await getUserData();
+            setUser(userData);
+            console.log("DRC ID: ", user?.drc_id);          
+          } catch (err) {
+            console.log("Error in getting user data : " , err);
+            
+          } 
+        };
+    
+        fetchUserData();
+    
+    }, []);
 
 
     useEffect(() => {
@@ -91,12 +102,11 @@ export default function AssignedROcaselog() {
 
 
     useEffect(() => {
-
-        console.log("Route parameter drc_id :", drc_id);
+        console.log("Route parameter drc_id :", user?.drc_id);
         const fetchData = async () => {
             try {
-                if (drc_id) {
-                    const payload = parseInt(drc_id, 10); // Convert drc_id to number
+                if (user?.drc_id) {
+                    const payload = parseInt(user?.drc_id, 10); // Convert drc_id to number
 
                     // Fetch RTOMs by DRC ID
                     const rtomsList = await getRTOMsByDRCID(payload);
@@ -111,16 +121,7 @@ export default function AssignedROcaselog() {
 
         fetchData();
 
-    }, [drc_id]); // Including drc_id to the Dependency array
-
-
-
-
-
-
-
-
-
+    }, [user?.drc_id]); // Including drc_id to the Dependency array
 
     // Handle filter function
     const handleFilter = async () => {
@@ -135,7 +136,7 @@ export default function AssignedROcaselog() {
             };
 
             const payload = {
-                drc_id: Number(drc_id), // Convert drc_id to number
+                drc_id: Number(user?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
                 arrears_band: filterAmount,
                 from_date: formatDate(fromDate),
@@ -435,7 +436,7 @@ export default function AssignedROcaselog() {
                                     <td className={GlobalStyle.tableData}>
                                         <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <AiFillEye
-                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${drc_id}/${item.case_id}`)}
+                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
                                                 style={{ cursor: "pointer", marginRight: "8px" }}
                                             />
                                             <FaEdit
@@ -445,7 +446,7 @@ export default function AssignedROcaselog() {
                                             <button
                                                 className={`${GlobalStyle.buttonPrimary} mx-auto`}
                                                 style={{ whiteSpace: "nowrap" }}
-                                                onClick={() => navigate(`/pages/DRC/Re-AssignRo/${drc_id}/${item.case_id}`)}
+                                                onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
                                             >
                                                 Re-Assign
                                             </button>

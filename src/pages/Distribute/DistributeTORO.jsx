@@ -34,6 +34,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { getUserData } from "../../services/auth/authService.js";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -54,10 +55,21 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsBands, setArrearsBands] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
+  const [user, setUser] =useState(null);
   
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
 
-  // Use useParams hook to get the drc_id from the URL
-  const { drc_id } = useParams();
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const fetchArrearsBands = async () => {
@@ -75,8 +87,8 @@ const DistributeTORO = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (drc_id) {
-          const payload = parseInt(drc_id, 10);
+        if (user?.drc_id) {
+          const payload = parseInt(user?.drc_id, 10);
   
           // Fetch RTOMs
           const rtomsList = await getRTOMsByDRCID(payload);
@@ -95,8 +107,8 @@ const DistributeTORO = () => {
   
     const fetchRecoveryOfficers = async () => {
       try {
-        if (drc_id) {
-          const numericDrcId = Number(drc_id);
+        if (user?.drc_id) {
+          const numericDrcId = Number(user?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
     
           // Map recovery officers with ro_id and other details
@@ -118,7 +130,7 @@ const DistributeTORO = () => {
     fetchData();
     fetchRecoveryOfficers();
     
-  }, [drc_id]);
+  }, [user?.drc_id]);
   
   const handleFilter = async () => {
     try {
@@ -131,7 +143,7 @@ const DistributeTORO = () => {
         };
 
         const payload = {
-            drc_id: Number(drc_id),
+            drc_id: Number(user?.drc_id),
             rtom: selectedRTOM,
             arrears_band: selectedArrearsBand,
             ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
@@ -540,7 +552,7 @@ const getStatusIcon = (status) => {
     <button
       onClick={() => { 
         handleSubmit(); 
-        navigate(`/drc/assigned-ro-case-log/${drc_id}`); 
+        navigate(`/drc/assigned-ro-case-log`); 
       }}
       className={GlobalStyle.buttonPrimary}
       disabled={selectedRows.size === 0} // Disable if no rows are selected
