@@ -11,12 +11,12 @@ Notes: The following page conatins the code for the assigned case list for DRC  
 
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -29,64 +29,18 @@ import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
-
 export default function AssignedCaseListforDRC() {
-    // Data for the table
-  // const data = [
-  //   {
-  //     caseId: "C001",
-  //     status: "Pending",
-  //     date: "2024.11.05",
-  //     amount: "15,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2024.12.20",
-  //     ro:"Silva Perera"
-      
-  //   },
-    
-  //   {
-  //     caseId: "C002",
-  //     status: "Pending",
-  //     date: "2024.11.05",
-  //     amount: "50,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Colombo",
-  //     expiredate: "2024.11.20",
-  //     ro:"P.B.Silva"
-  //   },
-  //   {
-  //     caseId: "C003",
-  //     status: "Pending",
-  //     date: "2025.01.01",
-  //     amount: "30,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2025.02.10",
-  //     ro:"Silva Perera"
-  //   },
-  //     {
-  //     caseId: "C004",
-  //     status: "Pending",
-  //     date: "2025.01.01",
-  //     amount: "15,000",
-  //     action: "Arrears Collect",
-  //     rtomArea: "Kegalle",
-  //     expiredate: "2025.01.20",
-  //     ro:"P.B.Silva"
-  //     },
-  // ];
+  // State for drc_id
+  const [drcId, setDrcId] = useState(null);
 
-  const {drc_id} =useParams();
-
-  //State for dropdowns
+  // State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
-  const [selectedArrearsAmount, setSelectedArrearsAmount] =useState("");
+  const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
-  const [selectedRo, setSelectedRo] =useState("");
+  const [selectedRo, setSelectedRo] = useState("");
 
   // State for search query and filtered data
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
   // Pagination state
@@ -97,7 +51,7 @@ export default function AssignedCaseListforDRC() {
   const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
-  //Handle Pagination
+  // Handle Pagination
   const handlePrevNext = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -111,62 +65,65 @@ export default function AssignedCaseListforDRC() {
   const [toDate, setToDate] = useState(null);
 
   useEffect(() => {
-    const fetchData =async () => {
+    const fetchUserData = async () => {
       try {
-        const arrearsAmounts = await fetchAllArrearsBands();        
+        // Step 1: Fetch user_id
+        const userId = await getLoggedUserId();
+        if (!userId) throw new Error("Unable to fetch user ID");
+
+        // Step 2: Fetch drc_id using user_id
+        const userData = await getUserData();
+        setDrcId(userData.drc_id);
+
+        // Step 3: Fetch arrears bands and ro list
+        const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (drc_id) {
-          const roData =await roassignedbydrc(drc_id);
+        if (userData.drc_id) {
+          const roData = await roassignedbydrc(userData.drc_id);
           setRoList(roData);
         }
-
       } catch (error) {
-        console.log("Data fetching failed : " , error);
-        setArrearsAmounts([]);
+        console.error("Error fetching data:", error);
       }
-      
-    }    
-    fetchData();
-    
-  }, [drc_id]);
+    };
+
+    fetchUserData();
+  }, [drcId]);
 
   // Handle filtering cases
-  const handleFilter =async () => {
+  const handleFilter = async () => {
     try {
       setFilteredData([]);
 
       const formatDate = (date) => {
         if (!date) return null;
         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-        return offsetDate.toISOString().split('T')[0];
+        return offsetDate.toISOString().split("T")[0];
       };
 
-      const payload ={
-        drc_id: Number(drc_id),
+      const payload = {
+        drc_id: Number(drcId),
         arrears_band: selectedArrearsAmount || "",
-        ro_id: selectedRo ? Number(selectedRo) : "", // Ensure it's properly assigned
+        ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
         to_date: formatDate(toDate),
       };
 
       console.log("Payload sent to API: ", payload);
-      
 
-      const response =await listHandlingCasesByDRC(payload);
+      const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
         console.log(response);
-        
         setFilteredData(response);
       } else {
-          console.error("No valid cases data found in response.");
+        console.error("No valid cases data found in response.");
       }
-
     } catch (error) {
-        console.error("Error filtering cases:", error);
+      console.error("Error filtering cases:", error);
     }
-  }
+  };
 
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
@@ -350,8 +307,6 @@ export default function AssignedCaseListforDRC() {
         <FaArrowRight />
         </button>
       </div>
-      
-
     </div>
   );
 }

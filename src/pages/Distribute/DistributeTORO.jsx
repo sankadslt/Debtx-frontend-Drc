@@ -15,14 +15,14 @@ import  { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
-import { getLoggedUserId } from "../../services/auth/authService";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -41,6 +41,7 @@ const DistributeTORO = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [drc_id, setDrcId] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
   const [fromDate, setFromDate] = useState(null);
@@ -53,24 +54,43 @@ const DistributeTORO = () => {
   const navigate = useNavigate();
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [arrearsBands, setArrearsBands] = useState([]);
+  const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
 
-
-  // Use useParams hook to get the drc_id from the URL
-  const { drc_id } = useParams();
+  // useEffect(() => {
+  //   const fetchArrearsBands = async () => {
+  //     try {
+  //       const bands = await fetchAllArrearsBands();
+  //       setArrearsBands(bands);
+  //     } catch (error) {
+  //       console.error("Error fetching arrears bands:", error);
+  //     }
+  //   };
+  //   fetchArrearsBands();
+  // }, []);
 
   useEffect(() => {
-    const fetchArrearsBands = async () => {
+    const fetchUserData = async () => {
       try {
-        const bands = await fetchAllArrearsBands();
-        setArrearsBands(bands);
+        // Step 1: Fetch user_id
+        const userId = await getLoggedUserId();
+        if (!userId) throw new Error("Unable to fetch user ID");
+
+        // Step 2: Fetch drc_id using user_id
+        const userData = await getUserData();
+        setDrcId(userData.drc_id);
+
+        // Step 3: Fetch arrears bands and ro list
+        const arrearsAmounts = await fetchAllArrearsBands();
+        setArrearsAmounts(arrearsAmounts);
+
       } catch (error) {
-        console.error("Error fetching arrears bands:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchArrearsBands();
-  }, []);
+  
+      fetchUserData();
+    }, [drc_id]);
 
   // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
@@ -377,8 +397,8 @@ const getStatusIcon = (status) => {
           onChange={(e) => setSelectedArrearsBand(e.target.value)}
         >
           <option value="">Arrears Band</option>
-          {arrearsBands.length > 0 ? (
-            arrearsBands.map((band, index) => (
+          {arrearsAmounts.length > 0 ? (
+            arrearsAmounts.map((band, index) => (
               <option key={index} value={band.key}>
                 {band.value}
               </option>
