@@ -1,7 +1,8 @@
 /*Purpose: This template is used for the 2.5- Re-Assign RO
 Created Date: 2025-01-07
 Created By: Sanjaya (sanjayaperera80@gmail.com)
-Last Modified Date: 2025-01-08
+Last Modified Date: 2025-02-19
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
 Version: node 20
 ui number : 2.5
 Dependencies: tailwind css
@@ -11,11 +12,12 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { List_Behaviors_Of_Case_During_DRC } from "../../services/case/CaseService";
+import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
+import { getLoggedUserId } from "../../services/auth/authService";
+import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
-
 
   const { drc_id, case_id } = useParams();
   const [selectedRO, setSelectedRO] = useState("");
@@ -33,12 +35,8 @@ export default function Re_AssignRo() {
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
   const [settlementDetails, setSettlementDetails] = useState({});
 
-
-
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,24 +131,88 @@ export default function Re_AssignRo() {
     fetchData();
     fetchRecoveryOfficers();
 
-
-
-
-
-
-
-
-
-
-
-
-
   }, [drc_id, case_id]);
 
-
-  const handleSubmit = () => {
-    alert("Submit button clicked");
+  const handleTextarea = async(remark) => {
+    try {
+      console.log("Data: ", case_id, drc_id, remark);
+      await updateLastRoDetails(case_id, drc_id, remark);
+    } catch (error) {
+      console.error("Error in handleTextArea: ", error);
+      throw new Error("Failed to update Last RO details");
+    }
   }
+
+  //Handle submit button
+  const handleSubmit = async () => {
+    try {
+      // Ensure selectedRO is available (the value from the dropdown)
+      const selectedRtom = selectedRO; // The selected RO name from the dropdown
+      if (!selectedRtom) {
+        Swal.fire("Error", "No Recovery Officer selected!", "error");
+        return;
+      }
+  
+      // Find the corresponding Recovery Officer object from recoveryOfficers
+      const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
+      if (!selectedOfficer) {
+        Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+        return;
+      }
+  
+      // Get the ro_id of the selected officer
+      const ro_id = selectedOfficer.ro_id; 
+      if (!ro_id) {
+        Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+        return;
+      }
+
+      if (!textareaValue.trim()) {
+        Swal.fire("Error", "Last RO details are required!", "error");
+        return;
+      }
+      
+      try {
+        await handleTextarea(textareaValue);
+      } catch (error) {
+        console.error("Error in updating last ro details: ", error);   
+        Swal.fire("Error", "Failed to update Last Ro details.", "error");
+        return
+      }
+  
+      const userId = await getLoggedUserId();
+
+       // Ensure case_id is wrapped in an array
+      const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
+
+      const assignmentPayload = {
+        caseIds: caseIdsArray,
+        drcId: drc_id,
+        roId: ro_id,
+        assigned_by: userId, // Include assigned_by in the payload
+      };
+
+      // Call the API to assign the cases with separate parameters (caseIds and roId)
+      const response = await assignROToCase(assignmentPayload);
+      console.log("response: ", response);
+
+       // Check if there are any failed cases
+      if (response.details?.failed_cases?.length > 0) {
+        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        return;
+      }
+      
+      if (response.status === 'success') {
+        Swal.fire("Success", "Cases assigned successfully!", "success");
+      } else {
+        Swal.fire("Error", response.message, "error");
+      }
+  
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+    }
+  };
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
@@ -158,8 +220,6 @@ export default function Re_AssignRo() {
         <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
       </div>
       {/* card box*/}
-
-
 
       <div className={`${GlobalStyle.cardContainer || ""}`}>
         {[
@@ -203,7 +263,6 @@ export default function Re_AssignRo() {
 
 
       {/* remark box */}
-
       <div className="mb-6 flex items-center  space-x-6">
         <label className={GlobalStyle.remarkTopic}>Last RO details</label>
         <textarea

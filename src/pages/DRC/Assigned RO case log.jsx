@@ -1,12 +1,13 @@
 /* Purpose: This template is used for the 2.3 - Assigned RO case log .
 Created Date: 2024-01-08
 Created By: Chamath (chamathjayasanka20@gmail.com)
-Last Modified Date:2025-01-08
+Last Modified Date:2025-02-18
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
 Version: node 20
 ui number : 2.3
 Dependencies: tailwind css
 Related Files: (routes)
-Notes:  The following page conatins the code for the Assigned RO case log Screen */
+Notes: The following page conatins the code for the Assigned RO case log Screen */
 
 import { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
@@ -14,14 +15,23 @@ import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { useParams } from "react-router-dom";
-
-
-
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+
+//Status Icons
+import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
+import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
+import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
+import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
+import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
+import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
+import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+
 
 export default function AssignedROcaselog() {
 
@@ -247,6 +257,31 @@ export default function AssignedROcaselog() {
             .includes(searchQuery.toLowerCase()) // Match with the search query
     );
 
+    const getStatusIcon = (status) => {
+        switch (status.toLowerCase()) {
+          case "open no agent":
+            return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+          case "open with agent":
+            return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+          case "negotiation settle pending":
+            return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+          case "negotiation settle open pending":
+            return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+          case "negotiation settle active":
+            return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+          case "fmb":
+            return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+          case "fmb settle pending":
+            return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+          case "fmb settle open pending":
+            return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+          case "fmb settle active":
+            return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+          default:
+            return <span className="text-gray-500">N/A</span>;
+        }
+    };
+
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
@@ -387,7 +422,7 @@ export default function AssignedROcaselog() {
                                             {item.case_id}
                                         </a>
                                     </td>
-                                    <td className={GlobalStyle.tableData}>{item.status}</td>
+                                    <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                                     <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
                                     <td className={GlobalStyle.tableData}>{item.area}</td>
                                     <td className={GlobalStyle.tableData}>{item.remark}</td>

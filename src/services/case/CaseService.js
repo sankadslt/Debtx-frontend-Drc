@@ -40,11 +40,13 @@ export const listHandlingCasesByDRC = async (payload) => {
 
 
 // Assign Recovery Officer to Case
-export const assignROToCase = async (caseIds, roId) => {
+export const assignROToCase = async (payload) => {
   try {
     const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
-      case_ids: caseIds,
-      ro_id: roId,
+      drc_id: payload.drcId,
+      case_ids: payload.caseIds,
+      ro_id: payload.roId,
+      assigned_by: payload.assigned_by
     });
     return response.data;
   } catch (error) {
@@ -161,9 +163,6 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 };
 
 
- 
-
-
 /* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
   try {
     if (!drcId || !caseId) {
@@ -234,3 +233,30 @@ export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
     };
   }
 };
+
+export const updateLastRoDetails =async(case_id, drc_id, remark) => {
+  try {
+    // if (!case_id || !drc_id || !remark) {
+    //   throw new Error("All Fields are required.")
+    // }
+
+    //Convert caseID and drcId to integers
+    const case_id_int =parseInt(case_id, 10);
+    const drc_id_int =parseInt(drc_id, 10);
+
+    console.log("Sending to backend:", { case_id_int, drc_id_int, remark }); 
+
+    const response =await axios.patch(`${URL}/Update_case_last_Ro_Details`, {
+      case_id: case_id_int,
+      drc_id: drc_id_int,
+      remark: remark
+    });
+
+    console.log("Response from handler: ", response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error updating recovery officer details:", error.response?.data || error.message);
+    throw error;
+  }
+}
