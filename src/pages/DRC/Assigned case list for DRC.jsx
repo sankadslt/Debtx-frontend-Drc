@@ -28,12 +28,12 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { getUserData } from "../../services/auth/authService.js";
 
 export default function AssignedCaseListforDRC() {
-  // State for drc_id
-  const [drcId, setDrcId] = useState(null);
-
-  // State for dropdowns
+  const [user, setUser] = useState(null);
+  
+  //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
@@ -67,6 +67,20 @@ export default function AssignedCaseListforDRC() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData =async () => {
+      try {
         // Step 1: Fetch user_id
         const userId = await getLoggedUserId();
         if (!userId) throw new Error("Unable to fetch user ID");
@@ -79,17 +93,18 @@ export default function AssignedCaseListforDRC() {
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (userData.drc_id) {
-          const roData = await roassignedbydrc(userData.drc_id);
+        if (user?.drc_id) {
+          const roData =await roassignedbydrc(user?.drc_id);
           setRoList(roData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-    };
-
-    fetchUserData();
-  }, [drcId]);
+      
+    }    
+    fetchData();
+    
+  }, [user?.drc_id]);
 
   // Handle filtering cases
   const handleFilter = async () => {
@@ -102,8 +117,8 @@ export default function AssignedCaseListforDRC() {
         return offsetDate.toISOString().split("T")[0];
       };
 
-      const payload = {
-        drc_id: Number(drcId),
+      const payload ={
+        drc_id: Number(user?.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
@@ -136,23 +151,23 @@ export default function AssignedCaseListforDRC() {
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
-        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+        return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
-        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+        return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
       case "negotiation settle pending":
-        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
       case "negotiation settle open pending":
-        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
       case "negotiation settle active":
         return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
       case "fmb":
-        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+        return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
       case "fmb settle pending":
-        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
       case "fmb settle open pending":
-        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
       case "fmb settle active":
-        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
       default:
         return <span className="text-gray-500">N/A</span>;
     }

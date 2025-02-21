@@ -16,10 +16,12 @@ import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails 
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
+import { getUserData } from "../../services/auth/authService";
 
 export default function Re_AssignRo() {
 
-  const { drc_id, case_id } = useParams();
+  const { case_id } = useParams();
+  const [user, setUser] =useState(null);
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
 
@@ -39,11 +41,25 @@ export default function Re_AssignRo() {
   const [textareaValue, setTextareaValue] = useState("");
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        if (drc_id && case_id) {
+        if (user?.drc_id && case_id) {
 
-          const data = await List_Behaviors_Of_Case_During_DRC(drc_id, case_id);
+          const data = await List_Behaviors_Of_Case_During_DRC(user?.drc_id, case_id);
 
           console.log("Data:", data);
 
@@ -108,8 +124,8 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (drc_id) {
-          const numericDrcId = Number(drc_id);
+        if (user?.drc_id) {
+          const numericDrcId = Number(user?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -131,12 +147,12 @@ export default function Re_AssignRo() {
     fetchData();
     fetchRecoveryOfficers();
 
-  }, [drc_id, case_id]);
+  }, [user?.drc_id, case_id]);
 
   const handleTextarea = async(remark) => {
     try {
-      console.log("Data: ", case_id, drc_id, remark);
-      await updateLastRoDetails(case_id, drc_id, remark);
+      console.log("Data: ", case_id, user?.drc_id, remark);
+      await updateLastRoDetails(case_id, user?.drc_id, remark);
     } catch (error) {
       console.error("Error in handleTextArea: ", error);
       throw new Error("Failed to update Last RO details");
@@ -184,10 +200,11 @@ export default function Re_AssignRo() {
 
        // Ensure case_id is wrapped in an array
       const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
-
+  
+      // Prepare the assignment payload
       const assignmentPayload = {
         caseIds: caseIdsArray,
-        drcId: drc_id,
+        drcId: user?.drc_id,
         roId: ro_id,
         assigned_by: userId, // Include assigned_by in the payload
       };

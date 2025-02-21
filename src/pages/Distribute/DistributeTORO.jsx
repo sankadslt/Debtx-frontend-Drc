@@ -35,6 +35,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { getUserData } from "../../services/auth/authService.js";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -56,18 +57,21 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
+  const [user, setUser] =useState(null);
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
 
-  // useEffect(() => {
-  //   const fetchArrearsBands = async () => {
-  //     try {
-  //       const bands = await fetchAllArrearsBands();
-  //       setArrearsBands(bands);
-  //     } catch (error) {
-  //       console.error("Error fetching arrears bands:", error);
-  //     }
-  //   };
-  //   fetchArrearsBands();
-  // }, []);
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -96,9 +100,9 @@ const DistributeTORO = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (drc_id) {
-          const payload = parseInt(drc_id, 10);
-
+        if (user?.drc_id) {
+          const payload = parseInt(user?.drc_id, 10);
+  
           // Fetch RTOMs
           const rtomsList = await getRTOMsByDRCID(payload);
           setRtoms(rtomsList);
@@ -116,8 +120,8 @@ const DistributeTORO = () => {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (drc_id) {
-          const numericDrcId = Number(drc_id);
+        if (user?.drc_id) {
+          const numericDrcId = Number(user?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -139,9 +143,9 @@ const DistributeTORO = () => {
 
     fetchData();
     fetchRecoveryOfficers();
-
-  }, [drc_id]);
-
+    
+  }, [user?.drc_id]);
+  
   const handleFilter = async () => {
     try {
       setFilteredData([]); // Clear previous results
@@ -152,14 +156,15 @@ const DistributeTORO = () => {
         return offsetDate.toISOString().split('T')[0];
       };
 
-      const payload = {
-        drc_id: Number(drc_id),
-        rtom: selectedRTOM,
-        arrears_band: selectedArrearsBand,
-        ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-        from_date: formatDate(fromDate),
-        to_date: formatDate(toDate),
-      };
+        const payload = {
+            drc_id: Number(user?.drc_id),
+            rtom: selectedRTOM,
+            arrears_band: selectedArrearsBand,
+            ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+            from_date: formatDate(fromDate),
+            to_date: formatDate(toDate),
+        };
+        
 
 
       const response = await listHandlingCasesByDRC(payload);
@@ -325,23 +330,23 @@ const DistributeTORO = () => {
 const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
-        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+        return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
-        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+        return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
       case "negotiation settle pending":
-        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
       case "negotiation settle open pending":
-        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
       case "negotiation settle active":
         return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
       case "fmb":
-        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+        return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
       case "fmb settle pending":
-        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
       case "fmb settle open pending":
-        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
       case "fmb settle active":
-        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
       default:
         return <span className="text-gray-500">N/A</span>;
     }
@@ -500,27 +505,95 @@ const getStatusIcon = (status) => {
 </div>
 
 
-      {/* Pagination Section */}
-      <div className={GlobalStyle.navButtonContainer}>
-        <button
-          onClick={() => handlePrevNext("prev")}
-          disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
-            }`}
-        >
-          <FaArrowLeft />
-        </button>
-        <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => handlePrevNext("next")}
-          disabled={currentPage === totalPages}
-          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
-            }`}
-        >
-          <FaArrowRight />
-        </button>
+    {/* Pagination Section */}
+    <div className={GlobalStyle.navButtonContainer}>
+      <button
+        onClick={() => handlePrevNext("prev")}
+        disabled={currentPage === 1}
+        className={`${GlobalStyle.navButton} ${
+          currentPage === 1 ? "cursor-not-allowed" : ""
+      }`}
+      >
+     <FaArrowLeft />
+      </button>
+      <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        onClick={() => handlePrevNext("next")}
+        disabled={currentPage === totalPages}
+        className={`${GlobalStyle.navButton} ${
+       currentPage === totalPages ? "cursor-not-allowed" : ""
+      }`}
+    >
+     <FaArrowRight />
+   </button>
+ </div>
+
+   {/* Select All Data Checkbox and Submit Button */}
+    <div className="flex justify-end gap-4 mt-4">
+     {/* Select All Data Checkbox */}
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          className="rounded-lg"
+          checked={selectAll}
+          onChange={handleSelectAll}
+        />
+            Select All Data
+       </label>
+
+    {/* Recovery Officer (RO) Select Dropdown */}
+   <select
+  id="ro-select"
+  className={GlobalStyle.selectBox}
+  value={selectedRO || ""}  // Keep the placeholder as default value when nothing is selected
+  onChange={(e) => {
+    const selectedName = e.target.value;
+    if (selectedName) {
+      setSelectedRO(selectedName);  // Update selected RO if the option is valid
+    }
+  }}
+>
+  {/* Placeholder Option */}
+  <option value="" disabled>
+    Select RO
+  </option>
+  
+  {/* Options for Recovery Officers */}
+  {recoveryOfficers && recoveryOfficers.length > 0 ? (
+    recoveryOfficers.map((officer, index) => {
+      // Format the display as "ro_name - rtoms_for_ro.name"
+      const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+      const displayName = `${officer.ro_name} - ${rtomsNames}`;
+
+      return (
+        <option key={`ro-${index}`} value={officer.ro_name}>
+          {displayName}
+        </option>
+      );
+    })
+  ) : (
+    <option value="" disabled>
+      No officers available
+    </option>
+  )}
+</select>
+
+
+
+  {/* Submit Button */}
+    <button
+      onClick={() => { 
+        handleSubmit(); 
+        navigate(`/drc/assigned-ro-case-log`); 
+      }}
+      className={GlobalStyle.buttonPrimary}
+      disabled={selectedRows.size === 0} // Disable if no rows are selected
+    >
+      Submit
+    </button>
+  </div>
       </div>
 
       {/* Select All Data Checkbox and Submit Button */}
