@@ -315,7 +315,7 @@ const DistributeTORO = () => {
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
-        navigate(`/drc/assigned-ro-case-log/${drc_id}`);
+        navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }

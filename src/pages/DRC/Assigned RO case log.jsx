@@ -55,7 +55,7 @@ export default function AssignedROcaselog() {
     const [drc_id, setDrcId] = useState(null);
 
     // Filter state for Amount, Case ID, Status, and Date
-    const [arrearsAmounts, setArrearsAmounts] = useState("");
+    const [arrearsAmounts, setArrearsAmounts] = useState([]);
     const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
@@ -90,7 +90,7 @@ export default function AssignedROcaselog() {
     
         fetchUserData();
     
-    }, []);
+    }, [user?.drc_id]);
 
 
     useEffect(() => {
@@ -113,7 +113,7 @@ export default function AssignedROcaselog() {
         };
 
         fetchUserData();
-    }, [drc_id]);
+    }, [user?.drc_id]);
 
     useEffect(() => {
         console.log("Route parameter drc_id :", user?.drc_id);
@@ -328,9 +328,6 @@ export default function AssignedROcaselog() {
                         <option disabled>No RTOMs found</option>
                     )}
                 </select>
-
-
-
                 <select
                     className={GlobalStyle.selectBox}
                     value={selectedArrearsBand}
@@ -339,14 +336,17 @@ export default function AssignedROcaselog() {
                     <option value="" disabled>
                         Arrears band
                     </option>
-                    {arrearsAmounts.map(({ key, value }) => (
-                        <option key={key} value={key}>
-                            {value}
-                        </option>
-                    ))}
+                    {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
+                        arrearsAmounts.map(({ key, value }) => (
+                            <option key={key} value={key}>
+                                {value}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No arrears bands available</option>
+                    )}
+
                 </select>
-
-
 
                 <div className={GlobalStyle.datePickerContainer}>
                     <label className={GlobalStyle.dataPickerDate}>Date</label>
