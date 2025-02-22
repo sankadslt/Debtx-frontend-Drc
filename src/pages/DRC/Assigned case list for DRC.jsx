@@ -11,12 +11,12 @@ Notes: The following page conatins the code for the assigned case list for DRC  
 
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -28,20 +28,19 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { getUserData } from "../../services/auth/authService.js";
-
 
 export default function AssignedCaseListforDRC() {
   const [user, setUser] = useState(null);
   
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
-  const [selectedArrearsAmount, setSelectedArrearsAmount] =useState("");
+  const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
-  const [selectedRo, setSelectedRo] =useState("");
+  const [selectedRo, setSelectedRo] = useState("");
+  const [drc_id, setDrcId] = useState(null);
 
   // State for search query and filtered data
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
   // Pagination state
@@ -52,7 +51,7 @@ export default function AssignedCaseListforDRC() {
   const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
-  //Handle Pagination
+  // Handle Pagination
   const handlePrevNext = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -77,22 +76,29 @@ export default function AssignedCaseListforDRC() {
     };
 
     fetchUserData();
-  }, []);
+  }, [user?.drc_id]);
 
   useEffect(() => {
     const fetchData =async () => {
       try {
-        const arrearsAmounts =await fetchAllArrearsBands();        
+        // Step 1: Fetch user_id
+        const userId = await getLoggedUserId();
+        if (!userId) throw new Error("Unable to fetch user ID");
+
+        // Step 2: Fetch drc_id using user_id
+        const userData = await getUserData();
+        setDrcId(userData.drc_id);
+
+        // Step 3: Fetch arrears bands and ro list
+        const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
         if (user?.drc_id) {
           const roData =await roassignedbydrc(user?.drc_id);
           setRoList(roData);
         }
-
       } catch (error) {
-        console.log("Data fetching failed : " , error);
-        setArrearsAmounts([]);
+        console.error("Error fetching data:", error);
       }
       
     }    
@@ -101,41 +107,38 @@ export default function AssignedCaseListforDRC() {
   }, [user?.drc_id]);
 
   // Handle filtering cases
-  const handleFilter =async () => {
+  const handleFilter = async () => {
     try {
       setFilteredData([]);
 
       const formatDate = (date) => {
         if (!date) return null;
         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-        return offsetDate.toISOString().split('T')[0];
+        return offsetDate.toISOString().split("T")[0];
       };
 
       const payload ={
         drc_id: Number(user?.drc_id),
         arrears_band: selectedArrearsAmount || "",
-        ro_id: selectedRo ? Number(selectedRo) : "", // Ensure it's properly assigned
+        ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
         to_date: formatDate(toDate),
       };
 
       console.log("Payload sent to API: ", payload);
-      
 
-      const response =await listHandlingCasesByDRC(payload);
+      const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
         console.log(response);
-        
         setFilteredData(response);
       } else {
-          console.error("No valid cases data found in response.");
+        console.error("No valid cases data found in response.");
       }
-
     } catch (error) {
-        console.error("Error filtering cases:", error);
+      console.error("Error filtering cases:", error);
     }
-  }
+  };
 
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
@@ -274,9 +277,7 @@ export default function AssignedCaseListforDRC() {
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
-
-                  <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
-
+                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 
@@ -321,8 +322,6 @@ export default function AssignedCaseListforDRC() {
         <FaArrowRight />
         </button>
       </div>
-      
-
     </div>
   );
 }

@@ -14,10 +14,10 @@ import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
 import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
-import { fetchAllArrearsBands } from "../../services/case/CaseService";
+import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -29,7 +29,6 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { getUserData } from "../../services/auth/authService.js";
 
 
 export default function AssignedROcaselog() {
@@ -53,17 +52,26 @@ export default function AssignedROcaselog() {
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
     const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+    const [drc_id, setDrcId] = useState(null);
 
     // Filter state for Amount, Case ID, Status, and Date
-    const [filterRTOM, setFilterRTOM] = useState(""); // RTOM
-    const [filterAmount, setFilterAmount] = useState("");
-    const [arrearsBands, setArrearsBands] = useState([]);
-
+    const [arrearsAmounts, setArrearsAmounts] = useState([]);
+    const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
 
+    // useEffect(() => {
+    //     const getArrearsBands = async () => {
+    //         try {
+    //             const bands = await fetchAllArrearsBands();
+    //             console.log("Arrears bands:", bands);
+    //             setArrearsBands(bands);
+    //         } catch (error) {
+    //             console.error("Error fetching arrears bands:", error);
+    //         }
+    //     };
 
 
     const [user, setUser] =useState(null);
@@ -82,24 +90,30 @@ export default function AssignedROcaselog() {
     
         fetchUserData();
     
-    }, []);
+    }, [user?.drc_id]);
 
 
     useEffect(() => {
-        const getArrearsBands = async () => {
-            try {
-                const bands = await fetchAllArrearsBands();
-                console.log("Arrears bands:", bands);
-                setArrearsBands(bands);
-            } catch (error) {
-                console.error("Error fetching arrears bands:", error);
-            }
+        const fetchUserData = async () => {
+        try {
+            // Step 1: Fetch user_id
+            const userId = await getLoggedUserId();
+            if (!userId) throw new Error("Unable to fetch user ID");
+
+            // Step 2: Fetch drc_id using user_id
+            const userData = await getUserData();
+            setDrcId(userData.drc_id);
+
+            // Step 3: Fetch arrears bands and ro list
+            const arrearsAmounts = await fetchAllArrearsBands();
+            setArrearsAmounts(arrearsAmounts);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
         };
 
-        getArrearsBands();
-    }, []);
-
-
+        fetchUserData();
+    }, [user?.drc_id]);
 
     useEffect(() => {
         console.log("Route parameter drc_id :", user?.drc_id);
@@ -138,7 +152,7 @@ export default function AssignedROcaselog() {
             const payload = {
                 drc_id: Number(user?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
-                arrears_band: filterAmount,
+                arrears_band: selectedArrearsBand,
                 from_date: formatDate(fromDate),
                 to_date: formatDate(toDate),
             };
@@ -198,6 +212,7 @@ export default function AssignedROcaselog() {
         if (fromDate) {
             tempData = tempData.filter((item) => {
                 const itemDate = new Date(item.date);
+                return itemDate >= toDate;
             });
         }
 
@@ -219,18 +234,18 @@ export default function AssignedROcaselog() {
         if (filterStatus) {
             tempData = tempData.filter((item) => item.status.includes(filterStatus));
         }
-        if (filterAmount) {
+        if (selectedArrearsBand) {
             tempData = tempData.filter((item) => {
                 const amount = parseInt(item.amount.replace(/,/g, "")); // Remove commas and parse as integer
-                if (filterAmount === "5-10") {
+                if (selectedArrearsBand === "5-10") {
                     return amount >= 5000 && amount <= 10000;
-                } else if (filterAmount === "10-25") {
+                } else if (selectedArrearsBand === "10-25") {
                     return amount >= 10000 && amount <= 25000;
-                } else if (filterAmount === "25-50") {
+                } else if (selectedArrearsBand === "25-50") {
                     return amount >= 25000 && amount <= 50000;
-                } else if (filterAmount === "50-100") {
+                } else if (selectedArrearsBand === "50-100") {
                     return amount >= 50000 && amount <= 100000;
-                } else if (filterAmount === "100+") {
+                } else if (selectedArrearsBand === "100+") {
                     return amount > 100000;
                 }
                 return true; // Return true if no filter is applied
@@ -313,25 +328,25 @@ export default function AssignedROcaselog() {
                         <option disabled>No RTOMs found</option>
                     )}
                 </select>
-
-
-
                 <select
-                    value={filterAmount}
-                    onChange={(e) => setFilterAmount(e.target.value)}
-                    className={`${GlobalStyle.selectBox} h-[43px] border rounded px-2`}
+                    className={GlobalStyle.selectBox}
+                    value={selectedArrearsBand}
+                    onChange={(e) => setSelectedArrearsBand(e.target.value)}
                 >
                     <option value="" disabled>
                         Arrears band
                     </option>
-                    {arrearsBands.map(({ key, value }) => (
-                        <option key={key} value={key}>
-                            {value}
-                        </option>
-                    ))}
+                    {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
+                        arrearsAmounts.map(({ key, value }) => (
+                            <option key={key} value={key}>
+                                {value}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No arrears bands available</option>
+                    )}
+
                 </select>
-
-
 
                 <div className={GlobalStyle.datePickerContainer}>
                     <label className={GlobalStyle.dataPickerDate}>Date</label>
