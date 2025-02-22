@@ -11,14 +11,14 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId, getUserData } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
-
+  const navigate = useNavigate();
   const { case_id } = useParams();
   const [user, setUser] =useState(null);
   const [selectedRO, setSelectedRO] = useState("");
@@ -220,6 +220,7 @@ export default function Re_AssignRo() {
       
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
+        navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }
