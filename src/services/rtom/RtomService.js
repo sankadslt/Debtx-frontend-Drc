@@ -149,7 +149,7 @@ export const getRTOMsByDRCID = async (drc_id) => {
 // RtomService.js
 export const getActiveRTOMsByDRCID = async (drc_id) => {
   try {
-    const response = await axios.post(`${URL}/active-rtoms`, {
+    const response = await axios.post(`${URL}/List_ALL_Active_RTOM_Ownned_By_DRC`, {
       drc_id: drc_id
     });
 

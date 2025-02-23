@@ -9,18 +9,19 @@ Version: node 20
 ui number : 2.15
 Dependencies: tailwind css
 Related Files: (routes)
-Notes:  The following page conatins the code for the Mediation Board case list Screen */
+Notes:The following page conatins the code for the Mediation Board case list Screen */
 
 
 
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
+import {  getUserData } from "../../services/auth/authService.js";
 
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -91,7 +92,6 @@ const StatusIcon = ({ status }) => {
 
 
 export default function MediationBoardCaselist() {
-  const { drc_id } = useParams();
   const navigate = useNavigate();
 
   // State management
@@ -103,6 +103,7 @@ export default function MediationBoardCaselist() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [cases, setCases] = useState([]);
+  const [user, setUser] = useState(null);
   const [filters, setFilters] = useState({
     rtom: "",
     action_type: "",
@@ -111,6 +112,41 @@ export default function MediationBoardCaselist() {
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
 
   const rowsPerPage = 7;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        console.log("User Data: ", userData);
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
+
+    fetchUserData();
+  }, [user?.drc_id]);
+
+  useEffect(() => {
+    const fetchRTOMs = async () => {
+      try {
+        if (user?.drc_id) {
+          const payload = parseInt(user?.drc_id);
+
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
+          setRtoms(rtomsList);
+        } else {
+          setError("DRC ID not found in URL.");
+        }
+      } catch (error) {
+        console.error("Error fetching RTOMs:", error);
+        setError("Failed to fetch RTOMs. Please try again later.");
+      }
+    };
+
+    fetchRTOMs();
+  }, [user?.drc_id]);
 
   // Date handlers
   const handleFromDateChange = (date) => {
@@ -160,7 +196,7 @@ export default function MediationBoardCaselist() {
       setError("");
 
       const payload = {
-        drc_id,
+        drc_id: Number(user?.drc_id),
         ...(filters.rtom && { rtom: filters.rtom }),
         ...(filters.action_type && { action_type: filters.action_type }),
         ...(filters.status && { case_current_status: filters.status }),
@@ -181,7 +217,7 @@ export default function MediationBoardCaselist() {
   };
 
   const handleFilterClick = () => {
-    if (!drc_id) {
+    if (!user?.drc_id) {
       setError("DRC ID is required");
       return;
     }
@@ -210,25 +246,6 @@ export default function MediationBoardCaselist() {
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
-
-  useEffect(() => {
-    const fetchRTOMs = async () => {
-      try {
-        if (drc_id) {
-          const payload = parseInt(drc_id, 10);
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
-          setRtoms(rtomsList);
-        } else {
-          setError("DRC ID not found in URL.");
-        }
-      } catch (error) {
-        console.error("Error fetching RTOMs:", error);
-        setError("Failed to fetch RTOMs. Please try again later.");
-      }
-    };
-
-    fetchRTOMs();
-  }, [drc_id]);
 
   return (
     <div className={GlobalStyle.fontPoppins}>

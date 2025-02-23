@@ -77,6 +77,16 @@ const Sidebar = ({ onHoverChange }) => {
               link: "/pages/DRC/Re-AssignRo", 
               roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
             },
+            { 
+              label: "Mediation Board Case List", 
+              link: "/drc/mediation-board-case-list", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
+            },
+            { 
+              label: "Mediation Board Response", 
+              link: "/pages/DRC/Mediation Board Response", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
+            },
           ],
         },
         { label: "Dummy", link: "/dashboard", roles: ["superadmin"] },

@@ -90,7 +90,7 @@ export const getUserData = async () => {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });
-
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error.response?.data || error.message);

@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
@@ -103,7 +103,7 @@ const DistributeTORO = () => {
           const payload = parseInt(user?.drc_id, 10);
   
           // Fetch RTOMs
-          const rtomsList = await getRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
 
         } else {
@@ -155,14 +155,14 @@ const DistributeTORO = () => {
         return offsetDate.toISOString().split('T')[0];
       };
 
-        const payload = {
-            drc_id: Number(user?.drc_id),
-            rtom: selectedRTOM,
-            arrears_band: selectedArrearsBand,
-            ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-            from_date: formatDate(fromDate),
-            to_date: formatDate(toDate),
-        };
+      const payload = {
+          drc_id: Number(user?.drc_id),
+          rtom: selectedRTOM,
+          arrears_band: selectedArrearsBand,
+          ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+          from_date: formatDate(fromDate),
+          to_date: formatDate(toDate),
+      };
         
 
 
