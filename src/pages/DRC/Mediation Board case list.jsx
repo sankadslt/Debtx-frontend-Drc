@@ -136,8 +136,6 @@ export default function MediationBoardCaselist() {
 
           const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
-        } else {
-          setError("DRC ID not found in URL.");
         }
       } catch (error) {
         console.error("Error fetching RTOMs:", error);
