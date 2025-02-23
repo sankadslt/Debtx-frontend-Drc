@@ -14,7 +14,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import { listDRCAllCases } from "../../services/Ro/RO.js";
+import { listDRCAllCases } from "../../services/case/CaseService";
 
 export default function ROsAssignedcaselog() {
   const navigate = useNavigate();
