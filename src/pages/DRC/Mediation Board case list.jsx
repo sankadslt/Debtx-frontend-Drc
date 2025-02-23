@@ -2,11 +2,12 @@
 Created Date: 2024-01-08
 Created By: Chamath (chamathjayasanka20@gmail.com)
 Last Modified Date:2025-01-08
+Modified By: Chathundi Sakumini (sakuminic@gmail.com)
 Version: node 20
 ui number : 2.15
 Dependencies: tailwind css
 Related Files: (routes)
-Notes:  The following page conatins the code for the Mediation Board case list Screen */
+Notes:The following page conatins the code for the Mediation Board case list Screen */
 
 
 

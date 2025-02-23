@@ -2,7 +2,7 @@
 Created Date: 2025-01-07
 Created By: Sanjaya (sanjayaperera80@gmail.com)
 Last Modified Date: 2025-02-19
-Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu srinayaka(sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.5
 Dependencies: tailwind css
