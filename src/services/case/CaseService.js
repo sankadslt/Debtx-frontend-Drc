@@ -127,7 +127,7 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
 
 
 
-export const listAllDRCMediationBoardCases = async (payload) => {
+export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 
   try {
     const { 

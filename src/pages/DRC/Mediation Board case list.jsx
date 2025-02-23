@@ -17,7 +17,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
-import { listAllDRCMediationBoardCases } from "../../services/case/CaseService.js";
+import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
@@ -168,7 +168,7 @@ export default function MediationBoardCaselist() {
         ...(toDate && { to_date: toDate.toISOString() }),
       };
 
-      const data = await listAllDRCMediationBoardCases(payload);
+      const data = await ListALLMediationCasesownnedbyDRCRO(payload);
       setCases(data);
       setCurrentPage(0);
       setHasInitialFetch(true);
