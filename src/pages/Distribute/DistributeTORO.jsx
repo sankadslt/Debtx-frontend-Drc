@@ -70,7 +70,7 @@ const DistributeTORO = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [user?.drc_id]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -93,7 +93,7 @@ const DistributeTORO = () => {
     };
   
       fetchUserData();
-    }, [drc_id]);
+    }, [user?.drc_id]);
 
   // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
