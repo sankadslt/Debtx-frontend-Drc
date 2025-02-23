@@ -181,3 +181,21 @@ export const getActiveRODetailsByDrcID = async (drcId) => {
       throw error;
     }
   };
+
+  export const listDRCAllCases = async ({ drc_id, ro_id, From_DAT, TO_DAT, case_current_status }) => {
+    try {
+      const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, {
+        drc_id,
+        ro_id,
+        From_DAT,
+        TO_DAT,
+        case_current_status: case_current_status || null, // Ensure it's not undefined
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching DRC all cases:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+  
