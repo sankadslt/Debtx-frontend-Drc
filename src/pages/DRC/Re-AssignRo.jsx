@@ -1,7 +1,8 @@
 /*Purpose: This template is used for the 2.5- Re-Assign RO
 Created Date: 2025-01-07
 Created By: Sanjaya (sanjayaperera80@gmail.com)
-Last Modified Date: 2025-01-08
+Last Modified Date: 2025-02-19
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu srinayaka(sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.5
 Dependencies: tailwind css
@@ -10,14 +11,16 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { assignROToCase, List_Behaviors_Of_Case_During_DRC } from "../../services/case/CaseService";
+import { useNavigate, useParams } from "react-router-dom";
+import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
-
-  const { drc_id, case_id } = useParams();
+  const navigate = useNavigate();
+  const { case_id } = useParams();
+  const [user, setUser] =useState(null);
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
 
@@ -37,11 +40,25 @@ export default function Re_AssignRo() {
   const [textareaValue, setTextareaValue] = useState("");
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        if (drc_id && case_id) {
+        if (user?.drc_id && case_id) {
 
-          const data = await List_Behaviors_Of_Case_During_DRC(drc_id, case_id);
+          const data = await List_Behaviors_Of_Case_During_DRC(user?.drc_id, case_id);
 
           console.log("Data:", data);
 
@@ -106,8 +123,8 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (drc_id) {
-          const numericDrcId = Number(drc_id);
+        if (user?.drc_id) {
+          const numericDrcId = Number(user?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -129,8 +146,19 @@ export default function Re_AssignRo() {
     fetchData();
     fetchRecoveryOfficers();
 
-  }, [drc_id, case_id]);
+  }, [user?.drc_id, case_id]);
 
+  const handleTextarea = async(remark) => {
+    try {
+      console.log("Data: ", case_id, user?.drc_id, remark);
+      await updateLastRoDetails(case_id, user?.drc_id, remark);
+    } catch (error) {
+      console.error("Error in handleTextArea: ", error);
+      throw new Error("Failed to update Last RO details");
+    }
+  }
+
+  //Handle submit button
   const handleSubmit = async () => {
     try {
       // Ensure selectedRO is available (the value from the dropdown)
@@ -142,27 +170,46 @@ export default function Re_AssignRo() {
   
       // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
-  
       if (!selectedOfficer) {
         Swal.fire("Error", "Selected Recovery Officer not found!", "error");
         return;
       }
   
       // Get the ro_id of the selected officer
-      const ro_id = selectedOfficer.ro_id;
-  
+      const ro_id = selectedOfficer.ro_id; 
       if (!ro_id) {
         Swal.fire("Error", "Recovery Officer ID is missing.", "error");
         return;
       }
+
+      if (!textareaValue.trim()) {
+        Swal.fire("Error", "Last RO details are required!", "error");
+        return;
+      }
+      
+      try {
+        await handleTextarea(textareaValue);
+      } catch (error) {
+        console.error("Error in updating last ro details: ", error);   
+        Swal.fire("Error", "Failed to update Last Ro details.", "error");
+        return
+      }
   
-      const assigned_by ="System"; //hardcoded assignedBy
+      const userId = await getLoggedUserId();
 
        // Ensure case_id is wrapped in an array
       const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
+  
+      // Prepare the assignment payload
+      const assignmentPayload = {
+        caseIds: caseIdsArray,
+        drcId: user?.drc_id,
+        roId: ro_id,
+        assigned_by: userId, // Include assigned_by in the payload
+      };
 
       // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(caseIdsArray, ro_id, drc_id, assigned_by);
+      const response = await assignROToCase(assignmentPayload);
       console.log("response: ", response);
 
        // Check if there are any failed cases
@@ -173,6 +220,7 @@ export default function Re_AssignRo() {
       
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
+        navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }
@@ -232,7 +280,6 @@ export default function Re_AssignRo() {
 
 
       {/* remark box */}
-
       <div className="mb-6 flex items-center  space-x-6">
         <label className={GlobalStyle.remarkTopic}>Last RO details</label>
         <textarea
