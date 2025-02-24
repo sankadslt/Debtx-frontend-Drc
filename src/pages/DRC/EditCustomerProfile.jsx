@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   drcCaseDetails,
-  updateCustomerContacts,
+  // updateCustomerContacts,
 } from "../../services/case/CaseService";
 import axios from "axios";
 import back from "../../assets/images/back.png";
