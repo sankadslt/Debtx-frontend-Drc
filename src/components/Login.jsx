@@ -22,7 +22,7 @@ const Login = () => {
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("user", JSON.stringify(response.user));
 
-     // console.log("Logged in successfully. Token:", response.accessToken);
+    //  console.log("Logged in successfully. Token:", response.accessToken);
 
       navigate("/dashboard");
     } catch (error) {
