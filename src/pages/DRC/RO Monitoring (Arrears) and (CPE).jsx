@@ -15,12 +15,17 @@ import { FaChevronDown } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
+import { getUserData } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Customer Negotiation"); // Active tab
 
-    const {drc_id, case_id} =useParams();
+    const {case_id} =useParams();
+
+    const [user, setUser] =useState(null);
+    // const [drcId, setDrcId] =useState(null);
+    const [error, setError] = useState(null);
 
     const [isOpen, setIsOpen] =useState([]);
     const[cusNegotiationData, setCusNegotiationData] =useState([]);
@@ -36,15 +41,31 @@ export default function RO_Monitoring_CPE() {
     }
 
     useEffect(() => {
-        if (!drc_id) {
+        const fetchUserData = async () => {
+          try {
+            const userData = await getUserData();
+            setUser(userData);
+            console.log("DRC ID: ", user?.drc_id);          
+          } catch (err) {
+            setError(err.message);
+          } 
+        };
+    
+        fetchUserData();
+
+    }, []);
+
+    useEffect(() => {
+        if (!user?.drc_id) {
           console.log("Missing DRC Id.");
           return;
         }
       
         const fetchData = async () => {
           try {
-            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id, case_id });   
-            console.log(data);
+            
+            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: user?.drc_id, case_id });   
+            console.log("Behavoirs of case: ", data);
       
             setCusNegotiationData({
               caseDetails: data.caseDetails || [],
@@ -58,7 +79,8 @@ export default function RO_Monitoring_CPE() {
         };
       
         fetchData();
-    }, [drc_id, case_id]);
+    }, [user?.drc_id, case_id]);
+    
       
     return (
         <div className={GlobalStyle.fontPoppins}>
