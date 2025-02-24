@@ -299,7 +299,7 @@ export default function MediationBoardCaselist() {
         <button
           className={GlobalStyle.buttonPrimary}
           onClick={handleFilterClick}
-          disabled={loading}
+         
         >
           {loading ? "Filter" : "Filter"}
         </button>
@@ -354,7 +354,7 @@ export default function MediationBoardCaselist() {
                   <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                   <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>
-                  {row.mediation_board_count || 0}
+                    {row.mediation_board_count || 0}
                   </td>
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_details?.next_calling_dtm
@@ -374,7 +374,7 @@ export default function MediationBoardCaselist() {
                       }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
                       onClick={() =>
                         row.status !== "MB_fail_with_pending_non_settlement" &&
-                        navigate(`/case/${row.case_id}`)
+                        navigate(`/pages/DRC/Mediation Board Response/${row.drc_id}/${row.case_id}`)
                       } // Prevent navigation for "MB_fail_with_pending_non_settlement"
                     />
                   </td>

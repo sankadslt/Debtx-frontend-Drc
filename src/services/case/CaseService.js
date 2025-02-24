@@ -204,8 +204,6 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
     throw error;
   }
 };
-
-
 export const ListActiveMediationResponse = async () => {
   try {    
     const response = await axios.get(`${URL}/List_Active_Mediation_Response`);

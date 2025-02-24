@@ -32,7 +32,7 @@ const MediationBoardResponse = () => {
     lastPaymentDate: "",
     callingRound: 0
   });
-
+  const [failReasons, setFailReasons] = useState([]);
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
   const [roRequests, setRoRequests] = useState([]);
@@ -402,9 +402,13 @@ const MediationBoardResponse = () => {
               aria-label="Fail reason"
             >
               <option value="">Select Response</option>
-              <option value="reason1">Reason 1</option>
-              <option value="reason2">Reason 2</option>
-              <option value="reason3">Reason 3</option>
+              {/* <option value="reason1">Mediation Board User Not Agree To Settle</option>
+              <option value="reason2">Installment Default</option>
+              <option value="reason3">Mediation Board Customer Available Not Agree To Settle</option>
+               */}
+              {failReasons.map((failReason, index)=>(
+                <option key={index} value={failReason.mediation_description}>{failReason.mediation_description}</option>
+              ))}
             </select>
           </div>
         )}
