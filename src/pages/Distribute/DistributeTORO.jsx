@@ -2,8 +2,8 @@
 Created Date: 2025-01-08
 Created By: Geeth (eshaneperera@gmail.com)
 Last Modified Date: 2025-01-08
-Modified Date: 2025-02-18
-Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com)
+Modified Date: 2025-02-23
+Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayaka(sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.2
 Dependencies: tailwind css
@@ -70,7 +70,7 @@ const DistributeTORO = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [user?.drc_id]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -93,7 +93,7 @@ const DistributeTORO = () => {
     };
   
       fetchUserData();
-    }, [drc_id]);
+    }, [user?.drc_id]);
 
   // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
