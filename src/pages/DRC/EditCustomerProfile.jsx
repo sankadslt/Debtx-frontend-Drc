@@ -31,9 +31,8 @@ export default function EditCustomerProfile() {
     phone: "",
     email: "",
     address: "",
-
-    remark: "",
     identityNumber: "",
+    remark: "",
   });
   const navigate = useNavigate();
 
@@ -51,6 +50,7 @@ export default function EditCustomerProfile() {
   // address
   const [address, setAddress] = useState("");
   const [addressInputs, setAddressInputs] = useState([address]);
+  const [addressError, setAddressError] = useState("");
   // email
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -118,6 +118,30 @@ export default function EditCustomerProfile() {
 
     let isValid = true;
 
+    // Validate mobile number
+    if (!phone) {
+      setPhone("Please enter a valid Mobile number.");
+      isValid = false;
+    }
+
+    // Validate nic
+    if (!addressInputs) {
+      setAddressInputs("Please enter a valid NIC.");
+      isValid = false;
+    }
+
+    // Validate email
+    if (!emailInputs) {
+      setEmailError("Please enter a valid email.");
+      isValid = false;
+    }
+
+    // Validate address
+    if (!addressInputs) {
+      setAddressError("Please enter a valid address.");
+      isValid = false;
+    }
+
     if (isValid) {
       // Prepare the data object for submission
       const caseData = {
@@ -139,12 +163,79 @@ export default function EditCustomerProfile() {
         // Check the response status to determine if the submission was successful
         if (response && response.status === 200) {
           alert("Data submitted successfully!");
+
+          // Clear user input fields here
+          setPhone("");
+          setPhoneType("");
+          setPhoneError("");
+          setContactName("");
+
+          setEmail("");
+          setEmailInputs([""]);
+          setEmailError("");
+
+          setAddress("");
+          setAddressInputs([""]);
+          setAddressError("");
+
+          setIdentityType("");
+          setIdentityNumber("");
+          setValidationMessage("");
+
+          // Clear the remark field
+          setCaseDetails((prevDetails) => ({
+            ...prevDetails,
+            remark: "",
+          }));
         } else {
-          alert("Submission failed, please try again.");
+          alert(response.error);
         }
       } catch (error) {
-        console.error("Error submitting data:", error);
-        alert("Failed to submit data. Please try again.");
+        // Handle duplicate mobile number error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: Mobile already exists"
+        ) {
+          setPhoneError(
+            "Mobile number already exists. Please use a different Mobile number."
+          );
+        }
+        // Handle duplicate NIC error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: NIC already exists"
+        ) {
+          setValidationMessage(
+            "NIC/PP/Driving License already exists. Please use a different One."
+          );
+        }
+        // Handle duplicate email error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: Email already exists"
+        ) {
+          setEmailError("Email already exists. Please use a different email.");
+        }
+        // Handle duplicate address error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: address already exists"
+        ) {
+          setAddressError(
+            "address already exists. Please use a different address."
+          );
+        } else {
+          console.error("Error submitting data:", error);
+          alert("Failed to submit data. Please try again.");
+        }
       }
     }
   };
@@ -288,7 +379,7 @@ export default function EditCustomerProfile() {
         </div>
 
         {/* Card box */}
-        <div className={`${GlobalStyle.tableContainer} p-8 max-w-4xl mx-auto `}>
+        <div className={`${GlobalStyle.tableContainer}  bg-white bg-opacity-50 p-8 max-w-4xl mx-auto `}>
           <div className="flex flex-col items-center justify-center mb-4">
             <div
               className={`${GlobalStyle.cardContainer} bg-white shadow-lg rounded-lg p-4`}
@@ -330,7 +421,7 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-                      : {caseDetails.arrearsAmount}
+                      : {caseDetails.arrearsAmount.toLocaleString()}
                     </td>
                   </tr>
 
@@ -423,17 +514,6 @@ export default function EditCustomerProfile() {
                       onChange={handlePhoneChange}
                       className={`${GlobalStyle.inputText} w-40`}
                     />
-                    {phoneError && (
-                      <p
-                        style={{
-                          color: "red",
-                          fontSize: "12px",
-                          marginTop: "4px",
-                        }}
-                      >
-                        {phoneError}
-                      </p>
-                    )}
                   </div>
 
                   {/* Contact Name Input */}
@@ -446,6 +526,24 @@ export default function EditCustomerProfile() {
                   />
                 </div>
               </div>
+              {phoneError && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "red",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {phoneError}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -499,8 +597,6 @@ export default function EditCustomerProfile() {
               {/* NIC, PP, Driving License validation */}
               <div
                 style={{
-                  height: "20px",
-                  marginTop: "8px",
                   marginLeft: "250px",
                 }}
               >
@@ -623,6 +719,11 @@ export default function EditCustomerProfile() {
                     className={`${GlobalStyle.inputText} `}
                     style={{ width: "450px" }}
                   />
+                  {addressError && (
+                    <p style={{ color: "red", fontSize: "12px" }}>
+                      {addressError}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
