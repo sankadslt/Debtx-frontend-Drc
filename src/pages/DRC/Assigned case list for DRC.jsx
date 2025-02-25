@@ -19,7 +19,6 @@ import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/cas
 import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 
 //Status Icons
-import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
 import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
 import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
 import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
