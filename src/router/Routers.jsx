@@ -64,7 +64,7 @@ const Routers = () => {
   } 
 />
       <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} />
-      <Route path="/drc/mediation-board-case-list/:drc_id" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/drc/mediation-board-case-list/:drc_id" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
       <Route path="/drc/assigned-ro-case-log/:drc_id" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} />
       <Route path="/drc/assigned-case-list-for-drc" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
     

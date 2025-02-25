@@ -126,13 +126,13 @@ export default function MediationBoardCaselist() {
     };
 
     fetchUserData();
-  }, [user?.drc_id]);
+  }, [user?.drc_id, user?.ro_id]);
 
   useEffect(() => {
     const fetchRTOMs = async () => {
       try {
-        if (user?.drc_id) {
-          const payload = parseInt(user?.drc_id);
+        if (user?.drc_id || user?.ro_id) {
+          const payload = parseInt(user?.drc_id || user?.ro_id);
 
           const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
@@ -144,7 +144,7 @@ export default function MediationBoardCaselist() {
     };
 
     fetchRTOMs();
-  }, [user?.drc_id]);
+  }, [user?.drc_id, user?.ro_id]);
 
   // Date handlers
   const handleFromDateChange = (date) => {
@@ -215,7 +215,7 @@ export default function MediationBoardCaselist() {
   };
 
   const handleFilterClick = () => {
-    if (!user?.drc_id) {
+    if (!user?.drc_id || !user?.ro_id) {
       setError("DRC ID is required");
       return;
     }

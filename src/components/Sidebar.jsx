@@ -50,7 +50,7 @@ const Sidebar = ({ onHoverChange }) => {
       subItems: [
         {
           label: "DRC",
-          roles: ["superadmin", "admin", 'drc_admin', 'drc_user'],
+          roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'],
           subItems: [
             {
               label: "Assigned Case List for DRC",
@@ -65,7 +65,7 @@ const Sidebar = ({ onHoverChange }) => {
             { 
               label: "Assigned RO Case Log", 
               link: "/drc/assigned-ro-case-log", 
-              roles: ["admin", "user", "drc_admin", 'drc_user'] 
+              roles: ["admin", "superadmin", "drc_admin", 'drc_user'] 
             },
             { 
               label: "RO Monitoring (Arrears) and (CPE)", 
