@@ -235,6 +235,7 @@ export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
   }
 };
 
+
 export const updateLastRoDetails =async(case_id, drc_id, remark) => {
   try {
     // if (!case_id || !drc_id || !remark) {
@@ -295,6 +296,7 @@ export const drcCaseDetails = async (caseId) => {
       throw new Error(response.data.message);
     }
 
+
     // Extract ro_negotiation details safely
     const roNegotiationDetails = response.data.data.ro_negotiation 
       ? response.data.data.ro_negotiation.map((negotiation) => ({
@@ -326,6 +328,7 @@ export const drcCaseDetails = async (caseId) => {
     throw error;
   }
 };
+
 
 // Add Negotiation Case
 export const addNegotiationCase = async (caseId,settleId,ini_amount, month, from,to,settle_remark,drcId,roId,requestId,request,intractionId,todo,completed,reasonId,reason,nego_remark ) => {
@@ -401,6 +404,32 @@ export const getActiveRORequests = async () => {
     return activeRORequests;
   } catch (error) {
     console.error("Error fetching active requests:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+
+// Update Customer Profile
+export const updateCustomerContacts = async (caseData) => {
+  try {
+    // Check if caseData or case_id is missing
+    if (!caseData || !caseData.case_id) {
+      throw new Error("Case ID and data are required.");
+    }
+
+    // Check if either contact or remark is provided
+    if (!caseData.contact && !caseData.remark) {
+      throw new Error("Either contact or remark is required.");
+    }
+
+    console.log('caseData', caseData)
+    // Send a POST request to update customer contacts
+    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
+    console.log("Update Response:", response);
+    return response;
+  } catch (error) {
+    console.error("Error updating customer contacts:", error.response?.data || error.message);
     throw error;
   }
 };
