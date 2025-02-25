@@ -150,8 +150,8 @@ export default function AssignedCaseListforDRC() {
 
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
-      case "open no agent":
-        return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+      // case "open no agent":
+      //   return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
         return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
       case "negotiation settle pending":
