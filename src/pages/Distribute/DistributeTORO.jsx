@@ -2,8 +2,8 @@
 Created Date: 2025-01-08
 Created By: Geeth (eshaneperera@gmail.com)
 Last Modified Date: 2025-01-08
-Modified Date: 2025-02-18
-Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com)
+Modified Date: 2025-02-23
+Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayaka(sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.2
 Dependencies: tailwind css
@@ -11,17 +11,18 @@ Related Files: (routes)
 Notes: This page includes a filter and a table */
 
 
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
+import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -40,6 +41,7 @@ const DistributeTORO = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [drc_id, setDrcId] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
   const [fromDate, setFromDate] = useState(null);
@@ -52,32 +54,54 @@ const DistributeTORO = () => {
   const navigate = useNavigate();
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [arrearsBands, setArrearsBands] = useState([]);
+  const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
+  const [user, setUser] =useState(null);
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserData();
+        setUser(userData);
+        console.log("DRC ID: ", user?.drc_id);          
+      } catch (err) {
+        console.log("Eror in retrieving DRC ID: ", err);       
+      } 
+    };
 
-
-  // Use useParams hook to get the drc_id from the URL
-  const { drc_id } = useParams();
+    fetchUserData();
+  }, [user?.drc_id]);
 
   useEffect(() => {
-    const fetchArrearsBands = async () => {
+    const fetchUserData = async () => {
       try {
-        const bands = await fetchAllArrearsBands();
-        setArrearsBands(bands);
+        // Step 1: Fetch user_id
+        const userId = await getLoggedUserId();
+        if (!userId) throw new Error("Unable to fetch user ID");
+
+        // Step 2: Fetch drc_id using user_id
+        const userData = await getUserData();
+        setDrcId(userData.drc_id);
+
+        // Step 3: Fetch arrears bands and ro list
+        const arrearsAmounts = await fetchAllArrearsBands();
+        setArrearsAmounts(arrearsAmounts);
+
       } catch (error) {
-        console.error("Error fetching arrears bands:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchArrearsBands();
-  }, []);
+  
+      fetchUserData();
+    }, [user?.drc_id]);
 
   // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (drc_id) {
-          const payload = parseInt(drc_id, 10);
-
+        if (user?.drc_id) {
+          const payload = parseInt(user?.drc_id, 10);
+  
           // Fetch RTOMs
           const rtomsList = await getRTOMsByDRCID(payload);
           setRtoms(rtomsList);
@@ -95,8 +119,8 @@ const DistributeTORO = () => {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (drc_id) {
-          const numericDrcId = Number(drc_id);
+        if (user?.drc_id) {
+          const numericDrcId = Number(user?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -106,6 +130,7 @@ const DistributeTORO = () => {
             rtoms_for_ro: officer.rtoms_for_ro,
           }));
           setRecoveryOfficers(officers);
+          console.log("Recovery Officers:", response.data);
         } else {
           setError("DRC ID not found in URL.");
         }
@@ -117,9 +142,9 @@ const DistributeTORO = () => {
 
     fetchData();
     fetchRecoveryOfficers();
-
-  }, [drc_id]);
-
+    
+  }, [user?.drc_id]);
+  
   const handleFilter = async () => {
     try {
       setFilteredData([]); // Clear previous results
@@ -130,14 +155,15 @@ const DistributeTORO = () => {
         return offsetDate.toISOString().split('T')[0];
       };
 
-      const payload = {
-        drc_id: Number(drc_id),
-        rtom: selectedRTOM,
-        arrears_band: selectedArrearsBand,
-        ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-        from_date: formatDate(fromDate),
-        to_date: formatDate(toDate),
-      };
+        const payload = {
+            drc_id: Number(user?.drc_id),
+            rtom: selectedRTOM,
+            arrears_band: selectedArrearsBand,
+            ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+            from_date: formatDate(fromDate),
+            to_date: formatDate(toDate),
+        };
+        
 
 
       const response = await listHandlingCasesByDRC(payload);
@@ -236,25 +262,18 @@ const DistributeTORO = () => {
 
   const handleSubmit = async () => {
     try {
-      // Ensure selectedRO is available (the value from the dropdown)
-      const selectedRtom = selectedRO; // The selected RO name from the dropdown
-      console.log("Selected RTOM:", selectedRtom);
-
+      const selectedRtom = selectedRO;
+      
       if (!selectedRO) {
         Swal.fire("Error", "No Recovery Officer selected!", "error");
         return;
       }
 
-      console.log("Selected rows:", selectedRows);
-      // Ensure that at least one row is selected
-      if (!selectedRows || selectedRows.size === 0) {  // Check if Set is empty
+      if (!selectedRows || selectedRows.size === 0) {
         Swal.fire("Error", "Please select at least one row before submitting!", "error");
         return;
       }
 
-
-
-      // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
 
       if (!selectedOfficer) {
@@ -262,7 +281,6 @@ const DistributeTORO = () => {
         return;
       }
 
-      // Get the ro_id of the selected officer
       const ro_id = selectedOfficer.ro_id;
 
       if (!ro_id) {
@@ -270,9 +288,6 @@ const DistributeTORO = () => {
         return;
       }
 
-
-
-      // Get selected case IDs from the rows selected (assuming selectedRows is an array of indices)
       const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
 
       if (selectedCaseIds.length === 0) {
@@ -280,14 +295,27 @@ const DistributeTORO = () => {
         return;
       }
 
-      const assigned_by = "System"; // Assign the cases by the system
+      const userId = await getLoggedUserId();
 
-      // Call the API to assign the cases with separate parameters (caseIds and roId)
-      const response = await assignROToCase(selectedCaseIds, ro_id, assigned_by);
+      // Create the payload object with all required parameters
+      const assignmentPayload = {
+        caseIds: selectedCaseIds,
+        drcId: drc_id,
+        roId: ro_id,
+        assigned_by: userId, // Include assigned_by in the payload
+      };
+
+      // Update the API call to pass the complete payload
+      const response = await assignROToCase(assignmentPayload);
+
+      if (response.details?.failed_cases?.length > 0) {
+        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        return;
+      }
 
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
-        navigate(`/drc/assigned-ro-case-log/${drc_id}`);
+        navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }
@@ -298,32 +326,30 @@ const DistributeTORO = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
+const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
-        return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
+        return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
-        return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
+        return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
       case "negotiation settle pending":
-        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
       case "negotiation settle open pending":
-        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
+        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
       case "negotiation settle active":
         return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
       case "fmb":
-        return <img src={FMB} alt="FMB" className="w-5 h-5" />;
+        return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
       case "fmb settle pending":
-        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
       case "fmb settle open pending":
-        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
       case "fmb settle active":
-        return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
+        return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
       default:
         return <span className="text-gray-500">N/A</span>;
     }
   };
-
-
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -375,8 +401,8 @@ const DistributeTORO = () => {
           onChange={(e) => setSelectedArrearsBand(e.target.value)}
         >
           <option value="">Arrears Band</option>
-          {arrearsBands.length > 0 ? (
-            arrearsBands.map((band, index) => (
+          {arrearsAmounts.length > 0 ? (
+            arrearsAmounts.map((band, index) => (
               <option key={index} value={band.key}>
                 {band.value}
               </option>
@@ -429,55 +455,53 @@ const DistributeTORO = () => {
 
       {/* Table Section */}
       <div className={GlobalStyle.tableContainer}>
-        <table className={GlobalStyle.table}>
-          <thead className={GlobalStyle.thead}>
-            <tr>
-              <th className={GlobalStyle.tableHeader}></th>
-              <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Case ID</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
-              <th className={GlobalStyle.tableHeader}>Amount</th>
-              <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-              <th className={GlobalStyle.tableHeader}>RO</th>
-              <th className={GlobalStyle.tableHeader}>Expire Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData && currentData.length > 0 ? (
-              currentData.map((item, index) => (
-                <tr
-                  key={item.case_id || index} // Use case_id if available, else fallback to index
-                  className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-                >
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.has(index)}
-                      onChange={() => handleRowSelect(index)}
-                      className="mx-auto"
-                    />
-                  </td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center">No cases available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-
+  <table className={GlobalStyle.table}>
+    <thead className={GlobalStyle.thead}>
+      <tr>
+        <th className={GlobalStyle.tableHeader}></th>
+        <th className={GlobalStyle.tableHeader}>Status</th>
+        <th className={GlobalStyle.tableHeader}>Case ID</th>
+        <th className={GlobalStyle.tableHeader}>Date</th>
+        <th className={GlobalStyle.tableHeader}>Amount</th>
+        <th className={GlobalStyle.tableHeader}>Action</th>
+        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+        <th className={GlobalStyle.tableHeader}>RO</th>
+        <th className={GlobalStyle.tableHeader}>Expire Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentData && currentData.length > 0 ? (
+        currentData.map((item, index) => (
+          <tr
+            key={item.case_id || index} // Use case_id if available, else fallback to index
+            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+          >
+            <td className="text-center">
+              <input
+                type="checkbox"
+                checked={selectedRows.has(index)}
+                onChange={() => handleRowSelect(index)}
+                className="mx-auto"
+              />
+            </td>
+            <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+            <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="9" className="text-center">No cases available</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
       {/* Pagination Section */}
       <div className={GlobalStyle.navButtonContainer}>
         <button
@@ -550,8 +574,6 @@ const DistributeTORO = () => {
             </option>
           )}
         </select>
-
-
 
         {/* Submit Button */}
         <button
