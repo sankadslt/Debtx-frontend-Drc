@@ -13,11 +13,13 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  drcCaseDetails,
-  // updateCustomerContacts,
+  caseDetailsforDRC,
+  updateCustomerContacts,
 } from "../../services/case/CaseService";
 import axios from "axios";
 import back from "../../assets/images/back.png";
+import Swal from 'sweetalert2';
+
 
 export default function EditCustomerProfile() {
   // State to manage case details
@@ -64,9 +66,10 @@ export default function EditCustomerProfile() {
     const fetchCaseDetails = async () => {
       try {
         // Fetch case details for case ID
-        const caseDetails = await drcCaseDetails(19);
+        const caseDetails = await caseDetailsforDRC(10,11);
 
         console.log("Case details:", caseDetails);
+        
         setCaseDetails({
           caseId: caseDetails.case_id,
           customerRef: caseDetails.customer_ref,
@@ -76,9 +79,9 @@ export default function EditCustomerProfile() {
           fullAddress: caseDetails.full_Address,
           nic: caseDetails.nic,
           remark: "",
-          contact_Details: caseDetails.contact_Details,
+          contact_Details: caseDetails.contactDetails,
         });
-        setContacts(caseDetails.contact_Details);
+        setContacts(caseDetails.contactDetails);
       } catch (error) {
         console.error("Error fetching case details:", error.message);
       }
@@ -143,6 +146,16 @@ export default function EditCustomerProfile() {
     }
 
     if (isValid) {
+      Swal.fire({
+        title: 'Confirm Submission',
+        text: "Are you sure you want to submit the form details?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
       // Prepare the data object for submission
       const caseData = {
         case_id: caseDetails.caseId,
@@ -162,7 +175,7 @@ export default function EditCustomerProfile() {
 
         // Check the response status to determine if the submission was successful
         if (response && response.status === 200) {
-          alert("Data submitted successfully!");
+          Swal.fire("Data submitted successfully!");
 
           // Clear user input fields here
           setPhone("");
@@ -234,11 +247,11 @@ export default function EditCustomerProfile() {
           );
         } else {
           console.error("Error submitting data:", error);
-          alert("Failed to submit data. Please try again.");
+          Swal.fire("Failed to submit data. Please try again.");
         }
       }
     }
-  };
+  })}};
 
   const handlePhoneTypeChange = (event) => {
     setPhoneType(event.target.value);
@@ -359,18 +372,6 @@ export default function EditCustomerProfile() {
     }
   };
 
-  // popup box function
-  const handleConfirmation = async () => {
-    // Close the modal after submission
-    await handleSubmit();
-    setShowModal(false);
-  };
-
-  const handleCancel = () => {
-    // Close the modal without submitting
-    setShowModal(false);
-  };
-
   return (
     <>
       <div className={GlobalStyle.fontPoppins}>
@@ -432,14 +433,14 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-                      :{" "}
-                      {caseDetails.lastPaymentDate
-                        ? new Date(caseDetails.lastPaymentDate)
-                            .toISOString()
-                            .split("T")[0]
-                            .replace(/-/g, ".")
-                        : "N/A"}
-                    </td>
+    :{" "}
+    {caseDetails.lastPaymentDate
+      ? new Date(caseDetails.lastPaymentDate)
+          .toISOString()
+          .split("T")[0]
+          .replace(/-/g, ".")
+      : null}  {/* This removes the "N/A" part if lastPaymentDate is undefined */}
+  </td>
                   </tr>
                 </tbody>
               </table>
@@ -756,42 +757,11 @@ export default function EditCustomerProfile() {
           <div className="flex justify-end items-center w-full mt-6">
             <button
               className={`${GlobalStyle.buttonPrimary} ml-4`}
-              onClick={() => setShowModal(true)}
+              onClick={handleSubmit}
             >
               Submit
             </button>
           </div>
-
-          {/* Confirmation Modal (POPUP)*/}
-          {showModal && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-              <div
-                className={GlobalStyle.cardContainer}
-                style={{ backgroundColor: "white" }}
-              >
-                <h2 className="text-xl font-semibold mb-4">
-                  Confirm Submission
-                </h2>
-                <p className="mb-6">
-                  Are you sure you want to submit the form details?
-                </p>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg"
-                    onClick={handleCancel}
-                  >
-                    No
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                    onClick={handleConfirmation}
-                  >
-                    Yes
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Back button */}
