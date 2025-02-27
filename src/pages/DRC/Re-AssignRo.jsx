@@ -51,7 +51,7 @@ export default function Re_AssignRo() {
     };
 
     fetchUserData();
-  }, []);
+  }, [ user?.drc_id ]);
 
   useEffect(() => {
     const fetchData = async () => {
