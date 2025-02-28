@@ -40,11 +40,13 @@ export const listHandlingCasesByDRC = async (payload) => {
 
 
 // Assign Recovery Officer to Case
-export const assignROToCase = async (caseIds, roId) => {
+export const assignROToCase = async (payload) => {
   try {
     const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
-      case_ids: caseIds,
-      ro_id: roId,
+      drc_id: payload.drcId,
+      case_ids: payload.caseIds,
+      ro_id: payload.roId,
+      assigned_by: payload.assigned_by
     });
     return response.data;
   } catch (error) {
