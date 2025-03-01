@@ -289,14 +289,14 @@ export default function MediationBoardCaselist() {
           className={`${GlobalStyle.selectBox} w-32 md:w-40`}
         >
           <option value="">Status</option>
-          <option value="Forward_to_Mediation_Board">Forward_to_Mediation_Board</option>
-          <option value="MB_fail_with_pending_non_settlement">MB_fail_with_pending_non_settlement</option>
-          <option value="MB_Handed_Customer_Info">MB_Handed_Customer_Info</option>
-          <option value="MB_Negotiation">MB_Negotiation</option>
-          <option value="MB_Request_Customer_Info">MB_Request_Customer_Info</option>
-          <option value="MB_Settle_Active">MB_Settle_Active</option>
-          <option value="MB_Settle_open_pending">MB_Settle_open_pending</option>
-          <option value="MB_Settle_pending">MB_Settle_pending</option>
+          <option value="Forward_to_Mediation_Board">Forward to Mediation Board</option>
+          <option value="MB_fail_with_pending_non_settlement">MB Fail with Pending non Settlement</option>
+          <option value="MB_Handed_Customer_Info">MB Handed Customer Info</option>
+          <option value="MB_Negotiation">MB Negotiation</option>
+          <option value="MB_Request_Customer_Info">MB Request Customer Info</option>
+          <option value="MB_Settle_Active">MB Settle Active</option>
+          <option value="MB_Settle_open_pending">MB Settle Open Pending</option>
+          <option value="MB_Settle_pending">MB Settle Pending</option>
         </select>
 
         <label className={GlobalStyle.dataPickerDate}>Date</label>
