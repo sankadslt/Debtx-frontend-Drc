@@ -295,7 +295,7 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 
 // Mediation_Board
 
-export const submitMediationBoardResponse = async (caseId, drcId, formData, nextCallingDate) => {
+export const MediationBoard = async (caseId, drcId, formData, nextCallingDate) => {
   try {
     if (!caseId || !drcId) {
       throw new Error("Case ID and DRC ID are required.");
