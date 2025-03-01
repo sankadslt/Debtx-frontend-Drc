@@ -9,20 +9,23 @@
 // Related Files: (routes)
 // Notes: The following page conatins the code for the Mediation board response */
 
+
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
-import { getCaseDetailsbyMediationBoard,ListActiveMediationResponse,ListActiveRORequestsMediation  } from "../../services/case/CaseService";
+import {
+  getCaseDetailsbyMediationBoard,
+  ListActiveMediationResponse,
+  ListActiveRORequestsMediation,
+} from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
-// import axios from 'axios';
-
 
 const MediationBoardResponse = () => {
   const { caseId, drcId } = useParams(); // Get parameters from URL
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Consolidated case details
   const [caseDetails, setCaseDetails] = useState({
     caseId: "",
@@ -30,7 +33,7 @@ const MediationBoardResponse = () => {
     accountNo: "",
     arrearsAmount: "",
     lastPaymentDate: "",
-    callingRound: 0
+    callingRound: 0,
   });
   const [failReasons, setFailReasons] = useState([]);
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
@@ -54,8 +57,23 @@ const MediationBoardResponse = () => {
     remark: "",
   });
 
+  // Settlement table state
+  const [settlements, setSettlements] = useState([
+    { seqNo: 1, installmentSettleAmount: "", planDate: "", installmentPaidAmount: ""},
+  ]);
+  const [showSettlementTable, setShowSettlementTable] = useState(false);
+
   const [showResponseHistory, setShowResponseHistory] = useState(false);
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
+  const [isSettlementTableVisible, setIsSettlementTableVisible] =
+    useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Derived state for showing settlement toggle
+  const showSettlementToggle =
+    handoverNonSettlement === "No" &&
+    formData.customerRepresented === "Yes" &&
+    formData.settle === "Yes";
 
   // Fetch case details when component mounts
   useEffect(() => {
@@ -65,13 +83,13 @@ const MediationBoardResponse = () => {
         setIsLoading(false);
         return;
       }
-      
+
       try {
         // Fetch all data in parallel
         const [data, failReasonsList, roRequestsList] = await Promise.all([
           getCaseDetailsbyMediationBoard(caseId, drcId),
           ListActiveMediationResponse(),
-          ListActiveRORequestsMediation()
+          ListActiveRORequestsMediation(),
         ]);
 
         setCaseDetails({
@@ -79,10 +97,10 @@ const MediationBoardResponse = () => {
           customerRef: data.customer_ref || "",
           accountNo: data.account_no || "",
           arrearsAmount: data.current_arrears_amount || "",
-          lastPaymentDate: data.last_payment_date 
-            ? format(new Date(data.last_payment_date), 'yyyy-MM-dd')
+          lastPaymentDate: data.last_payment_date
+            ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
             : "",
-          callingRound: data.mediation_board || 0
+          callingRound: data.mediation_board || 0,
         });
         setFailReasons(failReasonsList);
         setRoRequests(roRequestsList);
@@ -96,6 +114,35 @@ const MediationBoardResponse = () => {
 
     fetchCaseDetails();
   }, [caseId, drcId]);
+
+  // Update settlement table when settlement count changes
+  useEffect(() => {
+    if (
+      formData.settlementCount &&
+      !isNaN(parseInt(formData.settlementCount))
+    ) {
+      const count = parseInt(formData.settlementCount);
+      const newSettlements = [];
+
+      for (let i = 1; i <= count; i++) {
+        newSettlements.push({
+          id: i,
+          month: `Month ${i}`,
+          dueDate: "",
+          amount: "",
+          status: "Pending",
+        });
+      }
+
+      setSettlements(newSettlements);
+
+      if (count > 0) {
+        setShowSettlementTable(true);
+      } else {
+        setShowSettlementTable(false);
+      }
+    }
+  }, [formData.settlementCount]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -117,43 +164,89 @@ const MediationBoardResponse = () => {
     setNextCallingDate(e.target.value);
   };
 
+  const handleSettlementChange = (id, field, value) => {
+    setSettlements(
+      settlements.map((settlement) =>
+        settlement.id === id ? { ...settlement, [field]: value } : settlement
+      )
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Basic validation
-    if (formData.customerRepresented === "") {
-      alert("Please select whether customer is represented");
+
+    // Adjust validation based on handover status
+    if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
+      // For handover cases, only validate comment
+      if (!formData.comment.trim()) {
+        alert("Please enter a comment");
+        return;
+      }
+
+      setShowConfirmation(true);
       return;
+    } else {
+      // Regular validation for non-handover cases
+      if (formData.customerRepresented === "") {
+        alert("Please select whether customer is represented");
+        return;
+      }
+
+      if (formData.customerRepresented === "Yes" && formData.settle === "") {
+        alert("Please select whether customer agrees to settle");
+        return;
+      }
+
+      if (showFailReasonFields && !formData.failReason) {
+        alert("Please select a fail reason");
+        return;
+      }
+
+      // Validate settlement table if settlements are shown
+      if (showSettlementTable) {
+        let isValid = true;
+
+        settlements.forEach((settlement) => {
+          if (!settlement.dueDate || !settlement.amount) {
+            isValid = false;
+          }
+        });
+
+        if (!isValid) {
+          alert("Please fill in all settlement details");
+          return;
+        }
+      }
     }
-    
-    if (formData.customerRepresented === "Yes" && formData.settle === "") {
-      alert("Please select whether customer agrees to settle");
-      return;
-    }
-    
-    if (showFailReasonFields && !formData.failReason) {
-      alert("Please select a fail reason");
-      return;
-    }
-    
+
     try {
       // Here you would typically call an API to save the form data
-      console.log("Form submitted:", { 
+      console.log("Form submitted:", {
         ...formData,
         handoverNonSettlement,
         nextCallingDate,
+        settlements: showSettlementTable ? settlements : [],
         caseId,
-        drcId 
+        drcId,
       });
-      
+
+      // Close the confirmation popup
+      setShowConfirmation(false);
+
       // Simulate successful submission
       alert("Form submitted successfully!");
-      
+
       // Optional: Reset form or redirect
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to submit form. Please try again.");
+      setShowConfirmation(false);
     }
+  };
+
+  // Add this function to toggle settlement table visibility
+  const toggleSettlementTable = () => {
+    setIsSettlementTableVisible(!isSettlementTableVisible);
   };
 
   // Show additional fields when customer is represented and agrees to settle
@@ -163,6 +256,10 @@ const MediationBoardResponse = () => {
   // Show fail reason fields when customer is represented but doesn't agree to settle
   const showFailReasonFields =
     formData.customerRepresented === "Yes" && formData.settle === "No";
+
+  // Determine if form should be simplified based on handover selection
+  const isSimplifiedForm =
+    caseDetails.callingRound === 3 && handoverNonSettlement === "Yes";
 
   if (isLoading) {
     return (
@@ -178,7 +275,7 @@ const MediationBoardResponse = () => {
       <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
         <h2 className="text-lg font-bold mb-2">Error</h2>
         <p>{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
@@ -194,8 +291,8 @@ const MediationBoardResponse = () => {
         <h1 className={GlobalStyle.headingLarge}>Mediation Board Response</h1>
       </div>
 
-      {/* Case Details Card */}
-      <div className={GlobalStyle.cardContainer}>
+      {/* Case Details Card - Always visible */}
+      <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
         <table className="w-full">
           <tbody>
             <tr className="flex items-start py-1">
@@ -227,7 +324,8 @@ const MediationBoardResponse = () => {
         </table>
       </div>
 
-      <div className={GlobalStyle.cardContainer}>
+      {/* Calling Round Card - Always visible */}
+      <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
         <table className="w-full">
           <tbody>
             <tr className="flex items-start py-1">
@@ -271,8 +369,10 @@ const MediationBoardResponse = () => {
               </tr>
             )}
 
+            {/* Only show Next Calling Date when needed */}
             {(caseDetails.callingRound < 3 ||
-              (caseDetails.callingRound === 3 && handoverNonSettlement === "No")) && (
+              (caseDetails.callingRound === 3 &&
+                handoverNonSettlement === "No")) && (
               <tr className="flex items-start py-1">
                 <td className="font-semibold w-48">Next Calling Date</td>
                 <td className="px-4 font-semibold">:</td>
@@ -283,7 +383,8 @@ const MediationBoardResponse = () => {
                     onChange={handleNextCallingDateChange}
                     className="p-2 border rounded-md w-72"
                     disabled={
-                      caseDetails.callingRound === 3 && handoverNonSettlement === "Yes"
+                      caseDetails.callingRound === 3 &&
+                      handoverNonSettlement === "Yes"
                     }
                     aria-label="Next calling date"
                   />
@@ -296,203 +397,223 @@ const MediationBoardResponse = () => {
 
       {/* Main Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex items-center">
-          <span className="w-48 font-semibold">Request:</span>
-          <select
-            name="request"
-            value={formData.request}
-            onChange={handleInputChange}
-            className={GlobalStyle.selectBox}
-            aria-label="Request type"
-          >
-            <option value="">Select Request</option>
-            {roRequests.map((request) => (
-            <option 
-              key={request._id} 
-              value={request.request_mode}
-            >
-              {request.request_mode}
-            </option>
-          ))}
-          </select>
-        </div>
-
-        <div className="flex items-center">
-          <span className="font-semibold">Customer Represented:</span>
-          <div className="flex gap-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="customerRepresented"
-                value="Yes"
-                checked={formData.customerRepresented === "Yes"}
-                onChange={handleInputChange}
-                className="mr-2"
-                aria-label="Yes for customer represented"
-              />
-              Yes
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="customerRepresented"
-                value="No"
-                checked={formData.customerRepresented === "No"}
-                onChange={handleInputChange}
-                className="mr-2"
-                aria-label="No for customer represented"
-              />
-              No
-            </label>
-          </div>
-        </div>
-
-        <div className="flex">
-          <span className="w-48 font-semibold">Comment:</span>
-          <textarea
-            name="comment"
-            value={formData.comment}
-            onChange={handleInputChange}
-            className={GlobalStyle.remark}
-            rows="5"
-            aria-label="Comment"
-          />
-        </div>
-
-        {formData.customerRepresented === "Yes" && (
-          <div className="flex items-center">
-            <span className="w-48 font-semibold">Settle:</span>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="settle"
-                  value="Yes"
-                  checked={formData.settle === "Yes"}
-                  onChange={handleInputChange}
-                  className="mr-2"
-                  aria-label="Yes for settle"
-                />
-                Yes
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="settle"
-                  value="No"
-                  checked={formData.settle === "No"}
-                  onChange={handleInputChange}
-                  className="mr-2"
-                  aria-label="No for settle"
-                />
-                No
-              </label>
-            </div>
-          </div>
-        )}
-
-        {showFailReasonFields && (
-          <div className="flex items-center">
-            <span className="w-48 font-semibold">Fail Reason:</span>
-            <select
-              name="failReason"
-              value={formData.failReason}
-              onChange={handleInputChange}
-              className="w-72 p-2 border rounded-md"
-              aria-label="Fail reason"
-            >
-              <option value="">Select Response</option>
-              {/* <option value="reason1">Mediation Board User Not Agree To Settle</option>
-              <option value="reason2">Installment Default</option>
-              <option value="reason3">Mediation Board Customer Available Not Agree To Settle</option>
-               */}
-              {failReasons.map((failReason, index)=>(
-                <option key={index} value={failReason.mediation_description}>{failReason.mediation_description}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {showSettlementFields && (
+        {/* Only show these fields when NOT in simplified mode */}
+        {!isSimplifiedForm && (
           <>
             <div className="flex items-center">
-              <span className="w-48 font-semibold">Settlement Count:</span>
-              <input
-                type="text"
-                name="settlementCount"
-                value={formData.settlementCount}
+              <span className="w-48 font-semibold">Request:</span>
+              <select
+                name="request"
+                value={formData.request}
                 onChange={handleInputChange}
-                className="w-72 p-2 border rounded-md"
-                aria-label="Settlement count"
-              />
+                className={GlobalStyle.selectBox}
+                aria-label="Request type"
+              >
+                <option value="">Select Request</option>
+                {roRequests.map((request) => (
+                  <option key={request._id} value={request.request_description}>
+                    {request.request_description}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex items-center">
-              <span className="w-48 font-semibold">Initial Amount:</span>
-              <input
-                type="text"
-                name="initialAmount"
-                value={formData.initialAmount}
-                onChange={handleInputChange}
-                className="w-72 p-2 border rounded-md"
-                aria-label="Initial amount"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <span className="w-48 font-semibold">Calendar Month:</span>
-              <input
-                type="number"
-                name="calendarMonth"
-                value={formData.calendarMonth}
-                onChange={handleInputChange}
-                className="w-20 p-2 border rounded-md"
-                min="0"
-                aria-label="Calendar month"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <span className="w-48 font-semibold">Duration:</span>
-              <div className="flex items-center space-x-4">
-                <span>From:</span>
-                <input
-                  type="text"
-                  name="durationFrom"
-                  value={formData.durationFrom}
-                  onChange={handleInputChange}
-                  className="w-32 p-2 border rounded-md"
-                  aria-label="Duration from"
-                />
-                <span>To:</span>
-                <input
-                  type="text"
-                  name="durationTo"
-                  value={formData.durationTo}
-                  onChange={handleInputChange}
-                  className="w-32 p-2 border rounded-md"
-                  aria-label="Duration to"
-                />
+              <span className="font-semibold">Customer Represented:</span>
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerRepresented"
+                    value="Yes"
+                    checked={formData.customerRepresented === "Yes"}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                    aria-label="Yes for customer represented"
+                  />
+                  Yes
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerRepresented"
+                    value="No"
+                    checked={formData.customerRepresented === "No"}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                    aria-label="No for customer represented"
+                  />
+                  No
+                </label>
               </div>
             </div>
 
+            {/* Comment section - Moved directly below customer represented */}
             <div className="flex">
-              <span className="w-48 font-semibold">Remark:</span>
+              <span className="w-48 font-semibold">Comment:</span>
               <textarea
-                name="remark"
-                value={formData.remark}
+                name="comment"
+                value={formData.comment}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded-md"
-                rows="4"
-                aria-label="Remark"
+                className={GlobalStyle.remark}
+                rows="5"
+                aria-label="Comment"
               />
             </div>
+
+            {formData.customerRepresented === "Yes" && (
+              <div className="flex items-center">
+                <span className="w-48 font-semibold">Settle:</span>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="settle"
+                      value="Yes"
+                      checked={formData.settle === "Yes"}
+                      onChange={handleInputChange}
+                      className="mr-2"
+                      aria-label="Yes for settle"
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="settle"
+                      value="No"
+                      checked={formData.settle === "No"}
+                      onChange={handleInputChange}
+                      className="mr-2"
+                      aria-label="No for settle"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {showFailReasonFields && (
+              <div className="flex items-center">
+                <span className="w-48 font-semibold">Fail Reason:</span>
+                <select
+                  name="failReason"
+                  value={formData.failReason}
+                  onChange={handleInputChange}
+                  className="w-72 p-2 border rounded-md"
+                  aria-label="Fail reason"
+                >
+                  <option value="">Select Response</option>
+                  {failReasons.map((failReason, index) => (
+                    <option
+                      key={index}
+                      value={failReason.mediation_description}
+                    >
+                      {failReason.mediation_description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {showSettlementFields && (
+              <>
+                <div className="flex items-center">
+                  <span className="w-48 font-semibold">Settlement Count:</span>
+                  <input
+                    type="text"
+                    name="settlementCount"
+                    value={formData.settlementCount}
+                    onChange={handleInputChange}
+                    className="w-72 p-2 border rounded-md"
+                    aria-label="Settlement count"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <span className="w-48 font-semibold">Initial Amount:</span>
+                  <input
+                    type="text"
+                    name="initialAmount"
+                    value={formData.initialAmount}
+                    onChange={handleInputChange}
+                    className="w-72 p-2 border rounded-md"
+                    aria-label="Initial amount"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <span className="w-48 font-semibold">Calendar Month:</span>
+                  <input
+                    type="number"
+                    name="calendarMonth"
+                    value={formData.calendarMonth}
+                    onChange={handleInputChange}
+                    className="w-20 p-2 border rounded-md"
+                    min="0"
+                    aria-label="Calendar month"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <span className="w-48 font-semibold">Duration:</span>
+                  <div className="flex items-center space-x-4">
+                    <span>From:</span>
+                    <input
+                      type="text"
+                      name="durationFrom"
+                      value={formData.durationFrom}
+                      onChange={handleInputChange}
+                      className="w-32 p-2 border rounded-md"
+                      aria-label="Duration from"
+                    />
+                    <span>To:</span>
+                    <input
+                      type="text"
+                      name="durationTo"
+                      value={formData.durationTo}
+                      onChange={handleInputChange}
+                      className="w-32 p-2 border rounded-md"
+                      aria-label="Duration to"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <span className="w-48 font-semibold">Remark:</span>
+                  <textarea
+                    name="remark"
+                    value={formData.remark}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md"
+                    rows="4"
+                    aria-label="Remark"
+                  />
+                </div>
+              </>
+            )}
           </>
         )}
 
+        {/* Comment section for simplified form only */}
+        {isSimplifiedForm && (
+          <div className="flex">
+            <span className="w-48 font-semibold">Comment:</span>
+            <textarea
+              name="comment"
+              value={formData.comment}
+              onChange={handleInputChange}
+              className={GlobalStyle.remark}
+              rows="5"
+              aria-label="Comment"
+            />
+          </div>
+        )}
+
+        {/* Submit and Response History buttons - Always visible */}
         <div className="flex justify-end mt-6">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={GlobalStyle.buttonPrimary}
             aria-label="Submit form"
           >
@@ -500,6 +621,59 @@ const MediationBoardResponse = () => {
           </button>
         </div>
       </form>
+
+      {/* Settlement 1 toggle - Only shown when conditions are met */}
+      {showSettlementToggle && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={toggleSettlementTable}
+            className={`${GlobalStyle.buttonSecondary} bg-[rgb(56,75,92)] text-white p-2 flex items-center justify-between w-full`}
+            aria-label="Toggle settlement 1 details"
+          >
+            <span>Settlement 1</span>
+            <span>{isSettlementTableVisible ? "▲" : "▼"}</span>
+          </button>
+
+          {isSettlementTableVisible && (
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-200">
+              <div className={GlobalStyle.tableContainer}>
+                <table className={GlobalStyle.table}>
+                  <thead className={GlobalStyle.thead}>
+                    <tr>
+                      <th scope="col" className={GlobalStyle.tableHeader}>
+                        Seq.No
+                      </th>
+                      <th scope="col" className={GlobalStyle.tableHeader}>
+                        Installment Settle Amount
+                      </th>
+                      <th scope="col" className={GlobalStyle.tableHeader}>
+                        Plan Date
+                      </th>
+                      <th scope="col" className={GlobalStyle.tableHeader}>
+                        Installment Paid Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlements.map((settlement) => (
+                      <tr
+                        key={settlement.id}
+                        className="bg-white bg-opacity-75 border-b"
+                      >
+                        <td className={GlobalStyle.tableData}>{settlement.seqNo}</td>
+                        <td className={GlobalStyle.tableData}>{settlement.installmentSettleAmount}</td>
+                        <td className={GlobalStyle.tableData}>{settlement.planDate}</td>
+                        <td className={GlobalStyle.tableData}>{settlement.installmentPaidAmount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-6">
         <button
@@ -514,7 +688,7 @@ const MediationBoardResponse = () => {
 
       {/* Response History Popup */}
       {showResponseHistory && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           aria-modal="true"
           role="dialog"
@@ -674,6 +848,36 @@ const MediationBoardResponse = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Popup */}
+      {showConfirmation && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div className="bg-white p-6 rounded-lg w-1/3 max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Confirmation</h2>
+            <p className="mb-6">
+              Are you agree to submit the Non-Settlement letter?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+              >
+                No
+              </button>
+              <button
+                onClick={handleConfirmedSubmit}
+                className={GlobalStyle.buttonPrimary}
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>
