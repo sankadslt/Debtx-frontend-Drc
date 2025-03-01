@@ -269,6 +269,10 @@ export const MediationBoard = async (caseId, drcId, formData, nextCallingDate) =
     
     // Make the API call to the backend
     const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
+    // Specify that we only want requests with request_mode = "Mediation Board"
+    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`, {
+      request_mode: "Mediation Board"
+    });
     
     if (response.data.status === "error") {
       throw new Error(response.data.message);
