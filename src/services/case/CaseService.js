@@ -126,7 +126,11 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
+
+
+
+export const listAllDRCMediationBoardCases = async (payload) => {
+
   try {
     if (!payload.drc_id && !payload.ro_id) {
       throw new Error("DRC ID or RO ID is required.");
@@ -289,118 +293,61 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   }
 };
 
+// Mediation_Board
 
-/* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
+export const submitMediationBoardResponse = async (caseId, drcId, formData, nextCallingDate) => {
   try {
-    if (!drcId || !caseId) {
-      return { status: "error", message: "drcId and caseId are required parameters." };
+    if (!caseId || !drcId) {
+      throw new Error("Case ID and DRC ID are required.");
+    }
+    
+    const requestBody = {
+      case_id: caseId,
+      drc_id: drcId,
+      ro_id: localStorage.getItem('user_id') || "", 
+      customer_available: formData.customerRepresented,
+      comment: formData.comment || "",
+      settle: formData.settle || null,
+      created_by: localStorage.getItem('username') || "system" 
+    };
+
+    // Add next_calling_date if it's set
+    if (nextCallingDate) {
+      requestBody.next_calling_date = nextCallingDate;
     }
 
-    console.log("Fetching case details for DRC ID:", drcId, "and Case ID:", caseId);
-
-    const response = await axios.post(
-      `${URL}/List_Behaviors_Of_Case_During_DRC`,
-      { drc_id: drcId, case_id: caseId },
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    console.log("API Response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching case details:", error);
-
-    if (error.response) {
-      // The request was made, but the server responded with an error status
-      return {
-        status: "error",
-        message: error.response.data.message || "An error occurred on the server.",
-        errors: error.response.data.errors || {},
-        statusCode: error.response.status,
-      };
-    } else if (error.request) {
-      // The request was made but no response was received
-      return { status: "error", message: "No response from server. Please try again later." };
-    } else {
-      // Something happened in setting up the request
-      return { status: "error", message: error.message || "An unexpected error occurred." };
-    }
-  }
-};
- */
-
-// List Behaviors Of Case During DRC
-export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
-  try {
-    if (!drcId || !caseId) {
-      throw new Error("DRC ID and Case ID are required.");
+    // Add fail_reason if customer doesn't agree to settle
+    if (formData.customerRepresented === "Yes" && formData.settle === "No" && formData.failReason) {
+      requestBody.fail_reason = formData.failReason;
     }
 
-    const response = await axios.post(
-      `${URL}/List_Behaviors_Of_Case_During_DRC`,
-      { drc_id: drcId, case_id: caseId }
-    );
-    console.log("API Response:", response.data);
-
-   
+    // Add request-related fields if a special request is selected
+    if (formData.request && formData.request !== "Task With SLT") {
+      requestBody.request_id = `REQ-${Date.now()}`; 
+      requestBody.request_type = formData.request;
+      requestBody.intraction_id = `INT-${Date.now()}`; 
+    }
+    
+    // Add settlement-related fields if customer agrees to settle
+    if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
+      requestBody.settlement_count = formData.settlementCount;
+      requestBody.initial_amount = formData.initialAmount;
+      requestBody.calendar_month = formData.calendarMonth || "0";
+      requestBody.duration = `${formData.durationFrom} to ${formData.durationTo}`;
+      requestBody.remark = formData.remark || "";
+    }
+    
+    // Make the API call to the backend
+    const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
+    
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
-   
-    return response.data;
-
-  } catch (error) {
-    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
-    
-    // Return an error response if something goes wrong
-    return {
-      status: "error",
-      message: error.response?.data.message || error.message || "An unexpected error occurred.",
-      errors: error.response?.data.errors || {},
-    };
-  }
-};
-
-export const updateLastRoDetails =async(case_id, drc_id, remark) => {
-  try {
-    // if (!case_id || !drc_id || !remark) {
-    //   throw new Error("All Fields are required.")
-    // }
-
-    //Convert caseID and drcId to integers
-    const case_id_int =parseInt(case_id, 10);
-    const drc_id_int =parseInt(drc_id, 10);
-
-    console.log("Sending to backend:", { case_id_int, drc_id_int, remark }); 
-
-    const response =await axios.patch(`${URL}/Update_case_last_Ro_Details`, {
-      case_id: case_id_int,
-      drc_id: drc_id_int,
-      remark: remark
-    });
-
-    console.log("Response from handler: ", response.data);
     
     return response.data;
   } catch (error) {
-    console.error("Error updating recovery officer details:", error.response?.data || error.message);
-    throw error;
-  }
-}
-
-export const listDRCAllCases = async ({ drc_id, ro_id, From_DAT, TO_DAT, case_current_status }) => {
-  try {
-    const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, {
-      drc_id,
-      ro_id,
-      From_DAT,
-      TO_DAT,
-      case_current_status: case_current_status || null, // Ensure it's not undefined
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching DRC all cases:", error.response?.data || error.message);
+    console.error("Error submitting mediation board response:", 
+      error.response?.data?.message || error.message);
     throw error;
   }
 };
