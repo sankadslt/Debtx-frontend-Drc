@@ -222,3 +222,62 @@ export const ListActiveMediationResponse = async () => {
     throw error;
   }
 };
+
+// Mediation_Board
+
+export const submitMediationBoardResponse = async (caseId, drcId, formData, nextCallingDate) => {
+  try {
+    if (!caseId || !drcId) {
+      throw new Error("Case ID and DRC ID are required.");
+    }
+    
+    const requestBody = {
+      case_id: caseId,
+      drc_id: drcId,
+      ro_id: localStorage.getItem('user_id') || "", 
+      customer_available: formData.customerRepresented,
+      comment: formData.comment || "",
+      settle: formData.settle || null,
+      created_by: localStorage.getItem('username') || "system" 
+    };
+
+    // Add next_calling_date if it's set
+    if (nextCallingDate) {
+      requestBody.next_calling_date = nextCallingDate;
+    }
+
+    // Add fail_reason if customer doesn't agree to settle
+    if (formData.customerRepresented === "Yes" && formData.settle === "No" && formData.failReason) {
+      requestBody.fail_reason = formData.failReason;
+    }
+
+    // Add request-related fields if a special request is selected
+    if (formData.request && formData.request !== "Task With SLT") {
+      requestBody.request_id = `REQ-${Date.now()}`; 
+      requestBody.request_type = formData.request;
+      requestBody.intraction_id = `INT-${Date.now()}`; 
+    }
+    
+    // Add settlement-related fields if customer agrees to settle
+    if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
+      requestBody.settlement_count = formData.settlementCount;
+      requestBody.initial_amount = formData.initialAmount;
+      requestBody.calendar_month = formData.calendarMonth || "0";
+      requestBody.duration = `${formData.durationFrom} to ${formData.durationTo}`;
+      requestBody.remark = formData.remark || "";
+    }
+    
+    // Make the API call to the backend
+    const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error submitting mediation board response:", 
+      error.response?.data?.message || error.message);
+    throw error;
+  }
+};
