@@ -76,44 +76,45 @@ const MediationBoardResponse = () => {
     formData.settle === "Yes";
 
   // Fetch case details when component mounts
-  useEffect(() => {
-    const fetchCaseDetails = async () => {
-      if (!caseId || !drcId) {
-        setError("Case ID and DRC ID are required");
-        setIsLoading(false);
-        return;
-      }
+  // In MediationBoardResponse component
+useEffect(() => {
+  const fetchCaseDetails = async () => {
+    if (!caseId || !drcId) {
+      setError("Case ID and DRC ID are required");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        // Fetch all data in parallel
-        const [data, failReasonsList, roRequestsList] = await Promise.all([
-          getCaseDetailsbyMediationBoard(caseId, drcId),
-          ListActiveMediationResponse(),
-          ListActiveRORequestsMediation(),
-        ]);
+    try {
+      // Fetch all data in parallel
+      const [data, failReasonsList, roRequestsList] = await Promise.all([
+        getCaseDetailsbyMediationBoard(caseId, drcId),
+        ListActiveMediationResponse(),
+        ListActiveRORequestsMediation(), // This now fetches only mediation mode requests
+      ]);
 
-        setCaseDetails({
-          caseId: data.case_id || "",
-          customerRef: data.customer_ref || "",
-          accountNo: data.account_no || "",
-          arrearsAmount: data.current_arrears_amount || "",
-          lastPaymentDate: data.last_payment_date
-            ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
-            : "",
-          callingRound: data.mediation_board || 0,
-        });
-        setFailReasons(failReasonsList);
-        setRoRequests(roRequestsList);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching case details:", error);
-        setError(error.message || "Failed to fetch case details");
-        setIsLoading(false);
-      }
-    };
+      setCaseDetails({
+        caseId: data.case_id || "",
+        customerRef: data.customer_ref || "",
+        accountNo: data.account_no || "",
+        arrearsAmount: data.current_arrears_amount || "",
+        lastPaymentDate: data.last_payment_date
+          ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
+          : "",
+        callingRound: data.mediation_board || 0,
+      });
+      setFailReasons(failReasonsList);
+      setRoRequests(roRequestsList); // This should now contain only mediation requests
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching case details:", error);
+      setError(error.message || "Failed to fetch case details");
+      setIsLoading(false);
+    }
+  };
 
-    fetchCaseDetails();
-  }, [caseId, drcId]);
+  fetchCaseDetails();
+}, [caseId, drcId]);
 
   // Update settlement table when settlement count changes
   useEffect(() => {
@@ -403,19 +404,19 @@ const MediationBoardResponse = () => {
             <div className="flex items-center">
               <span className="w-48 font-semibold">Request:</span>
               <select
-                name="request"
-                value={formData.request}
-                onChange={handleInputChange}
-                className={GlobalStyle.selectBox}
-                aria-label="Request type"
-              >
-                <option value="">Select Request</option>
-                {roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description}>
-                    {request.request_description}
-                  </option>
-                ))}
-              </select>
+  name="request"
+  value={formData.request}
+  onChange={handleInputChange}
+  className={GlobalStyle.selectBox}
+  aria-label="Request type"
+>
+  <option value="">Select Request</option>
+  {roRequests.map((request) => (
+    <option key={request._id} value={request.request_description}>
+      {request.request_description}
+    </option>
+  ))}
+</select>
             </div>
 
             <div className="flex items-center">

@@ -225,7 +225,10 @@ export const ListActiveMediationResponse = async () => {
 // List Active RO Requests Mediation
 export const ListActiveRORequestsMediation = async () => {
   try {
-    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`);
+    // Specify that we only want requests with request_mode = "Mediation Board"
+    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`, {
+      request_mode: "Mediation Board"
+    });
     
     if (response.data.status === "error") {
       throw new Error(response.data.message);
