@@ -222,7 +222,7 @@ export const ListActiveMediationResponse = async () => {
 };
 
 
-// List Active RO Requests Mediation
+// List Active RO Requests Mediation Board
 export const ListActiveRORequestsMediation = async () => {
   try {
     // Specify that we only want requests with request_mode = "Mediation Board"
