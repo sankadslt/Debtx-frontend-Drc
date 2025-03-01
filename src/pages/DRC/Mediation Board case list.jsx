@@ -12,13 +12,12 @@ Related Files: (routes)
 Notes:The following page conatins the code for the Mediation Board case list Screen */
 
 
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
-import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import {  getUserData } from "../../services/auth/authService.js";
@@ -126,25 +125,29 @@ export default function MediationBoardCaselist() {
     };
 
     fetchUserData();
-  }, [user?.drc_id, user?.ro_id]);
+  }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
   useEffect(() => {
-    const fetchRTOMs = async () => {
+    console.log("Route parameter drc_id :", user?.drc_id || user?.ro_id);
+    const fetchData = async () => {
       try {
         if (user?.drc_id || user?.ro_id) {
-          const payload = parseInt(user?.drc_id || user?.ro_id);
+          const payload = parseInt(user?.drc_id || user?.ro_id); // Convert drc_id to number
 
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
-          setRtoms(rtomsList);
+          // Fetch RTOMs by DRC ID
+          const rtomsList = await getRTOMsByDRCID(payload);
+          setRtoms(rtomsList); // Set RTOMs to state
+
         }
-      } catch (error) {
-        console.error("Error fetching RTOMs:", error);
-        setError("Failed to fetch RTOMs. Please try again later.");
-      }
-    };
 
-    fetchRTOMs();
-  }, [user?.drc_id, user?.ro_id]);
+      } catch (error) {
+          console.error("Error fetching RTOMs:", error);
+      }
+  };
+
+  fetchData();
+
+}, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
   // Date handlers
   const handleFromDateChange = (date) => {
@@ -195,6 +198,7 @@ export default function MediationBoardCaselist() {
 
       const payload = {
         drc_id: Number(user?.drc_id),
+        ro_id: Number(user?.ro_id),
         ...(filters.rtom && { rtom: filters.rtom }),
         ...(filters.action_type && { action_type: filters.action_type }),
         ...(filters.status && { case_current_status: filters.status }),
@@ -215,8 +219,8 @@ export default function MediationBoardCaselist() {
   };
 
   const handleFilterClick = () => {
-    if (!user?.drc_id || !user?.ro_id) {
-      setError("DRC ID is required");
+    if (!user?.drc_id && !user?.ro_id) {
+      setError("DRC ID or RO ID is required");
       return;
     }
     fetchCases();
@@ -371,13 +375,7 @@ export default function MediationBoardCaselist() {
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_board_count || 0}
                   </td>
-                  <td className={GlobalStyle.tableData}>
-                    {row.mediation_details?.next_calling_dtm
-                      ? new Date(
-                          row.mediation_details.next_calling_dtm
-                        ).toLocaleDateString()
-                      : "N/A"}
-                  </td>
+                  <td className={GlobalStyle.tableData}>{row.next_calling_date}</td>
                   <td className={GlobalStyle.tableData}>
                     <img
                       src={edit}

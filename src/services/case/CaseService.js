@@ -126,47 +126,78 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-
 export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
-
   try {
-    const { 
-      drc_id, 
-      rtom, 
-      ro_id, 
-      action_type, 
-      from_date, 
-      to_date, 
-      case_current_status 
-    } = payload;
-
-    if (!drc_id) {
-      throw new Error("DRC ID is required.");
+    if (!payload.drc_id && !payload.ro_id) {
+      throw new Error("DRC ID or RO ID is required.");
     }
 
-    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, {
-      drc_id,
-      ...(rtom && { rtom }),
-      ...(ro_id && { ro_id }),
-      ...(action_type && { action_type }),
-      ...(from_date && { from_date }),
-      ...(to_date && { to_date }),
-      ...(case_current_status && { case_current_status }),
+    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, payload);
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        area: caseData.area,
+        ro_name: caseData.ro_name || null,
+        mediation_board_count: caseData.mediation_board_count,
+        next_calling_date: caseData.next_calling_date,
+      };
     });
 
-    if (response.data.status === "error") {
-      throw new Error(response.data.message || "Failed to retrieve cases");
-    }
-    console.log("response.data.data",response.data.data[0].mediation_details.next_calling_dtm.split("T")[0]);
-    return response.data.data || [];
-    
-    
+    return formattedCases;
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
-    console.error("Error retrieving DRC Mediation Board cases:", errorMessage);
-    throw new Error(errorMessage);
+    console.error("Error retrieving handling cases by DRC:", error.response?.data || error.message);
+    throw error;
   }
 };
+
+// export const ListALLMediationCasesownnedbyxDRCRO = async (payload) => {
+
+//   try {
+//     const { 
+//       drc_id, 
+//       rtom, 
+//       ro_id, 
+//       action_type, 
+//       from_date, 
+//       to_date, 
+//       case_current_status 
+//     } = payload;
+
+//     if (!drc_id && !ro_id) {
+//       throw new Error("DRC ID or RO ID is required.");
+//     }
+
+//     const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, {
+//       drc_id,
+//       ro_id,
+//       ...(rtom && { rtom }),
+//       ...(action_type && { action_type }),
+//       ...(from_date && { from_date }),
+//       ...(to_date && { to_date }),
+//       ...(case_current_status && { case_current_status }),
+//     });
+
+//     if (response.data.status === "error") {
+//       throw new Error(response.data.message || "Failed to retrieve cases");
+//     }
+//     console.log("response.data.data",response.data.data[0].mediation_details.next_calling_date.split("T")[0]);
+//     return response.data.data || [];
+    
+    
+//   } catch (error) {
+//     const errorMessage = error.response?.data?.message || error.message;
+//     console.error("Error retrieving DRC Mediation Board cases:", errorMessage);
+//     throw new Error(errorMessage);
+//   }
+// };
 
 
 // get CaseDetails for MediationBoard
@@ -204,6 +235,7 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
     throw error;
   }
 };
+
 export const ListActiveMediationResponse = async () => {
   try {    
     const response = await axios.get(`${URL}/List_Active_Mediation_Response`);
@@ -220,6 +252,7 @@ export const ListActiveMediationResponse = async () => {
     throw error;
   }
 };
+
 export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   try {
     if (!payload.drc_id || !payload.case_id) {
