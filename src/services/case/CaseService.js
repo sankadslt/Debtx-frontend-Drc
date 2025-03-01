@@ -126,11 +126,7 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-
-
-
-export const listAllDRCMediationBoardCases = async (payload) => {
-
+export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
   try {
     if (!payload.drc_id && !payload.ro_id) {
       throw new Error("DRC ID or RO ID is required.");
@@ -257,97 +253,19 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
-export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+
+// List Active RO Requests Mediation
+export const ListActiveRORequestsMediation = async () => {
   try {
-    if (!payload.drc_id || !payload.case_id) {
-      throw new Error("DRC ID and Case ID are required.");
-    }
-
-    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
-
-    if (response.data.status === "error") {
-      throw new Error(response.data.message);
-    }
-
-    const formattedData = {
-      caseDetails: {
-        case_id: response.data.data.formattedCaseDetails.case_id,
-        customer_ref: response.data.data.formattedCaseDetails.customer_ref,
-        account_no: response.data.data.formattedCaseDetails.account_no,
-        current_arrears_amount: response.data.data.formattedCaseDetails.current_arrears_amount,
-        last_payment_date: response.data.data.formattedCaseDetails.last_payment_date,
-        ref_products: response.data.data.formattedCaseDetails.ref_products || [],
-      },
-      settlementData: response.data.data.settlementData,
-      paymentData: response.data.data.paymentData,
-      additionalData: {
-        ro_negotiation: response.data.data.formattedCaseDetails.ro_negotiation,
-        ro_requests: response.data.data.formattedCaseDetails.ro_requests,
-      }
-    };
-
-    return formattedData;
-  } catch (error) {
-    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
-// Mediation_Board
-
-export const MediationBoard = async (caseId, drcId, formData, nextCallingDate) => {
-  try {
-    if (!caseId || !drcId) {
-      throw new Error("Case ID and DRC ID are required.");
-    }
-    
-    const requestBody = {
-      case_id: caseId,
-      drc_id: drcId,
-      ro_id: localStorage.getItem('user_id') || "", 
-      customer_available: formData.customerRepresented,
-      comment: formData.comment || "",
-      settle: formData.settle || null,
-      created_by: localStorage.getItem('username') || "system" 
-    };
-
-    // Add next_calling_date if it's set
-    if (nextCallingDate) {
-      requestBody.next_calling_date = nextCallingDate;
-    }
-
-    // Add fail_reason if customer doesn't agree to settle
-    if (formData.customerRepresented === "Yes" && formData.settle === "No" && formData.failReason) {
-      requestBody.fail_reason = formData.failReason;
-    }
-
-    // Add request-related fields if a special request is selected
-    if (formData.request && formData.request !== "Task With SLT") {
-      requestBody.request_id = `REQ-${Date.now()}`; 
-      requestBody.request_type = formData.request;
-      requestBody.intraction_id = `INT-${Date.now()}`; 
-    }
-    
-    // Add settlement-related fields if customer agrees to settle
-    if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
-      requestBody.settlement_count = formData.settlementCount;
-      requestBody.initial_amount = formData.initialAmount;
-      requestBody.calendar_month = formData.calendarMonth || "0";
-      requestBody.duration = `${formData.durationFrom} to ${formData.durationTo}`;
-      requestBody.remark = formData.remark || "";
-    }
-    
-    // Make the API call to the backend
-    const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
+    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`);
     
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
     
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    console.error("Error submitting mediation board response:", 
-      error.response?.data?.message || error.message);
+    console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
     throw error;
   }
 };
