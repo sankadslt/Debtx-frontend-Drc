@@ -56,7 +56,6 @@ export const assignROToCase = async (payload) => {
 };
 
 
-
 // List All Active ROs By DRC and RTOM
 export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
   try {
