@@ -11,7 +11,7 @@ Related Files: (routes)
 Notes: This page includes a filter and a table */
 
 
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
@@ -56,17 +56,17 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
-  const [user, setUser] =useState(null);
-  
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const userData = await getUserData();
         setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
+        console.log("DRC ID: ", user?.drc_id);
       } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
+        console.log("Eror in retrieving DRC ID: ", err);
+      }
     };
 
     fetchUserData();
@@ -91,9 +91,9 @@ const DistributeTORO = () => {
         console.error("Error fetching data:", error);
       }
     };
-  
-      fetchUserData();
-    }, [user?.drc_id]);
+
+    fetchUserData();
+  }, [user?.drc_id]);
 
   // Fetch data and recovery officers when drc_id changes
   useEffect(() => {
@@ -101,7 +101,7 @@ const DistributeTORO = () => {
       try {
         if (user?.drc_id) {
           const payload = parseInt(user?.drc_id, 10);
-  
+
           // Fetch RTOMs
           const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
@@ -142,9 +142,9 @@ const DistributeTORO = () => {
 
     fetchData();
     fetchRecoveryOfficers();
-    
+
   }, [user?.drc_id]);
-  
+
   const handleFilter = async () => {
     try {
       setFilteredData([]); // Clear previous results
@@ -155,15 +155,26 @@ const DistributeTORO = () => {
         return offsetDate.toISOString().split('T')[0];
       };
 
-      const payload = {
-          drc_id: Number(user?.drc_id),
-          rtom: selectedRTOM,
-          arrears_band: selectedArrearsBand,
-          ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-          from_date: formatDate(fromDate),
-          to_date: formatDate(toDate),
+      if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
+        Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+        return;
+
       };
-        
+
+      if (new Date(fromDate) > new Date(toDate)) {
+        Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+        return;
+      };
+
+      const payload = {
+        drc_id: Number(user?.drc_id),
+        rtom: selectedRTOM,
+        arrears_band: selectedArrearsBand,
+        ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+        from_date: formatDate(fromDate),
+        to_date: formatDate(toDate),
+      };
+
 
 
       const response = await listHandlingCasesByDRC(payload);
@@ -263,7 +274,7 @@ const DistributeTORO = () => {
   const handleSubmit = async () => {
     try {
       const selectedRtom = selectedRO;
-      
+
       if (!selectedRO) {
         Swal.fire("Error", "No Recovery Officer selected!", "error");
         return;
@@ -326,7 +337,7 @@ const DistributeTORO = () => {
     }
   };
 
-const getStatusIcon = (status) => {
+  const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
         return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
@@ -455,53 +466,53 @@ const getStatusIcon = (status) => {
 
       {/* Table Section */}
       <div className={GlobalStyle.tableContainer}>
-  <table className={GlobalStyle.table}>
-    <thead className={GlobalStyle.thead}>
-      <tr>
-        <th className={GlobalStyle.tableHeader}></th>
-        <th className={GlobalStyle.tableHeader}>Status</th>
-        <th className={GlobalStyle.tableHeader}>Case ID</th>
-        <th className={GlobalStyle.tableHeader}>Date</th>
-        <th className={GlobalStyle.tableHeader}>Amount</th>
-        <th className={GlobalStyle.tableHeader}>Action</th>
-        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-        <th className={GlobalStyle.tableHeader}>RO</th>
-        <th className={GlobalStyle.tableHeader}>Expire Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {currentData && currentData.length > 0 ? (
-        currentData.map((item, index) => (
-          <tr
-            key={item.case_id || index} // Use case_id if available, else fallback to index
-            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-          >
-            <td className="text-center">
-              <input
-                type="checkbox"
-                checked={selectedRows.has(index)}
-                onChange={() => handleRowSelect(index)}
-                className="mx-auto"
-              />
-            </td>
-            <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="9" className="text-center">No cases available</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+        <table className={GlobalStyle.table}>
+          <thead className={GlobalStyle.thead}>
+            <tr>
+              <th className={GlobalStyle.tableHeader}></th>
+              <th className={GlobalStyle.tableHeader}>Status</th>
+              <th className={GlobalStyle.tableHeader}>Case ID</th>
+              <th className={GlobalStyle.tableHeader}>Date</th>
+              <th className={GlobalStyle.tableHeader}>Amount</th>
+              <th className={GlobalStyle.tableHeader}>Action</th>
+              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+              <th className={GlobalStyle.tableHeader}>RO</th>
+              <th className={GlobalStyle.tableHeader}>Expire Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentData && currentData.length > 0 ? (
+              currentData.map((item, index) => (
+                <tr
+                  key={item.case_id || index} // Use case_id if available, else fallback to index
+                  className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+                >
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(index)}
+                      onChange={() => handleRowSelect(index)}
+                      className="mx-auto"
+                    />
+                  </td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="text-center">No cases available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {/* Pagination Section */}
       <div className={GlobalStyle.navButtonContainer}>
         <button
@@ -582,7 +593,7 @@ const getStatusIcon = (status) => {
 
           }}
           className={GlobalStyle.buttonPrimary}
-         // disabled={selectedRows.size === 0} // Disable if no rows are selected
+        // disabled={selectedRows.size === 0} // Disable if no rows are selected
         >
           Submit
         </button>

@@ -18,6 +18,7 @@ import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/cas
 import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
 import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -38,7 +39,7 @@ export default function AssignedROcaselog() {
     const [rtoms, setRtoms] = useState([]);
     const [selectedRTOM, setSelectedRTOM] = useState("");
     const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
-
+    const [expireDate, setexpireDate] = useState([]); // State for data
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
@@ -74,42 +75,42 @@ export default function AssignedROcaselog() {
     //     };
 
 
-    const [user, setUser] =useState(null);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
-          try {
-            const userData = await getUserData();
-            setUser(userData);
-            console.log("DRC ID: ", user?.drc_id);          
-          } catch (err) {
-            console.log("Error in getting user data : " , err);
-            
-          } 
+            try {
+                const userData = await getUserData();
+                setUser(userData);
+                console.log("DRC ID: ", user?.drc_id);
+            } catch (err) {
+                console.log("Error in getting user data : ", err);
+
+            }
         };
-    
+
         fetchUserData();
-    
+
     }, [user?.drc_id]);
 
 
     useEffect(() => {
         const fetchUserData = async () => {
-        try {
-            // Step 1: Fetch user_id
-            const userId = await getLoggedUserId();
-            if (!userId) throw new Error("Unable to fetch user ID");
+            try {
+                // Step 1: Fetch user_id
+                const userId = await getLoggedUserId();
+                if (!userId) throw new Error("Unable to fetch user ID");
 
-            // Step 2: Fetch drc_id using user_id
-            const userData = await getUserData();
-            setDrcId(userData.drc_id);
+                // Step 2: Fetch drc_id using user_id
+                const userData = await getUserData();
+                setDrcId(userData.drc_id);
 
-            // Step 3: Fetch arrears bands and ro list
-            const arrearsAmounts = await fetchAllArrearsBands();
-            setArrearsAmounts(arrearsAmounts);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
+                // Step 3: Fetch arrears bands and ro list
+                const arrearsAmounts = await fetchAllArrearsBands();
+                setArrearsAmounts(arrearsAmounts);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
         };
 
         fetchUserData();
@@ -149,6 +150,20 @@ export default function AssignedROcaselog() {
                 return offsetDate.toISOString().split('T')[0];
             };
 
+            if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
+                Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+                return;
+
+            };
+
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+                return;
+            };
+
+
+
             const payload = {
                 drc_id: Number(user?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
@@ -177,12 +192,17 @@ export default function AssignedROcaselog() {
 
             console.log("Filtered data updated:", filteredlogData); //for debugging
 
+            const endDate = AssignedROcaselog.expire_dtm;
+            const currentDate = new Date();
+            const isPastDate = endDate < currentDate;
 
 
         } catch (error) {
             console.error("Error filtering cases:", error);
         }
     };
+
+
 
 
 
@@ -276,29 +296,29 @@ export default function AssignedROcaselog() {
             .includes(searchQuery.toLowerCase()) // Match with the search query
     );
 
-   const getStatusIcon = (status) => {
-       switch (status.toLowerCase()) {
-         case "open no agent":
-           return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
-         case "open with agent":
-           return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
-         case "negotiation settle pending":
-           return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
-         case "negotiation settle open pending":
-           return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
-         case "negotiation settle active":
-           return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
-         case "fmb":
-           return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
-         case "fmb settle pending":
-           return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
-         case "fmb settle open pending":
-           return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
-         case "fmb settle active":
-           return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
-         default:
-           return <span className="text-gray-500">N/A</span>;
-       }
+    const getStatusIcon = (status) => {
+        switch (status.toLowerCase()) {
+            case "open no agent":
+                return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+            case "open with agent":
+                return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+            case "negotiation settle pending":
+                return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+            case "negotiation settle open pending":
+                return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+            case "negotiation settle active":
+                return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+            case "fmb":
+                return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
+            case "fmb settle pending":
+                return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
+            case "fmb settle open pending":
+                return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
+            case "fmb settle active":
+                return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+            default:
+                return <span className="text-gray-500">N/A</span>;
+        }
     };
 
     return (
@@ -428,50 +448,70 @@ export default function AssignedROcaselog() {
                     </thead>
                     <tbody>
                         {filteredDataBySearch.length > 0 ? (
-                            filteredDataBySearch.map((item, index) => (
-                                <tr
-                                    key={index}
-                                    className={`${index % 2 === 0
-                                        ? "bg-white bg-opacity-75"
-                                        : "bg-gray-50 bg-opacity-50"
-                                        } border-b`}
-                                >
-                                    <td className={GlobalStyle.tableData}>
-                                        <a href={`#${item.case_id}`} className="hover:underline">
-                                            {item.case_id}
-                                        </a>
-                                    </td>
-                                    <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                                    <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
-                                    <td className={GlobalStyle.tableData}>{item.area}</td>
-                                    <td className={GlobalStyle.tableData}>{item.remark}</td>
-                                    <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                                    <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString()}</td>
-                                    <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
-                                    <td className={GlobalStyle.tableData}>
-                                        <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                            <AiFillEye
-                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
-                                                style={{ cursor: "pointer", marginRight: "8px" }}
-                                            />
-                                            <FaEdit
-                                                onClick={() => console.log("Edit clicked")}
-                                                style={{ cursor: "pointer", marginRight: "8px" }}
-                                            />
-                                            <button
-                                                className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                                                style={{ whiteSpace: "nowrap" }}
-                                                onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
-                                            >
-                                                Re-Assign
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            filteredDataBySearch.map((item, index) => {
+                                // Convert expire_dtm to a JavaScript Date object
+                                const expireDate = new Date(item.expire_dtm);
+                                const today = new Date();
+
+                                // Check if the expire date is in the past
+                                const isPastDate = expireDate < today;
+
+                                return (
+                                    <tr
+                                        key={index}
+                                        className={`${index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
+                                            } border-b`}
+                                    >
+                                        <td className={GlobalStyle.tableData}>
+                                            <a href={`#${item.case_id}`} className="hover:underline">
+                                                {item.case_id}
+                                            </a>
+                                        </td>
+                                        <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                                            {getStatusIcon(item.status)}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
+                                        <td className={GlobalStyle.tableData}>{item.area}</td>
+                                        <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                        <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                                        <td className={GlobalStyle.tableData}>{expireDate.toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>
+                                            <div className="px-8 flex items-center gap-2">
+                                                <AiFillEye
+                                                    onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
+                                                    style={{ cursor: "pointer", marginRight: "8px" }}
+                                                />
+
+                                                {/* Show Edit button only if the expire date is in the future */}
+                                                <FaEdit
+                                                    onClick={() => {
+                                                        if (!isPastDate) console.log("Edit clicked");
+                                                    }}
+                                                    style={{
+                                                        cursor: isPastDate ? "not-allowed" : "pointer",
+                                                        color: isPastDate ? "#d3d3d3" : "#000",
+                                                        opacity: isPastDate ? 0.6 : 1,
+                                                    }}
+                                                />
+
+                                                <button
+                                                    className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                                                    style={{ whiteSpace: "nowrap" }}
+                                                    onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
+                                                >
+                                                    Re-Assign
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="9" className={GlobalStyle.tableData}>No data available</td>
+                                <td colSpan="9" className={GlobalStyle.tableData}>
+                                    No data available
+                                </td>
                             </tr>
                         )}
                     </tbody>
