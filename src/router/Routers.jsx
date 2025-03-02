@@ -39,8 +39,8 @@ const Routers = () => {
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/unauthorized" element={<Unauthorized/>} />
-     <Route path="/user-profile" element={<UserProfile />} />
-     <Route path="/create-task" element={<CreateTask />} />
+      <Route path="/user-profile" element={<UserProfile />} />
+      <Route path="/create-task" element={<CreateTask />} />
 
       <Route path="/dummy-page" element={<ProtectedRoute element={<DummyPage />} allowedRoles={['superadmin']} />} />
 
@@ -62,7 +62,7 @@ const Routers = () => {
       <Route path="/drc/ro-monitoring-arrears/:case_id" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
       
       <Route path="/pages/DRC/Mediation Board Response" element={<ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin']} />} />
-      <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
       <Route path="/drc/mediation-board-case-list" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin']} />} />
       <Route path="/drc/assigned-ro-case-log" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin','drc_user', 'drc_admin']} />} />
       <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin']} />} />
