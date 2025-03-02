@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
-import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import {  getUserData } from "../../services/auth/authService.js";

@@ -389,19 +389,34 @@ export const updateLastRoDetails =async(case_id, drc_id, remark) => {
   }
 }
 
-export const listDRCAllCases = async ({ drc_id, ro_id, From_DAT, TO_DAT, case_current_status }) => {
+export const listDRCAllCases = async (payload) => {
   try {
-    const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, {
-      drc_id,
-      ro_id,
-      From_DAT,
-      TO_DAT,
-      case_current_status: case_current_status || null, // Ensure it's not undefined
+    if (!payload.drc_id && !payload.ro_id) {
+      throw new Error("DRC ID or RO ID is required.");
+    }
+
+    const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        ro_name: caseData.ro_name || null,
+        contact_no: caseData.contact_no || null,
+        area: caseData.area,
+        action_type: caseData.action_type,
+      };
     });
 
-    return response.data;
+    return formattedCases;
   } catch (error) {
-    console.error("Error fetching DRC all cases:", error.response?.data || error.message);
+    console.error("Error retrieving cases by DRC:", error.response?.data || error.message);
     throw error;
   }
 };
