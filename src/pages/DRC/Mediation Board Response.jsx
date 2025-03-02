@@ -796,13 +796,10 @@
 // };
 
 // export default MediationBoardResponse;
-
-
-// src/components/MediationBoardResponse.jsx
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
-import { getCaseDetailsbyMediationBoard,ListActiveMediationResponse } from "../../services/case/CaseService";
+import { getCaseDetailsbyMediationBoard, ListActiveMediationResponse } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
 
@@ -820,6 +817,13 @@ const MediationBoardResponse = () => {
     lastPaymentDate: "",
     callingRound: 0
   });
+  
+  // New state for response history, payment details, and additional details
+  const [responseHistory, setResponseHistory] = useState([]);
+  const [paymentDetails, setPaymentDetails] = useState([]);
+  const [additionalRequests, setAdditionalRequests] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  
   const [failReasons, setFailReasons] = useState([]);
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
@@ -865,7 +869,7 @@ const MediationBoardResponse = () => {
           lastPaymentDate: data.last_payment_date 
             ? format(new Date(data.last_payment_date), 'yyyy-MM-dd')
             : "",
-          callingRound: data.mediation_board || 0
+          callingRound: data.calling_round || 0
         });
         setFailReasons(failReasonsList);
         setIsLoading(false);
@@ -878,6 +882,62 @@ const MediationBoardResponse = () => {
 
     fetchCaseDetails();
   }, [caseId, drcId]);
+
+  // New function to fetch response history data when the modal is opened
+  const fetchResponseHistory = async () => {
+    if (!caseId || !drcId) return;
+    
+    setHistoryLoading(true);
+    try {
+      // Use the service function to fetch history data
+      const data = await getCaseDetailsbyMediationBoard(caseId, drcId);
+      
+      // Format the response history data from mediation_board array
+      const formattedHistory = data.mediation_board?.map(item => ({
+        callingDate: item.mediation_board_calling_dtm 
+          ? format(new Date(item.mediation_board_calling_dtm), 'yyyy-MM-dd')
+          : "-",
+        customerRepresented: item.customer_available || "-",
+        agreeToSettle: item.agree_to_settle || "-",
+        remark: item.customer_response || item.comment || "-"
+      })) || [];
+      
+      setResponseHistory(formattedHistory);
+      
+      // Format payment details from settlement array if available
+      const formattedPayments = data.settlement?.map(payment => ({
+        date: payment.settlement_created_dtm 
+          ? format(new Date(payment.settlement_created_dtm), 'yyyy-MM-dd')
+          : "-",
+        paidAmount: payment.payment_amount || "-",
+        settledBalance: payment.settled_balance || "-"
+      })) || [];
+      
+      setPaymentDetails(formattedPayments);
+      
+      // Format additional requests from ro_requests array if available
+      const formattedRequests = data.ro_requests?.map(request => ({
+        date: request.created_dtm 
+          ? format(new Date(request.created_dtm), 'yyyy-MM-dd')
+          : "-",
+        request: request.ro_request || "-",
+        remark: request.remark || "-"
+      })) || [];
+      
+      setAdditionalRequests(formattedRequests);
+    } catch (error) {
+      console.error("Error fetching response history:", error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Call fetchResponseHistory when the modal is opened
+  useEffect(() => {
+    if (showResponseHistory) {
+      fetchResponseHistory();
+    }
+  }, [showResponseHistory]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -1186,10 +1246,6 @@ const MediationBoardResponse = () => {
               aria-label="Fail reason"
             >
               <option value="">Select Response</option>
-              {/* <option value="reason1">Mediation Board User Not Agree To Settle</option>
-              <option value="reason2">Installment Default</option>
-              <option value="reason3">Mediation Board Customer Available Not Agree To Settle</option>
-               */}
               {failReasons.map((failReason, index)=>(
                 <option key={index} value={failReason.mediation_description}>{failReason.mediation_description}</option>
               ))}
@@ -1313,152 +1369,169 @@ const MediationBoardResponse = () => {
               <X size={24} />
             </button>
 
-            {/* Mediation Board Response History Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins">
-              Mediation Board Response History
-            </h2>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
-                  <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Calling Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Customer Represented
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Agree to Settle
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Remarks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    {
-                      callingDate: "2024-02-10",
-                      customerRepresented: "Yes/No",
-                      agreeToSettle: "Yes/No",
-                      remark: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${
-                        index % 2 === 0
-                          ? "bg-white bg-opacity-75"
-                          : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>
-                        {entry.callingDate}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.customerRepresented}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.agreeToSettle}
-                      </td>
-                      <td className={GlobalStyle.tableData}>{entry.remark}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Loading Indicator */}
+            {historyLoading && (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-2">Loading history data...</span>
+              </div>
+            )}
 
-            {/* Payment Details Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
-              Payment Details
-            </h2>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
-                  <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Paid Amount
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Settled Balance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    {
-                      date: "2024-02-10",
-                      paidAmount: "3000",
-                      settledBalance: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${
-                        index % 2 === 0
-                          ? "bg-white bg-opacity-75"
-                          : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>{entry.date}</td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.paidAmount}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.settledBalance}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {!historyLoading && (
+              <>
+                {/* Mediation Board Response History Table */}
+                <h2 className="text-2xl font-semibold mb-2 font-poppins">
+                  Mediation Board Response History
+                </h2>
+                <div className={GlobalStyle.tableContainer}>
+                  <table className={GlobalStyle.table}>
+                    <thead className={GlobalStyle.thead}>
+                      <tr>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Calling Date
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Customer Represented
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Agree to Settle
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Remarks
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {responseHistory.length > 0 ? (
+                        responseHistory.map((entry, index) => (
+                          <tr
+                            key={index}
+                            className={`${
+                              index % 2 === 0
+                                ? "bg-white bg-opacity-75"
+                                : "bg-gray-50 bg-opacity-50"
+                            } border-b`}
+                          >
+                            <td className={GlobalStyle.tableData}>
+                              {entry.callingDate}
+                            </td>
+                            <td className={GlobalStyle.tableData}>
+                              {entry.customerRepresented}
+                            </td>
+                            <td className={GlobalStyle.tableData}>
+                              {entry.agreeToSettle}
+                            </td>
+                            <td className={GlobalStyle.tableData}>{entry.remark}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center py-4 text-gray-500">
+                            No response history available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-            {/* Requested Additional Details Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
-              Requested Additional Details
-            </h2>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
-                  <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Request
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Remarks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    {
-                      date: "2024-02-10",
-                      request: "....",
-                      remark: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${
-                        index % 2 === 0
-                          ? "bg-white bg-opacity-75"
-                          : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>{entry.date}</td>
-                      <td className={GlobalStyle.tableData}>{entry.request}</td>
-                      <td className={GlobalStyle.tableData}>{entry.remark}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                {/* Payment Details Table */}
+                <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
+                  Payment Details
+                </h2>
+                <div className={GlobalStyle.tableContainer}>
+                  <table className={GlobalStyle.table}>
+                    <thead className={GlobalStyle.thead}>
+                      <tr>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Date
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Paid Amount
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Settled Balance
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paymentDetails.length > 0 ? (
+                        paymentDetails.map((entry, index) => (
+                          <tr
+                            key={index}
+                            className={`${
+                              index % 2 === 0
+                                ? "bg-white bg-opacity-75"
+                                : "bg-gray-50 bg-opacity-50"
+                            } border-b`}
+                          >
+                            <td className={GlobalStyle.tableData}>{entry.date}</td>
+                            <td className={GlobalStyle.tableData}>
+                              {entry.paidAmount}
+                            </td>
+                            <td className={GlobalStyle.tableData}>
+                              {entry.settledBalance}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center py-4 text-gray-500">
+                            No payment details available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Requested Additional Details Table */}
+                <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
+                  Requested Additional Details
+                </h2>
+                <div className={GlobalStyle.tableContainer}>
+                  <table className={GlobalStyle.table}>
+                    <thead className={GlobalStyle.thead}>
+                      <tr>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Date
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Request
+                        </th>
+                        <th scope="col" className={GlobalStyle.tableHeader}>
+                          Remarks
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {additionalRequests.length > 0 ? (
+                        additionalRequests.map((entry, index) => (
+                          <tr
+                            key={index}
+                            className={`${
+                              index % 2 === 0
+                                ? "bg-white bg-opacity-75"
+                                : "bg-gray-50 bg-opacity-50"
+                            } border-b`}
+                          >
+                            <td className={GlobalStyle.tableData}>{entry.date}</td>
+                            <td className={GlobalStyle.tableData}>{entry.request}</td>
+                            <td className={GlobalStyle.tableData}>{entry.remark}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center py-4 text-gray-500">
+                            No additional requests available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

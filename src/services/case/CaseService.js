@@ -202,7 +202,6 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 
 // get CaseDetails for MediationBoard
 
-
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
     if (!case_id || !drc_id) {
@@ -218,20 +217,54 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
       throw new Error(response.data.message);
     }
     
-    // Format the response to include only required fields
-    const caseDetails = {
-      case_id: response.data.data.case_id,
-      customer_ref: response.data.data.customer_ref,
-      account_no: response.data.data.account_no,
-      current_arrears_amount: response.data.data.current_arrears_amount,
-      last_payment_date: response.data.data.last_payment_date,
-      mediation_board: response.data.data.calling_round,
-    };
+    const data = response.data.data;
     
-    return caseDetails;
+    // Process arrays to remove entries with empty or dash values
+    if (data.mediation_board && Array.isArray(data.mediation_board)) {
+      data.mediation_board = data.mediation_board.filter(item => {
+        // Check if any property has a meaningful value (not empty, not dash)
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      // Remove empty array
+      if (data.mediation_board.length === 0) {
+        delete data.mediation_board;
+      }
+    }
+    
+    if (data.settlement && Array.isArray(data.settlement)) {
+      data.settlement = data.settlement.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.settlement.length === 0) {
+        delete data.settlement;
+      }
+    }
+    
+    if (data.ro_requests && Array.isArray(data.ro_requests)) {
+      data.ro_requests = data.ro_requests.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.ro_requests.length === 0) {
+        delete data.ro_requests;
+      }
+    }
+    
+    return data;
+    
   } catch (error) {
-    console.error("Error retrieving case details for mediation board:", 
-      error.response?.data || error.message);
+    console.error(
+      "Error retrieving case details for mediation board:", 
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -269,3 +302,5 @@ export const ListActiveRORequestsMediation = async () => {
     throw error;
   }
 };
+
+
