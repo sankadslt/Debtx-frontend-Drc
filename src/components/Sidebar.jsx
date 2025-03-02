@@ -50,7 +50,7 @@ const Sidebar = ({ onHoverChange }) => {
       subItems: [
         {
           label: "DRC",
-          roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'],
+          roles: ["superadmin", "admin", 'drc_admin', 'drc_user'],
           subItems: [
             {
               label: "Assigned Case List for DRC",
@@ -77,6 +77,12 @@ const Sidebar = ({ onHoverChange }) => {
               link: "/pages/DRC/Re-AssignRo", 
               roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
             },
+          ],
+        },
+        {
+          label: "DRC / RO",
+          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
+          subItems: [
             { 
               label: "Mediation Board Case List", 
               link: "/drc/mediation-board-case-list", 
@@ -85,6 +91,16 @@ const Sidebar = ({ onHoverChange }) => {
             { 
               label: "Mediation Board Response", 
               link: "/pages/DRC/Mediation Board Response", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
+            },
+            { 
+              label: "RO Assigned Case Log", 
+              link: "/drc/ro-s-assigned-case-log", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
+            },
+            { 
+              label: "Edit Customer Profile", 
+              link: "/drc/customer-negotiation", 
               roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
             },
           ],

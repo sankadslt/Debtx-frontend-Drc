@@ -61,7 +61,7 @@ const Routers = () => {
       <Route path="/drc/assigned-case-list-for-drc" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-case-list-for-drc/:drc_id" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin']} />} /> */}
       <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'admin']} />} />
-      {/* <Route path="/drc/ro-monitoring-arrears/:case_id" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} /> */}
+      <Route path="/drc/ro-monitoring-arrears/:case_id" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
       <Route path="/drc/assigned-ro-case-log" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin','drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-ro-case-log/:drc_id" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} /> */}
       <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} />
@@ -78,8 +78,8 @@ const Routers = () => {
       {/* DRC/RO Routes for 2.6 to 2.7.1 - Negotiation*/}
       <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
       {/* <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} /> */}
-      <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin']} />} />
-      <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin']} />} />
+      <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'admin,', 'drc_user', 'drc_admin', 'user']} />} />
+      <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin', 'user']} />} />
     </Routes>
   );
 };
