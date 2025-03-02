@@ -206,6 +206,7 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
     throw error;
   }
 };
+
 export const ListActiveMediationResponse = async () => {
   try {    
     const response = await axios.get(`${URL}/List_Active_Mediation_Response`);
@@ -223,22 +224,21 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
-// Mediation_Board
-
-export const MediationBoard = async (caseId, drcId, formData, nextCallingDate) => {
+export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) => {
   try {
     if (!caseId || !drcId) {
       throw new Error("Case ID and DRC ID are required.");
     }
-    
+
+    // Build the request body according to the controller's requirements
     const requestBody = {
       case_id: caseId,
       drc_id: drcId,
-      ro_id: localStorage.getItem('user_id') || "", 
+      ro_id: localStorage.getItem("user_id") || "", // Get user ID from local storage or provide appropriate source
       customer_available: formData.customerRepresented,
       comment: formData.comment || "",
       settle: formData.settle || null,
-      created_by: localStorage.getItem('username') || "system" 
+      created_by: localStorage.getItem("username") || "system", // Get username from local storage or provide appropriate source
     };
 
     // Add next_calling_date if it's set
@@ -251,33 +251,55 @@ export const MediationBoard = async (caseId, drcId, formData, nextCallingDate) =
       requestBody.fail_reason = formData.failReason;
     }
 
-    // Add request-related fields if a special request is selected
-    if (formData.request && formData.request !== "Task With SLT") {
-      requestBody.request_id = `REQ-${Date.now()}`; 
-      requestBody.request_type = formData.request;
-      requestBody.intraction_id = `INT-${Date.now()}`; 
-    }
-    
     // Add settlement-related fields if customer agrees to settle
     if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
+      if (
+        !formData.settlementCount ||
+        !formData.initialAmount ||
+        !formData.calendarMonth ||
+        !formData.durationFrom ||
+        !formData.durationTo
+      ) {
+        throw new Error("Missing required fields: settlement count, initial amount, calendar months, duration");
+      }
+
       requestBody.settlement_count = formData.settlementCount;
       requestBody.initial_amount = formData.initialAmount;
       requestBody.calendar_month = formData.calendarMonth || "0";
       requestBody.duration = `${formData.durationFrom} to ${formData.durationTo}`;
       requestBody.remark = formData.remark || "";
     }
-    
+
     // Make the API call to the backend
     const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error submitting mediation board response:", error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+
+// List Active RO Requests Mediation Board
+export const ListActiveRORequestsMediation = async () => {
+  try {
+    // Specify that we only want requests with request_mode = "Mediation Board"
+    const response = await axios.post(`${URL}//List_Active_RO_Requests_Mediation`, {
+      request_mode: "Mediation Board"
+    });
     
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
     
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    console.error("Error submitting mediation board response:", 
-      error.response?.data?.message || error.message);
+    console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
     throw error;
   }
 };
