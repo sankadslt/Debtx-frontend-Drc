@@ -17,9 +17,9 @@ import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
 import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
 
 //Status Icons
-import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
 import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
 import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
 import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
@@ -31,7 +31,7 @@ import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 export default function AssignedCaseListforDRC() {
   const [user, setUser] = useState(null);
-  
+
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
@@ -69,17 +69,17 @@ export default function AssignedCaseListforDRC() {
       try {
         const userData = await getUserData();
         setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
+        console.log("DRC ID: ", user?.drc_id);
       } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
+        console.log("Eror in retrieving DRC ID: ", err);
+      }
     };
 
     fetchUserData();
   }, [user?.drc_id]);
 
   useEffect(() => {
-    const fetchData =async () => {
+    const fetchData = async () => {
       try {
         // Step 1: Fetch user_id
         const userId = await getLoggedUserId();
@@ -94,21 +94,22 @@ export default function AssignedCaseListforDRC() {
         setArrearsAmounts(arrearsAmounts);
 
         if (user?.drc_id) {
-          const roData =await roassignedbydrc(user?.drc_id);
+          const roData = await roassignedbydrc(user?.drc_id);
           setRoList(roData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-      
-    }    
+
+    }
     fetchData();
-    
+
   }, [user?.drc_id]);
 
   // Handle filtering cases
   const handleFilter = async () => {
     try {
+
       setFilteredData([]);
 
       const formatDate = (date) => {
@@ -117,7 +118,18 @@ export default function AssignedCaseListforDRC() {
         return offsetDate.toISOString().split("T")[0];
       };
 
-      const payload ={
+      if (!selectedArrearsAmount && !selectedRo && !fromDate && !toDate) {
+        Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+        return;
+
+      };
+
+      if (new Date(fromDate) > new Date(toDate)) {
+        Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+        return;
+      };
+
+      const payload = {
         drc_id: Number(user?.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "",
@@ -172,12 +184,12 @@ export default function AssignedCaseListforDRC() {
         return <span className="text-gray-500">N/A</span>;
     }
   };
-  
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Case List</h1>
-      
+
       <div className="flex gap-4 items-center flex-wrap mt-4 ">
         {/* Dropdown for Arrears Amount */}
         <select
@@ -185,7 +197,7 @@ export default function AssignedCaseListforDRC() {
           value={selectedArrearsAmount}
           onChange={(e) => setSelectedArrearsAmount(e.target.value)}
         >
-        <option value="">Arrears Band</option>
+          <option value="">Arrears Band</option>
           {arrearsAmounts.length > 0 ? (
             arrearsAmounts.map((amount, index) => (
               <option key={index} value={amount.key}>
@@ -198,7 +210,7 @@ export default function AssignedCaseListforDRC() {
         </select>
 
         {/* Dropdown for RO */}
-        <select 
+        <select
           className={GlobalStyle.selectBox}
           value={selectedRo}
           onChange={(e) => setSelectedRo(e.target.value)}
@@ -227,10 +239,10 @@ export default function AssignedCaseListforDRC() {
           />
         </div>
         <button
-            onClick={handleFilter}
-            className={`${GlobalStyle.buttonPrimary}`}
-          >
-            Filter
+          onClick={handleFilter}
+          className={`${GlobalStyle.buttonPrimary}`}
+        >
+          Filter
         </button>
       </div>
 
@@ -280,19 +292,19 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
-                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 
-                        ? new Date(item.expire_dtm).toLocaleDateString("en-CA") 
-                        : "N/A"
+                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime())
+                      ? new Date(item.expire_dtm).toLocaleDateString("en-CA")
+                      : "N/A"
                     }
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                  
+
                 </tr>
               ))
-              ) : (
-                <tr>
-                  <td colSpan={9} className="text-center">No cases available</td>
-                </tr>
+            ) : (
+              <tr>
+                <td colSpan={9} className="text-center">No cases available</td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -303,23 +315,21 @@ export default function AssignedCaseListforDRC() {
         <button
           onClick={() => handlePrevNext("prev")}
           disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${
-            currentPage === 1 ? "cursor-not-allowed" : ""
-        }`}
+          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+            }`}
         >
-        <FaArrowLeft />
-          </button>
-          <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePrevNext("next")}
-            disabled={currentPage === totalPages}
-            className={`${GlobalStyle.navButton} ${
-          currentPage === totalPages ? "cursor-not-allowed" : ""
-          }`}
+          <FaArrowLeft />
+        </button>
+        <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePrevNext("next")}
+          disabled={currentPage === totalPages}
+          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
+            }`}
         >
-        <FaArrowRight />
+          <FaArrowRight />
         </button>
       </div>
     </div>
