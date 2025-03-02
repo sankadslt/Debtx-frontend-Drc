@@ -65,7 +65,7 @@ const Sidebar = ({ onHoverChange }) => {
             { 
               label: "Assigned RO Case Log", 
               link: "/drc/assigned-ro-case-log", 
-              roles: ["admin", "superadmin", "drc_admin", 'drc_user'] 
+              roles: ["superadmin", "admin", "drc_admin", 'drc_user'] 
             },
             { 
               label: "RO Monitoring (Arrears) and (CPE)", 
