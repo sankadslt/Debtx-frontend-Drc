@@ -3,8 +3,7 @@ import { FaBell, FaCog, FaUser, FaSignOutAlt, FaTasks } from "react-icons/fa";
 import profileImage from "../assets/images/profile.jpg";
 import logo from "../assets/images/logo.png";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import { refreshAccessToken, logoutUser } from "../services/auth/authService";
+import { getUserData, logoutUser } from "../services/auth/authService";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -14,42 +13,39 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     setIsDropdownOpen(false);
+
+    localStorage.removeItem("accessToken");
     await logoutUser();
     setUserData(null);
     navigate("/");
   };
+  
 
   const loadUser = async () => {
-    let token = localStorage.getItem("accessToken");
-    if (!token) {
-      setUserData(null);
-      return;
-    }
-
     try {
-      let decoded = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp < currentTime) {
-        token = await refreshAccessToken();
-        if (!token) return;
-        decoded = jwtDecode(token);
-      }
-
+      const user = await getUserData();
       setUserData({
-        id: decoded.user_id,
-        name: decoded.username,
-        email: decoded.email,
-        role: decoded.role,
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        role: user.role,
       });
     } catch (error) {
-      console.error("Invalid token:", error);
+      console.error("Failed to fetch user data:", error);
       handleLogout();
     }
   };
-
+  
   useEffect(() => {
-    loadUser();
-  }, [localStorage.getItem("accessToken")]);
+    const token = localStorage.getItem("accessToken");
+  
+    if (token) {
+      loadUser();
+    } else {
+      handleLogout();
+    }
+  }, []);
+  
 
   const defaultUser = {
     name: "Guest",
@@ -102,9 +98,9 @@ const Navbar = () => {
 
   const toggleTaskList = () => setIsTaskListOpen((prev) => !prev);
 
-  // Ensure taskData is fetched correctly before computing pendingTasksCount
+
   const pendingTasksCount = userData
-    ? taskData.filter((task) => task.user_id === userData.id && !task.completed).length
+    ? taskData.filter((task) => task.id === userData.id && !task.completed).length
     : 0;
 
     const markTaskAsDoneAndNavigate = async (id, url) => {
@@ -120,7 +116,7 @@ const Navbar = () => {
           {
             method: "PATCH",
             headers: {
-              "Authorization": `Bearer ${token}`, // Ensure the token is included
+              "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -249,7 +245,7 @@ const Navbar = () => {
                 }}
               >
                 {taskData
-                  .filter((task) => task.user_id === userData?.id)
+                  .filter((task) => task.id === userData?.id)
                   .slice(0, visibleTasks)
                   .map((task) => (
                     <li
