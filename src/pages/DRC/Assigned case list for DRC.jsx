@@ -79,6 +79,9 @@ export default function AssignedCaseListforDRC() {
     fetchUserData();
   }, [user?.drc_id]);
 
+
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -107,6 +110,57 @@ export default function AssignedCaseListforDRC() {
 
   }, [user?.drc_id]);
 
+
+
+  const handlestartdatechange = (date) => {
+    setFromDate(date);
+    if (toDate) checkdatediffrence(date, toDate);
+  };
+
+  const handleenddatechange = (date) => {
+    if (fromDate) {
+      checkdatediffrence(fromDate, date);
+    }
+    setToDate(date);
+
+  }
+
+  const checkdatediffrence = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const diffInMs = end - start;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30;
+
+    if (diffInMonths > 1) {
+      Swal.fire({
+        title: "Date Range Exceeded",
+        text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        confirmButtonColor: "#28a745",
+        cancelButtonText: "No",
+        cancelButtonColor: "#d33",
+      }).then((result) => {
+        if (result.isConfirmed) {
+
+          endDate = endDate;
+          handleApicall(startDate, endDate);
+        } else {
+          setToDate(null);
+          console.log("Dates cleared");
+        }
+      }
+      );
+
+    }
+  };
+
+
+
   // Handle filtering cases
   const handleFilter = async () => {
     try {
@@ -120,15 +174,46 @@ export default function AssignedCaseListforDRC() {
       };
 
       if (!selectedArrearsAmount && !selectedRo && !fromDate && !toDate) {
-        Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+        Swal.fire({
+          title: "Warning",
+          text: "No filter data is selected. Please, select data.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
         return;
-
       };
+
+      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+        Swal.fire({
+          title: "Warning",
+          text: "Both From Date and To Date must be selected.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      }
+
 
       if (new Date(fromDate) > new Date(toDate)) {
-        Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+
+        Swal.fire({
+          title: "Warning",
+          text: "To date should be greater than or equal to From date",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
         return;
       };
+
 
       const payload = {
         drc_id: Number(user?.drc_id),
@@ -222,18 +307,18 @@ export default function AssignedCaseListforDRC() {
           ))}
         </select>
 
-        <div className={`${GlobalStyle.datePickerContainer} flex items-center gap-2`}>
+        <div className={GlobalStyle.datePickerContainer}>
           <label className={GlobalStyle.dataPickerDate}>Date</label>
           <DatePicker
             selected={fromDate}
-            onChange={(date) => setFromDate(date)}
+            onChange={handlestartdatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}
           />
           <DatePicker
             selected={toDate}
-            onChange={(date) => setToDate(date)}
+            onChange={handleenddatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}
