@@ -1,3 +1,15 @@
+// /*Purpose: This template is used for the 2.16- Mediation board response
+// Created Date: 2025-02-07
+// Created By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
+// Last Modified Date: 2025-02-12
+// Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
+// Version: node 20
+// ui number : 2.16
+// Dependencies: tailwind css
+// Related Files: (routes)
+// Notes: The following page conatins the code for the Mediation board response */
+
+
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
@@ -5,7 +17,6 @@ import {
   getCaseDetailsbyMediationBoard,
   ListActiveMediationResponse,
   ListActiveRORequestsMediation,
-  Mediation_Board, // Import the submit function
 } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
@@ -65,44 +76,45 @@ const MediationBoardResponse = () => {
     formData.settle === "Yes";
 
   // Fetch case details when component mounts
-  useEffect(() => {
-    const fetchCaseDetails = async () => {
-      if (!caseId || !drcId) {
-        setError("Case ID and DRC ID are required");
-        setIsLoading(false);
-        return;
-      }
+  // In MediationBoardResponse component
+useEffect(() => {
+  const fetchCaseDetails = async () => {
+    if (!caseId || !drcId) {
+      setError("Case ID and DRC ID are required");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        // Fetch all data in parallel
-        const [data, failReasonsList, roRequestsList] = await Promise.all([
-          getCaseDetailsbyMediationBoard(caseId, drcId),
-          ListActiveMediationResponse(),
-          ListActiveRORequestsMediation(), // This now fetches only mediation mode requests
-        ]);
+    try {
+      // Fetch all data in parallel
+      const [data, failReasonsList, roRequestsList] = await Promise.all([
+        getCaseDetailsbyMediationBoard(caseId, drcId),
+        ListActiveMediationResponse(),
+        ListActiveRORequestsMediation(), // This now fetches only mediation mode requests
+      ]);
+      console.log(roRequestsList);
+      setCaseDetails({
+        caseId: data.case_id || "",
+        customerRef: data.customer_ref || "",
+        accountNo: data.account_no || "",
+        arrearsAmount: data.current_arrears_amount || "",
+        lastPaymentDate: data.last_payment_date
+          ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
+          : "",
+        callingRound: data.mediation_board || 0,
+      });
+      setFailReasons(failReasonsList);
+      setRoRequests(roRequestsList); // This should now contain only mediation requests
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching case details:", error);
+      setError(error.message || "Failed to fetch case details");
+      setIsLoading(false);
+    }
+  };
 
-        setCaseDetails({
-          caseId: data.case_id || "",
-          customerRef: data.customer_ref || "",
-          accountNo: data.account_no || "",
-          arrearsAmount: data.current_arrears_amount || "",
-          lastPaymentDate: data.last_payment_date
-            ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
-            : "",
-          callingRound: data.mediation_board || 0,
-        });
-        setFailReasons(failReasonsList);
-        setRoRequests(roRequestsList); // This should now contain only mediation requests
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching case details:", error);
-        setError(error.message || "Failed to fetch case details");
-        setIsLoading(false);
-      }
-    };
-
-    fetchCaseDetails();
-  }, [caseId, drcId]);
+  fetchCaseDetails();
+}, [caseId, drcId]);
 
   // Update settlement table when settlement count changes
   useEffect(() => {
@@ -163,75 +175,76 @@ const MediationBoardResponse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    console.log("Submitted Form Data:", formData);
     // Adjust validation based on handover status
-    if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
-      // For handover cases, only validate comment
-      if (!formData.comment.trim()) {
-        alert("Please enter a comment");
-        return;
-      }
-  
-      setShowConfirmation(true);
-      return;
-    } else {
-      // Regular validation for non-handover cases
-      if (formData.customerRepresented === "") {
-        alert("Please select whether customer is represented");
-        return;
-      }
-  
-      if (formData.customerRepresented === "Yes" && formData.settle === "") {
-        alert("Please select whether customer agrees to settle");
-        return;
-      }
-  
-      // Validate fail reason if customer is represented but doesn't agree to settle
-      if (formData.customerRepresented === "Yes" && formData.settle === "No" && !formData.failReason) {
-        alert("Please select a fail reason");
-        return;
-      }
-  
-      // Validate settlement fields only if customer agrees to settle
-      if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
-        if (
-          !formData.settlementCount ||
-          !formData.initialAmount ||
-          !formData.calendarMonth ||
-          !formData.durationFrom ||
-          !formData.durationTo
-        ) {
-          alert("Please fill in all settlement details");
-          return;
-        }
-      }
-    }
-  
-    try {
-      // Call the submitMediationBoardResponse function
-      const response = await Mediation_Board(
-        caseId,
-        drcId,
-        formData,
-        nextCallingDate
-      );
-  
-      // Handle the response
-      if (response.status === "success") {
-        alert("Form submitted successfully!");
-        // Optionally, reset the form or redirect the user
-      } else {
-        alert("Failed to submit form. Please try again.");
-      }
-  
-      // Close the confirmation popup
-      setShowConfirmation(false);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
-      setShowConfirmation(false);
-    }
+    // if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
+    //   // For handover cases, only validate comment
+    //   if (!formData.comment.trim()) {
+    //     alert("Please enter a comment");
+    //     return;
+    //   }
+
+    //   setShowConfirmation(true);
+    //   return;
+    // } else {
+    //   // Regular validation for non-handover cases
+    //   if (formData.customerRepresented === "") {
+    //     alert("Please select whether customer is represented");
+    //     return;
+    //   }
+
+    //   if (formData.customerRepresented === "Yes" && formData.settle === "") {
+    //     alert("Please select whether customer agrees to settle");
+    //     return;
+    //   }
+
+    //   if (showFailReasonFields && !formData.failReason) {
+    //     alert("Please select a fail reason");
+    //     return;
+    //   }
+
+    //   // Validate settlement table if settlements are shown
+    //   if (showSettlementTable) {
+    //     let isValid = true;
+
+    //     settlements.forEach((settlement) => {
+    //       if (!settlement.dueDate || !settlement.amount) {
+    //         isValid = false;
+    //       }
+    //     });
+
+    //     if (!isValid) {
+    //       alert("Please fill in all settlement details");
+    //       return;
+    //     }
+    //   }
+    // }
+
+    // try {
+    //   // Here you would typically call an API to save the form data
+    //   console.log("Form submitted:", {
+    //     ...formData,
+    //     handoverNonSettlement,
+    //     nextCallingDate,
+    //     settlements: showSettlementTable ? settlements : [],
+    //     caseId,
+    //     drcId,
+    //   });
+
+    //   // Close the confirmation popup
+    //   setShowConfirmation(false);
+
+    //   // Simulate successful submission
+    //   alert("Form submitted successfully!");
+
+    //   // Optional: Reset form or redirect
+    // } catch (error) {
+    //   console.error("Error submitting form:", error);
+    //   alert("Failed to submit form. Please try again.");
+    //   setShowConfirmation(false);
+    // }
   };
+
   // Add this function to toggle settlement table visibility
   const toggleSettlementTable = () => {
     setIsSettlementTableVisible(!isSettlementTableVisible);
@@ -366,6 +379,7 @@ const MediationBoardResponse = () => {
                 <td className="px-4 font-semibold">:</td>
                 <td>
                   <input
+                    name="next_calling_date"
                     type="date"
                     value={nextCallingDate}
                     onChange={handleNextCallingDateChange}
@@ -390,20 +404,23 @@ const MediationBoardResponse = () => {
           <>
             <div className="flex items-center">
               <span className="w-48 font-semibold">Request:</span>
-              <select
-  name="request"
-  value={formData.request}
-  onChange={handleInputChange}
-  className={GlobalStyle.selectBox}
-  aria-label="Request type"
->
-  <option value="">Select Request</option>
-  {roRequests.map((request) => (
-    <option key={request._id} value={request.request_description}>
-      {request.request_description}
-    </option>
-  ))}
-</select>
+                <select
+                  name="request"
+                  value={formData.request}
+                  onChange={handleInputChange}
+                  className={GlobalStyle.selectBox}
+                  aria-label="Request type"
+                >
+                    <option value="">Select Request</option>
+                    {roRequests.map((request) => (
+                      // <option key={request._id} value={request.request_description}>
+                      //   {request.request_description}
+                      // </option>
+                      <option key={request._id} value={JSON.stringify(request)}>
+                        {request.request_description}
+                      </option>
+                    ))}
+                </select>
             </div>
 
             <div className="flex items-center">
@@ -424,7 +441,7 @@ const MediationBoardResponse = () => {
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    name="customerRepresented"
+                    name="customer_available"
                     value="No"
                     checked={formData.customerRepresented === "No"}
                     onChange={handleInputChange}
@@ -485,7 +502,7 @@ const MediationBoardResponse = () => {
               <div className="flex items-center">
                 <span className="w-48 font-semibold">Fail Reason:</span>
                 <select
-                  name="failReason"
+                  name="fail_reason"
                   value={formData.failReason}
                   onChange={handleInputChange}
                   className="w-72 p-2 border rounded-md"
@@ -510,7 +527,7 @@ const MediationBoardResponse = () => {
                   <span className="w-48 font-semibold">Settlement Count:</span>
                   <input
                     type="text"
-                    name="settlementCount"
+                    name="settlement_count"
                     value={formData.settlementCount}
                     onChange={handleInputChange}
                     className="w-72 p-2 border rounded-md"
@@ -522,7 +539,7 @@ const MediationBoardResponse = () => {
                   <span className="w-48 font-semibold">Initial Amount:</span>
                   <input
                     type="text"
-                    name="initialAmount"
+                    name="initial_amount"
                     value={formData.initialAmount}
                     onChange={handleInputChange}
                     className="w-72 p-2 border rounded-md"
@@ -534,7 +551,7 @@ const MediationBoardResponse = () => {
                   <span className="w-48 font-semibold">Calendar Month:</span>
                   <input
                     type="number"
-                    name="calendarMonth"
+                    name="calendar_month"
                     value={formData.calendarMonth}
                     onChange={handleInputChange}
                     className="w-20 p-2 border rounded-md"
