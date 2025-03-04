@@ -303,7 +303,11 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
       status: "error",
       message: error.response?.data.message || error.message || "An unexpected error occurred.",
       errors: error.response?.data.errors || {},
-    };
+    }
+  }catch (error) {
+    console.error("Error retrieving case details for mediation board:", 
+    error.response?.data || error.message);
+    throw error;
   }
 };
 
@@ -556,4 +560,3 @@ export const updateCustomerContacts = async (caseData) => {
     throw error;
   }
 };
-
