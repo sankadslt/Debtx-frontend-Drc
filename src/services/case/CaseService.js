@@ -284,10 +284,14 @@ export const ListActiveMediationResponse = async () => {
     throw error;
   }
 };
+<<<<<<< Updated upstream
 
 
 // List Active RO Requests Mediation
 export const ListActiveRORequestsMediation = async () => {
+=======
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+>>>>>>> Stashed changes
   try {
     if (!payload.drc_id || !payload.case_id) {
       throw new Error("DRC ID and Case ID are required.");
