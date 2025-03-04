@@ -1,8 +1,8 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
  
-const BASE_URL = import.meta.env.VITE_BASE_URL ; // Base URL from environment variables
-const AUTH_URL = `${BASE_URL}/auth`; // Auth endpoint
+const BASE_URL = import.meta.env.VITE_BASE_URL ;
+const AUTH_URL = `${BASE_URL}/auth`;
 
 
 // Register a new user
@@ -91,7 +91,7 @@ export const getUserData = async () => {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });
-    console.log(response.data);
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error.response?.data || error.message);
