@@ -402,9 +402,9 @@ const MediationBoardResponse = () => {
         {!isSimplifiedForm && (
           <>
             <div className="flex items-center">
-              <span className="w-48 font-semibold">Request:</span>
+              <span className="w-48 font-semibold">Request Remark:</span>
               <select
-                name="request"
+                name="request comment"
                 value={formData.request}
                 onChange={handleInputChange}
                 className={GlobalStyle.selectBox}
