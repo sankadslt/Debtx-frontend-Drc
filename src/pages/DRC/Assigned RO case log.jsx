@@ -15,10 +15,12 @@ import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { jwtDecode } from "jwt-decode";
+
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -39,7 +41,6 @@ export default function AssignedROcaselog() {
     const [rtoms, setRtoms] = useState([]);
     const [selectedRTOM, setSelectedRTOM] = useState("");
     const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
-    const [expireDate, setexpireDate] = useState([]); // State for data
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
@@ -53,7 +54,6 @@ export default function AssignedROcaselog() {
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
     const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
-    const [drc_id, setDrcId] = useState(null);
 
     // Filter state for Amount, Case ID, Status, and Date
     const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -62,83 +62,64 @@ export default function AssignedROcaselog() {
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+    const [userData, setUserData] = useState(null);
 
-    // useEffect(() => {
-    //     const getArrearsBands = async () => {
-    //         try {
-    //             const bands = await fetchAllArrearsBands();
-    //             console.log("Arrears bands:", bands);
-    //             setArrearsBands(bands);
-    //         } catch (error) {
-    //             console.error("Error fetching arrears bands:", error);
-    //         }
-    //     };
-
-
-    const [user, setUser] = useState(null);
+    const loadUser = async () => {
+        let token = localStorage.getItem("accessToken");
+        if (!token) {
+          setUserData(null);
+          return;
+        }
+    
+        try {
+          let decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp < currentTime) {
+            token = await refreshAccessToken();
+            if (!token) return;
+            decoded = jwtDecode(token);
+          }
+    
+          setUserData({
+            id: decoded.user_id,
+            role: decoded.role,
+            drc_id: decoded.drc_id,
+            ro_id: decoded.ro_id,
+          });
+        } catch (error) {
+          console.error("Invalid token:", error);
+        }
+      };
+    
+      useEffect(() => {
+        loadUser();
+      }, [localStorage.getItem("accessToken")]);
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await getUserData();
-                setUser(userData);
-                console.log("DRC ID: ", user?.drc_id);
-            } catch (err) {
-                console.log("Error in getting user data : ", err);
-
-            }
-        };
-
-        fetchUserData();
-
-    }, [user?.drc_id]);
-
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                // Step 1: Fetch user_id
-                const userId = await getLoggedUserId();
-                if (!userId) throw new Error("Unable to fetch user ID");
-
-                // Step 2: Fetch drc_id using user_id
-                const userData = await getUserData();
-                setDrcId(userData.drc_id);
-
-                // Step 3: Fetch arrears bands and ro list
-                const arrearsAmounts = await fetchAllArrearsBands();
+        const fetchRTOMs = async () => {
+          try {
+            if (userData?.drc_id) {
+              // Make sure to convert to number if needed
+              const payload = parseInt(userData.drc_id);
+              console.log("Fetching RTOMs for DRC ID:", payload);
+              
+              const arrearsAmounts = await fetchAllArrearsBands();
                 setArrearsAmounts(arrearsAmounts);
-            } catch (error) {
-                console.error("Error fetching data:", error);
+              // Fetch RTOMs by DRC ID
+              const rtomsList = await getActiveRTOMsByDRCID(payload);
+              console.log("RTOM list retrieved:", rtomsList);
+              setRtoms(rtomsList);
+            } else {
+              console.log("No DRC ID available yet");
             }
+          } catch (error) {
+            console.error("Error fetching RTOMs:", error);
+          }
         };
+    
+        fetchRTOMs();
+      }, [userData?.drc_id]); // Only depend on userData
 
-        fetchUserData();
-    }, [user?.drc_id]);
-
-    useEffect(() => {
-        console.log("Route parameter drc_id :", user?.drc_id);
-        const fetchData = async () => {
-            try {
-                if (user?.drc_id) {
-                    const payload = parseInt(user?.drc_id, 10); // Convert drc_id to number
-
-                    // Fetch RTOMs by DRC ID
-                    const rtomsList = await getRTOMsByDRCID(payload);
-                    setRtoms(rtomsList); // Set RTOMs to state
-
-                }
-
-            } catch (error) {
-                console.error("Error fetching RTOMs:", error);
-            }
-        };
-
-        fetchData();
-
-    }, [user?.drc_id]); // Including drc_id to the Dependency array
-
-    // Handle filter function
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -163,9 +144,8 @@ export default function AssignedROcaselog() {
             };
 
 
-
             const payload = {
-                drc_id: Number(user?.drc_id), // Convert drc_id to number
+                drc_id: Number(userData?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
                 arrears_band: selectedArrearsBand,
                 from_date: formatDate(fromDate),
@@ -201,10 +181,6 @@ export default function AssignedROcaselog() {
             console.error("Error filtering cases:", error);
         }
     };
-
-
-
-
 
 
     // Handle pagination

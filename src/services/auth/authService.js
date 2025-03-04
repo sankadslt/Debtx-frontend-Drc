@@ -5,8 +5,6 @@ const BASE_URL = import.meta.env.VITE_BASE_URL ; // Base URL from environment va
 const AUTH_URL = `${BASE_URL}/auth`; // Auth endpoint
 
 
-
-
 // Register a new user
 export const registerUser = async (userData) => {
   try {
@@ -28,7 +26,6 @@ export const loginUser = async (userData) => {
     throw error.response?.data || error;
   }
 };
-
 
 // Refresh access token
 export const refreshAccessToken = async () => {

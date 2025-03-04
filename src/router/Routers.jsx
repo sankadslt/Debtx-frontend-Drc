@@ -60,12 +60,12 @@ const Routers = () => {
       {/* DRC Routes for 2.1 to 2.5 - Distribute to RO*/}
       <Route path="/drc/assigned-case-list-for-drc" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-case-list-for-drc/:drc_id" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin']} />} /> */}
-      <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'admin']} />} />
+      {/* <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'admin']} />} /> */}
       <Route path="/drc/ro-monitoring-arrears/:case_id" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
       <Route path="/drc/assigned-ro-case-log" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin','drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-ro-case-log/:drc_id" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} /> */}
-      <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} />
-      {/* <Route path="/pages/DRC/Re-AssignRo/:case_id" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} /> */}
+      {/* <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} /> */}
+      <Route path="/pages/DRC/Re-AssignRo/:case_id" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
 
 
       {/* DRC/RO Routes for 2.15 to 2.16 - Mediation Board*/}

@@ -15,18 +15,14 @@ import { FaChevronDown } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
-import { getUserData } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
+import {  refreshAccessToken } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Customer Negotiation"); // Active tab
-
+    const [userData, setUserData] = useState(null);
     const {case_id} =useParams();
-
-    const [user, setUser] =useState(null);
-    // const [drcId, setDrcId] =useState(null);
-    const [error, setError] = useState(null);
-
     const [isOpen, setIsOpen] =useState([]);
     const[cusNegotiationData, setCusNegotiationData] =useState([]);
 
@@ -40,23 +36,39 @@ export default function RO_Monitoring_CPE() {
         setIsOpen(isOpen === index ? null : index);
     }
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-          try {
-            const userData = await getUserData();
-            setUser(userData);
-            console.log("DRC ID: ", user?.drc_id);          
-          } catch (err) {
-            setError(err.message);
-          } 
-        };
-    
-        fetchUserData();
+    const loadUser = async () => {
+        let token = localStorage.getItem("accessToken");
+        if (!token) {
+        setUserData(null);
+        return;
+        }
 
-    }, []);
+        try {
+        let decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp < currentTime) {
+            token = await refreshAccessToken();
+            if (!token) return;
+            decoded = jwtDecode(token);
+        }
+
+        setUserData({
+            id: decoded.user_id,
+            role: decoded.role,
+            drc_id: decoded.drc_id,
+            ro_id: decoded.ro_id,
+        });
+        } catch (error) {
+        console.error("Invalid token:", error);
+        }
+    };
 
     useEffect(() => {
-        if (!user?.drc_id) {
+        loadUser();
+    }, [localStorage.getItem("accessToken")]);
+
+    useEffect(() => {
+        if (!userData?.drc_id) {
           console.log("Missing DRC Id.");
           return;
         }
@@ -64,7 +76,7 @@ export default function RO_Monitoring_CPE() {
         const fetchData = async () => {
           try {
             
-            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: user?.drc_id, case_id });   
+            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: userData?.drc_id, case_id });   
             console.log("Behavoirs of case: ", data);
       
             setCusNegotiationData({
@@ -79,7 +91,7 @@ export default function RO_Monitoring_CPE() {
         };
       
         fetchData();
-    }, [user?.drc_id, case_id]);
+    }, [userData?.drc_id, case_id]);
     
       
     return (

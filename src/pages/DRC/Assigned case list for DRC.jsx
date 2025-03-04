@@ -1,8 +1,8 @@
 /*Purpose: This template is used for the 2.1- Assigned case list for DRC
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-02-18
-Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
+Last Modified Date: 2025-03-04
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayka (sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.1
 Dependencies: tailwind css
@@ -16,7 +16,8 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing G
 import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -30,14 +31,13 @@ import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_p
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 export default function AssignedCaseListforDRC() {
-  const [user, setUser] = useState(null);
 
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  const [drc_id, setDrcId] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,37 +64,46 @@ export default function AssignedCaseListforDRC() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);
-      }
-    };
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
 
-    fetchUserData();
-  }, [user?.drc_id]);
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Step 1: Fetch user_id
-        const userId = await getLoggedUserId();
-        if (!userId) throw new Error("Unable to fetch user ID");
-
-        // Step 2: Fetch drc_id using user_id
-        const userData = await getUserData();
-        setDrcId(userData.drc_id);
-
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (user?.drc_id) {
-          const roData = await roassignedbydrc(user?.drc_id);
+        if (userData.drc_id) {
+          const roData = await roassignedbydrc(userData.drc_id);
           setRoList(roData);
         }
       } catch (error) {
@@ -104,7 +113,7 @@ export default function AssignedCaseListforDRC() {
     }
     fetchData();
 
-  }, [user?.drc_id]);
+  }, [userData?.drc_id]);
 
   // Handle filtering cases
   const handleFilter = async () => {
@@ -130,7 +139,7 @@ export default function AssignedCaseListforDRC() {
       };
 
       const payload = {
-        drc_id: Number(user?.drc_id),
+        drc_id: Number(userData.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),

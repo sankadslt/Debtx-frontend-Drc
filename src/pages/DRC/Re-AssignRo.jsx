@@ -14,13 +14,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService";
+import { jwtDecode } from "jwt-decode";
+import { getLoggedUserId, refreshAccessToken } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
   const { case_id } = useParams();
-  const [user, setUser] =useState(null);
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
 
@@ -35,30 +35,50 @@ export default function Re_AssignRo() {
 
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
   const [settlementDetails, setSettlementDetails] = useState({});
+  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
-    };
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+    setUserData(null);
+    return;
+    }
 
-    fetchUserData();
-  }, [ user?.drc_id ]);
+    try {
+    let decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+    }
+
+    setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+    });
+    } catch (error) {
+    console.error("Invalid token:", error);
+    }
+  };
+
+  useEffect(() => {
+      loadUser();
+  }, [localStorage.getItem("accessToken")]);
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (user?.drc_id && case_id) {
+        if (!userData?.drc_id && case_id) {
 
-          const data = await List_Behaviors_Of_Case_During_DRC(user?.drc_id, case_id);
+          const data = await List_Behaviors_Of_Case_During_DRC(userData?.drc_id, case_id);
 
           console.log("Data:", data);
 
@@ -104,17 +124,10 @@ export default function Re_AssignRo() {
                 },
               ]);
             }
-
-
           } else {
             console.error("Error in API response:", data?.message || "Unknown error");
           }
-
-
           console.log(settlementDetails);
-
-
-
         }
       } catch (error) {
         console.error("Error fetching case details:", error);
@@ -123,8 +136,8 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (user?.drc_id) {
-          const numericDrcId = Number(user?.drc_id);
+        if (!userData?.drc_id) {
+          const numericDrcId = Number(userData?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -146,12 +159,12 @@ export default function Re_AssignRo() {
     fetchData();
     fetchRecoveryOfficers();
 
-  }, [user?.drc_id, case_id]);
+  }, [userData?.drc_id, case_id]);
 
   const handleTextarea = async(remark) => {
     try {
-      console.log("Data: ", case_id, user?.drc_id, remark);
-      await updateLastRoDetails(case_id, user?.drc_id, remark);
+      console.log("Data: ", case_id, userData?.drc_id, remark);
+      await updateLastRoDetails(case_id, userData?.drc_id, remark);
     } catch (error) {
       console.error("Error in handleTextArea: ", error);
       throw new Error("Failed to update Last RO details");
@@ -203,7 +216,7 @@ export default function Re_AssignRo() {
       // Prepare the assignment payload
       const assignmentPayload = {
         caseIds: caseIdsArray,
-        drcId: user?.drc_id,
+        drcId: userData?.drc_id,
         roId: ro_id,
         assigned_by: userId, // Include assigned_by in the payload
       };
@@ -377,7 +390,6 @@ export default function Re_AssignRo() {
       {/* dropdown */}
       <div className="flex   gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
-
         <select
           id="ro-select"
           className={`${GlobalStyle.selectBox}`}
@@ -410,13 +422,7 @@ export default function Re_AssignRo() {
             </option>
           )}
         </select>
-
-
-
       </div>
-
-
-
       {/* Submit Button */}
       <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>

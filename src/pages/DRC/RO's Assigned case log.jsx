@@ -1,7 +1,8 @@
 /* Purpose: This template is used for the 2.6 - RO's Assigned case log .
 Created Date: 2024-01-08
 Created By: Chamath (chamathjayasanka20@gmail.com)
-Last Modified Date:2025-01-08
+Modified By; Sasindu Srinayka (sasindusrinayaka@gmail.com)
+Last Modified Date:2025-03-04
 Version: node 20
 ui number : 2.6
 Dependencies: tailwind css
@@ -16,7 +17,8 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import { listDRCAllCases } from "../../services/case/CaseService";
-import {  getUserData } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
+import {  refreshAccessToken } from "../../services/auth/authService.js";
 
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -92,49 +94,84 @@ export default function ROsAssignedcaselog() {
   const [toDate, setToDate] = useState(null);
   const [rtoms, setRtoms] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [filters, setFilters] = useState({
     rtom: "",
     action_type: "",
   });
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
 
-  // API Call to fetch assigned cases
-  useEffect(() => {
-   const fetchUserData = async () => {
-    try {
-      const userData = await getUserData();
-      console.log("User Data: ", userData);
-      setUser(userData);
-      console.log("DRC ID: ", user?.drc_id);          
-    } catch (err) {
-      console.log("Eror in retrieving DRC ID: ", err);       
-    } 
-  };
+//   // API Call to fetch assigned cases
+//   useEffect(() => {
+//    const fetchUserData = async () => {
+//     try {
+//       const userData = await getUserData();
+//       console.log("User Data: ", userData);
+//       setUser(userData);
+//       console.log("DRC ID: ", user?.drc_id);          
+//     } catch (err) {
+//       console.log("Eror in retrieving DRC ID: ", err);       
+//     } 
+//   };
 
-  fetchUserData();
-}, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
+//   fetchUserData();
+// }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
-useEffect(() => {
-  console.log("Route parameter drc_id :", user?.drc_id);
-  const fetchData = async () => {
-    try {
-      if (user?.drc_id) {
-        const payload = parseInt(user?.drc_id); // Convert drc_id to number
+const loadUser = async () => {
+  let token = localStorage.getItem("accessToken");
+  if (!token) {
+    setUserData(null);
+    return;
+  }
 
-        // Fetch RTOMs by DRC ID
-        const rtomsList = await getActiveRTOMsByDRCID(payload);
-        setRtoms(rtomsList); // Set RTOMs to state
-      }
-
-    } catch (error) {
-        console.error("Error fetching RTOMs:", error);
+  try {
+    let decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    if (decoded.exp < currentTime) {
+      token = await refreshAccessToken();
+      if (!token) return;
+      decoded = jwtDecode(token);
     }
+
+    setUserData({
+      id: decoded.user_id,
+      role: decoded.role,
+      drc_id: decoded.drc_id,
+      ro_id: decoded.ro_id,
+    });
+  } catch (error) {
+    console.error("Invalid token:", error);
+  }
 };
 
-fetchData();
+useEffect(() => {
+  loadUser();
+}, [localStorage.getItem("accessToken")]);
 
-}, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
+
+// Then update your useEffect that fetches RTOMs
+useEffect(() => {
+  const fetchRTOMs = async () => {
+    try {
+      if (userData?.drc_id) {
+        // Make sure to convert to number if needed
+        const payload = parseInt(userData.drc_id);
+        console.log("Fetching RTOMs for DRC ID:", payload);
+        
+        // Fetch RTOMs by DRC ID
+        const rtomsList = await getActiveRTOMsByDRCID(payload);
+        console.log("RTOM list retrieved:", rtomsList);
+        setRtoms(rtomsList);
+      } else {
+        console.log("No DRC ID available yet");
+      }
+    } catch (error) {
+      console.error("Error fetching RTOMs:", error);
+    }
+  };
+
+  fetchRTOMs();
+}, [userData?.drc_id]); // Only depend on userData.drc_id
 
 // Date handlers
 const handleFromDateChange = (date) => {
@@ -183,13 +220,16 @@ const fetchCases = async () => {
     setError("");
 
     const payload = {
-      drc_id: Number(user?.drc_id),
-      ro_id: Number(user?.ro_id),
+      // Use Number() to ensure these are numbers and not strings
+      drc_id: Number(userData.drc_id),
+      ro_id: Number(userData.ro_id), // Fixed: was using drc_id instead of ro_id
       ...(filters.rtom && { rtom: filters.rtom }),
       ...(filters.action_type && { action_type: filters.action_type }),
       ...(fromDate && { from_date: fromDate.toISOString() }),
       ...(toDate && { to_date: toDate.toISOString() }),
     };
+
+    console.log("Sending payload to fetch cases:", payload);
 
     const data = await listDRCAllCases(payload);
     setCases(data);
@@ -204,7 +244,7 @@ const fetchCases = async () => {
 };
 
 const handleFilterClick = () => {
-  if (!user?.drc_id && !user?.ro_id) {
+  if (!userData.drc_id && !userData.ro_id) {
     setError("DRC ID or RO ID is required");
     return;
   }
