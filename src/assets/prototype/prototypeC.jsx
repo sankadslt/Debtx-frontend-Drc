@@ -7,6 +7,7 @@ const PrototypeC = () => {
   const [activeTab, setActiveTab] = useState("RO");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [month, setMonth] = useState(1); // Month counter state
 
   // State variables for filters
   const [status, setStatus] = useState("");
@@ -122,6 +123,19 @@ const PrototypeC = () => {
   const endIndex = startIndex + rowsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
+  // Month counter handlers
+  const increaseMonth = () => {
+    if (month < 12) {
+      setMonth(month + 1);
+    }
+  };
+
+  const decreaseMonth = () => {
+    if (month > 1) {
+      setMonth(month - 1);
+    }
+  };
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <div className="flex justify-between items-center mb-8">
@@ -129,6 +143,34 @@ const PrototypeC = () => {
           Prototype C
         </h1>
       </div>
+
+       {/* Month Counter */}
+       <div className="flex items-center gap-2 mb-4">
+        <span className={GlobalStyle.headingMedium}>Select Month : </span>
+        <div className={GlobalStyle.monthCounterContainer}>
+      <input
+        type="text"
+        value={String(month).padStart(2, "0")}
+        readOnly
+        className={GlobalStyle.monthCounterNumber}
+      />
+      <div className={GlobalStyle.monthCounterButton}>
+        <button
+          onClick={increaseMonth}
+          className={GlobalStyle.monthCounterButtonIcon}
+        >
+          ▲
+        </button>
+        <button
+          onClick={decreaseMonth}
+          className={GlobalStyle.monthCounterButtonIcon}
+        >
+          ▼
+        </button>
+      </div>
+    </div>
+      </div>
+  
 
       {/* Filter Section */}
       <div className="flex flex-col mb-10">
