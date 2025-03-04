@@ -549,6 +549,7 @@ export const updateCustomerContacts = async (caseData) => {
     if (!caseData.contact && !caseData.remark) {
       throw new Error("Either contact or remark is required.");
     }
+    
 
     console.log('caseData', caseData)
     // Send a POST request to update customer contacts
