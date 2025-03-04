@@ -9,7 +9,6 @@
 // Related Files: (routes)
 // Notes: The following page conatins the code for the Mediation board response */
 
-
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
@@ -65,8 +64,7 @@ const MediationBoardResponse = () => {
 
   const [showResponseHistory, setShowResponseHistory] = useState(false);
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
-  const [isSettlementTableVisible, setIsSettlementTableVisible] =
-    useState(false);
+  const [isSettlementTableVisible, setIsSettlementTableVisible] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Derived state for showing settlement toggle
@@ -76,7 +74,6 @@ const MediationBoardResponse = () => {
     formData.settle === "Yes";
 
   // Fetch case details when component mounts
-  // In MediationBoardResponse component
   useEffect(() => {
     const fetchCaseDetails = async () => {
       if (!caseId || !drcId) {
@@ -260,7 +257,7 @@ const MediationBoardResponse = () => {
 
   // Determine if form should be simplified based on handover selection
   const isSimplifiedForm =
-    caseDetails.callingRound === 3 && handoverNonSettlement === "Yes";
+    caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes";
 
   if (isLoading) {
     return (
@@ -335,7 +332,7 @@ const MediationBoardResponse = () => {
               <td className="text-gray-700">{caseDetails.callingRound}</td>
             </tr>
 
-            {caseDetails.callingRound === 3 && (
+            {caseDetails.callingRound >= 3 && (
               <tr className="flex items-start py-1">
                 <td className="font-semibold w-48">Handover Non-Settlement</td>
                 <td className="px-4 font-semibold">:</td>
@@ -372,7 +369,7 @@ const MediationBoardResponse = () => {
 
             {/* Only show Next Calling Date when needed */}
             {(caseDetails.callingRound < 3 ||
-              (caseDetails.callingRound === 3 &&
+              (caseDetails.callingRound >= 3 &&
                 handoverNonSettlement === "No")) && (
                 <tr className="flex items-start py-1">
                   <td className="font-semibold w-48">Next Calling Date</td>
@@ -384,7 +381,7 @@ const MediationBoardResponse = () => {
                       onChange={handleNextCallingDateChange}
                       className="p-2 border rounded-md w-72"
                       disabled={
-                        caseDetails.callingRound === 3 &&
+                        caseDetails.callingRound >= 3 &&
                         handoverNonSettlement === "Yes"
                       }
                       aria-label="Next calling date"
@@ -401,35 +398,37 @@ const MediationBoardResponse = () => {
         {/* Only show these fields when NOT in simplified mode */}
         {!isSimplifiedForm && (
           <>
-            <div className="flex items-center">
-              <span className="w-48 font-semibold">Request Remark:</span>
-              <select
-                name="request comment"
-                value={formData.request}
-                onChange={handleInputChange}
-                className={GlobalStyle.selectBox}
-                aria-label="Request type"
-              >
-                <option value="">Select Request</option>
-                {roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description}>
-                    {request.request_description}
-                  </option>
-                ))}
-              </select>
-            </div>
+<div className="flex items-center">
+  <span className="w-48 font-semibold">Request : </span>
+  <select
+    name="request"
+    value={formData.request}
+    onChange={handleInputChange}
+    className={GlobalStyle.selectBox}
+    aria-label="Request type"
+  >
+    <option value="">Select Request</option>
+    {roRequests.map((request) => (
+      <option key={request._id} value={request.request_description}>
+        {request.request_description}
+      </option>
+    ))}
+  </select>
+</div>
 
-            <div className="flex">
-              <span className="w-48 font-semibold">Request Remark:</span>
-              <textarea
-                name="request comment"
-                value={formData.comment}
-                onChange={handleInputChange}
-                className={GlobalStyle.remark}
-                rows="5"
-                aria-label="Comment"
-              />
-            </div>
+{formData.request && (
+  <div className="flex">
+    <span className="w-48 font-semibold">Request Remark:</span>
+    <textarea
+      name="requestcomment"
+      value={formData.requestcomment}
+      onChange={handleInputChange}
+      className={GlobalStyle.remark}
+      rows="5"
+      aria-label="Comment"
+    />
+  </div>
+)}
 
             <div className="flex items-center">
               <span className="font-semibold">Customer Represented:</span>
@@ -462,17 +461,7 @@ const MediationBoardResponse = () => {
             </div>
 
             {/* Comment section - Moved directly below customer represented */}
-            <div className="flex">
-              <span className="w-48 font-semibold">Comment:</span>
-              <textarea
-                name="comment"
-                value={formData.comment}
-                onChange={handleInputChange}
-                className={GlobalStyle.remark}
-                rows="5"
-                aria-label="Comment"
-              />
-            </div>
+            
 
             {formData.customerRepresented === "Yes" && (
               <div className="flex items-center">
@@ -506,28 +495,45 @@ const MediationBoardResponse = () => {
               </div>
             )}
 
-            {showFailReasonFields && (
-              <div className="flex items-center">
-                <span className="w-48 font-semibold">Fail Reason:</span>
-                <select
-                  name="failReason"
-                  value={formData.failReason}
-                  onChange={handleInputChange}
-                  className="w-72 p-2 border rounded-md"
-                  aria-label="Fail reason"
-                >
-                  <option value="">Select Response</option>
-                  {failReasons.map((failReason, index) => (
-                    <option
-                      key={index}
-                      value={failReason.mediation_description}
-                    >
-                      {failReason.mediation_description}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+{showFailReasonFields && (
+  <div>
+    <div className="flex items-center">
+      <span className="w-48 font-semibold">Fail Reason:</span>
+      <select
+        name="failReason"
+        value={formData.failReason}
+        onChange={handleInputChange}
+        className="w-72 p-2 border rounded-md"
+        aria-label="Fail reason"
+      >
+        <option value="">Select Response</option>
+        {failReasons.map((failReason, index) => (
+          <option
+            key={index}
+            value={failReason.mediation_description}
+          >
+            {failReason.mediation_description}
+          </option>
+        ))}
+      </select>
+    </div>
+    
+    {formData.failReason && (
+      <div className="flex mt-2">
+        <span className="w-48 font-semibold">Comment:</span>
+        <textarea
+          name="failComment"
+          value={formData.failComment}
+          onChange={handleInputChange}
+          className={GlobalStyle.remark}
+          rows="4"
+          aria-label="Fail reason comment"
+        />
+      </div>
+    )}
+  </div>
+)}
+            
 
             {showSettlementFields && (
               <>
