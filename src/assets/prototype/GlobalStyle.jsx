@@ -4,7 +4,7 @@ const GlobalStyle = {
   fontPoppins: "font-poppins",
 
   // Text Styles
-  headingLarge: "text-[40px] font-semibold",
+  headingLarge: "text-[40px] font-semibold text-[#1E2659]",
   headingMedium: "text-[18px]",
   headingSmall: "text-[16px]",
   paragraph: "text-gray-700",
