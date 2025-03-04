@@ -21,7 +21,8 @@ import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseServ
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
-import {  getUserData } from "../../services/auth/authService.js";
+import { getUserData } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
 
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -154,6 +155,7 @@ export default function MediationBoardCaselist() {
   const handleFromDateChange = (date) => {
     if (toDate && date > toDate) {
       setError("The 'From' date cannot be later than the 'To' date.");
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setFromDate(date);
@@ -162,7 +164,8 @@ export default function MediationBoardCaselist() {
 
   const handleToDateChange = (date) => {
     if (fromDate && date < fromDate) {
-      setError("The 'To' date cannot be earlier than the 'From' date.");
+      
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setToDate(date);
@@ -182,15 +185,26 @@ export default function MediationBoardCaselist() {
   // Fetch cases data
   const fetchCases = async () => {
     try {
+      // Check if only one date field is filled
+      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+       
+        Swal.fire("Warning", "Both From and To dates are required", "warning");
+        return;
+      }
+
       const hasActiveFilters =
         filters.rtom ||
         filters.action_type ||
         filters.status ||
-        fromDate ||
-        toDate;
+        (fromDate && toDate);
 
       if (!hasActiveFilters) {
-        setError("Please set at least one filter before searching.");
+        Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+        return;
+      }
+
+      if (fromDate && toDate && fromDate > toDate) {
+        Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
         return;
       }
 
@@ -203,8 +217,8 @@ export default function MediationBoardCaselist() {
         ...(filters.rtom && { rtom: filters.rtom }),
         ...(filters.action_type && { action_type: filters.action_type }),
         ...(filters.status && { case_current_status: filters.status }),
-        ...(fromDate && { from_date: fromDate.toISOString() }),
-        ...(toDate && { to_date: toDate.toISOString() }),
+        ...(fromDate && toDate && { from_date: fromDate.toISOString() }),
+        ...(fromDate && toDate && { to_date: toDate.toISOString() }),
       };
 
       const data = await ListALLMediationCasesownnedbyDRCRO(payload);
@@ -224,6 +238,19 @@ export default function MediationBoardCaselist() {
       setError("DRC ID or RO ID is required");
       return;
     }
+    
+    // Check if only one date field is filled
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      
+      Swal.fire("Warning", "Both From and To dates are required", "warning");
+      return;
+    }
+    
+    if (fromDate && toDate && fromDate > toDate) {
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+      return;
+    }
+    
     fetchCases();
   };
 
@@ -430,5 +457,3 @@ export default function MediationBoardCaselist() {
     </div>
   );
 }
-
-
