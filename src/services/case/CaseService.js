@@ -289,7 +289,7 @@ export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) 
 export const ListActiveRORequestsMediation = async () => {
   try {
     // Specify that we only want requests with request_mode = "Mediation Board"
-    const response = await axios.post(`${URL}//List_Active_RO_Requests_Mediation`, {
+    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`, {
       request_mode: "Mediation Board"
     });
     

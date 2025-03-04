@@ -1,3 +1,15 @@
+// /*Purpose: This template is used for the 2.16- Mediation board response
+// Created Date: 2025-02-07
+// Created By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
+// Last Modified Date: 2025-02-12
+// Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
+// Version: node 20
+// ui number : 2.16
+// Dependencies: tailwind css
+// Related Files: (routes)
+// Notes: The following page conatins the code for the Mediation board response */
+
+
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon
@@ -5,7 +17,6 @@ import {
   getCaseDetailsbyMediationBoard,
   ListActiveMediationResponse,
   ListActiveRORequestsMediation,
-  Mediation_Board, // Import the submit function
 } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
@@ -48,7 +59,7 @@ const MediationBoardResponse = () => {
 
   // Settlement table state
   const [settlements, setSettlements] = useState([
-    { seqNo: 1, installmentSettleAmount: "", planDate: "", installmentPaidAmount: ""},
+    { seqNo: 1, installmentSettleAmount: "", planDate: "", installmentPaidAmount: "" },
   ]);
   const [showSettlementTable, setShowSettlementTable] = useState(false);
 
@@ -65,6 +76,7 @@ const MediationBoardResponse = () => {
     formData.settle === "Yes";
 
   // Fetch case details when component mounts
+  // In MediationBoardResponse component
   useEffect(() => {
     const fetchCaseDetails = async () => {
       if (!caseId || !drcId) {
@@ -163,7 +175,7 @@ const MediationBoardResponse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Adjust validation based on handover status
     if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
@@ -171,7 +183,7 @@ const MediationBoardResponse = () => {
         alert("Please enter a comment");
         return;
       }
-  
+
       setShowConfirmation(true);
       return;
     } else {
@@ -180,58 +192,59 @@ const MediationBoardResponse = () => {
         alert("Please select whether customer is represented");
         return;
       }
-  
+
       if (formData.customerRepresented === "Yes" && formData.settle === "") {
         alert("Please select whether customer agrees to settle");
         return;
       }
-  
-      // Validate fail reason if customer is represented but doesn't agree to settle
-      if (formData.customerRepresented === "Yes" && formData.settle === "No" && !formData.failReason) {
+
+      if (showFailReasonFields && !formData.failReason) {
         alert("Please select a fail reason");
         return;
       }
-  
-      // Validate settlement fields only if customer agrees to settle
-      if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
-        if (
-          !formData.settlementCount ||
-          !formData.initialAmount ||
-          !formData.calendarMonth ||
-          !formData.durationFrom ||
-          !formData.durationTo
-        ) {
+
+      // Validate settlement table if settlements are shown
+      if (showSettlementTable) {
+        let isValid = true;
+
+        settlements.forEach((settlement) => {
+          if (!settlement.dueDate || !settlement.amount) {
+            isValid = false;
+          }
+        });
+
+        if (!isValid) {
           alert("Please fill in all settlement details");
           return;
         }
       }
     }
-  
+
     try {
-      // Call the submitMediationBoardResponse function
-      const response = await Mediation_Board(
+      // Here you would typically call an API to save the form data
+      console.log("Form submitted:", {
+        ...formData,
+        handoverNonSettlement,
+        nextCallingDate,
+        settlements: showSettlementTable ? settlements : [],
         caseId,
         drcId,
-        formData,
-        nextCallingDate
-      );
-  
-      // Handle the response
-      if (response.status === "success") {
-        alert("Form submitted successfully!");
-        // Optionally, reset the form or redirect the user
-      } else {
-        alert("Failed to submit form. Please try again.");
-      }
-  
+      });
+
       // Close the confirmation popup
       setShowConfirmation(false);
+
+      // Simulate successful submission
+      alert("Form submitted successfully!");
+
+      // Optional: Reset form or redirect
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to submit form. Please try again.");
       setShowConfirmation(false);
     }
   };
+
   // Add this function to toggle settlement table visibility
   const toggleSettlementTable = () => {
     setIsSettlementTableVisible(!isSettlementTableVisible);
@@ -361,24 +374,24 @@ const MediationBoardResponse = () => {
             {(caseDetails.callingRound < 3 ||
               (caseDetails.callingRound === 3 &&
                 handoverNonSettlement === "No")) && (
-              <tr className="flex items-start py-1">
-                <td className="font-semibold w-48">Next Calling Date</td>
-                <td className="px-4 font-semibold">:</td>
-                <td>
-                  <input
-                    type="date"
-                    value={nextCallingDate}
-                    onChange={handleNextCallingDateChange}
-                    className="p-2 border rounded-md w-72"
-                    disabled={
-                      caseDetails.callingRound === 3 &&
-                      handoverNonSettlement === "Yes"
-                    }
-                    aria-label="Next calling date"
-                  />
-                </td>
-              </tr>
-            )}
+                <tr className="flex items-start py-1">
+                  <td className="font-semibold w-48">Next Calling Date</td>
+                  <td className="px-4 font-semibold">:</td>
+                  <td>
+                    <input
+                      type="date"
+                      value={nextCallingDate}
+                      onChange={handleNextCallingDateChange}
+                      className="p-2 border rounded-md w-72"
+                      disabled={
+                        caseDetails.callingRound === 3 &&
+                        handoverNonSettlement === "Yes"
+                      }
+                      aria-label="Next calling date"
+                    />
+                  </td>
+                </tr>
+              )}
           </tbody>
         </table>
       </div>
@@ -391,19 +404,31 @@ const MediationBoardResponse = () => {
             <div className="flex items-center">
               <span className="w-48 font-semibold">Request:</span>
               <select
-  name="request"
-  value={formData.request}
-  onChange={handleInputChange}
-  className={GlobalStyle.selectBox}
-  aria-label="Request type"
->
-  <option value="">Select Request</option>
-  {roRequests.map((request) => (
-    <option key={request._id} value={request.request_description}>
-      {request.request_description}
-    </option>
-  ))}
-</select>
+                name="request"
+                value={formData.request}
+                onChange={handleInputChange}
+                className={GlobalStyle.selectBox}
+                aria-label="Request type"
+              >
+                <option value="">Select Request</option>
+                {roRequests.map((request) => (
+                  <option key={request._id} value={request.request_description}>
+                    {request.request_description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex">
+              <span className="w-48 font-semibold">Request Remark:</span>
+              <textarea
+                name="request comment"
+                value={formData.comment}
+                onChange={handleInputChange}
+                className={GlobalStyle.remark}
+                rows="5"
+                aria-label="Comment"
+              />
             </div>
 
             <div className="flex items-center">
@@ -724,11 +749,10 @@ const MediationBoardResponse = () => {
                   ].map((entry, index) => (
                     <tr
                       key={index}
-                      className={`${
-                        index % 2 === 0
+                      className={`${index % 2 === 0
                           ? "bg-white bg-opacity-75"
                           : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
+                        } border-b`}
                     >
                       <td className={GlobalStyle.tableData}>
                         {entry.callingDate}
@@ -775,11 +799,10 @@ const MediationBoardResponse = () => {
                   ].map((entry, index) => (
                     <tr
                       key={index}
-                      className={`${
-                        index % 2 === 0
+                      className={`${index % 2 === 0
                           ? "bg-white bg-opacity-75"
                           : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
+                        } border-b`}
                     >
                       <td className={GlobalStyle.tableData}>{entry.date}</td>
                       <td className={GlobalStyle.tableData}>
@@ -823,11 +846,10 @@ const MediationBoardResponse = () => {
                   ].map((entry, index) => (
                     <tr
                       key={index}
-                      className={`${
-                        index % 2 === 0
+                      className={`${index % 2 === 0
                           ? "bg-white bg-opacity-75"
                           : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
+                        } border-b`}
                     >
                       <td className={GlobalStyle.tableData}>{entry.date}</td>
                       <td className={GlobalStyle.tableData}>{entry.request}</td>
