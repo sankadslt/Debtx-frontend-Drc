@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
-import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
+// import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
 import { getUserData } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {

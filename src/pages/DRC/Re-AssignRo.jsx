@@ -12,9 +12,9 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
+// import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService";
+// import { getLoggedUserId, getUserData } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 
 export default function Re_AssignRo() {

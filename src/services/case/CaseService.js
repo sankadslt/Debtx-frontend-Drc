@@ -201,7 +201,6 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 
 // get CaseDetails for MediationBoard
 
-
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
     if (!case_id || !drc_id) {
@@ -217,20 +216,54 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
       throw new Error(response.data.message);
     }
     
-    // Format the response to include only required fields
-    const caseDetails = {
-      case_id: response.data.data.case_id,
-      customer_ref: response.data.data.customer_ref,
-      account_no: response.data.data.account_no,
-      current_arrears_amount: response.data.data.current_arrears_amount,
-      last_payment_date: response.data.data.last_payment_date,
-      mediation_board: response.data.data.calling_round,
-    };
+    const data = response.data.data;
     
-    return caseDetails;
+    // Process arrays to remove entries with empty or dash values
+    if (data.mediation_board && Array.isArray(data.mediation_board)) {
+      data.mediation_board = data.mediation_board.filter(item => {
+        // Check if any property has a meaningful value (not empty, not dash)
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      // Remove empty array
+      if (data.mediation_board.length === 0) {
+        delete data.mediation_board;
+      }
+    }
+    
+    if (data.settlement && Array.isArray(data.settlement)) {
+      data.settlement = data.settlement.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.settlement.length === 0) {
+        delete data.settlement;
+      }
+    }
+    
+    if (data.ro_requests && Array.isArray(data.ro_requests)) {
+      data.ro_requests = data.ro_requests.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.ro_requests.length === 0) {
+        delete data.ro_requests;
+      }
+    }
+    
+    return data;
+    
   } catch (error) {
-    console.error("Error retrieving case details for mediation board:", 
-      error.response?.data || error.message);
+    console.error(
+      "Error retrieving case details for mediation board:", 
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -264,100 +297,17 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
-    const formattedData = {
-      caseDetails: {
-        case_id: response.data.data.formattedCaseDetails.case_id,
-        customer_ref: response.data.data.formattedCaseDetails.customer_ref,
-        account_no: response.data.data.formattedCaseDetails.account_no,
-        current_arrears_amount: response.data.data.formattedCaseDetails.current_arrears_amount,
-        last_payment_date: response.data.data.formattedCaseDetails.last_payment_date,
-        ref_products: response.data.data.formattedCaseDetails.ref_products || [],
-      },
-      settlementData: response.data.data.settlementData,
-      paymentData: response.data.data.paymentData,
-      additionalData: {
-        ro_negotiation: response.data.data.formattedCaseDetails.ro_negotiation,
-        ro_requests: response.data.data.formattedCaseDetails.ro_requests,
-      }
-    };
-
-    return formattedData;
-  } catch (error) {
-    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
-    throw error;
-  }
-};
-
-
-/* export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
-  try {
-    if (!drcId || !caseId) {
-      return { status: "error", message: "drcId and caseId are required parameters." };
-    }
-
-    console.log("Fetching case details for DRC ID:", drcId, "and Case ID:", caseId);
-
-    const response = await axios.post(
-      `${URL}/List_Behaviors_Of_Case_During_DRC`,
-      { drc_id: drcId, case_id: caseId },
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    console.log("API Response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching case details:", error);
-
-    if (error.response) {
-      // The request was made, but the server responded with an error status
-      return {
-        status: "error",
-        message: error.response.data.message || "An error occurred on the server.",
-        errors: error.response.data.errors || {},
-        statusCode: error.response.status,
-      };
-    } else if (error.request) {
-      // The request was made but no response was received
-      return { status: "error", message: "No response from server. Please try again later." };
-    } else {
-      // Something happened in setting up the request
-      return { status: "error", message: error.message || "An unexpected error occurred." };
-    }
-  }
-};
- */
-
-// List Behaviors Of Case During DRC
-export const List_Behaviors_Of_Case_During_DRC = async (drcId, caseId) => {
-  try {
-    if (!drcId || !caseId) {
-      throw new Error("DRC ID and Case ID are required.");
-    }
-
-    const response = await axios.post(
-      `${URL}/List_Behaviors_Of_Case_During_DRC`,
-      { drc_id: drcId, case_id: caseId }
-    );
-    console.log("API Response:", response.data);
-
-   
-    if (response.data.status === "error") {
-      throw new Error(response.data.message);
-    }
-
-   
-    return response.data;
-
-  } catch (error) {
-    console.error("Error retrieving behaviors of case during DRC:", error.response?.data || error.message);
     
     // Return an error response if something goes wrong
     return {
       status: "error",
       message: error.response?.data.message || error.message || "An unexpected error occurred.",
       errors: error.response?.data.errors || {},
-    };
+    }
+  }catch (error) {
+    console.error("Error retrieving case details for mediation board:", 
+    error.response?.data || error.message);
+    throw error;
   }
 };
 
@@ -599,6 +549,7 @@ export const updateCustomerContacts = async (caseData) => {
     if (!caseData.contact && !caseData.remark) {
       throw new Error("Either contact or remark is required.");
     }
+    
 
     console.log('caseData', caseData)
     // Send a POST request to update customer contacts
@@ -610,4 +561,3 @@ export const updateCustomerContacts = async (caseData) => {
     throw error;
   }
 };
-
