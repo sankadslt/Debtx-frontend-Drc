@@ -132,14 +132,43 @@ export default function AssignedROcaselog() {
             };
 
             if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
-                Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+                Swal.fire({
+                    title: "Warning",
+                    text: "No filter data is selected. Please, select data.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
                 return;
-
             };
 
+            if ((fromDate && !toDate) || (!fromDate && toDate)) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "Both From Date and To Date must be selected.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+                return;
+            }
 
             if (new Date(fromDate) > new Date(toDate)) {
-                Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+
+                Swal.fire({
+                    title: "Warning",
+                    text: "To date should be greater than or equal to From date",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+
                 return;
             };
 
@@ -306,7 +335,6 @@ export default function AssignedROcaselog() {
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
 
 
-
                 {/* RTOM Select Dropdown */}
                 <select
                     className={GlobalStyle.selectBox}
@@ -329,7 +357,7 @@ export default function AssignedROcaselog() {
                     value={selectedArrearsBand}
                     onChange={(e) => setSelectedArrearsBand(e.target.value)}
                 >
-                    <option value="" disabled>
+                    <option value="" >
                         Arrears band
                     </option>
                     {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
@@ -348,14 +376,14 @@ export default function AssignedROcaselog() {
                     <label className={GlobalStyle.dataPickerDate}>Date</label>
                     <DatePicker
                         selected={fromDate}
-                        onChange={(date) => setFromDate(date)}
+                        onChange={handlestartdatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
                     />
                     <DatePicker
                         selected={toDate}
-                        onChange={(date) => setToDate(date)}
+                        onChange={handleenddatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
