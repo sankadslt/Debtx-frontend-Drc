@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import {  getUserData } from "../../services/auth/authService.js";
@@ -129,14 +129,14 @@ export default function MediationBoardCaselist() {
   }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
   useEffect(() => {
-    console.log("Route parameter drc_id :", user?.drc_id || user?.ro_id);
+    console.log("Route parameter drc_id :", user?.drc_id);
     const fetchData = async () => {
       try {
-        if (user?.drc_id || user?.ro_id) {
-          const payload = parseInt(user?.drc_id || user?.ro_id); // Convert drc_id to number
+        if (user?.drc_id) {
+          const payload = parseInt(user?.drc_id); // Convert drc_id to number
 
           // Fetch RTOMs by DRC ID
-          const rtomsList = await getRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList); // Set RTOMs to state
 
         }
@@ -376,12 +376,12 @@ export default function MediationBoardCaselist() {
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_board_count || 0}
                   </td>
-                  <td className={GlobalStyle.tableData}>{row.next_calling_date}</td>
+                  <td className={GlobalStyle.tableData}>{new Date(row.next_calling_date).toLocaleDateString()}</td>
                   <td className={GlobalStyle.tableData}>
                     <img
                       src={edit}
                       alt="Edit Case"
-                      className={`w-7 h-7 ${
+                      className={`w-6 h-6 ${
                         row.status === "MB_fail_with_pending_non_settlement"
                           ? "opacity-50 cursor-default"
                           : "cursor-pointer"
