@@ -56,7 +56,6 @@ export const assignROToCase = async (payload) => {
 };
 
 
-
 // List All Active ROs By DRC and RTOM
 export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
   try {
@@ -126,53 +125,81 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
   }
 };
 
-
-
-
-export const listAllDRCMediationBoardCases = async (payload) => {
-
+export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
   try {
-    const { 
-      drc_id, 
-      rtom, 
-      ro_id, 
-      action_type, 
-      from_date, 
-      to_date, 
-      case_current_status 
-    } = payload;
-
-    if (!drc_id) {
-      throw new Error("DRC ID is required.");
+    if (!payload.drc_id && !payload.ro_id) {
+      throw new Error("DRC ID or RO ID is required.");
     }
 
-    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, {
-      drc_id,
-      ...(rtom && { rtom }),
-      ...(ro_id && { ro_id }),
-      ...(action_type && { action_type }),
-      ...(from_date && { from_date }),
-      ...(to_date && { to_date }),
-      ...(case_current_status && { case_current_status }),
+    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, payload);
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        area: caseData.area,
+        ro_name: caseData.ro_name || null,
+        mediation_board_count: caseData.mediation_board_count,
+        next_calling_date: caseData.next_calling_date,
+      };
     });
 
-    if (response.data.status === "error") {
-      throw new Error(response.data.message || "Failed to retrieve cases");
-    }
-    console.log("response.data.data",response.data.data[0].mediation_details.next_calling_dtm.split("T")[0]);
-    return response.data.data || [];
-    
-    
+    return formattedCases;
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
-    console.error("Error retrieving DRC Mediation Board cases:", errorMessage);
-    throw new Error(errorMessage);
+    console.error("Error retrieving handling cases by DRC:", error.response?.data || error.message);
+    throw error;
   }
 };
 
+// export const ListALLMediationCasesownnedbyxDRCRO = async (payload) => {
+
+//   try {
+//     const { 
+//       drc_id, 
+//       rtom, 
+//       ro_id, 
+//       action_type, 
+//       from_date, 
+//       to_date, 
+//       case_current_status 
+//     } = payload;
+
+//     if (!drc_id && !ro_id) {
+//       throw new Error("DRC ID or RO ID is required.");
+//     }
+
+//     const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, {
+//       drc_id,
+//       ro_id,
+//       ...(rtom && { rtom }),
+//       ...(action_type && { action_type }),
+//       ...(from_date && { from_date }),
+//       ...(to_date && { to_date }),
+//       ...(case_current_status && { case_current_status }),
+//     });
+
+//     if (response.data.status === "error") {
+//       throw new Error(response.data.message || "Failed to retrieve cases");
+//     }
+//     console.log("response.data.data",response.data.data[0].mediation_details.next_calling_date.split("T")[0]);
+//     return response.data.data || [];
+    
+    
+//   } catch (error) {
+//     const errorMessage = error.response?.data?.message || error.message;
+//     console.error("Error retrieving DRC Mediation Board cases:", errorMessage);
+//     throw new Error(errorMessage);
+//   }
+// };
+
 
 // get CaseDetails for MediationBoard
-
 
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
@@ -189,20 +216,54 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
       throw new Error(response.data.message);
     }
     
-    // Format the response to include only required fields
-    const caseDetails = {
-      case_id: response.data.data.case_id,
-      customer_ref: response.data.data.customer_ref,
-      account_no: response.data.data.account_no,
-      current_arrears_amount: response.data.data.current_arrears_amount,
-      last_payment_date: response.data.data.last_payment_date,
-      mediation_board: response.data.data.calling_round,
-    };
+    const data = response.data.data;
     
-    return caseDetails;
+    // Process arrays to remove entries with empty or dash values
+    if (data.mediation_board && Array.isArray(data.mediation_board)) {
+      data.mediation_board = data.mediation_board.filter(item => {
+        // Check if any property has a meaningful value (not empty, not dash)
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      // Remove empty array
+      if (data.mediation_board.length === 0) {
+        delete data.mediation_board;
+      }
+    }
+    
+    if (data.settlement && Array.isArray(data.settlement)) {
+      data.settlement = data.settlement.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.settlement.length === 0) {
+        delete data.settlement;
+      }
+    }
+    
+    if (data.ro_requests && Array.isArray(data.ro_requests)) {
+      data.ro_requests = data.ro_requests.filter(item => {
+        return Object.values(item).some(val => 
+          val !== "" && val !== "-" && val !== null && val !== undefined
+        );
+      });
+      
+      if (data.ro_requests.length === 0) {
+        delete data.ro_requests;
+      }
+    }
+    
+    return data;
+    
   } catch (error) {
-    console.error("Error retrieving case details for mediation board:", 
-      error.response?.data || error.message);
+    console.error(
+      "Error retrieving case details for mediation board:", 
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -224,11 +285,23 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
+
 export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) => {
+
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+
   try {
-    if (!caseId || !drcId) {
-      throw new Error("Case ID and DRC ID are required.");
+    if (!payload.drc_id || !payload.case_id) {
+      throw new Error("DRC ID and Case ID are required.");
     }
+
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
 
     // Build the request body according to the controller's requirements
     const requestBody = {
@@ -241,15 +314,61 @@ export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) 
       created_by: localStorage.getItem("username") || "system", // Get username from local storage or provide appropriate source
     };
 
-    // Add next_calling_date if it's set
-    if (nextCallingDate) {
-      requestBody.next_calling_date = nextCallingDate;
+    
+    // Return an error response if something goes wrong
+    return {
+      status: "error",
+      message: error.response?.data.message || error.message || "An unexpected error occurred.",
+      errors: error.response?.data.errors || {},
+    }
+  }catch (error) {
+    console.error("Error retrieving case details for mediation board:", 
+    error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+
+export const updateLastRoDetails =async(case_id, drc_id, remark) => {
+  try {
+    // if (!case_id || !drc_id || !remark) {
+    //   throw new Error("All Fields are required.")
+    // }
+
+    //Convert caseID and drcId to integers
+    const case_id_int =parseInt(case_id, 10);
+    const drc_id_int =parseInt(drc_id, 10);
+
+    console.log("Sending to backend:", { case_id_int, drc_id_int, remark }); 
+
+    const response =await axios.patch(`${URL}/Update_case_last_Ro_Details`, {
+      case_id: case_id_int,
+      drc_id: drc_id_int,
+      remark: remark
+    });
+
+    console.log("Response from handler: ", response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error updating recovery officer details:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+export const listDRCAllCases = async (payload) => {
+  try {
+    if (!payload.drc_id && !payload.ro_id) {
+      throw new Error("DRC ID or RO ID is required.");
     }
 
-    // Add fail_reason if customer doesn't agree to settle
-    if (formData.customerRepresented === "Yes" && formData.settle === "No" && formData.failReason) {
-      requestBody.fail_reason = formData.failReason;
+    const response = await axios.post(`${URL}/List_All_DRC_Negotiation_Cases`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
     }
+
 
     // Add settlement-related fields if customer agrees to settle
     if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
@@ -273,16 +392,117 @@ export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) 
     // Make the API call to the backend
     const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
 
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        ro_name: caseData.ro_name || null,
+        contact_no: caseData.contact_no || null,
+        area: caseData.area,
+        action_type: caseData.action_type,
+      };
+    });
+
+    return formattedCases;
+  } catch (error) {
+    console.error("Error retrieving cases by DRC:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// Get Case Details by Case ID
+export const drcCaseDetails = async (caseId) => {
+  try {
+    if (!caseId) {
+      throw new Error("Case ID is required.");
+    }
+
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
+       case_id: caseId
+    });
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+
+    // Extract ro_negotiation details safely
+    const roNegotiationDetails = response.data.data.ro_negotiation 
+      ? response.data.data.ro_negotiation.map((negotiation) => ({
+          drc_id: negotiation.drc_id,
+          ro_id: negotiation.ro_id,
+          created_dtm: negotiation.created_dtm,
+          field_reason_id: negotiation.field_reason_id,
+          field_reason: negotiation.field_reason,
+          remark: negotiation.remark,
+        }))
+      : [];
+
+
+      const caseDetails = {
+        case_id: response.data.data.case_id,
+        customer_ref: response.data.data.customer_ref,
+        account_no: response.data.data.account_no,
+        current_arrears_amount: response.data.data.current_arrears_amount,
+        last_payment_date: response.data.data.last_payment_date,
+        ro_negotiation_details: roNegotiationDetails,
+      };
+
+
+    return caseDetails;
+  } catch (error) {
+    console.error("Error retrieving case details by ID:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// Add Negotiation Case
+export const addNegotiationCase = async (caseId,settleId,ini_amount, month, from,to,settle_remark,drcId,roId,requestId,request,intractionId,todo,completed,reasonId,reason,nego_remark ) => {
+  try {
+    if (!caseId || !reason || !request) {
+      throw new Error("Case ID, reason, and request are required.");
+    }
+
+    const response = await axios.post(`${URL}/Customer_Negotiations`, {
+      case_id: caseId,
+      settlement_id: settleId || null,
+      initial_amount: ini_amount || null,
+      calender_month: month || null,
+      duration_from: from || null,
+      duration_to: to || null,
+      settlement_remark:settle_remark || null,
+      drc_id: drcId || null ,
+      ro_id: roId || null,
+      ro_request: request || null,
+      ro_request_id: requestId || null,
+      intraction_id: intractionId || null,
+      todo_on: todo || null,
+      completed_on: completed || null,
+      field_reason: reason,
+      field_reason_id: reasonId || null,
+      remark: nego_remark || null
+    });
+
+
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
 
     return response.data;
   } catch (error) {
+
     console.error("Error submitting mediation board response:", error.response?.data?.message || error.message);
+
+    console.error("Error adding negotiation case:", error.response?.data || error.message);
+
     throw error;
   }
 };
+
 
 
 // List Active RO Requests Mediation Board
@@ -300,6 +520,109 @@ export const ListActiveRORequestsMediation = async () => {
     return response.data.data;
   } catch (error) {
     console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
+
+// Fetch active negotiations
+export const fetchActiveNegotiations = async () => {
+  try {
+    const response = await axios.post(`${URL}/list_Active_Customer_Negotiations`);
+    const data = response.data.data;
+
+    // Format the response data
+    const activeNegotiations = data.map((negotiation) => ({
+      negotiation_id: negotiation.negotiation_id,
+      negotiation_description: negotiation.negotiation_description,
+      end_dtm: negotiation.end_dtm,
+    }));
+
+    return activeNegotiations;
+  } catch (error) {
+    console.error("Error fetching active negotiations:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// Fetch active requests
+export const getActiveRORequests = async () => {
+  try {
+    const response = await axios.post(`${URL}/List_Active_RO_Requests`);
+    const data = response.data.data;
+
+    // Format the response data
+    const activeRORequests = data.map((requests) => ({
+      ro_request_id: requests.ro_request_id,
+      request_description: requests.request_description,
+      intraction_id: requests.intraction_id,
+    }));
+
+    return activeRORequests;
+  } catch (error) {
+    console.error("Error fetching active requests:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Get Case Details by Case ID
+export const caseDetailsforDRC = async (caseId, drcId) => {
+  try {
+    // Validate inputs
+    if (!caseId || !drcId) {
+      throw new Error("Both Case ID and DRC ID are required.");
+    }
+    // Send a POST request to fetch case details
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
+       case_id: caseId,
+       drc_id: drcId
+    });
+    // Check if the response indicates an error
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    console.log(response.data)
+    console.log('response.data.data', response.data.data)
+    // Map the response data to a structured caseDetails object
+
+    const caseDetails = {
+      case_id: response.data.data.case_id,
+      customer_ref: response.data.data.customer_ref,
+      account_no: response.data.data.account_no,
+      current_arrears_amount: response.data.data.current_arrears_amount,
+      last_payment_date: response.data.data.last_payment_date,
+      contactDetails: response.data.data.current_contact,
+      full_Address: response.data.data.full_Address,
+      nic: response.data.data.nic,
+    };
+  return caseDetails;
+  } catch (error) {
+    console.error("Error retrieving case details by ID:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+// Update Customer Profile
+export const updateCustomerContacts = async (caseData) => {
+  try {
+    // Check if caseData or case_id is missing
+    if (!caseData || !caseData.case_id) {
+      throw new Error("Case ID and data are required.");
+    }
+
+    // Check if either contact or remark is provided
+    if (!caseData.contact && !caseData.remark) {
+      throw new Error("Either contact or remark is required.");
+    }
+    
+
+    console.log('caseData', caseData)
+    // Send a POST request to update customer contacts
+    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
+    console.log("Update Response:", response);
+    return response;
+  } catch (error) {
+    console.error("Error updating customer contacts:", error.response?.data || error.message);
+
     throw error;
   }
 };

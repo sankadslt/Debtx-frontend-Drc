@@ -1,8 +1,8 @@
 /*Purpose: This template is used for the 2.1- Assigned case list for DRC
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-02-18
-Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
+Last Modified Date: 2025-03-04
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayka (sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.1
 Dependencies: tailwind css
@@ -16,7 +16,9 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing G
 import DatePicker from "react-datepicker";
 import { roassignedbydrc } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
 
 //Status Icons
 import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
@@ -29,14 +31,13 @@ import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_p
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 export default function AssignedCaseListforDRC() {
-  const [user, setUser] = useState(null);
-  
+
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  const [drc_id, setDrcId] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,51 +64,115 @@ export default function AssignedCaseListforDRC() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
-    };
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
 
-    fetchUserData();
-  }, [user?.drc_id]);
+
+
 
   useEffect(() => {
-    const fetchData =async () => {
+    const fetchData = async () => {
       try {
-        // Step 1: Fetch user_id
-        const userId = await getLoggedUserId();
-        if (!userId) throw new Error("Unable to fetch user ID");
-
-        // Step 2: Fetch drc_id using user_id
-        const userData = await getUserData();
-        setDrcId(userData.drc_id);
-
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (user?.drc_id) {
-          const roData =await roassignedbydrc(user?.drc_id);
+        if (userData.drc_id) {
+          const roData = await roassignedbydrc(userData.drc_id);
           setRoList(roData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-      
-    }    
+
+    }
     fetchData();
-    
-  }, [user?.drc_id]);
+
+  }, [userData?.drc_id]);
+
+
+
+  const handlestartdatechange = (date) => {
+    setFromDate(date);
+    if (toDate) checkdatediffrence(date, toDate);
+  };
+
+  const handleenddatechange = (date) => {
+    if (fromDate) {
+      checkdatediffrence(fromDate, date);
+    }
+    setToDate(date);
+
+  }
+
+  const checkdatediffrence = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const diffInMs = end - start;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30;
+
+    if (diffInMonths > 1) {
+      Swal.fire({
+        title: "Date Range Exceeded",
+        text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        confirmButtonColor: "#28a745",
+        cancelButtonText: "No",
+        cancelButtonColor: "#d33",
+      }).then((result) => {
+        if (result.isConfirmed) {
+
+          endDate = endDate;
+          handleApicall(startDate, endDate);
+        } else {
+          setToDate(null);
+          console.log("Dates cleared");
+        }
+      }
+      );
+
+    }
+  };
+
+
 
   // Handle filtering cases
   const handleFilter = async () => {
     try {
+
       setFilteredData([]);
 
       const formatDate = (date) => {
@@ -116,8 +181,50 @@ export default function AssignedCaseListforDRC() {
         return offsetDate.toISOString().split("T")[0];
       };
 
-      const payload ={
-        drc_id: Number(user?.drc_id),
+      if (!selectedArrearsAmount && !selectedRo && !fromDate && !toDate) {
+        Swal.fire({
+          title: "Warning",
+          text: "No filter data is selected. Please, select data.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      };
+
+      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+        Swal.fire({
+          title: "Warning",
+          text: "Both From Date and To Date must be selected.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      }
+
+
+      if (new Date(fromDate) > new Date(toDate)) {
+
+        Swal.fire({
+          title: "Warning",
+          text: "To date should be greater than or equal to From date",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      };
+
+
+      const payload = {
+        drc_id: Number(userData.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
@@ -171,12 +278,12 @@ export default function AssignedCaseListforDRC() {
         return <span className="text-gray-500">N/A</span>;
     }
   };
-  
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Case List</h1>
-      
+
       <div className="flex gap-4 items-center flex-wrap mt-4 ">
         {/* Dropdown for Arrears Amount */}
         <select
@@ -184,7 +291,7 @@ export default function AssignedCaseListforDRC() {
           value={selectedArrearsAmount}
           onChange={(e) => setSelectedArrearsAmount(e.target.value)}
         >
-        <option value="">Arrears Band</option>
+          <option value="">Arrears Band</option>
           {arrearsAmounts.length > 0 ? (
             arrearsAmounts.map((amount, index) => (
               <option key={index} value={amount.key}>
@@ -197,7 +304,7 @@ export default function AssignedCaseListforDRC() {
         </select>
 
         {/* Dropdown for RO */}
-        <select 
+        <select
           className={GlobalStyle.selectBox}
           value={selectedRo}
           onChange={(e) => setSelectedRo(e.target.value)}
@@ -208,28 +315,28 @@ export default function AssignedCaseListforDRC() {
           ))}
         </select>
 
-        <div className={`${GlobalStyle.datePickerContainer} flex items-center gap-2`}>
+        <div className={GlobalStyle.datePickerContainer}>
           <label className={GlobalStyle.dataPickerDate}>Date</label>
           <DatePicker
             selected={fromDate}
-            onChange={(date) => setFromDate(date)}
+            onChange={handlestartdatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}
           />
           <DatePicker
             selected={toDate}
-            onChange={(date) => setToDate(date)}
+            onChange={handleenddatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}
           />
         </div>
         <button
-            onClick={handleFilter}
-            className={`${GlobalStyle.buttonPrimary}`}
-          >
-            Filter
+          onClick={handleFilter}
+          className={`${GlobalStyle.buttonPrimary}`}
+        >
+          Filter
         </button>
       </div>
 
@@ -279,19 +386,19 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
-                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime()) 
-                        ? new Date(item.expire_dtm).toLocaleDateString("en-CA") 
-                        : "N/A"
+                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime())
+                      ? new Date(item.expire_dtm).toLocaleDateString("en-CA")
+                      : "N/A"
                     }
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                  
+
                 </tr>
               ))
-              ) : (
-                <tr>
-                  <td colSpan={9} className="text-center">No cases available</td>
-                </tr>
+            ) : (
+              <tr>
+                <td colSpan={9} className="text-center">No cases available</td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -302,23 +409,21 @@ export default function AssignedCaseListforDRC() {
         <button
           onClick={() => handlePrevNext("prev")}
           disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${
-            currentPage === 1 ? "cursor-not-allowed" : ""
-        }`}
+          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+            }`}
         >
-        <FaArrowLeft />
-          </button>
-          <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePrevNext("next")}
-            disabled={currentPage === totalPages}
-            className={`${GlobalStyle.navButton} ${
-          currentPage === totalPages ? "cursor-not-allowed" : ""
-          }`}
+          <FaArrowLeft />
+        </button>
+        <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePrevNext("next")}
+          disabled={currentPage === totalPages}
+          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
+            }`}
         >
-        <FaArrowRight />
+          <FaArrowRight />
         </button>
       </div>
     </div>

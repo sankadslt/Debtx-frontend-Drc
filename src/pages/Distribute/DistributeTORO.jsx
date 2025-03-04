@@ -11,7 +11,7 @@ Related Files: (routes)
 Notes: This page includes a filter and a table */
 
 
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
@@ -19,10 +19,11 @@ import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { refreshAccessToken, getLoggedUserId } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -38,10 +39,8 @@ import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [drc_id, setDrcId] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
   const [fromDate, setFromDate] = useState(null);
@@ -56,33 +55,46 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
-  const [user, setUser] =useState(null);
-  
+  const [userData, setUserData] = useState(null);
+
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
-    };
-
-    fetchUserData();
-  }, [user?.drc_id]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Step 1: Fetch user_id
-        const userId = await getLoggedUserId();
-        if (!userId) throw new Error("Unable to fetch user ID");
-
-        // Step 2: Fetch drc_id using user_id
-        const userData = await getUserData();
-        setDrcId(userData.drc_id);
-
+        if (!userData?.drc_id) {
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
+          return;
+        }
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
@@ -91,23 +103,23 @@ const DistributeTORO = () => {
         console.error("Error fetching data:", error);
       }
     };
-  
-      fetchUserData();
-    }, [user?.drc_id]);
 
-  // Fetch data and recovery officers when drc_id changes
+    fetchUserData();
+  }, [userData?.drc_id]);
+
+  // Fetch data and RTOMs when drc_id changes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (user?.drc_id) {
-          const payload = parseInt(user?.drc_id, 10);
-  
+        if (userData?.drc_id) {
+          const payload = parseInt(userData?.drc_id);
+
           // Fetch RTOMs
-          const rtomsList = await getRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
 
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/5001)");
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -119,8 +131,8 @@ const DistributeTORO = () => {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (user?.drc_id) {
-          const numericDrcId = Number(user?.drc_id);
+        if (userData?.drc_id) {
+          const numericDrcId = Number(userData?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -142,9 +154,53 @@ const DistributeTORO = () => {
 
     fetchData();
     fetchRecoveryOfficers();
-    
-  }, [user?.drc_id]);
-  
+
+  }, [userData?.drc_id]);
+
+
+
+  const handlestartdatechange = (date) => {
+    setFromDate(date);
+    if (toDate) checkdatediffrence(date, toDate);
+  };
+
+  const handleenddatechange = (date) => {
+    if (fromDate) {
+      checkdatediffrence(fromDate, date);
+    }
+    setToDate(date);
+
+  }
+
+  const checkdatediffrence = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const diffInMs = end - start;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30;
+
+    if (diffInMonths > 1) {
+      Swal.fire({
+        title: "Date Range Exceeded",
+        text: "The selected dates have exeeded more than a 1-month gap. we can't proceed.",
+        icon: "warning"
+       
+      }).then((result) => {
+        if (result.isConfirmed) {
+
+          endDate = endDate;
+          handleApicall(startDate, endDate);
+        } else {
+          setToDate(null);
+          console.log("Dates cleared");
+        }
+      }
+      );
+
+    }
+  };
+
+
   const handleFilter = async () => {
     try {
       setFilteredData([]); // Clear previous results
@@ -155,15 +211,57 @@ const DistributeTORO = () => {
         return offsetDate.toISOString().split('T')[0];
       };
 
-        const payload = {
-            drc_id: Number(user?.drc_id),
-            rtom: selectedRTOM,
-            arrears_band: selectedArrearsBand,
-            ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-            from_date: formatDate(fromDate),
-            to_date: formatDate(toDate),
-        };
-        
+      if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
+        Swal.fire({
+          title: "Warning",
+          text: "No filter data is selected. Please, select data.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      };
+
+
+      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+        Swal.fire({
+          title: "Warning",
+          text: "Both From Date and To Date must be selected.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      }
+
+
+      if (new Date(fromDate) > new Date(toDate)) {
+
+        Swal.fire({
+          title: "Warning",
+          text: "To date should be greater than or equal to From date",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      };
+
+      const payload = {
+        drc_id: Number(userData?.drc_id),
+        rtom: selectedRTOM,
+        arrears_band: selectedArrearsBand,
+        ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
+        from_date: formatDate(fromDate),
+        to_date: formatDate(toDate),
+      };
+
 
 
       const response = await listHandlingCasesByDRC(payload);
@@ -263,35 +361,67 @@ const DistributeTORO = () => {
   const handleSubmit = async () => {
     try {
       const selectedRtom = selectedRO;
-      
+
       if (!selectedRO) {
-        Swal.fire("Error", "No Recovery Officer selected!", "error");
+        Swal.fire({
+          title: "Error",
+          text:"No Recovery Officer selected!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         return;
       }
 
       if (!selectedRows || selectedRows.size === 0) {
-        Swal.fire("Error", "Please select at least one row before submitting!", "error");
+
+        Swal.fire({
+          title: "Error",
+          text: "Please select at least one row before submitting!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         return;
       }
 
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
 
       if (!selectedOfficer) {
-        Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Selected Recovery Officer not found!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         return;
       }
 
       const ro_id = selectedOfficer.ro_id;
 
       if (!ro_id) {
-        Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Recovery Officer ID is missing.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         return;
       }
 
       const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
 
       if (selectedCaseIds.length === 0) {
-        Swal.fire("Error", "No cases selected!", "error");
+
+        Swal.fire({
+          title: "Error",
+          text: "No cases selected!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         return;
       }
 
@@ -300,7 +430,7 @@ const DistributeTORO = () => {
       // Create the payload object with all required parameters
       const assignmentPayload = {
         caseIds: selectedCaseIds,
-        drcId: drc_id,
+        drcId: userData?.drc_id,
         roId: ro_id,
         assigned_by: userId, // Include assigned_by in the payload
       };
@@ -309,24 +439,52 @@ const DistributeTORO = () => {
       const response = await assignROToCase(assignmentPayload);
 
       if (response.details?.failed_cases?.length > 0) {
-        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        Swal.fire({
+          title: "Error",
+          text:  "The RTOM area does not match any RTOM area assigned to Recovery Officer",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+
         return;
       }
 
       if (response.status === 'success') {
-        Swal.fire("Success", "Cases assigned successfully!", "success");
+
+        Swal.fire({
+          title: "Success",
+          text:   "Cases assigned successfully!",
+          icon: "success",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
         navigate(`/drc/assigned-ro-case-log`);
       } else {
-        Swal.fire("Error", response.message, "error");
+        Swal.fire({
+          title: "Error",
+          text:  response.message,
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+
       }
 
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while assigning cases.",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      });
     }
   };
 
-const getStatusIcon = (status) => {
+  const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "open no agent":
         return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
@@ -418,14 +576,14 @@ const getStatusIcon = (status) => {
             <label className={GlobalStyle.dataPickerDate}>Date</label>
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={handlestartdatechange}
               dateFormat="dd/MM/yyyy"
               placeholderText="dd/MM/yyyy"
               className={GlobalStyle.inputText}
             />
             <DatePicker
               selected={toDate}
-              onChange={(date) => setToDate(date)}
+              onChange={handleenddatechange}
               dateFormat="dd/MM/yyyy"
               placeholderText="dd/MM/yyyy"
               className={GlobalStyle.inputText}
@@ -455,53 +613,53 @@ const getStatusIcon = (status) => {
 
       {/* Table Section */}
       <div className={GlobalStyle.tableContainer}>
-  <table className={GlobalStyle.table}>
-    <thead className={GlobalStyle.thead}>
-      <tr>
-        <th className={GlobalStyle.tableHeader}></th>
-        <th className={GlobalStyle.tableHeader}>Status</th>
-        <th className={GlobalStyle.tableHeader}>Case ID</th>
-        <th className={GlobalStyle.tableHeader}>Date</th>
-        <th className={GlobalStyle.tableHeader}>Amount</th>
-        <th className={GlobalStyle.tableHeader}>Action</th>
-        <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-        <th className={GlobalStyle.tableHeader}>RO</th>
-        <th className={GlobalStyle.tableHeader}>Expire Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {currentData && currentData.length > 0 ? (
-        currentData.map((item, index) => (
-          <tr
-            key={item.case_id || index} // Use case_id if available, else fallback to index
-            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-          >
-            <td className="text-center">
-              <input
-                type="checkbox"
-                checked={selectedRows.has(index)}
-                onChange={() => handleRowSelect(index)}
-                className="mx-auto"
-              />
-            </td>
-            <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-            <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-            <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="9" className="text-center">No cases available</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+        <table className={GlobalStyle.table}>
+          <thead className={GlobalStyle.thead}>
+            <tr>
+              <th className={GlobalStyle.tableHeader}></th>
+              <th className={GlobalStyle.tableHeader}>Status</th>
+              <th className={GlobalStyle.tableHeader}>Case ID</th>
+              <th className={GlobalStyle.tableHeader}>Date</th>
+              <th className={GlobalStyle.tableHeader}>Amount</th>
+              <th className={GlobalStyle.tableHeader}>Action</th>
+              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+              <th className={GlobalStyle.tableHeader}>RO</th>
+              <th className={GlobalStyle.tableHeader}>Expire Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentData && currentData.length > 0 ? (
+              currentData.map((item, index) => (
+                <tr
+                  key={item.case_id || index} // Use case_id if available, else fallback to index
+                  className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+                >
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(index)}
+                      onChange={() => handleRowSelect(index)}
+                      className="mx-auto"
+                    />
+                  </td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="text-center">No cases available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {/* Pagination Section */}
       <div className={GlobalStyle.navButtonContainer}>
         <button
@@ -582,7 +740,7 @@ const getStatusIcon = (status) => {
 
           }}
           className={GlobalStyle.buttonPrimary}
-         // disabled={selectedRows.size === 0} // Disable if no rows are selected
+        // disabled={selectedRows.size === 0} // Disable if no rows are selected
         >
           Submit
         </button>

@@ -13,16 +13,17 @@ Related Files: (routes)
 Notes:The following page conatins the code for the Mediation Board case list Screen */
 
 
-
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import DatePicker from "react-datepicker";
-import { listAllDRCMediationBoardCases } from "../../services/case/CaseService.js";
-import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseService.js";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
-
+import { jwtDecode } from "jwt-decode";
+import {  refreshAccessToken } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
 import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
@@ -92,10 +93,7 @@ const StatusIcon = ({ status }) => {
 
 
 export default function MediationBoardCaselist() {
-  const { drc_id } = useParams();
   const navigate = useNavigate();
-
-  // State management
   const [fromDate, setFromDate] = useState(null);
   const [rtoms, setRtoms] = useState([]);
   const [toDate, setToDate] = useState(null);
@@ -104,6 +102,7 @@ export default function MediationBoardCaselist() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [cases, setCases] = useState([]);
+  const [userData, setUserData] = useState(null);
   const [filters, setFilters] = useState({
     rtom: "",
     action_type: "",
@@ -113,10 +112,83 @@ export default function MediationBoardCaselist() {
 
   const rowsPerPage = 7;
 
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const userData = await getUserData();
+  //       console.log("User Data: ", userData);
+  //       setUser(userData);
+  //       console.log("DRC ID: ", user?.drc_id);          
+  //     } catch (err) {
+  //       console.log("Eror in retrieving DRC ID: ", err);       
+  //     } 
+  //   };
+
+  //   fetchUserData();
+  // }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
+
+
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
+  
+
+  // Then update your useEffect that fetches RTOMs
+  useEffect(() => {
+    const fetchRTOMs = async () => {
+      try {
+        if (userData?.drc_id) {
+          // Make sure to convert to number if needed
+          const payload = parseInt(userData.drc_id);
+          console.log("Fetching RTOMs for DRC ID:", payload);
+          
+          // Fetch RTOMs by DRC ID
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
+          console.log("RTOM list retrieved:", rtomsList);
+          setRtoms(rtomsList);
+        } else {
+          console.log("No DRC ID available yet");
+        }
+      } catch (error) {
+        console.error("Error fetching RTOMs:", error);
+      }
+    };
+
+    fetchRTOMs();
+  }, [userData?.drc_id, userData?.ro_id]); // Only depend on userData
+  
   // Date handlers
   const handleFromDateChange = (date) => {
     if (toDate && date > toDate) {
       setError("The 'From' date cannot be later than the 'To' date.");
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setFromDate(date);
@@ -125,7 +197,8 @@ export default function MediationBoardCaselist() {
 
   const handleToDateChange = (date) => {
     if (fromDate && date < fromDate) {
-      setError("The 'To' date cannot be earlier than the 'From' date.");
+      
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setToDate(date);
@@ -143,52 +216,71 @@ export default function MediationBoardCaselist() {
   };
 
   // Fetch cases data
-  const fetchCases = async () => {
-    try {
-      const hasActiveFilters =
-        filters.rtom ||
-        filters.action_type ||
-        filters.status ||
-        fromDate ||
-        toDate;
+const fetchCases = async () => {
+  try {
+    // Check if required filters are set
+    const hasActiveFilters =
+      filters.rtom ||
+      filters.action_type ||
+      filters.status ||
+      fromDate ||
+      toDate;
 
-      if (!hasActiveFilters) {
-        setError("Please set at least one filter before searching.");
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-
-      const payload = {
-        drc_id,
-        ...(filters.rtom && { rtom: filters.rtom }),
-        ...(filters.action_type && { action_type: filters.action_type }),
-        ...(filters.status && { case_current_status: filters.status }),
-        ...(fromDate && { from_date: fromDate.toISOString() }),
-        ...(toDate && { to_date: toDate.toISOString() }),
-      };
-
-      const data = await listAllDRCMediationBoardCases(payload);
-      setCases(data);
-      setCurrentPage(0);
-      setHasInitialFetch(true);
-    } catch (err) {
-      setError(err.message || "Failed to fetch cases. Please try again.");
-      setCases([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFilterClick = () => {
-    if (!drc_id) {
-      setError("DRC ID is required");
+    if (!hasActiveFilters) {
+      setError("Please set at least one filter before searching.");
       return;
     }
-    fetchCases();
-  };
 
+    // Check if userData is available
+    if (!userData) {
+      setError("User data is not available. Please refresh the page or log in again.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const payload = {
+      // Use Number() to ensure these are numbers and not strings
+      drc_id: Number(userData.drc_id),
+      ro_id: Number(userData.ro_id), // Fixed: was using drc_id instead of ro_id
+      ...(filters.rtom && { rtom: filters.rtom }),
+      ...(filters.action_type && { action_type: filters.action_type }),
+      ...(filters.status && { case_current_status: filters.status }),
+      ...(fromDate && { from_date: fromDate.toISOString() }),
+      ...(toDate && { to_date: toDate.toISOString() }),
+    };
+
+    console.log("Sending payload to fetch cases:", payload);
+    
+    const data = await ListALLMediationCasesownnedbyDRCRO(payload);
+    console.log("Cases data received:", data);
+    
+    setCases(Array.isArray(data) ? data : []);
+    setCurrentPage(0);
+    setHasInitialFetch(true);
+  } catch (err) {
+    console.error("Error fetching cases:", err);
+    setError(err.message || "Failed to fetch cases. Please try again.");
+    setCases([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleFilterClick = () => {
+  if (!userData) {
+    setError("User data is not available. Please refresh the page or log in again.");
+    return;
+  }
+  
+  if (!userData.drc_id && !userData.ro_id) {
+    setError("DRC ID or RO ID is required");
+    return;
+  }
+  
+  fetchCases();
+};
   // Data filtering and pagination
   const filteredData = cases.filter((row) =>
     Object.values(row)
@@ -211,25 +303,6 @@ export default function MediationBoardCaselist() {
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
-
-  useEffect(() => {
-    const fetchRTOMs = async () => {
-      try {
-        if (drc_id) {
-          const payload = parseInt(drc_id, 10);
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
-          setRtoms(rtomsList);
-        } else {
-          setError("DRC ID not found in URL.");
-        }
-      } catch (error) {
-        console.error("Error fetching RTOMs:", error);
-        setError("Failed to fetch RTOMs. Please try again later.");
-      }
-    };
-
-    fetchRTOMs();
-  }, [drc_id]);
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -271,14 +344,14 @@ export default function MediationBoardCaselist() {
           className={`${GlobalStyle.selectBox} w-32 md:w-40`}
         >
           <option value="">Status</option>
-          <option value="Forward_to_Mediation_Board">Forward_to_Mediation_Board</option>
-          <option value="MB_fail_with_pending_non_settlement">MB_fail_with_pending_non_settlement</option>
-          <option value="MB_Handed_Customer_Info">MB_Handed_Customer_Info</option>
-          <option value="MB_Negotiation">MB_Negotiation</option>
-          <option value="MB_Request_Customer_Info">MB_Request_Customer_Info</option>
-          <option value="MB_Settle_Active">MB_Settle_Active</option>
-          <option value="MB_Settle_open_pending">MB_Settle_open_pending</option>
-          <option value="MB_Settle_pending">MB_Settle_pending</option>
+          <option value="Forward_to_Mediation_Board">Forward to Mediation Board</option>
+          <option value="MB_fail_with_pending_non_settlement">MB Fail with Pending non Settlement</option>
+          <option value="MB_Handed_Customer_Info">MB Handed Customer Info</option>
+          <option value="MB_Negotiation">MB Negotiation</option>
+          <option value="MB_Request_Customer_Info">MB Request Customer Info</option>
+          <option value="MB_Settle_Active">MB Settle Active</option>
+          <option value="MB_Settle_open_pending">MB Settle Open Pending</option>
+          <option value="MB_Settle_pending">MB Settle Pending</option>
         </select>
 
         <label className={GlobalStyle.dataPickerDate}>Date</label>
@@ -357,18 +430,12 @@ export default function MediationBoardCaselist() {
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_board_count || 0}
                   </td>
-                  <td className={GlobalStyle.tableData}>
-                    {row.mediation_details?.next_calling_dtm
-                      ? new Date(
-                          row.mediation_details.next_calling_dtm
-                        ).toLocaleDateString()
-                      : "N/A"}
-                  </td>
+                  <td className={GlobalStyle.tableData}>{new Date(row.next_calling_date).toLocaleDateString()}</td>
                   <td className={GlobalStyle.tableData}>
                     <img
                       src={edit}
                       alt="Edit Case"
-                      className={`w-7 h-7 ${
+                      className={`w-6 h-6 ${
                         row.status === "MB_fail_with_pending_non_settlement"
                           ? "opacity-50 cursor-default"
                           : "cursor-pointer"
@@ -417,5 +484,3 @@ export default function MediationBoardCaselist() {
     </div>
   );
 }
-
-
