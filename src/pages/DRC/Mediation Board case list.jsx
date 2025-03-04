@@ -4,7 +4,8 @@ Created By: Chamath (chamathjayasanka20@gmail.com)
 Last Modified Date:2025-01-08
 Last Modified Date:2025-02-01
 Last Modified Date:2025-02-17
-Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com), Chathundi Sakumini (sakuminic@gmail.com), Sasindu Srinayka(sasindusrinayaka@gmail.com)
+Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
+Modified By: Chathundi Sakumini (sakuminic@gmail.com)
 Version: node 20
 ui number : 2.15
 Dependencies: tailwind css
@@ -22,7 +23,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import { jwtDecode } from "jwt-decode";
 import {  refreshAccessToken } from "../../services/auth/authService.js";
-
+import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
 import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
@@ -187,6 +188,7 @@ export default function MediationBoardCaselist() {
   const handleFromDateChange = (date) => {
     if (toDate && date > toDate) {
       setError("The 'From' date cannot be later than the 'To' date.");
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setFromDate(date);
@@ -195,7 +197,8 @@ export default function MediationBoardCaselist() {
 
   const handleToDateChange = (date) => {
     if (fromDate && date < fromDate) {
-      setError("The 'To' date cannot be earlier than the 'From' date.");
+      
+      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
     } else {
       setError("");
       setToDate(date);
@@ -481,5 +484,3 @@ const handleFilterClick = () => {
     </div>
   );
 }
-
-
