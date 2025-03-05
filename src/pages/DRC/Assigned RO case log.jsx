@@ -52,7 +52,7 @@ export default function AssignedROcaselog() {
     const recordsPerPage = 5;
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+    // const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
     // Filter state for Amount, Case ID, Status, and Date

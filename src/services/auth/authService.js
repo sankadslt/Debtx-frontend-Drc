@@ -33,7 +33,7 @@ export const refreshAccessToken = async () => {
     const response = await axios.post(`${AUTH_URL}/refresh-token`, {}, { withCredentials: true });
     const { accessToken } = response.data;
 
-    console.log("New Access Token:", accessToken);
+   // console.log("New Access Token:", accessToken);
     localStorage.setItem("accessToken", accessToken);
 
     return accessToken;

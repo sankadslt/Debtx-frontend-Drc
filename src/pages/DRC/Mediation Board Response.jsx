@@ -9,6 +9,10 @@
 // Related Files: (routes)
 // Notes: The following page conatins the code for the Mediation board response */
 
+// Related Files: (routes)
+// Notes: The following page conatins the code for the Mediation board response */
+
+
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { X } from "lucide-react"; // Importing the close icon

@@ -324,6 +324,7 @@ import logo from "../assets/images/logo.png";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken, logoutUser } from "../services/auth/authService";
+import { fetchUserTasks, markTaskAsCompleted } from "../services/userTask/userTaskService";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -421,60 +422,39 @@ const Navbar = () => {
 
   const toggleTaskList = () => setIsTaskListOpen((prev) => !prev);
 
-  // Ensure taskData is fetched correctly before computing pendingTasksCount
   const pendingTasksCount = userData
-    ? taskData.filter((task) => task.user_id === userData.id && !task.completed).length
+    ? taskData.filter((task) => task.userId === userData.user_id && !task.completed).length
     : 0;
 
-    const markTaskAsDoneAndNavigate = async (id, url) => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.error("No token found in localStorage");
-          return;
-        }
-    
-        const response = await fetch(
-          `http://localhost:5000/api/taskList/task/${id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Authorization": `Bearer ${token}`, // Ensure the token is included
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              completed: true,
-            }),
-          }
-        );
-    
-        if (response.ok) {
-          setTaskData((prev) =>
-            prev.map((task) =>
-              task._id === id ? { ...task, completed: true } : task
-            )
-          );
-          navigate(url);
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to update task status:", errorData.message);
-        }
-      } catch (error) {
-        console.error("Error updating task status:", error);
-      }
-    };
-    
+  const markTaskAsDoneAndNavigate = async (user_id, url) => {
+    try {
+      const response = await markTaskAsCompleted(localStorage.getItem("accessToken"), user_id);
 
-  const handleTaskClick = (id, url) => {
-    const task = taskData.find((task) => task._id === id);
+      if (response) {
+        setTaskData((prev) =>
+          prev.map((task) =>
+            task._id === user_id ? { ...task, completed: true } : task
+          )
+        );
+        navigate(url);
+      } else {
+        console.error("Failed to update task status.");
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
+  };
+
+  const handleTaskClick = (user_id, url) => {
+    const task = taskData.find((task) => task._id === user_id);
 
     if (!task) {
-      console.error("Task not found:", id);
+      console.error("Task not found:", user_id);
       return;
     }
 
     if (!task.completed) {
-      markTaskAsDoneAndNavigate(id, url);
+      markTaskAsDoneAndNavigate(user_id, url);
     } else {
       navigate(url);
     }
@@ -487,32 +467,17 @@ const Navbar = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.error("No token found in localStorage");
-          return;
-        }
+        const tasks = await fetchUserTasks(localStorage.getItem("accessToken"), userData?.user_id);
 
-        const response = await fetch("http://localhost:5000/api/taskList/task", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Error: ${response.status} - ${errorData.message}`);
-        }
-
-        const data = await response.json();
-        setTaskData(data);
+        setTaskData(tasks);
       } catch (error) {
         console.error("Error fetching tasks:", error.message);
       }
     };
 
-    fetchTasks();
+    if (userData) {
+      fetchTasks();
+    }
 
     const handleClickOutside = (event) => {
       if (
@@ -528,7 +493,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [userData]);
 
   return (
     <nav className="bg-white px-6 py-4 flex justify-between items-center shadow-md fixed top-0 left-0 w-full z-50 font-poppins">
