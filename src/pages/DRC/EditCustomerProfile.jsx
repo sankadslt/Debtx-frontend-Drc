@@ -35,6 +35,8 @@ export default function EditCustomerProfile() {
     address: "",
     identityNumber: "",
     remark: "",
+    contact_type: "",
+    identification_type: "",
   });
   const navigate = useNavigate();
 
@@ -42,7 +44,7 @@ export default function EditCustomerProfile() {
   const [phoneType, setPhoneType] = useState("");
 
   // NIC
-  const [identityType, setIdentityType] = useState("");
+  const [identification_type, setidentification_type] = useState("");
   const [identityNumber, setIdentityNumber] = useState("");
   // Phone
   const [contacts, setContacts] = useState([]);
@@ -62,6 +64,7 @@ export default function EditCustomerProfile() {
 
   const [showModal, setShowModal] = useState(false);
 
+  console.log("contacts",contacts)
   useEffect(() => {
     const fetchCaseDetails = async () => {
       try {
@@ -80,6 +83,7 @@ export default function EditCustomerProfile() {
           nic: caseDetails.nic,
           remark: "",
           contact_Details: caseDetails.contactDetails,
+          identification_type: caseDetails.identification_type,
         });
         setContacts(caseDetails.contactDetails);
       } catch (error) {
@@ -165,6 +169,7 @@ export default function EditCustomerProfile() {
         nic: identityNumber,
         address: addressInputs[0],
         remark: caseDetails.remark,
+        identification_type: identification_type,
       };
 
       console.log("caseData", caseData);
@@ -191,7 +196,7 @@ export default function EditCustomerProfile() {
           setAddressInputs([""]);
           setAddressError("");
 
-          setIdentityType("");
+          setidentification_type("");
           setIdentityNumber("");
           setValidationMessage("");
 
@@ -317,7 +322,7 @@ export default function EditCustomerProfile() {
 
   // NIC , PP , Driving license add function
   const handleIdentityTypeChange = (event) => {
-    setIdentityType(event.target.value);
+    setidentification_type(event.target.value);
   };
 
   const handleIdentityNumberChange = (e) => {
@@ -325,7 +330,7 @@ export default function EditCustomerProfile() {
     const value = e.target.value;
     setIdentityNumber(value);
     // Validate the identity number based on the selected identity type
-    const message = validateIdentityNumber(identityType, value);
+    const message = validateIdentityNumber(identification_type, value);
     setValidationMessage(message);
   };
 
@@ -561,11 +566,12 @@ export default function EditCustomerProfile() {
               <div className="flex gap-4 mb-6" style={{ marginLeft: "170px" }}>
                 {/* Drop down */}
                 <div className="flex flex-col space-y-4">
-                  <h1 className={GlobalStyle.remarkTopic}>NIC</h1>
+                  <h1 className={GlobalStyle.remarkTopic}>{contacts && contacts[0] && contacts[0].identification_type}
+                  </h1>
                   <select
                     className={GlobalStyle.selectBox}
                     onChange={handleIdentityTypeChange}
-                    value={identityType}
+                    value={identification_type}
                   >
                     <option value=""></option>
                     <option value="NIC">NIC</option>
