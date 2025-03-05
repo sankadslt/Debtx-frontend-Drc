@@ -561,3 +561,22 @@ export const updateCustomerContacts = async (caseData) => {
     throw error;
   }
 };
+
+// List Active RO Requests Mediation Board
+export const ListActiveRORequestsMediation = async () => {
+  try {
+    // Specify that we only want requests with request_mode = "Mediation Board"
+    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`, {
+      request_mode: "Mediation Board"
+    });
+    
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+    
+    return response.data.data;
+  } catch (error) {
+    console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
+    throw error;
+  }
+};
