@@ -285,11 +285,7 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
-
-export const Mediation_Board = async (caseId, drcId, formData, nextCallingDate) => {
-
 export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
-
   try {
     if (!payload.drc_id || !payload.case_id) {
       throw new Error("DRC ID and Case ID are required.");
@@ -301,19 +297,6 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
-
-    // Build the request body according to the controller's requirements
-    const requestBody = {
-      case_id: caseId,
-      drc_id: drcId,
-      ro_id: localStorage.getItem("user_id") || "", // Get user ID from local storage or provide appropriate source
-      customer_available: formData.customerRepresented,
-      comment: formData.comment || "",
-      settle: formData.settle || null,
-      created_by: localStorage.getItem("username") || "system", // Get username from local storage or provide appropriate source
-    };
-
     
     // Return an error response if something goes wrong
     return {
@@ -327,7 +310,6 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
     throw error;
   }
 };
-
 
 
 export const updateLastRoDetails =async(case_id, drc_id, remark) => {
@@ -368,29 +350,6 @@ export const listDRCAllCases = async (payload) => {
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
-
-    // Add settlement-related fields if customer agrees to settle
-    if (formData.customerRepresented === "Yes" && formData.settle === "Yes") {
-      if (
-        !formData.settlementCount ||
-        !formData.initialAmount ||
-        !formData.calendarMonth ||
-        !formData.durationFrom ||
-        !formData.durationTo
-      ) {
-        throw new Error("Missing required fields: settlement count, initial amount, calendar months, duration");
-      }
-
-      requestBody.settlement_count = formData.settlementCount;
-      requestBody.initial_amount = formData.initialAmount;
-      requestBody.calendar_month = formData.calendarMonth || "0";
-      requestBody.duration = `${formData.durationFrom} to ${formData.durationTo}`;
-      requestBody.remark = formData.remark || "";
-    }
-
-    // Make the API call to the backend
-    const response = await axios.post(`${URL}/Mediation_Board`, requestBody);
 
     // Format the response data including status
     const formattedCases = response.data.data.map((caseData) => {
@@ -487,39 +446,16 @@ export const addNegotiationCase = async (caseId,settleId,ini_amount, month, from
       remark: nego_remark || null
     });
 
-
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
 
     return response.data;
   } catch (error) {
-
-    console.error("Error submitting mediation board response:", error.response?.data?.message || error.message);
-
     console.error("Error adding negotiation case:", error.response?.data || error.message);
-
     throw error;
   }
 };
-
-
-
-// List Active RO Requests Mediation Board
-export const ListActiveRORequestsMediation = async () => {
-  try {
-    // Specify that we only want requests with request_mode = "Mediation Board"
-    const response = await axios.post(`${URL}/List_Active_RO_Requests_Mediation`, {
-      request_mode: "Mediation Board"
-    });
-    
-    if (response.data.status === "error") {
-      throw new Error(response.data.message);
-    }
-    
-    return response.data.data;
-  } catch (error) {
-    console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
 
 // Fetch active negotiations
 export const fetchActiveNegotiations = async () => {
@@ -622,7 +558,6 @@ export const updateCustomerContacts = async (caseData) => {
     return response;
   } catch (error) {
     console.error("Error updating customer contacts:", error.response?.data || error.message);
-
     throw error;
   }
 };
