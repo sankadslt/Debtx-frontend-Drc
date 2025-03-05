@@ -19,6 +19,7 @@ import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import { listDRCAllCases } from "../../services/case/CaseService";
 import { jwtDecode } from "jwt-decode";
 import {  refreshAccessToken } from "../../services/auth/authService.js";
+import edit from "../../assets/images/mediationBoard/edit.png";
 
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -386,16 +387,22 @@ const paginatedData = filteredData.slice(
                   <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>{row.action_type}</td>
                   <td className={GlobalStyle.tableData}>
-                    <button
-                      className={`${GlobalStyle.button} ${GlobalStyle.buttonPrimary}`}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className={`${GlobalStyle.button} ${GlobalStyle.buttonPrimary}`}
-                    >
-                      Negotiation
-                    </button>
+                    <img
+                      src={edit}
+                      alt="Edit Case"
+                      className={`w-6 h-6 cursor-pointer display: inline-block`}
+                      onClick={() =>
+                        navigate(`/pages/DRC/EditCustomerProfile/${row.userData?.drc_id}/${row.case_id}`)
+                      }
+                    />
+                    <img
+                      src={edit}
+                      alt="Negotiation Case"
+                      className={`w-6 h-6 cursor-pointer display: inline-block`}
+                      onClick={() =>
+                        navigate(`/pages/DRC/Mediation Board Response/${row.userData?.drc_id}/${row.case_id}`)
+                      }
+                    />
                   </td>
                 </tr>
               ))}

@@ -298,6 +298,10 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
       throw new Error(response.data.message);
     }
     
+    const error = response.data.data.error;
+    if (error) {
+      throw new Error(error);
+    }
     // Return an error response if something goes wrong
     return {
       status: "error",
