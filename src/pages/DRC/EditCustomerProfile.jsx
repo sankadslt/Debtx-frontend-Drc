@@ -16,8 +16,10 @@ import {
   caseDetailsforDRC,
   updateCustomerContacts,
 } from "../../services/case/CaseService";
-import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+// import axios from "axios";
 import back from "../../assets/images/back.png";
+import {  refreshAccessToken } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 
@@ -46,63 +48,123 @@ export default function EditCustomerProfile() {
   // NIC
   const [identification_type, setidentification_type] = useState("");
   const [identityNumber, setIdentityNumber] = useState("");
+  
   // Phone
   const [contacts, setContacts] = useState([]);
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+
   // address
   const [address, setAddress] = useState("");
   const [addressInputs, setAddressInputs] = useState([address]);
   const [addressError, setAddressError] = useState("");
+
   // email
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [emailInputs, setEmailInputs] = useState([email]);
+
   // validation masseges
   const [validationMessage, setValidationMessage] = useState("");
+  const [userData, setUserData] = useState(null);
 
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
 
-  console.log("contacts",contacts)
-  useEffect(() => {
-    const fetchCaseDetails = async () => {
-      try {
-        // Fetch case details for case ID
-        const caseDetails = await caseDetailsforDRC(10,11);
+  // useEffect(() => {
+  //   const fetchCaseDetails = async () => {
+  //     try {
+  //       // Fetch case details for case ID
+  //       const caseDetails = await caseDetailsforDRC(10,11);
 
-        console.log("Case details:", caseDetails);
+  //       console.log("Case details:", caseDetails);
         
-        setCaseDetails({
-          caseId: caseDetails.case_id,
-          customerRef: caseDetails.customer_ref,
-          accountNo: caseDetails.account_no,
-          arrearsAmount: caseDetails.current_arrears_amount,
-          lastPaymentDate: caseDetails.last_payment_date,
-          fullAddress: caseDetails.full_Address,
-          nic: caseDetails.nic,
-          remark: "",
-          contact_Details: caseDetails.contactDetails,
-          identification_type: caseDetails.identification_type,
-        });
-        setContacts(caseDetails.contactDetails);
+  //       setCaseDetails({
+  //         caseId: caseDetails.case_id,
+  //         customerRef: caseDetails.customer_ref,
+  //         accountNo: caseDetails.account_no,
+  //         arrearsAmount: caseDetails.current_arrears_amount,
+  //         lastPaymentDate: caseDetails.last_payment_date,
+  //         fullAddress: caseDetails.full_Address,
+  //         nic: caseDetails.nic,
+  //         remark: "",
+  //         contact_Details: caseDetails.contactDetails,
+  //       });
+  //       setContacts(caseDetails.contactDetails);
+  //     } catch (error) {
+  //       console.error("Error fetching case details:", error.message);
+  //     }
+  //   };
+  //   // Call the fetchCaseDetails function
+  //   fetchCaseDetails();
+  // }, []);
+
+  // useEffect(() => {
+  //   setContacts(caseDetails.contact_Details);
+  // }, [caseDetails.contact_Details]);
+
+  // const handleEmailChange = (e) => {
+  //   const newEmail = e.target.value;
+  //   setEmail(newEmail);
+  //   setEmailError("");
+  // };
+
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+  
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+  
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+  
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
+  
+  
+  // Then update your useEffect that fetches RTOMs
+  useEffect(() => {
+    const fetchRTOMs = async () => {
+      try {
+        if (userData?.drc_id) {
+          // Make sure to convert to number if needed
+          const payload = parseInt(userData.drc_id);
+          console.log("Fetching RTOMs for DRC ID:", payload);
+          
+          // Fetch RTOMs by DRC ID
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
+          console.log("RTOM list retrieved:", rtomsList);
+          setRtoms(rtomsList);
+        } else {
+          console.log("No DRC ID available yet");
+        }
       } catch (error) {
-        console.error("Error fetching case details:", error.message);
+        console.error("Error fetching RTOMs:", error);
       }
     };
-    // Call the fetchCaseDetails function
-    fetchCaseDetails();
-  }, []);
-
-  useEffect(() => {
-    setContacts(caseDetails.contact_Details);
-  }, [caseDetails.contact_Details]);
-
-  const handleEmailChange = (e) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    setEmailError("");
-  };
+  
+    fetchRTOMs();
+  }, [userData?.drc_id]); // Only depend on userData.drc_id
+  
 
   const handlePhoneChange = (e) => {
     const newPhone = e.target.value;
@@ -266,9 +328,9 @@ export default function EditCustomerProfile() {
     setContactName(event.target.value);
   };
 
-  const handleAddressChange = (event) => {
-    setAddress(event.target.value);
-  };
+  // const handleAddressChange = (event) => {
+  //   setAddress(event.target.value);
+  // };
 
   const handleInputChange = (event, field) => {
     setCaseDetails({
@@ -277,41 +339,41 @@ export default function EditCustomerProfile() {
     });
   };
 
-  const addNewContact = () => {
-    // Check if phone number is empty
-    if (!phone) {
-      setPhoneError("Phone number is required.");
-      return;
-    }
+  // const addNewContact = () => {
+  //   // Check if phone number is empty
+  //   if (!phone) {
+  //     setPhoneError("Phone number is required.");
+  //     return;
+  //   }
 
-    // Clear any previous phone error
-    setPhoneError("");
+  //   // Clear any previous phone error
+  //   setPhoneError("");
 
-    // Create a new contact object
-    const newContact = {
-      Contact: phone,
-      Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
-      Create_By: contactName || "N/A",
-    };
+  //   // Create a new contact object
+  //   const newContact = {
+  //     Contact: phone,
+  //     Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
+  //     Create_By: contactName || "N/A",
+  //   };
 
-    // Ensure state is updated correctly
-    setContacts((prevContacts) => [...prevContacts, newContact]);
+  //   // Ensure state is updated correctly
+  //   setContacts((prevContacts) => [...prevContacts, newContact]);
 
-    // Clear input fields
-    setPhone("");
-    setPhoneType("");
-    setContactName("");
-  };
+  //   // Clear input fields
+  //   setPhone("");
+  //   setPhoneType("");
+  //   setContactName("");
+  // };
 
-  const addEmailInput = () => {
-    // Add a new empty email field to the array
-    setEmailInputs([...emailInputs, ""]);
-  };
+  // const addEmailInput = () => {
+  //   // Add a new empty email field to the array
+  //   setEmailInputs([...emailInputs, ""]);
+  // };
 
-  const addAddressInput = () => {
-    // Add a new empty address field to the array
-    setAddressInputs([...addressInputs, ""]);
-  };
+  // const addAddressInput = () => {
+  //   // Add a new empty address field to the array
+  //   setAddressInputs([...addressInputs, ""]);
+  // };
 
   const handleAddressInputChange = (index, value) => {
     const updatedAddresses = [...addressInputs];
