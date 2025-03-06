@@ -138,8 +138,8 @@ export default function Re_AssignRo() {
     const fetchRecoveryOfficers = async () => {
       try {
         if (!userData?.drc_id) {
-          const numericDrcId = Number(userData?.drc_id);
-          const response = await getActiveRODetailsByDrcID(numericDrcId);
+          // const payload = parseInt(userData?.drc_id);
+          const response = await getActiveRODetailsByDrcID(userData?.drc_id);
 
           // Map recovery officers with ro_id and other details
           const officers = response.data.map((officer) => ({
@@ -386,8 +386,6 @@ export default function Re_AssignRo() {
         </div>
       </div>}
 
-
-
       {/* dropdown */}
       <div className="flex   gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
@@ -424,6 +422,7 @@ export default function Re_AssignRo() {
           )}
         </select>
       </div>
+
       {/* Submit Button */}
       <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>

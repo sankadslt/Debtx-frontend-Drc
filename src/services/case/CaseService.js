@@ -285,13 +285,16 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
-export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
+export const fetchBehaviorsOfCaseDuringDRC = async (drc_id, case_id) => {
   try {
-    if (!payload.drc_id || !payload.case_id) {
+    if (!drc_id || !case_id) {
       throw new Error("DRC ID and Case ID are required.");
     }
 
-    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, {
+      drc_id: drc_id,
+      case_id: case_id
+    });
 
 
     if (response.data.status === "error") {
@@ -303,7 +306,7 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
       throw new Error(error);
     }
     // Return an error response if something goes wrong
-    return {
+    return { 
       status: "error",
       message: error.response?.data.message || error.message || "An unexpected error occurred.",
       errors: error.response?.data.errors || {},

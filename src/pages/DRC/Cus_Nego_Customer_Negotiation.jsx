@@ -10,7 +10,7 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes: The following page conatins the code for the assigned customer negotiation and cpe collect for DRC  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import {
@@ -27,7 +27,6 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [lastRequests, setLastRoRequests] = useState([]);
   const [activeNegotiations, setActiveNegotiations] = useState([]); // State for active negotiations
   const [activeRORequests, setActiveRORequests] = useState([]);
-
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
 
