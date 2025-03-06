@@ -503,6 +503,26 @@ export const getActiveRORequests = async () => {
   }
 };
 
+// Fetch active requests
+export const getActiveRORequestsforNegotiation = async (request_mode) => {
+  try {
+    const response = await axios.post(`${URL}/List_Active_RO_Requests`,{request_mode});
+    const data = response.data.data;
+
+    // Format the response data
+    const activeRORequests = data.map((requests) => ({
+      ro_request_id: requests.ro_request_id,
+      request_description: requests.request_description,
+      intraction_id: requests.intraction_id,
+    }));
+
+    return activeRORequests;
+  } catch (error) {
+    console.error("Error fetching active requests:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // Get Case Details by Case ID
 export const caseDetailsforDRC = async (caseId, drcId) => {
   try {
