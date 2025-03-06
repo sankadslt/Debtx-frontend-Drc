@@ -292,6 +292,7 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
     }
 
     const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+    console.log("Response from handler: ", response.data);
 
 
     if (response.data.status === "error") {

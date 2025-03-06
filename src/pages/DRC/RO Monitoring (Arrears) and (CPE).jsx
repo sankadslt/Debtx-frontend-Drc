@@ -68,15 +68,14 @@ export default function RO_Monitoring_CPE() {
     }, [localStorage.getItem("accessToken")]);
 
     useEffect(() => {
-        if (!userData?.drc_id) {
-          console.log("Missing DRC Id.");
-          return;
-        }
-
         const fetchData = async () => {
           try {
-            
-            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: userData?.drc_id, case_id });   
+            if (userData?.drc_id) {
+                const payload = parseInt(userData.drc_id)
+                console.log("Missing DRC Id.", payload);
+                return;
+            }
+            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: Number(userData?.drc_id), case_id });   
             console.log("Behavoirs of case: ", data);
       
             setCusNegotiationData({
