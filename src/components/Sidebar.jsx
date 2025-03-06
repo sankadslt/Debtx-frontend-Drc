@@ -67,16 +67,16 @@ const Sidebar = ({ onHoverChange }) => {
               link: "/drc/assigned-ro-case-log", 
               roles: ["superadmin", "admin", "drc_admin", 'drc_user'] 
             },
-            { 
-              label: "RO Monitoring (Arrears) and (CPE)", 
-              link: "/drc/ro-monitoring-arrears", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
-            },
-            { 
-              label: "Re-Assign-Ro", 
-              link: "/pages/DRC/Re-AssignRo", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
-            },
+            // { 
+            //   label: "RO Monitoring (Arrears) and (CPE)", 
+            //   link: "/drc/ro-monitoring-arrears", 
+            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+            // },
+            // { 
+            //   label: "Re-Assign-Ro", 
+            //   link: "/pages/DRC/Re-AssignRo", 
+            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+            // },
           ],
         },
         {
