@@ -121,6 +121,52 @@ export default function AssignedROcaselog() {
         fetchRTOMs();
       }, [userData?.drc_id]); // Only depend on userData
 
+
+    const handlestartdatechange = (date) => {
+        setFromDate(date);
+        if (toDate) checkdatediffrence(date, toDate);
+      };
+    
+      const handleenddatechange = (date) => {
+        if (fromDate) {
+          checkdatediffrence(fromDate, date);
+        }
+        setToDate(date);
+      }
+    
+      const checkdatediffrence = (startDate, endDate) => {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        const diffInMs = end - start;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        const diffInMonths = diffInDays / 30;
+    
+        if (diffInMonths > 1) {
+          Swal.fire({
+            title: "Date Range Exceeded",
+            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+            icon: "warning",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            confirmButtonColor: "#28a745",
+            cancelButtonText: "No",
+            cancelButtonColor: "#d33",
+          }).then((result) => {
+            if (result.isConfirmed) {
+    
+              endDate = endDate;
+              handleApicall(startDate, endDate);
+            } else {
+              setToDate(null);
+              console.log("Dates cleared");
+            }
+          }
+          );
+    
+        }
+      };  
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -172,7 +218,6 @@ export default function AssignedROcaselog() {
 
                 return;
             };
-
 
             const payload = {
                 drc_id: Number(userData?.drc_id), // Convert drc_id to number
@@ -277,19 +322,6 @@ export default function AssignedROcaselog() {
                 return true; // Return true if no filter is applied
             });
         }
-        if (fromDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
-                return itemDate >= fromDate;
-            });
-        }
-        if (toDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate <= toDate;
-            });
-        }
-
         setFilteredData(tempData);
         setCurrentPage(1); // Reset pagination when filter changes
     };

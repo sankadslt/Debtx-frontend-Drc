@@ -112,10 +112,8 @@ export default function AssignedCaseListforDRC() {
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-
     }
     fetchData();
-
   }, [userData?.drc_id]);
 
 
@@ -130,7 +128,6 @@ export default function AssignedCaseListforDRC() {
       checkdatediffrence(fromDate, date);
     }
     setToDate(date);
-
   }
 
   const checkdatediffrence = (startDate, endDate) => {
