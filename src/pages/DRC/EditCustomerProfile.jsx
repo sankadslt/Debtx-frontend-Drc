@@ -137,7 +137,7 @@ export default function EditCustomerProfile() {
   
   // Then update your useEffect that fetches RTOMs
   useEffect(() => {
-    const fetchRTOMs = async () => {
+    const fetchData = async () => {
       try {
         if (userData?.drc_id) {
           // Make sure to convert to number if needed
@@ -156,7 +156,7 @@ export default function EditCustomerProfile() {
       }
     };
   
-    fetchRTOMs();
+    fetchData();
   }, [userData?.drc_id]); // Only depend on userData.drc_id
   
 

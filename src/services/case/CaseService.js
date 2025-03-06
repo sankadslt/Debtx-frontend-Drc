@@ -131,14 +131,14 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
       throw new Error("DRC ID or RO ID is required.");
     }
 
-    const response = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, payload);
+    const result = await axios.post(`${URL}/List_All_DRC_Mediation_Board_Cases`, payload);
     
-    if (response.data.status === "error") {
-      throw new Error(response.data.message);
+    if (result.data.status === "error") {
+      throw new Error(result.data.message);
     }
 
     // Format the response data including status
-    const formattedCases = response.data.data.map((caseData) => {
+    const formattedCases = result.data.data.map((caseData) => {
       return {
         case_id: caseData.case_id,
         status: caseData.status, // Added status field
@@ -152,7 +152,7 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 
     return formattedCases;
   } catch (error) {
-    console.error("Error retrieving handling cases by DRC:", error.response?.data || error.message);
+    console.error("Error retrieving handling cases by DRC:", error.result?.data || error.message);
     throw error;
   }
 };
@@ -285,16 +285,13 @@ export const ListActiveMediationResponse = async () => {
   }
 };
 
-export const fetchBehaviorsOfCaseDuringDRC = async (drc_id, case_id) => {
+export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   try {
-    if (!drc_id || !case_id) {
+    if (!payload.drc_id || !payload.case_id) {
       throw new Error("DRC ID and Case ID are required.");
     }
 
-    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, {
-      drc_id: drc_id,
-      case_id: case_id
-    });
+    const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
 
 
     if (response.data.status === "error") {

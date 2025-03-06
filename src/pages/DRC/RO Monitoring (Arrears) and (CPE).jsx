@@ -74,7 +74,11 @@ export default function RO_Monitoring_CPE() {
                 console.log("Missing DRC Id.");
                 return;
             }
-            const data = await fetchBehaviorsOfCaseDuringDRC({ drc_id: userData?.drc_id, case_id: case_id });   
+            const payload = {
+              drc_id: userData.drc_id,
+              case_id: Number(case_id), 
+            };
+            const data = await fetchBehaviorsOfCaseDuringDRC(payload);
             console.log("Behavoirs of case: ", data);
       
             setCusNegotiationData({
