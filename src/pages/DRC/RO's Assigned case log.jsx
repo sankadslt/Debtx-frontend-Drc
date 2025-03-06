@@ -198,6 +198,8 @@ export default function ROsAssignedcaselog() {
         >
           <FaArrowRight />
         </button>
+
+        
       </div>
     </div>
   );

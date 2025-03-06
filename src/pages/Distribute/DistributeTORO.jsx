@@ -172,7 +172,7 @@ const DistributeTORO = () => {
         title: "Date Range Exceeded",
         text: "The selected dates have exeeded more than a 1-month gap. we can't proceed.",
         icon: "warning"
-       
+
       }).then((result) => {
         if (result.isConfirmed) {
 
@@ -353,7 +353,7 @@ const DistributeTORO = () => {
       if (!selectedRO) {
         Swal.fire({
           title: "Error",
-          text:"No Recovery Officer selected!",
+          text: "No Recovery Officer selected!",
           icon: "error",
           allowOutsideClick: false,
           allowEscapeKey: false
@@ -429,7 +429,7 @@ const DistributeTORO = () => {
       if (response.details?.failed_cases?.length > 0) {
         Swal.fire({
           title: "Error",
-          text:  "The RTOM area does not match any RTOM area assigned to Recovery Officer",
+          text: "The RTOM area does not match any RTOM area assigned to Recovery Officer",
           icon: "error",
           allowOutsideClick: false,
           allowEscapeKey: false
@@ -442,7 +442,7 @@ const DistributeTORO = () => {
 
         Swal.fire({
           title: "Success",
-          text:   "Cases assigned successfully!",
+          text: "Cases assigned successfully!",
           icon: "success",
           allowOutsideClick: false,
           allowEscapeKey: false
@@ -451,7 +451,7 @@ const DistributeTORO = () => {
       } else {
         Swal.fire({
           title: "Error",
-          text:  response.message,
+          text: response.message,
           icon: "error",
           allowOutsideClick: false,
           allowEscapeKey: false
@@ -732,7 +732,14 @@ const DistributeTORO = () => {
         >
           Submit
         </button>
+
       </div>
+      <button
+        onClick={() => navigate(-1)}
+        className={`${GlobalStyle.navButton} `}
+      >
+        <FaArrowLeft />Go Back
+      </button>
     </div>
   );
 };
