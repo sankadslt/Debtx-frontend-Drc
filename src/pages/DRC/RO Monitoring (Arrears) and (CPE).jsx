@@ -11,7 +11,7 @@ Notes: The following page conatins the code for both the UI's */
 
 
 import { useEffect, useState } from "react";
-import { FaChevronDown, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa6";
+import { FaChevronDown, FaArrowLeft } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
