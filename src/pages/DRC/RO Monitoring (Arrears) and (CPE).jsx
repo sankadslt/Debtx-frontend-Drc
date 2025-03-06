@@ -11,7 +11,7 @@ Notes: The following page conatins the code for both the UI's */
 
 
 import { useEffect, useState } from "react";
-import { FaChevronDown } from "react-icons/fa6";
+import { FaChevronDown, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
@@ -31,8 +31,8 @@ export default function RO_Monitoring_CPE() {
         setActiveTab(tab);
     };
 
-     //Accordion handler
-     const handleAccordion = (index) => {
+    //Accordion handler
+    const handleAccordion = (index) => {
         setIsOpen(isOpen === index ? null : index);
     }
 
@@ -72,7 +72,7 @@ export default function RO_Monitoring_CPE() {
           console.log("Missing DRC Id.");
           return;
         }
-      
+
         const fetchData = async () => {
           try {
             
@@ -89,7 +89,7 @@ export default function RO_Monitoring_CPE() {
             console.log("Error: ", error);
           }
         };
-      
+
         fetchData();
     }, [userData?.drc_id, case_id]);
     
@@ -107,11 +107,10 @@ export default function RO_Monitoring_CPE() {
                     <button
                         key={tab}
                         onClick={() => handleTabClick(tab)}
-                        className={`px-4 py-2 ${
-                            activeTab === tab
-                                ? "border-b-2 border-blue-500 font-bold"
-                                : "text-gray-500"
-                        }`}
+                        className={`px-4 py-2 ${activeTab === tab
+                            ? "border-b-2 border-blue-500 font-bold"
+                            : "text-gray-500"
+                            }`}
                     >
                         {tab}
                     </button>
@@ -124,7 +123,7 @@ export default function RO_Monitoring_CPE() {
                 {activeTab === "CPE Collect" && (
                     <>
                         {/* Card Section */}
-                        <div className="flex flex-col items-center justify-center mb-4">                        
+                        <div className="flex flex-col items-center justify-center mb-4">
                             <div className={`${GlobalStyle.cardContainer}`}>
                                 {[
                                     { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id },
@@ -139,7 +138,7 @@ export default function RO_Monitoring_CPE() {
                                 ))}
                             </div>
                         </div>
-                              
+
                         {cusNegotiationData?.caseDetails?.ref_products?.map((product, index) => (
                             <div key={index} className="overflow-hidden">
                                 <button
@@ -168,8 +167,8 @@ export default function RO_Monitoring_CPE() {
                                                 </p>
                                             ))}
                                         </div>
-                            
-                                    </div> 
+
+                                    </div>
                                     {/* Table for Last Negotiation Details */}
                                     <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
                                     <div className={`${GlobalStyle.tableContainer} mb-4`}>
@@ -185,25 +184,34 @@ export default function RO_Monitoring_CPE() {
                                                 {[...(cusNegotiationData?.additionalData?.ro_negotiation || [])]
                                                     .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sorting in descending order
                                                     .map((item, index) => (
-                                                    <tr
-                                                        key={item._id}
-                                                        className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
-                                                    >
-                                                        <td className={GlobalStyle.tableData}>
-                                                        {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}
-                                                        </td>
-                                                        <td className={GlobalStyle.tableData}>{item.feild_reason}</td>
-                                                        <td className={GlobalStyle.tableData}>{item.remark}</td>
-                                                    </tr>
-                                                ))}
+                                                        <tr
+                                                            key={item._id}
+                                                            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+                                                        >
+                                                            <td className={GlobalStyle.tableData}>
+                                                                {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                                            </td>
+                                                            <td className={GlobalStyle.tableData}>{item.feild_reason}</td>
+                                                            <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                                        </tr>
+                                                    ))}
                                             </tbody>
-                                        </table>                           
+                                        </table>
                                     </div>
+                                    
                                 </div>
-                                
+
                             </div>
                         ))}
-                        
+                        <div>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className={`${GlobalStyle.navButton}  `}
+                            >
+                                <FaArrowLeft />Go Back
+                            </button>
+                        </div>
+
 
                         {/* Table for Last Negotiation Details
                         <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
@@ -242,11 +250,11 @@ export default function RO_Monitoring_CPE() {
                     <>
                         <div className={`${GlobalStyle.cardContainer}`}>
                             {[
-                                { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id},
+                                { label: "Case ID", value: cusNegotiationData?.caseDetails?.case_id },
                                 { label: "Customer Ref", value: cusNegotiationData?.caseDetails?.customer_ref },
                                 { label: "Account No", value: cusNegotiationData?.caseDetails?.account_no },
                                 { label: "Arrears Amount", value: cusNegotiationData?.caseDetails?.current_arrears_amount },
-                                { label: "Last Payment Date", value: new Date(cusNegotiationData?.caseDetails?.last_payment_date).toLocaleDateString("en-CA")},
+                                { label: "Last Payment Date", value: new Date(cusNegotiationData?.caseDetails?.last_payment_date).toLocaleDateString("en-CA") },
                             ].map((item, index) => (
                                 <p key={index} className="mb-2 flex items-center">
                                     <strong className="w-40 text-left">{item.label}</strong>
@@ -284,12 +292,12 @@ export default function RO_Monitoring_CPE() {
                                         </tr>
                                     ))}
                                 </tbody>
-                            </table>                           
+                            </table>
                         </div>
 
                         {/* Content for the Settlement Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Settlement Details</h2>
-                        {/* Table Section */}                     
+                        {/* Table Section */}
                         <div className={GlobalStyle.tableContainer}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
@@ -314,11 +322,11 @@ export default function RO_Monitoring_CPE() {
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         {/* Content for the Payment Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Payment Details</h2>
                         {/* Table Section */}
-                        
+
                         <div className={GlobalStyle.tableContainer}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
@@ -347,7 +355,7 @@ export default function RO_Monitoring_CPE() {
                         {/* Content for the Requests Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Requested Additional Details</h2>
                         {/* Table Section */}
-                        <div className={GlobalStyle.tableContainer}>
+                        <div className={`${GlobalStyle.tableContainer} mb-4`}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
@@ -373,6 +381,17 @@ export default function RO_Monitoring_CPE() {
                                     ))}
                                 </tbody>
                             </table>
+
+
+
+                        </div>
+                        <div>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className={`${GlobalStyle.navButton}  `}
+                            >
+                                <FaArrowLeft />Go Back
+                            </button>
                         </div>
                     </>
                 )}

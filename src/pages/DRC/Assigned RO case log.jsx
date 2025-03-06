@@ -577,6 +577,15 @@ export default function AssignedROcaselog() {
                     <FaArrowRight />
                 </button>
             </div>
+
+            <button
+                onClick={() => navigate(-1)}
+                className={`${GlobalStyle.navButton} `}
+            >
+                <FaArrowLeft />Go Back
+            </button>
+
+
         </div>
     );
 }

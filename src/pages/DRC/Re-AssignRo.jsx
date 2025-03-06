@@ -12,11 +12,12 @@ Notes: The following page conatins the code for the Re-Assign RO  */
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-// import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
+import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { jwtDecode } from "jwt-decode";
 import { getLoggedUserId, refreshAccessToken } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
+import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
@@ -161,7 +162,7 @@ export default function Re_AssignRo() {
 
   }, [userData?.drc_id, case_id]);
 
-  const handleTextarea = async(remark) => {
+  const handleTextarea = async (remark) => {
     try {
       console.log("Data: ", case_id, userData?.drc_id, remark);
       await updateLastRoDetails(case_id, userData?.drc_id, remark);
@@ -180,16 +181,16 @@ export default function Re_AssignRo() {
         Swal.fire("Error", "No Recovery Officer selected!", "error");
         return;
       }
-  
+
       // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
       if (!selectedOfficer) {
         Swal.fire("Error", "Selected Recovery Officer not found!", "error");
         return;
       }
-  
+
       // Get the ro_id of the selected officer
-      const ro_id = selectedOfficer.ro_id; 
+      const ro_id = selectedOfficer.ro_id;
       if (!ro_id) {
         Swal.fire("Error", "Recovery Officer ID is missing.", "error");
         return;
@@ -199,20 +200,20 @@ export default function Re_AssignRo() {
         Swal.fire("Error", "Last RO details are required!", "error");
         return;
       }
-      
+
       try {
         await handleTextarea(textareaValue);
       } catch (error) {
-        console.error("Error in updating last ro details: ", error);   
+        console.error("Error in updating last ro details: ", error);
         Swal.fire("Error", "Failed to update Last Ro details.", "error");
         return
       }
-  
+
       const userId = await getLoggedUserId();
 
-       // Ensure case_id is wrapped in an array
+      // Ensure case_id is wrapped in an array
       const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
-  
+
       // Prepare the assignment payload
       const assignmentPayload = {
         caseIds: caseIdsArray,
@@ -225,19 +226,19 @@ export default function Re_AssignRo() {
       const response = await assignROToCase(assignmentPayload);
       console.log("response: ", response);
 
-       // Check if there are any failed cases
+      // Check if there are any failed cases
       if (response.details?.failed_cases?.length > 0) {
         Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
         return;
       }
-      
+
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
         navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }
-  
+
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       Swal.fire("Error", "An error occurred while assigning cases.", "error");
@@ -427,6 +428,12 @@ export default function Re_AssignRo() {
       <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
       </div>
+      <button
+        onClick={() => navigate(-1)}
+        className={`${GlobalStyle.navButton} `}
+      >
+        <FaArrowLeft />Go Back
+      </button>
     </div>
   );
 }
