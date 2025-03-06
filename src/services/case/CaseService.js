@@ -503,7 +503,7 @@ export const getActiveRORequests = async () => {
 };
 
 // Fetch active requests
-export const getActiveRORequestsforNegotiation = async (request_mode) => {
+export const getActiveRORequestsforNegotiationandMediation = async (request_mode) => {
   try {
     const response = await axios.post(`${URL}/List_Active_RO_Requests`,{request_mode});
     const data = response.data.data;

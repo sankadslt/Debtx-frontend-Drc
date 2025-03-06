@@ -14,10 +14,11 @@ import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import {
+  caseDetailsforDRC,
   drcCaseDetails,
   addNegotiationCase,
   fetchActiveNegotiations,
-  getActiveRORequestsforNegotiation,
+  getActiveRORequestsforNegotiationandMediation,
 } from "../../services/case/CaseService";
 
 const Cus_Nego_Customer_Negotiation = () => {
@@ -91,7 +92,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     // fetch case details
     const fetchCaseDetails = async () => {
       try {
-        const caseDetails = await drcCaseDetails(caseID, drcId);
+        const caseDetails = await caseDetailsforDRC(caseID, drcId);
 
         console.log("Case details:", caseDetails);
         setFormData((prevFormData) => ({
@@ -115,6 +116,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         const negotiations = await fetchActiveNegotiations();
         console.log("negotiation:", negotiations);
         setActiveNegotiations(negotiations);
+        
       } catch (error) {
         console.error("Error fetching active negotiations:", error.message);
       }
@@ -123,7 +125,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     // fetch active RO requests
     const fetchRORequests = async () => {
       try {
-        const RO_Requests = await getActiveRORequestsforNegotiation("Negotiation");
+        const RO_Requests = await getActiveRORequestsforNegotiationandMediation("Negotiation");
         console.log("RO requests:", RO_Requests);
         setActiveRORequests(RO_Requests);
       } catch (error) {
@@ -172,11 +174,11 @@ const Cus_Nego_Customer_Negotiation = () => {
     e.preventDefault();
     const newErrors = {};
     if (!formData.caseId) newErrors.caseId = "Case ID is required.";
-    if (!formData.reason) newErrors.reason = "Reason is required.";
-    if (!formData.nego_remark) newErrors.nego_remark = "Remark is required.";
-    if (!formData.request) newErrors.request = "Request is required.";
-    if (!formData.request_remark)
-      newErrors.request_remark = "Request remark is required.";
+    // if (!formData.reason) newErrors.reason = "Reason is required.";
+    // if (!formData.nego_remark) newErrors.nego_remark = "Remark is required.";
+    // if (!formData.request) newErrors.request = "Request is required.";
+    // if (!formData.request_remark)
+      // newErrors.request_remark = "Request remark is required.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -272,7 +274,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     setShowResponseHistory(!showResponseHistory);
     if (!showResponseHistory) {
       try {
-        const caseDetails = await drcCaseDetails(formData.caseId);
+        const caseDetails = await caseDetailsforDRC(formData.caseId);
         console.log(caseDetails);
         const lastRequests = caseDetails.ro_negotiation_details
           ? caseDetails.ro_negotiation_details.map((negotiation) => ({
