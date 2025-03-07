@@ -39,7 +39,6 @@ export default function EditCustomerProfile() {
     contact_Details: []
   });
   const navigate = useNavigate();
-  const {case_id} =useParams();
 
   // Separate state for dropdowns
   const [phoneType, setPhoneType] = useState("");
@@ -102,27 +101,11 @@ export default function EditCustomerProfile() {
   }, [localStorage.getItem("accessToken")]);
 
   useEffect(() => {
-<<<<<<< Updated upstream
     const fetchCaseDetails = async () => {
       try {
         if (!userData?.drc_id) {
           console.log("Missing DRC Id.", userData?.drc_id);
           return;
-=======
-    const fetchData = async () => {
-      try {
-        if (userData?.drc_id && case_id) {
-          // Make sure to convert to number if needed
-          const payload = parseInt(userData.drc_id, case_id);
-          console.log("Fetching RTOMs for DRC ID:", payload);
-          
-          // Fetch RTOMs by DRC ID
-          const rtomsList = await caseDetailsforDRC(payload);
-          console.log("RTOM list retrieved:", rtomsList);
-          setRtoms(rtomsList);
-        } else {
-          console.log("No DRC ID available yet");
->>>>>>> Stashed changes
         }
         
         // FIXED: Corrected parameter order to match the function definition
@@ -153,18 +136,11 @@ export default function EditCustomerProfile() {
         });
       }
     };
-<<<<<<< Updated upstream
     
     if (userData?.drc_id) {
       fetchCaseDetails();
     }
   }, [userData?.drc_id, case_id]);
-=======
-  
-    fetchData();
-  }, [userData?.drc_id]); // Only depend on userData.drc_id
-  
->>>>>>> Stashed changes
 
   useEffect(() => {
     if (Array.isArray(caseDetails.contact_Details)) {
