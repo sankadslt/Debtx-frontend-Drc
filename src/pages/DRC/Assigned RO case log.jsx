@@ -205,7 +205,6 @@ export default function AssignedROcaselog() {
             }
 
             if (new Date(fromDate) > new Date(toDate)) {
-
                 Swal.fire({
                     title: "Warning",
                     text: "To date should be greater than or equal to From date",
@@ -215,7 +214,6 @@ export default function AssignedROcaselog() {
                 });
                 setToDate(null);
                 setFromDate(null);
-
                 return;
             };
 
