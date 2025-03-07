@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
 
 const PrototypeC = () => {
   // State variables for managing active tab, search query, and pagination
@@ -8,6 +10,7 @@ const PrototypeC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [month, setMonth] = useState(1); // Month counter state
+  const [userRole, setUserRole] = useState(null); // Role-Based Button
 
   // State variables for filters
   const [status, setStatus] = useState("");
@@ -29,17 +32,61 @@ const PrototypeC = () => {
 
   // Dummy data for RO, RTOM, and Services lists
   const roListData = [
-    { name: "AB", status: "Active", enableDate: "2024-12-24", contact: "0123456789" },
-    { name: "KU", status: "Inactive", enableDate: "2024-12-20", contact: "0111111111" },
-    { name: "XY", status: "Active", enableDate: "2025-01-01", contact: "0987654321" },
-    { name: "MN", status: "Inactive", enableDate: "2024-11-15", contact: "0223334444" },
+    {
+      name: "AB",
+      status: "Active",
+      enableDate: "2024-12-24",
+      contact: "0123456789",
+    },
+    {
+      name: "KU",
+      status: "Inactive",
+      enableDate: "2024-12-20",
+      contact: "0111111111",
+    },
+    {
+      name: "XY",
+      status: "Active",
+      enableDate: "2025-01-01",
+      contact: "0987654321",
+    },
+    {
+      name: "MN",
+      status: "Inactive",
+      enableDate: "2024-11-15",
+      contact: "0223334444",
+    },
   ];
 
   const rtomListData = [
-    { name: "RTOM 1", abbreviation: "AB", enableDate: "2024-12-24", contact: "0123456789", count: 10 },
-    { name: "RTOM 2", abbreviation: "KU", enableDate: "2024-12-20", contact: "0111111111", count: 5 },
-    { name: "RTOM 3", abbreviation: "XY", enableDate: "2025-01-01", contact: "0987654321", count: 7 },
-    { name: "RTOM 4", abbreviation: "MN", enableDate: "2024-11-15", contact: "0223334444", count: 3 },
+    {
+      name: "RTOM 1",
+      abbreviation: "AB",
+      enableDate: "2024-12-24",
+      contact: "0123456789",
+      count: 10,
+    },
+    {
+      name: "RTOM 2",
+      abbreviation: "KU",
+      enableDate: "2024-12-20",
+      contact: "0111111111",
+      count: 5,
+    },
+    {
+      name: "RTOM 3",
+      abbreviation: "XY",
+      enableDate: "2025-01-01",
+      contact: "0987654321",
+      count: 7,
+    },
+    {
+      name: "RTOM 4",
+      abbreviation: "MN",
+      enableDate: "2024-11-15",
+      contact: "0223334444",
+      count: 3,
+    },
   ];
 
   const servicesListData = [
@@ -111,11 +158,10 @@ const PrototypeC = () => {
 
   // Toggle service active status (dummy functionality for now)
   const toggleService = (id) => {
-    ((prevServices) =>
+    (prevServices) =>
       prevServices.map((service) =>
         service.id === id ? { ...service, enabled: !service.enabled } : service
-      )
-    );
+      );
   };
 
   // Pagination indexes
@@ -136,41 +182,70 @@ const PrototypeC = () => {
     }
   };
 
+  // Role-Based Button
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <div className="flex justify-between items-center mb-8">
-        <h1 className={GlobalStyle.headingLarge}>
-          Prototype C
-        </h1>
+        <h1 className={GlobalStyle.headingLarge}>Prototype C</h1>
       </div>
 
-       {/* Month Counter */}
-       <div className="flex items-center gap-2 mb-4">
+      {/* Month Counter */}
+      <div className="flex items-center gap-2 mb-4">
         <span className={GlobalStyle.headingMedium}>Select Month : </span>
         <div className={GlobalStyle.monthCounterContainer}>
-      <input
-        type="text"
-        value={String(month).padStart(2, "0")}
-        readOnly
-        className={GlobalStyle.monthCounterNumber}
-      />
-      <div className={GlobalStyle.monthCounterButton}>
-        <button
-          onClick={increaseMonth}
-          className={GlobalStyle.monthCounterButtonIcon}
-        >
-          ▲
-        </button>
-        <button
-          onClick={decreaseMonth}
-          className={GlobalStyle.monthCounterButtonIcon}
-        >
-          ▼
-        </button>
+          <input
+            type="text"
+            value={String(month).padStart(2, "0")}
+            readOnly
+            className={GlobalStyle.monthCounterNumber}
+          />
+          <div className={GlobalStyle.monthCounterButton}>
+            <button
+              onClick={increaseMonth}
+              className={GlobalStyle.monthCounterButtonIcon}
+            >
+              ▲
+            </button>
+            <button
+              onClick={decreaseMonth}
+              className={GlobalStyle.monthCounterButtonIcon}
+            >
+              ▼
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Role-Based Button */}
+      <div>
+        {["admin", "superadmin", "slt"].includes(userRole) && (
+          <button className={GlobalStyle.buttonPrimary}>
+            Role-Based Button
+          </button>
+        )}
       </div>
-  
 
       {/* Filter Section */}
       <div className="flex flex-col mb-10">
@@ -322,9 +397,7 @@ const PrototypeC = () => {
                   <>
                     <td className={GlobalStyle.tableData}>{row.name}</td>
                     <td className={GlobalStyle.tableData}>{row.status}</td>
-                    <td className={GlobalStyle.tableData}>
-                      {row.enableDate}
-                    </td>
+                    <td className={GlobalStyle.tableData}>{row.enableDate}</td>
                     <td className={GlobalStyle.tableData}>{row.contact}</td>
                   </>
                 )}
@@ -334,18 +407,14 @@ const PrototypeC = () => {
                     <td className={GlobalStyle.tableData}>
                       {row.abbreviation}
                     </td>
-                    <td className={GlobalStyle.tableData}>
-                      {row.enableDate}
-                    </td>
+                    <td className={GlobalStyle.tableData}>{row.enableDate}</td>
                     <td className={GlobalStyle.tableData}>{row.contact}</td>
                   </>
                 )}
                 {activeTab === "Services" && (
                   <>
                     <td className={GlobalStyle.tableData}>{row.type}</td>
-                    <td className={GlobalStyle.tableData}>
-                      {row.enableDate}
-                    </td>
+                    <td className={GlobalStyle.tableData}>{row.enableDate}</td>
                     <td className={GlobalStyle.tableData}>
                       <label className="inline-flex relative items-center cursor-pointer">
                         <input
