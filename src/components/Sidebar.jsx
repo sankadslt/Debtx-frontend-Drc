@@ -60,7 +60,7 @@ const Sidebar = ({ onHoverChange }) => {
             { 
               label: "Distribute To RO", 
               link: "/pages/Distribute/DistributeTORO", 
-              roles: ["superadmin, admin", 'drc_admin', 'drc_user'] 
+              roles: ['superadmin', 'admin', 'drc_admin', 'drc_user'] 
             },
             { 
               label: "Assigned RO Case Log", 
