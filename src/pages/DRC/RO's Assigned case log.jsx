@@ -392,7 +392,7 @@ const paginatedData = filteredData.slice(
                       alt="Edit Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() =>
-                        navigate(`/pages/DRC/EditCustomerProfile/${row.userData?.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/EditCustomerProfile/${row.case_id}`)
                       }
                     />
                     <img
@@ -400,7 +400,7 @@ const paginatedData = filteredData.slice(
                       alt="Negotiation Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() =>
-                        navigate(`/pages/DRC/Mediation Board Response/${row.userData?.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/Mediation Board Response/${row.case_id}`)
                       }
                     />
                   </td>

@@ -11,17 +11,15 @@ Notes: The following page conatins the code for Edit Customer details  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   caseDetailsforDRC,
   updateCustomerContacts,
 } from "../../services/case/CaseService";
 import { jwtDecode } from "jwt-decode";
-// import axios from "axios";
 import back from "../../assets/images/back.png";
-import {  refreshAccessToken } from "../../services/auth/authService.js";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
-
 
 export default function EditCustomerProfile() {
   // State to manage case details
@@ -31,7 +29,6 @@ export default function EditCustomerProfile() {
     accountNo: "",
     arrearsAmount: "",
     lastPaymentDate: "",
-
     phone: "",
     email: "",
     address: "",
@@ -39,6 +36,7 @@ export default function EditCustomerProfile() {
     remark: "",
     contact_type: "",
     identification_type: "",
+    contact_Details: []
   });
   const navigate = useNavigate();
 
@@ -57,58 +55,19 @@ export default function EditCustomerProfile() {
 
   // address
   const [address, setAddress] = useState("");
-  const [addressInputs, setAddressInputs] = useState([address]);
+  const [addressInputs, setAddressInputs] = useState([""]);
   const [addressError, setAddressError] = useState("");
 
   // email
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [emailInputs, setEmailInputs] = useState([email]);
+  const [emailInputs, setEmailInputs] = useState([""]);
 
   // validation masseges
   const [validationMessage, setValidationMessage] = useState("");
   const [userData, setUserData] = useState(null);
-
-  // const [showModal, setShowModal] = useState(false);
-
-  // useEffect(() => {
-  //   const fetchCaseDetails = async () => {
-  //     try {
-  //       // Fetch case details for case ID
-  //       const caseDetails = await caseDetailsforDRC(10,11);
-
-  //       console.log("Case details:", caseDetails);
-        
-  //       setCaseDetails({
-  //         caseId: caseDetails.case_id,
-  //         customerRef: caseDetails.customer_ref,
-  //         accountNo: caseDetails.account_no,
-  //         arrearsAmount: caseDetails.current_arrears_amount,
-  //         lastPaymentDate: caseDetails.last_payment_date,
-  //         fullAddress: caseDetails.full_Address,
-  //         nic: caseDetails.nic,
-  //         remark: "",
-  //         contact_Details: caseDetails.contactDetails,
-  //       });
-  //       setContacts(caseDetails.contactDetails);
-  //     } catch (error) {
-  //       console.error("Error fetching case details:", error.message);
-  //     }
-  //   };
-  //   // Call the fetchCaseDetails function
-  //   fetchCaseDetails();
-  // }, []);
-
-  // useEffect(() => {
-  //   setContacts(caseDetails.contact_Details);
-  // }, [caseDetails.contact_Details]);
-
-  // const handleEmailChange = (e) => {
-  //   const newEmail = e.target.value;
-  //   setEmail(newEmail);
-  //   setEmailError("");
-  // };
-
+  const { case_id } = useParams();
+  
   const loadUser = async () => {
     let token = localStorage.getItem("accessToken");
     if (!token) {
@@ -139,33 +98,55 @@ export default function EditCustomerProfile() {
   useEffect(() => {
     loadUser();
   }, [localStorage.getItem("accessToken")]);
-  
-  
-  // Then update your useEffect that fetches RTOMs
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCaseDetails = async () => {
       try {
-        if (userData?.drc_id) {
-          // Make sure to convert to number if needed
-          const payload = parseInt(userData.drc_id);
-          console.log("Fetching RTOMs for DRC ID:", payload);
-          
-          // Fetch RTOMs by DRC ID
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
-          console.log("RTOM list retrieved:", rtomsList);
-          setRtoms(rtomsList);
-        } else {
-          console.log("No DRC ID available yet");
+        if (!userData?.drc_id) {
+          console.log("Missing DRC Id.", userData?.drc_id);
+          return;
         }
+        
+        // FIXED: Corrected parameter order to match the function definition
+        const caseDetails = await caseDetailsforDRC(Number(case_id), userData.drc_id);
+
+        console.log("Case details:", caseDetails);
+        
+        setCaseDetails({
+          caseId: caseDetails.case_id,
+          customerRef: caseDetails.customer_ref,
+          accountNo: caseDetails.account_no,
+          arrearsAmount: caseDetails.current_arrears_amount,
+          lastPaymentDate: caseDetails.last_payment_date,
+          fullAddress: caseDetails.full_Address,
+          nic: caseDetails.nic,
+          remark: "",
+          contact_Details: caseDetails.contactDetails || [],
+        });
+        
+        // Ensure contactDetails is an array before setting it
+        setContacts(Array.isArray(caseDetails.contactDetails) ? caseDetails.contactDetails : []);
       } catch (error) {
-        console.error("Error fetching RTOMs:", error);
+        console.error("Error fetching case details:", error.message);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to fetch case details. Please try again.',
+        });
       }
     };
-  
-    fetchData();
-  }, [userData?.drc_id]); // Only depend on userData.drc_id
-  
+    
+    if (userData?.drc_id) {
+      fetchCaseDetails();
+    }
+  }, [userData?.drc_id, case_id]);
 
+  useEffect(() => {
+    if (Array.isArray(caseDetails.contact_Details)) {
+      setContacts(caseDetails.contact_Details);
+    }
+  }, [caseDetails.contact_Details]);
+  
   const handlePhoneChange = (e) => {
     const newPhone = e.target.value;
     setPhone(newPhone);
@@ -173,7 +154,7 @@ export default function EditCustomerProfile() {
     // Phone number validation (10 digits in this case)
     const phoneRegex = /^0[0-9]{9}$/;
 
-    if (!phoneRegex.test(newPhone)) {
+    if (!phoneRegex.test(newPhone) && newPhone !== "") {
       setPhoneError("Invalid phone number. Please enter 10 digits.");
     } else {
       // Clear the error if the phone number is valid
@@ -187,28 +168,31 @@ export default function EditCustomerProfile() {
 
     let isValid = true;
 
-    // Validate mobile number
-    if (!phone) {
-      setPhone("Please enter a valid Mobile number.");
-      isValid = false;
+    // Validate mobile number if provided
+    if (phone && phoneType) {
+      const phoneRegex = /^0[0-9]{9}$/;
+      if (!phoneRegex.test(phone)) {
+        setPhoneError("Please enter a valid Mobile number.");
+        isValid = false;
+      }
     }
 
-    // Validate nic
-    if (!addressInputs) {
-      setAddressInputs("Please enter a valid NIC.");
-      isValid = false;
+    // Validate email if provided
+    if (emailInputs[0]) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailInputs[0])) {
+        setEmailError("Please enter a valid email address.");
+        isValid = false;
+      }
     }
 
-    // Validate email
-    if (!emailInputs) {
-      setEmailError("Please enter a valid email.");
-      isValid = false;
-    }
-
-    // Validate address
-    if (!addressInputs) {
-      setAddressError("Please enter a valid address.");
-      isValid = false;
+    // Validate identity number if provided
+    if (identityNumber && identification_type) {
+      const message = validateIdentityNumber(identification_type, identityNumber);
+      if (message) {
+        setValidationMessage(message);
+        isValid = false;
+      }
     }
 
     if (isValid) {
@@ -222,103 +206,117 @@ export default function EditCustomerProfile() {
         confirmButtonText: 'Yes, submit!',
       }).then(async (result) => {
         if (result.isConfirmed) {
-      // Prepare the data object for submission
-      const caseData = {
-        case_id: caseDetails.caseId,
-        mob: phoneType === "Mobile" ? phone : "",
-        lan: phoneType === "Landline" ? phone : "",
-        email: emailInputs[0],
-        nic: identityNumber,
-        address: addressInputs[0],
-        remark: caseDetails.remark,
-        identification_type: identification_type,
-      };
+          // Prepare the data object for submission
+          const caseData = {
+            case_id: caseDetails.caseId,
+            mob: phoneType === "Mobile" ? phone : "",
+            lan: phoneType === "Landline" ? phone : "",
+            email: emailInputs[0],
+            nic: identityNumber,
+            address: addressInputs[0],
+            remark: caseDetails.remark,
+            identification_type: identification_type,
+          };
 
-      console.log("caseData", caseData);
-      try {
-        // Submit the data and wait for the response
-        const response = await updateCustomerContacts(caseData);
-        console.log("response form", response);
+          console.log("caseData", caseData);
+          try {
+            // Submit the data and wait for the response
+            const response = await updateCustomerContacts(caseData);
+            console.log("response form", response);
 
-        // Check the response status to determine if the submission was successful
-        if (response && response.status === 200) {
-          Swal.fire("Data submitted successfully!");
+            // Check the response status to determine if the submission was successful
+            if (response && response.status === 200) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Data submitted successfully!'
+              });
 
-          // Clear user input fields here
-          setPhone("");
-          setPhoneType("");
-          setPhoneError("");
-          setContactName("");
+              // Clear user input fields here
+              setPhone("");
+              setPhoneType("");
+              setPhoneError("");
+              setContactName("");
 
-          setEmail("");
-          setEmailInputs([""]);
-          setEmailError("");
+              setEmail("");
+              setEmailInputs([""]);
+              setEmailError("");
 
-          setAddress("");
-          setAddressInputs([""]);
-          setAddressError("");
+              setAddress("");
+              setAddressInputs([""]);
+              setAddressError("");
 
-          setidentification_type("");
-          setIdentityNumber("");
-          setValidationMessage("");
+              setidentification_type("");
+              setIdentityNumber("");
+              setValidationMessage("");
 
-          // Clear the remark field
-          setCaseDetails((prevDetails) => ({
-            ...prevDetails,
-            remark: "",
-          }));
-        } else {
-          alert(response.error);
+              // Clear the remark field
+              setCaseDetails((prevDetails) => ({
+                ...prevDetails,
+                remark: "",
+              }));
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.error || 'Failed to submit data. Please try again.'
+              });
+            }
+          } catch (error) {
+            // Handle duplicate mobile number error
+            if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: Mobile already exists"
+            ) {
+              setPhoneError(
+                "Mobile number already exists. Please use a different Mobile number."
+              );
+            }
+            // Handle duplicate NIC error
+            else if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: NIC already exists"
+            ) {
+              setValidationMessage(
+                "NIC/PP/Driving License already exists. Please use a different One."
+              );
+            }
+            // Handle duplicate email error
+            else if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: Email already exists"
+            ) {
+              setEmailError("Email already exists. Please use a different email.");
+            }
+            // Handle duplicate address error
+            else if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: address already exists"
+            ) {
+              setAddressError(
+                "Address already exists. Please use a different address."
+              );
+            } else {
+              console.error("Error submitting data:", error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to submit data. Please try again.'
+              });
+            }
+          }
         }
-      } catch (error) {
-        // Handle duplicate mobile number error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: Mobile already exists"
-        ) {
-          setPhoneError(
-            "Mobile number already exists. Please use a different Mobile number."
-          );
-        }
-        // Handle duplicate NIC error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: NIC already exists"
-        ) {
-          setValidationMessage(
-            "NIC/PP/Driving License already exists. Please use a different One."
-          );
-        }
-        // Handle duplicate email error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: Email already exists"
-        ) {
-          setEmailError("Email already exists. Please use a different email.");
-        }
-        // Handle duplicate address error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: address already exists"
-        ) {
-          setAddressError(
-            "address already exists. Please use a different address."
-          );
-        } else {
-          console.error("Error submitting data:", error);
-          Swal.fire("Failed to submit data. Please try again.");
-        }
-      }
+      });
     }
-  })}};
+  };
 
   const handlePhoneTypeChange = (event) => {
     setPhoneType(event.target.value);
@@ -328,52 +326,12 @@ export default function EditCustomerProfile() {
     setContactName(event.target.value);
   };
 
-  // const handleAddressChange = (event) => {
-  //   setAddress(event.target.value);
-  // };
-
   const handleInputChange = (event, field) => {
     setCaseDetails({
       ...caseDetails,
       [field]: event.target.value,
     });
   };
-
-  // const addNewContact = () => {
-  //   // Check if phone number is empty
-  //   if (!phone) {
-  //     setPhoneError("Phone number is required.");
-  //     return;
-  //   }
-
-  //   // Clear any previous phone error
-  //   setPhoneError("");
-
-  //   // Create a new contact object
-  //   const newContact = {
-  //     Contact: phone,
-  //     Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
-  //     Create_By: contactName || "N/A",
-  //   };
-
-  //   // Ensure state is updated correctly
-  //   setContacts((prevContacts) => [...prevContacts, newContact]);
-
-  //   // Clear input fields
-  //   setPhone("");
-  //   setPhoneType("");
-  //   setContactName("");
-  // };
-
-  // const addEmailInput = () => {
-  //   // Add a new empty email field to the array
-  //   setEmailInputs([...emailInputs, ""]);
-  // };
-
-  // const addAddressInput = () => {
-  //   // Add a new empty address field to the array
-  //   setAddressInputs([...addressInputs, ""]);
-  // };
 
   const handleAddressInputChange = (index, value) => {
     const updatedAddresses = [...addressInputs];
@@ -392,8 +350,12 @@ export default function EditCustomerProfile() {
     const value = e.target.value;
     setIdentityNumber(value);
     // Validate the identity number based on the selected identity type
-    const message = validateIdentityNumber(identification_type, value);
-    setValidationMessage(message);
+    if (identification_type && value) {
+      const message = validateIdentityNumber(identification_type, value);
+      setValidationMessage(message);
+    } else {
+      setValidationMessage("");
+    }
   };
 
   const handleEmailInputChange = (index, value) => {
@@ -405,7 +367,7 @@ export default function EditCustomerProfile() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // Check if the email is valid, otherwise set the error
-    if (!emailRegex.test(value)) {
+    if (!emailRegex.test(value) && value !== "") {
       setEmailError("Please enter a valid email address.");
     } else {
       setEmailError("");
@@ -437,6 +399,10 @@ export default function EditCustomerProfile() {
       default:
         return "Invalid type selected.";
     }
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to the previous page
   };
 
   return (
@@ -489,7 +455,9 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-                      : {caseDetails.arrearsAmount.toLocaleString()}
+                      : {caseDetails.arrearsAmount && typeof caseDetails.arrearsAmount === 'number' 
+                          ? caseDetails.arrearsAmount.toLocaleString() 
+                          : caseDetails.arrearsAmount}
                     </td>
                   </tr>
 
@@ -500,14 +468,14 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-    :{" "}
-    {caseDetails.lastPaymentDate
-      ? new Date(caseDetails.lastPaymentDate)
-          .toISOString()
-          .split("T")[0]
-          .replace(/-/g, ".")
-      : null}  {/* This removes the "N/A" part if lastPaymentDate is undefined */}
-  </td>
+                      :{" "}
+                      {caseDetails.lastPaymentDate
+                        ? new Date(caseDetails.lastPaymentDate)
+                            .toISOString()
+                            .split("T")[0]
+                            .replace(/-/g, ".")
+                        : ""}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -547,15 +515,6 @@ export default function EditCustomerProfile() {
                         </div>
                       ))}
                   </div>
-
-                  {/* Add Button */}
-                  {/* <button
-                  className={`${GlobalStyle.buttonPrimary} self-start`}
-                  onClick={addNewContact}
-                  title="add"
-                >
-                  +
-                </button> */}
                 </div>
               </div>
 
@@ -628,7 +587,8 @@ export default function EditCustomerProfile() {
               <div className="flex gap-4 mb-6" style={{ marginLeft: "170px" }}>
                 {/* Drop down */}
                 <div className="flex flex-col space-y-4">
-                  <h1 className={GlobalStyle.remarkTopic}>{contacts && contacts[0] && contacts[0].identification_type}
+                  <h1 className={GlobalStyle.remarkTopic}>
+                    {contacts && contacts[0] && contacts[0].identification_type}
                   </h1>
                   <select
                     className={GlobalStyle.selectBox}
@@ -649,7 +609,6 @@ export default function EditCustomerProfile() {
                       contacts.map((contact, index) => (
                         <div key={index}>
                           {contact.nic && <h1>{contact.nic}</h1>}
-                          <h1></h1>
                         </div>
                       ))}
                   </h1>
@@ -669,7 +628,6 @@ export default function EditCustomerProfile() {
                   marginLeft: "250px",
                 }}
               >
-                {" "}
                 {validationMessage && (
                   <p className="text-red-500 text-sm">{validationMessage}</p>
                 )}
@@ -693,30 +651,21 @@ export default function EditCustomerProfile() {
               <div className="flex space-x-4 ">
                 <div>
                   {Array.isArray(contacts) &&
-                    contacts.map((email) => {
-                      if (email.email) {
+                    contacts.map((contact, index) => {
+                      if (contact.email) {
                         return (
                           <span
-                            key={email.email}
+                            key={index}
                             className={GlobalStyle.remarkTopic}
                             style={{ display: "block" }}
                           >
-                            {email.email}
+                            {contact.email}
                           </span>
                         );
                       }
                       return null;
                     })}
                 </div>
-
-                {/* <button
-                  className={GlobalStyle.buttonPrimary}
-                  style={{ position: "relative", top: "-5px" }}
-                  onClick={addEmailInput}
-                  title="add"
-                >
-                  +
-                </button> */}
               </div>
 
               {emailInputs.map((emailValue, index) => (
@@ -766,14 +715,6 @@ export default function EditCustomerProfile() {
                       </div>
                     ))}
                 </h1>
-                {/* <button
-                  className={GlobalStyle.buttonPrimary}
-                  style={{ position: "relative", top: "-5px" }}
-                  onClick={addAddressInput}
-                  title="add"
-                >
-                  +
-                </button> */}
               </div>
               {addressInputs.map((addressValue, index) => (
                 // address input
@@ -833,10 +774,10 @@ export default function EditCustomerProfile() {
         </div>
 
         {/* Back button */}
-        <div>
+        <div onClick={handleBack} style={{ cursor: 'pointer' }}>
           <img
             src={back}
-            alt="Description"
+            alt="Back"
             title="Back"
             style={{ width: "50px", height: "auto" }}
           />
@@ -844,4 +785,4 @@ export default function EditCustomerProfile() {
       </div>
     </>
   );
-}
+};

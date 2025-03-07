@@ -293,24 +293,17 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 
     const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
 
-
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
     
-    const error = response.data.data.error;
-    if (error) {
-      throw new Error(error);
-    }
-    // Return an error response if something goes wrong
-    return { 
-      status: "error",
-      message: error.response?.data.message || error.message || "An unexpected error occurred.",
-      errors: error.response?.data.errors || {},
-    }
-  }catch (error) {
+    // Return the successful response
+    return response.data;
+    
+  } catch (error) {
     console.error("Error retrieving case details for mediation board:", 
-    error.response?.data || error.message);
+      error.response?.data || error.message);
+    // Rethrow the error to be handled by the component
     throw error;
   }
 };
@@ -509,31 +502,34 @@ export const caseDetailsforDRC = async (caseId, drcId) => {
     if (!caseId || !drcId) {
       throw new Error("Both Case ID and DRC ID are required.");
     }
+    
     // Send a POST request to fetch case details
     const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
        case_id: caseId,
        drc_id: drcId
     });
+    
     // Check if the response indicates an error
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
 
-    console.log(response.data)
-    console.log('response.data.data', response.data.data)
+    console.log(response.data);
+    console.log('response.data.data', response.data.data);
+    
     // Map the response data to a structured caseDetails object
-
     const caseDetails = {
       case_id: response.data.data.case_id,
       customer_ref: response.data.data.customer_ref,
       account_no: response.data.data.account_no,
       current_arrears_amount: response.data.data.current_arrears_amount,
       last_payment_date: response.data.data.last_payment_date,
-      contactDetails: response.data.data.current_contact,
+      contactDetails: response.data.data.current_contact || [],
       full_Address: response.data.data.full_Address,
       nic: response.data.data.nic,
     };
-  return caseDetails;
+    
+    return caseDetails;
   } catch (error) {
     console.error("Error retrieving case details by ID:", error.response?.data || error.message);
     throw error;
@@ -544,22 +540,20 @@ export const caseDetailsforDRC = async (caseId, drcId) => {
 // Update Customer Profile
 export const updateCustomerContacts = async (caseData) => {
   try {
-    // Check if caseData or case_id is missing
-    if (!caseData || !caseData.case_id) {
-      throw new Error("Case ID and data are required.");
+    // Validate required fields
+    if (!caseData.case_id) {
+      throw new Error("Case ID is required");
     }
 
-    // Check if either contact or remark is provided
-    if (!caseData.contact && !caseData.remark) {
-      throw new Error("Either contact or remark is required.");
+    // Send a POST request to update customer contacts
+    const response = await axios.post(`${URL}/update_customer_contacts`, caseData);
+    
+    // Check if the response indicates an error
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
     }
     
-
-    console.log('caseData', caseData)
-    // Send a POST request to update customer contacts
-    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
-    console.log("Update Response:", response);
-    return response;
+    return response.data;
   } catch (error) {
     console.error("Error updating customer contacts:", error.response?.data || error.message);
     throw error;

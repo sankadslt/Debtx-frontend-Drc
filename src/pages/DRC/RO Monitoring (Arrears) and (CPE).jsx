@@ -13,25 +13,30 @@ Notes: The following page conatins the code for both the UI's */
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaArrowLeft } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
-import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Imprting GlobalStyle
+import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
 import { jwtDecode } from "jwt-decode";
-import {  refreshAccessToken } from "../../services/auth/authService.js";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState("Customer Negotiation"); // Active tab
+    const [activeTab, setActiveTab] = useState("Customer Negotiation");
     const [userData, setUserData] = useState(null);
     const { case_id } = useParams();
-    const [isOpen, setIsOpen] =useState([]);
-    const[cusNegotiationData, setCusNegotiationData] =useState([]);
+    const [isOpen, setIsOpen] = useState(null);
+    const [cusNegotiationData, setCusNegotiationData] = useState({
+        caseDetails: {},
+        settlementData: {},
+        paymentData: {},
+        additionalData: { ro_negotiation: [], ro_requests: [] }
+    });
 
     // Tab click handler
     const handleTabClick = (tab) => {
         setActiveTab(tab);
     };
 
-    //Accordion handler
+    // Accordion handler
     const handleAccordion = (index) => {
         setIsOpen(isOpen === index ? null : index);
     }
@@ -39,27 +44,27 @@ export default function RO_Monitoring_CPE() {
     const loadUser = async () => {
         let token = localStorage.getItem("accessToken");
         if (!token) {
-        setUserData(null);
-        return;
+            setUserData(null);
+            return;
         }
 
         try {
-        let decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp < currentTime) {
-            token = await refreshAccessToken();
-            if (!token) return;
-            decoded = jwtDecode(token);
-        }
+            let decoded = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            if (decoded.exp < currentTime) {
+                token = await refreshAccessToken();
+                if (!token) return;
+                decoded = jwtDecode(token);
+            }
 
-        setUserData({
-            id: decoded.user_id,
-            role: decoded.role,
-            drc_id: decoded.drc_id,
-            ro_id: decoded.ro_id,
-        });
+            setUserData({
+                id: decoded.user_id,
+                role: decoded.role,
+                drc_id: decoded.drc_id,
+                ro_id: decoded.ro_id,
+            });
         } catch (error) {
-        console.error("Invalid token:", error);
+            console.error("Invalid token:", error);
         }
     };
 
@@ -69,33 +74,51 @@ export default function RO_Monitoring_CPE() {
 
     useEffect(() => {
         const fetchData = async () => {
-          try {
-            if (!userData?.drc_id) {
-                console.log("Missing DRC Id.");
-                return;
+            try {
+                if (!userData?.drc_id) {
+                    console.log("Missing DRC Id.", userData?.drc_id);
+                    return;
+                }
+                const payload = {
+                    drc_id: userData.drc_id,
+                    case_id: Number(case_id),
+                };
+                const response = await fetchBehaviorsOfCaseDuringDRC(payload);
+                
+                if (response && response.data) {
+                    const { formattedCaseDetails, settlementData, paymentData } = response.data;
+                    
+                    setCusNegotiationData({
+                        caseDetails: formattedCaseDetails || {},
+                        settlementData: settlementData || {},
+                        paymentData: paymentData || {},
+                        additionalData: {
+                            ro_negotiation: formattedCaseDetails?.ro_negotiation || [],
+                            ro_requests: formattedCaseDetails?.ro_requests || []
+                        }
+                    });
+                } else {
+                    console.log("No data returned or unexpected response format:", response);
+                }
+            } catch (error) {
+                console.log("Error fetching data: ", error);
             }
-            const payload = {
-              drc_id: userData.drc_id,
-              case_id: Number(case_id), 
-            };
-            const data = await fetchBehaviorsOfCaseDuringDRC(payload);
-            console.log("Behavoirs of case: ", data);
-      
-            setCusNegotiationData({
-              caseDetails: data.caseDetails || [],
-              settlementData: data.settlementData || [],
-              paymentData: data.paymentData || [],
-              additionalData: data.additionalData || [],
-            });
-          } catch (error) {
-            console.log("Error: ", error);
-          }
         };
 
-        fetchData();
+        if (userData?.drc_id) {
+            fetchData();
+        }
     }, [userData?.drc_id, case_id]);
-    
-      
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        try {
+            return new Date(dateString).toLocaleDateString("en-CA");
+        } catch (error) {
+            return "Invalid Date";
+        }
+    };
+
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Header */}
@@ -141,7 +164,7 @@ export default function RO_Monitoring_CPE() {
                             </div>
                         </div>
 
-                        {cusNegotiationData?.caseDetails?.ref_products?.map((product, index) => (
+                        {(cusNegotiationData?.caseDetails?.ref_products || []).map((product, index) => (
                             <div key={index} className="overflow-hidden">
                                 <button
                                     className="flex justify-between items-center w-full p-2 bg-[#384B5C] text-white mb-4 rounded-r-lg"
@@ -152,7 +175,7 @@ export default function RO_Monitoring_CPE() {
                                         <FaChevronDown className={`w-4 h-4 transition-transform ${isOpen === index ? "rotate-180" : "rotate-0"}`} />
                                     </span>
                                 </button>
-                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-50" : "max-h-0"}`}>
+                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-96" : "max-h-0"}`}>
                                     <div className="flex flex-col items-center justify-center">
                                         <div className={`${GlobalStyle.cardContainer}`}>
                                             {[
@@ -161,16 +184,16 @@ export default function RO_Monitoring_CPE() {
                                                 { label: "Service Address", value: product.service_address },
                                                 { label: "Service Status", value: product.product_status },
                                                 { label: "Ownership", value: product.product_ownership },
-                                            ].map((item, index) => (
-                                                <p key={index} className="mb-2 flex items-center">
+                                            ].map((item, idx) => (
+                                                <p key={idx} className="mb-2 flex items-center">
                                                     <strong className="w-40 text-left">{item.label}</strong>
                                                     <span className="w-6 text-center">:</span>
-                                                    <span className="flex-1">{item.value}</span>
+                                                    <span className="flex-1">{item.value || "N/A"}</span>
                                                 </p>
                                             ))}
                                         </div>
-
                                     </div>
+                                    
                                     {/* Table for Last Negotiation Details */}
                                     <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
                                     <div className={`${GlobalStyle.tableContainer} mb-4`}>
@@ -184,66 +207,34 @@ export default function RO_Monitoring_CPE() {
                                             </thead>
                                             <tbody>
                                                 {[...(cusNegotiationData?.additionalData?.ro_negotiation || [])]
-                                                    .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sorting in descending order
-                                                    .map((item, index) => (
+                                                    .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm))
+                                                    .map((item, idx) => (
                                                         <tr
-                                                            key={item._id}
-                                                            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
+                                                            key={item._id || idx}
+                                                            className={idx % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
                                                         >
                                                             <td className={GlobalStyle.tableData}>
-                                                                {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                                                {formatDate(item.created_dtm)}
                                                             </td>
-                                                            <td className={GlobalStyle.tableData}>{item.feild_reason}</td>
-                                                            <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                                            <td className={GlobalStyle.tableData}>{item.feild_reason || "N/A"}</td>
+                                                            <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
                                                         </tr>
                                                     ))}
                                             </tbody>
                                         </table>
                                     </div>
-                                    
                                 </div>
-
                             </div>
                         ))}
+                        
                         <div>
                             <button
                                 onClick={() => navigate(-1)}
-                                className={`${GlobalStyle.navButton}  `}
+                                className={GlobalStyle.navButton}
                             >
                                 <FaArrowLeft />Go Back
                             </button>
                         </div>
-
-
-                        {/* Table for Last Negotiation Details
-                        <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
-                        <div className={GlobalStyle.tableContainer}>
-                            <table className={GlobalStyle.table}>
-                                <thead className={GlobalStyle.thead}>
-                                    <tr>
-                                        <th className={GlobalStyle.tableHeader}>Date</th>
-                                        <th className={GlobalStyle.tableHeader}>Negotiation</th>
-                                        <th className={GlobalStyle.tableHeader}>Remark</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {cpeData.map((item, index) => (
-                                        <tr
-                                            key={item.date}
-                                            className={
-                                                index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                            }
-                                        >
-                                            <td className={GlobalStyle.tableData}>{item.date}</td>
-                                            <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                                            <td className={GlobalStyle.tableData}>{item.remark}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div> */}
                     </>
                 )}
 
@@ -256,7 +247,7 @@ export default function RO_Monitoring_CPE() {
                                 { label: "Customer Ref", value: cusNegotiationData?.caseDetails?.customer_ref },
                                 { label: "Account No", value: cusNegotiationData?.caseDetails?.account_no },
                                 { label: "Arrears Amount", value: cusNegotiationData?.caseDetails?.current_arrears_amount },
-                                { label: "Last Payment Date", value: new Date(cusNegotiationData?.caseDetails?.last_payment_date).toLocaleDateString("en-CA") },
+                                { label: "Last Payment Date", value: formatDate(cusNegotiationData?.caseDetails?.last_payment_date) },
                             ].map((item, index) => (
                                 <p key={index} className="mb-2 flex items-center">
                                     <strong className="w-40 text-left">{item.label}</strong>
@@ -279,18 +270,14 @@ export default function RO_Monitoring_CPE() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cusNegotiationData?.additionalData?.ro_negotiation?.map((item, index) => (
+                                    {(cusNegotiationData?.additionalData?.ro_negotiation || []).map((item, index) => (
                                         <tr
-                                            key={item._id}
-                                            className={
-                                                index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                            }
+                                            key={item._id || index}
+                                            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
                                         >
-                                            <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
-                                            <td className={GlobalStyle.tableData}>{item.feild_reason}</td>
-                                            <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                            <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
+                                            <td className={GlobalStyle.tableData}>{item.feild_reason || "N/A"}</td>
+                                            <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -298,7 +285,7 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         {/* Content for the Settlement Details Section */}
-                        <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Settlement Details</h2>
+                        <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Settlement Details</h2>
                         {/* Table Section */}
                         <div className={GlobalStyle.tableContainer}>
                             <table className={GlobalStyle.table}>
@@ -312,13 +299,13 @@ export default function RO_Monitoring_CPE() {
                                 <tbody>
                                     <tr className={GlobalStyle.tableRowEven}>
                                         <td className={GlobalStyle.tableData}>
-                                            {new Date(cusNegotiationData?.settlementData?.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                            {formatDate(cusNegotiationData?.settlementData?.created_dtm)}
                                         </td>
                                         <td className={GlobalStyle.tableData}>
-                                            {cusNegotiationData?.settlementData?.settlement_status}
+                                            {cusNegotiationData?.settlementData?.settlement_status || "N/A"}
                                         </td>
                                         <td className={GlobalStyle.tableData}>
-                                            {new Date(cusNegotiationData?.settlementData?.expire_date).toLocaleDateString("en-CA") || "N/A"}
+                                            {formatDate(cusNegotiationData?.settlementData?.expire_date)}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -326,9 +313,8 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         {/* Content for the Payment Details Section */}
-                        <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Payment Details</h2>
+                        <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Payment Details</h2>
                         {/* Table Section */}
-
                         <div className={GlobalStyle.tableContainer}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
@@ -341,13 +327,13 @@ export default function RO_Monitoring_CPE() {
                                 <tbody>
                                     <tr className={GlobalStyle.tableRowEven}>
                                         <td className={GlobalStyle.tableData}>
-                                            {new Date(cusNegotiationData?.paymentData?.created_dtm).toLocaleDateString("en-CA") || "N/A"}
+                                            {formatDate(cusNegotiationData?.paymentData?.created_dtm)}
                                         </td>
                                         <td className={GlobalStyle.tableData}>
-                                            {cusNegotiationData?.paymentData?.bill_paid_amount}
+                                            {cusNegotiationData?.paymentData?.bill_paid_amount || "N/A"}
                                         </td>
                                         <td className={GlobalStyle.tableData}>
-                                            {cusNegotiationData?.paymentData?.settled_balance}
+                                            {cusNegotiationData?.paymentData?.settled_balance || "N/A"}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -355,7 +341,7 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         {/* Content for the Requests Details Section */}
-                        <h2 className={`${GlobalStyle.headingMedium} mb-4  mt-4`}>Requested Additional Details</h2>
+                        <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Requested Additional Details</h2>
                         {/* Table Section */}
                         <div className={`${GlobalStyle.tableContainer} mb-4`}>
                             <table className={GlobalStyle.table}>
@@ -367,16 +353,12 @@ export default function RO_Monitoring_CPE() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cusNegotiationData?.additionalData?.ro_requests?.map((item, index) => (
+                                    {(cusNegotiationData?.additionalData?.ro_requests || []).map((item, index) => (
                                         <tr
-                                            key={item._id}
-                                            className={
-                                                index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                            }
+                                            key={item._id || index}
+                                            className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
                                         >
-                                            <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
+                                            <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
                                             <td className={GlobalStyle.tableData}>{item.ro_request || "N/A"}</td>
                                             <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
                                         </tr>
@@ -387,7 +369,7 @@ export default function RO_Monitoring_CPE() {
                         <div>
                             <button
                                 onClick={() => navigate(-1)}
-                                className={`${GlobalStyle.navButton}  `}
+                                className={GlobalStyle.navButton}
                             >
                                 <FaArrowLeft />Go Back
                             </button>
