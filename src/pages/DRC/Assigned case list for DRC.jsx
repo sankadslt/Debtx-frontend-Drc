@@ -151,7 +151,6 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-
           endDate = endDate;
           handleApicall(startDate, endDate);
         } else {

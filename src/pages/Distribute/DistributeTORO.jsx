@@ -132,8 +132,8 @@ const DistributeTORO = () => {
     const fetchRecoveryOfficers = async () => {
       try {
         if (userData?.drc_id) {
-          const numericDrcId = Number(userData?.drc_id);
-          const response = await getActiveRODetailsByDrcID(numericDrcId);
+          const payload = Number(userData?.drc_id);
+          const response = await getActiveRODetailsByDrcID(payload);
 
           // Map recovery officers with ro_id and other details
           const officers = response.data.map((officer) => ({
