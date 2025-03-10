@@ -134,20 +134,20 @@ const DistributeTORO = () => {
       try {
         if (userData?.drc_id) {
           const numericDrcId = Number(userData?.drc_id);
-          const response = await getActiveRODetailsByDrcID(numericDrcId);
+          const officers = await getActiveRODetailsByDrcID(numericDrcId);
     
-          // Check if response and response.data exist before mapping
-          if (response && response.data) {
+          if (Array.isArray(officers)) {
             // Map recovery officers with ro_id and other details
-            const officers = response.data.map((officer) => ({
-              ro_id: officer.ro_id, // Include ro_id
+            const formattedOfficers = officers.map((officer) => ({
+              ro_id: officer.ro_id,
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
             }));
-            setRecoveryOfficers(officers);
-            console.log("Recovery Officers:", response.data);
+    
+            setRecoveryOfficers(formattedOfficers);
+            console.log("Recovery Officers:", formattedOfficers);
           } else {
-            console.error("Invalid response format:", response);
+            console.error("Invalid response format:", officers);
             setRecoveryOfficers([]);
             setError("Failed to fetch recovery officers. Invalid response format.");
           }
@@ -160,6 +160,7 @@ const DistributeTORO = () => {
         setRecoveryOfficers([]); // Set empty array to prevent further errors
       }
     };
+    
     fetchData();
     fetchRecoveryOfficers();
 
