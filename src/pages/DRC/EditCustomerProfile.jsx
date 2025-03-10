@@ -18,8 +18,7 @@ import {
 } from "../../services/case/CaseService";
 import axios from "axios";
 import back from "../../assets/images/back.png";
-import Swal from 'sweetalert2';
-
+import Swal from "sweetalert2";
 
 export default function EditCustomerProfile() {
   // State to manage case details
@@ -30,26 +29,25 @@ export default function EditCustomerProfile() {
     arrearsAmount: "",
     lastPaymentDate: "",
 
-    phone: "",
+    contact_type: "",
+    contact_no: "",
+    identification_type: "",
+    identityNumber: "",
     email: "",
     address: "",
-    identityNumber: "",
     remark: "",
-    contact_type: "",
-    identification_type: "",
   });
   const navigate = useNavigate();
 
-  // Separate state for dropdowns
-  const [phoneType, setPhoneType] = useState("");
+  const [contacts, setContacts] = useState([]);
 
   // NIC
   const [identification_type, setidentification_type] = useState("");
   const [identityNumber, setIdentityNumber] = useState("");
   // Phone
-  const [contacts, setContacts] = useState([]);
   const [contactName, setContactName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [contact_type, setContact_type] = useState("");
+  const [contact_no, setContact_no] = useState("");
   const [phoneError, setPhoneError] = useState("");
   // address
   const [address, setAddress] = useState("");
@@ -64,21 +62,21 @@ export default function EditCustomerProfile() {
 
   const [showModal, setShowModal] = useState(false);
 
-  console.log("contacts",contacts)
   useEffect(() => {
     const fetchCaseDetails = async () => {
       try {
         // Fetch case details for case ID
-        const caseDetails = await caseDetailsforDRC(10,11);
+        const caseDetails = await caseDetailsforDRC(10, 11);
 
         console.log("Case details:", caseDetails);
-        
+
         setCaseDetails({
           caseId: caseDetails.case_id,
           customerRef: caseDetails.customer_ref,
           accountNo: caseDetails.account_no,
           arrearsAmount: caseDetails.current_arrears_amount,
           lastPaymentDate: caseDetails.last_payment_date,
+          
           fullAddress: caseDetails.full_Address,
           nic: caseDetails.nic,
           remark: "",
@@ -105,13 +103,13 @@ export default function EditCustomerProfile() {
   };
 
   const handlePhoneChange = (e) => {
-    const newPhone = e.target.value;
-    setPhone(newPhone);
+    const newContact_no = e.target.value;
+    setContact_no(newContact_no);
 
     // Phone number validation (10 digits in this case)
     const phoneRegex = /^0[0-9]{9}$/;
 
-    if (!phoneRegex.test(newPhone)) {
+    if (!phoneRegex.test(newContact_no)) {
       setPhoneError("Invalid phone number. Please enter 10 digits.");
     } else {
       // Clear the error if the phone number is valid
@@ -124,12 +122,6 @@ export default function EditCustomerProfile() {
     if (e) e.preventDefault();
 
     let isValid = true;
-
-    // Validate mobile number
-    if (!phone) {
-      setPhone("Please enter a valid Mobile number.");
-      isValid = false;
-    }
 
     // Validate nic
     if (!addressInputs) {
@@ -151,115 +143,119 @@ export default function EditCustomerProfile() {
 
     if (isValid) {
       Swal.fire({
-        title: 'Confirm Submission',
+        title: "Confirm Submission",
         text: "Are you sure you want to submit the form details?",
-        icon: 'question',
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, submit!',
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, submit!",
       }).then(async (result) => {
         if (result.isConfirmed) {
-      // Prepare the data object for submission
-      const caseData = {
-        case_id: caseDetails.caseId,
-        mob: phoneType === "Mobile" ? phone : "",
-        lan: phoneType === "Landline" ? phone : "",
-        email: emailInputs[0],
-        nic: identityNumber,
-        address: addressInputs[0],
-        remark: caseDetails.remark,
-        identification_type: identification_type,
-      };
+          // Prepare the data object for submission
+          const caseData = {
+            case_id: caseDetails.caseId,
+            contact_type: contact_type,
+            contact_no: contact_no,
+            email: emailInputs[0],
+            nic: identityNumber,
+            address: addressInputs[0],
+            remark: caseDetails.remark,
+            identification_type: identification_type,
+          };
 
-      console.log("caseData", caseData);
-      try {
-        // Submit the data and wait for the response
-        const response = await updateCustomerContacts(caseData);
-        console.log("response form", response);
+          console.log("caseData", caseData);
+          try {
+            // Submit the data and wait for the response
+            const response = await updateCustomerContacts(caseData);
+            console.log("response form", response);
 
-        // Check the response status to determine if the submission was successful
-        if (response && response.status === 200) {
-          Swal.fire("Data submitted successfully!");
+            // Check the response status to determine if the submission was successful
+            if (response && response.status === 200) {
+              Swal.fire("Data submitted successfully!");
 
-          // Clear user input fields here
-          setPhone("");
-          setPhoneType("");
-          setPhoneError("");
-          setContactName("");
+              // Clear user input fields here
+              setContact_no("");
+              setContact_type("");
+              setPhoneError("");
+              setContactName("");
 
-          setEmail("");
-          setEmailInputs([""]);
-          setEmailError("");
+              setEmail("");
+              setEmailInputs([""]);
+              setEmailError("");
 
-          setAddress("");
-          setAddressInputs([""]);
-          setAddressError("");
+              setAddress("");
+              setAddressInputs([""]);
+              setAddressError("");
 
-          setidentification_type("");
-          setIdentityNumber("");
-          setValidationMessage("");
+              setidentification_type("");
+              setIdentityNumber("");
+              setValidationMessage("");
 
-          // Clear the remark field
-          setCaseDetails((prevDetails) => ({
-            ...prevDetails,
-            remark: "",
-          }));
-        } else {
-          alert(response.error);
+              // Clear the remark field
+              setCaseDetails((prevDetails) => ({
+                ...prevDetails,
+                remark: "",
+              }));
+            } else {
+              alert(response.error);
+            }
+          } catch (error) {
+            // Handle duplicate mobile number error
+            if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: Mobile already exists"
+            ) {
+              setPhoneError(
+                "Mobile number already exists. Please use a different Mobile number."
+              );
+            }
+            // Handle duplicate NIC error
+            if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: NIC already exists"
+            ) {
+              setValidationMessage(
+                "NIC/PP/Driving License already exists. Please use a different One."
+              );
+            }
+            // Handle duplicate email error
+            if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: Email already exists"
+            ) {
+              setEmailError(
+                "Email already exists. Please use a different email."
+              );
+            }
+            // Handle duplicate address error
+            if (
+              error.response &&
+              error.response.data &&
+              error.response.data.error ===
+                "Duplicate data detected: address already exists"
+            ) {
+              setAddressError(
+                "address already exists. Please use a different address."
+              );
+            } else {
+              console.error("Error submitting data:", error);
+              Swal.fire("Failed to submit data. Please try again.");
+            }
+          }
         }
-      } catch (error) {
-        // Handle duplicate mobile number error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: Mobile already exists"
-        ) {
-          setPhoneError(
-            "Mobile number already exists. Please use a different Mobile number."
-          );
-        }
-        // Handle duplicate NIC error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: NIC already exists"
-        ) {
-          setValidationMessage(
-            "NIC/PP/Driving License already exists. Please use a different One."
-          );
-        }
-        // Handle duplicate email error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: Email already exists"
-        ) {
-          setEmailError("Email already exists. Please use a different email.");
-        }
-        // Handle duplicate address error
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error ===
-            "Duplicate data detected: address already exists"
-        ) {
-          setAddressError(
-            "address already exists. Please use a different address."
-          );
-        } else {
-          console.error("Error submitting data:", error);
-          Swal.fire("Failed to submit data. Please try again.");
-        }
-      }
+      });
     }
-  })}};
+  };
 
   const handlePhoneTypeChange = (event) => {
-    setPhoneType(event.target.value);
+    setContact_type(event.target.value);
   };
 
   const handleContactNameChange = (event) => {
@@ -279,7 +275,7 @@ export default function EditCustomerProfile() {
 
   const addNewContact = () => {
     // Check if phone number is empty
-    if (!phone) {
+    if (!contact_no) {
       setPhoneError("Phone number is required.");
       return;
     }
@@ -289,8 +285,8 @@ export default function EditCustomerProfile() {
 
     // Create a new contact object
     const newContact = {
-      Contact: phone,
-      Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
+      Contact: contact_no,
+      Contact_Type: contact_type === "Mobile" ? "Mob" : "Land",
       Create_By: contactName || "N/A",
     };
 
@@ -298,8 +294,8 @@ export default function EditCustomerProfile() {
     setContacts((prevContacts) => [...prevContacts, newContact]);
 
     // Clear input fields
-    setPhone("");
-    setPhoneType("");
+    setContact_no("");
+    setContact_type("");
     setContactName("");
   };
 
@@ -385,7 +381,9 @@ export default function EditCustomerProfile() {
         </div>
 
         {/* Card box */}
-        <div className={`${GlobalStyle.tableContainer}  bg-white bg-opacity-50 p-8 max-w-4xl mx-auto `}>
+        <div
+          className={`${GlobalStyle.tableContainer}  bg-white bg-opacity-50 p-8 max-w-4xl mx-auto `}
+        >
           <div className="flex flex-col items-center justify-center mb-4">
             <div
               className={`${GlobalStyle.cardContainer} bg-white shadow-lg rounded-lg p-4`}
@@ -438,14 +436,15 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-    :{" "}
-    {caseDetails.lastPaymentDate
-      ? new Date(caseDetails.lastPaymentDate)
-          .toISOString()
-          .split("T")[0]
-          .replace(/-/g, ".")
-      : null}  {/* This removes the "N/A" part if lastPaymentDate is undefined */}
-  </td>
+                      :{" "}
+                      {caseDetails.lastPaymentDate
+                        ? new Date(caseDetails.lastPaymentDate)
+                            .toISOString()
+                            .split("T")[0]
+                            .replace(/-/g, ".")
+                        : null}{" "}
+                      {/* This removes the "N/A" part if lastPaymentDate is undefined */}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -464,26 +463,16 @@ export default function EditCustomerProfile() {
             <div className="flex flex-col items-center justify-center mb-4">
               <div>
                 {/* Display existing contacts */}
-                <div className="flex items-start gap-20">
-                  <div className={GlobalStyle.remarkTopic}>
-                    {Array.isArray(contacts) &&
-                      contacts.length > 0 &&
-                      contacts.map((contact, index) => (
-                        <div key={index}>
-                          {contact.mob && (
-                            <div className="grid grid-cols-2 gap-40 mb-2 items-center">
-                              <h1>Mobile</h1>
-                              <h1>{contact.mob}</h1>
-                            </div>
-                          )}
-                          {contact.lan && (
-                            <div className="grid grid-cols-2 gap-40 mb-2 items-center">
-                              <h1>Land</h1>
-                              <h1>{contact.lan}</h1>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                <div className="w-full mb-4">
+                  <div className={`${GlobalStyle.remarkTopic} flex-grow`}>
+                    <p className="flex space-x-40">
+                      <span>
+                        {contacts && contacts[0] && contacts[0].contact_type}
+                      </span>
+                      <span>
+                        {contacts && contacts[0] && contacts[0].contact_no}
+                      </span>
+                    </p>
                   </div>
 
                   {/* Add Button */}
@@ -504,7 +493,7 @@ export default function EditCustomerProfile() {
                   <select
                     className={GlobalStyle.selectBox}
                     onChange={handlePhoneTypeChange}
-                    value={phoneType}
+                    value={contact_type}
                   >
                     <option value=""></option>
                     <option value="Mobile">Mobile</option>
@@ -516,7 +505,7 @@ export default function EditCustomerProfile() {
                     <input
                       type="text"
                       placeholder=""
-                      value={phone}
+                      value={contact_no}
                       onChange={handlePhoneChange}
                       className={`${GlobalStyle.inputText} w-40`}
                     />
@@ -566,7 +555,8 @@ export default function EditCustomerProfile() {
               <div className="flex gap-4 mb-6" style={{ marginLeft: "170px" }}>
                 {/* Drop down */}
                 <div className="flex flex-col space-y-4">
-                  <h1 className={GlobalStyle.remarkTopic}>{contacts && contacts[0] && contacts[0].identification_type}
+                  <h1 className={GlobalStyle.remarkTopic}>
+                    {contacts && contacts[0] && contacts[0].identification_type}
                   </h1>
                   <select
                     className={GlobalStyle.selectBox}

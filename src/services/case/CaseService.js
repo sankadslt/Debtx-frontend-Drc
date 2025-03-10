@@ -550,7 +550,6 @@ export const updateCustomerContacts = async (caseData) => {
       throw new Error("Either contact or remark is required.");
     }
     
-
     console.log('caseData', caseData)
     // Send a POST request to update customer contacts
     const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
