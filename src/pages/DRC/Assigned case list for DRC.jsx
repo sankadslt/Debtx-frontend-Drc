@@ -29,7 +29,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { Create_Task } from "../../services/task/TaskService.js";
+import { Create_Task } from "../../services/task/taskService.js";
 
 
 export default function AssignedCaseListforDRC() {
@@ -44,9 +44,8 @@ export default function AssignedCaseListforDRC() {
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  const [drc_id, setDrcId] = useState(null);
-  const [selectAllData, setSelectAllData] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
+  
+ 
 
   const [selectedSource, setSelectedSource] = useState("");
   const [tableData, setTableData] = useState([]);
