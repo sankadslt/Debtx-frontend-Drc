@@ -28,9 +28,15 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { Create_Task } from "../../services/task/TaskService.js";
+
 
 export default function AssignedCaseListforDRC() {
   const [user, setUser] = useState(null);
+  const [error, setError] = useState("");
+
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
 
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -38,6 +44,11 @@ export default function AssignedCaseListforDRC() {
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
   const [drc_id, setDrcId] = useState(null);
+  const [selectAllData, setSelectAllData] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  const [selectedSource, setSelectedSource] = useState("");
+  const [tableData, setTableData] = useState([]);
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,9 +71,6 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-  // Filter state
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -111,20 +119,97 @@ export default function AssignedCaseListforDRC() {
 
 
 
+
+  const handleCreateTaskForDownload = async ({
+
+    fromDate,
+    toDate,
+  }) => {
+    if (!fromDate && !toDate) {
+      Swal.fire({
+        title: "Warning",
+        text: "Please provide a date range before creating a task.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      return; // Stop function execution
+    }
+
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      Swal.fire({
+        title: "Incomplete Date Range",
+        text: "Both From Date and To Date must be selected together.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      title: "Confirm Task Creation",
+      text: "Are you sure you want to create this task?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, create it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      const filteredParams = {
+
+        FromDate: fromDate,
+        ToDate: toDate,
+      };
+
+      const response = await Create_Task(filteredParams);
+
+      if (response.status === 201) {
+        Swal.fire({
+          title: "Success",
+          text: "Task successfully created",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      }
+    } catch {
+      Swal.fire({
+        title: "Error",
+        text: "Error creating task",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+
   const handlestartdatechange = (date) => {
-    setFromDate(date);
-    if (toDate) checkdatediffrence(date, toDate);
+    if (toDate && date > toDate) {
+      setError("The 'From' date cannot be later than the 'To' date.");
+    } else {
+      setError("");
+      setFromDate(date);
+    }
   };
 
   const handleenddatechange = (date) => {
-    if (fromDate) {
-      checkdatediffrence(fromDate, date);
+    if (fromDate && date < fromDate) {
+      setError("The 'To' date cannot be earlier than the 'From' date.");
+    } else {
+      setError("");
+      setToDate(date);
     }
-    setToDate(date);
+  };
 
-  }
 
-  const checkdatediffrence = (startDate, endDate) => {
+
+
+
+
+
+
+  /* const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
     const diffInMs = end - start;
@@ -156,14 +241,14 @@ export default function AssignedCaseListforDRC() {
       );
 
     }
-  };
+  }; */
 
 
 
-  // Handle filtering cases
+
+
   const handleFilter = async () => {
     try {
-
       setFilteredData([]);
 
       const formatDate = (date) => {
@@ -172,47 +257,62 @@ export default function AssignedCaseListforDRC() {
         return offsetDate.toISOString().split("T")[0];
       };
 
-      if (!selectedArrearsAmount && !selectedRo && !fromDate && !toDate) {
-        Swal.fire({
-          title: "Warning",
-          text: "No filter data is selected. Please, select data.",
-          icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false
-        });
-        setToDate(null);
-        setFromDate(null);
-        return;
-      };
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
 
-      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      if (!selectedArrearsAmount && !selectedRo && !from && !to) {
         Swal.fire({
-          title: "Warning",
-          text: "Both From Date and To Date must be selected.",
+          title: "Missing Filters",
+          text: "Please select at least one filter.",
           icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false
+          confirmButtonText: "OK",
         });
-        setToDate(null);
-        setFromDate(null);
         return;
       }
 
-
-      if (new Date(fromDate) > new Date(toDate)) {
-
+      if ((from && !to) || (!from && to)) {
         Swal.fire({
-          title: "Warning",
-          text: "To date should be greater than or equal to From date",
+          title: "Incomplete Date Range",
+          text: "Both From Date and To Date must be selected together.",
           icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false
+          confirmButtonText: "OK",
         });
-        setToDate(null);
-        setFromDate(null);
         return;
-      };
+      }
 
+      if (from && to && from > to) {
+        Swal.fire({
+          title: "Invalid Date Range",
+          text: "To Date should be greater than or equal to From Date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      if (from && to) {
+        const monthDiff = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+        if (monthDiff > 1 || (monthDiff === 1 && to.getDate() > from.getDate())) {
+          Swal.fire({
+            title: "Long Date Range",
+            text: "The selected date range exceeds one month. Consider creating a task instead.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Create Task",
+            cancelButtonText: "Cancel",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              handleCreateTaskForDownload({
+                arrears_band: selectedArrearsAmount,
+                ro_id: selectedRo,
+                fromDate: formatDate(fromDate),
+                toDate: formatDate(toDate),
+              });
+            }
+          });
+          return;
+        }
+      }
 
       const payload = {
         drc_id: Number(user?.drc_id),
@@ -236,6 +336,7 @@ export default function AssignedCaseListforDRC() {
       console.error("Error filtering cases:", error);
     }
   };
+
 
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
