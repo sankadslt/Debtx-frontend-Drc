@@ -164,20 +164,49 @@ export const roassignedbydrc = async (drc_id) => {
  * @returns {Promise<object>} - The API response containing the list of active recovery officers.
  * @throws {Error} - Throws an error if the request fails.
  */
-export const getActiveRODetailsByDrcID = async (drcId) => {
-    try {
-      const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, {
-        drc_id: drcId,
-      });
-  
-      if (response.data.status === "success") {
-        return response.data;
-      } else {
-        console.error(response.data.message);
-        throw new Error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error retrieving active recovery officers:", error.message);
-      throw error;
+export const getActiveRODetailsByDrcID = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, {
+      drc_id: payload.drc_id,
+    });
+
+    if (response.data.status === "success") {
+      return response.data;
+    } else {
+      console.error(response.data.message);
+      throw new Error(response.data.message);
     }
-  };  
+  } catch (error) {
+    console.error("Error retrieving active recovery officers:", error.message);
+    throw error;
+  }
+};
+
+
+  // export const fetchCaseDetails = async (caseId) => {
+  //   try {
+  //     const response = await axios.post(`${URL}/Case_Details_for_DRC`, { case_id: caseId });
+  //     return response.data; // Return the fetched data
+  //   } catch (error) {
+  //     console.error("Error fetching case details:", error.response?.data || error.message);
+  //     throw error; // Re-throw error if needed for error handling
+  //   }
+  // };
+
+/**
+ * Fetches case details for a specific case ID.
+ * @param {Number | String} caseId - The ID of the case to fetch.
+ * @returns {Promise<Object>} The fetched case details.
+ * @throws {Error} Throws an error if the request fails.
+ */
+export const drcCaseDetails = async (caseId) => {
+  try {
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, { case_id: caseId });
+    return response.data; // Return the fetched data
+  } catch (error) {
+    console.error("Error fetching case details:", error.response?.data || error.message);
+    throw error; // Re-throw error to handle it further upstream
+  }
+};
+
+  

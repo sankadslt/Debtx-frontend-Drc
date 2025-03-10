@@ -19,10 +19,11 @@ import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { refreshAccessToken, getLoggedUserId } from "../../services/auth/authService.js";
+import { jwtDecode } from "jwt-decode";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -38,10 +39,8 @@ import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [drc_id, setDrcId] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
   const [fromDate, setFromDate] = useState(null);
@@ -56,33 +55,46 @@ const DistributeTORO = () => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
-  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
       }
-    };
 
-    fetchUserData();
-  }, [user?.drc_id]);
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Step 1: Fetch user_id
-        const userId = await getLoggedUserId();
-        if (!userId) throw new Error("Unable to fetch user ID");
-
-        // Step 2: Fetch drc_id using user_id
-        const userData = await getUserData();
-        setDrcId(userData.drc_id);
-
+        if (!userData?.drc_id) {
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
+          return;
+        }
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
@@ -93,21 +105,21 @@ const DistributeTORO = () => {
     };
 
     fetchUserData();
-  }, [user?.drc_id]);
+  }, [userData?.drc_id]);
 
-  // Fetch data and recovery officers when drc_id changes
+  // Fetch data and RTOMs when drc_id changes
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (user?.drc_id) {
-          const payload = parseInt(user?.drc_id, 10);
+        if (userData?.drc_id) {
+          const payload = parseInt(userData?.drc_id);
 
           // Fetch RTOMs
-          const rtomsList = await getRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
 
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/5001)");
+          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -119,8 +131,8 @@ const DistributeTORO = () => {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (user?.drc_id) {
-          const numericDrcId = Number(user?.drc_id);
+        if (userData?.drc_id) {
+          const numericDrcId = Number(userData?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
           // Map recovery officers with ro_id and other details
@@ -143,7 +155,7 @@ const DistributeTORO = () => {
     fetchData();
     fetchRecoveryOfficers();
 
-  }, [user?.drc_id]);
+  }, [userData?.drc_id]);
 
 
 
@@ -242,7 +254,7 @@ const DistributeTORO = () => {
       };
 
       const payload = {
-        drc_id: Number(user?.drc_id),
+        drc_id: Number(userData?.drc_id),
         rtom: selectedRTOM,
         arrears_band: selectedArrearsBand,
         ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
@@ -418,7 +430,7 @@ const DistributeTORO = () => {
       // Create the payload object with all required parameters
       const assignmentPayload = {
         caseIds: selectedCaseIds,
-        drcId: drc_id,
+        drcId: userData?.drc_id,
         roId: ro_id,
         assigned_by: userId, // Include assigned_by in the payload
       };

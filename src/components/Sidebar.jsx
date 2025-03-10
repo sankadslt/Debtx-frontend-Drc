@@ -60,22 +60,48 @@ const Sidebar = ({ onHoverChange }) => {
             { 
               label: "Distribute To RO", 
               link: "/pages/Distribute/DistributeTORO", 
-              roles: ["superadmin, admin", 'drc_admin', 'drc_user'] 
+              roles: ['superadmin', 'admin', 'drc_admin', 'drc_user'] 
             },
             { 
               label: "Assigned RO Case Log", 
               link: "/drc/assigned-ro-case-log", 
-              roles: ["admin", "user", "drc_admin", 'drc_user'] 
+              roles: ["superadmin", "admin", "drc_admin", 'drc_user'] 
+            },
+            // { 
+            //   label: "RO Monitoring (Arrears) and (CPE)", 
+            //   link: "/drc/ro-monitoring-arrears", 
+            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+            // },
+            // { 
+            //   label: "Re-Assign-Ro", 
+            //   link: "/pages/DRC/Re-AssignRo", 
+            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+            // },
+          ],
+        },
+        {
+          label: "DRC / RO",
+          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
+          subItems: [
+            { 
+              label: "Mediation Board Case List", 
+              link: "/drc/mediation-board-case-list", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
             },
             { 
-              label: "RO Monitoring (Arrears) and (CPE)", 
-              link: "/drc/ro-monitoring-arrears", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+              label: "Mediation Board Response", 
+              link: "/pages/DRC/Mediation Board Response", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
             },
             { 
-              label: "Re-Assign-Ro", 
-              link: "/pages/DRC/Re-AssignRo", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
+              label: "RO Assigned Case Log", 
+              link: "/drc/ro-s-assigned-case-log", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
+            },
+            { 
+              label: "Edit Customer Profile", 
+              link: "/drc/customer-negotiation", 
+              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
             },
           ],
         },

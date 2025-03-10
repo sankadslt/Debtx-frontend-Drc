@@ -15,10 +15,12 @@ import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { jwtDecode } from "jwt-decode";
+
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -39,12 +41,12 @@ export default function AssignedROcaselog() {
     const [rtoms, setRtoms] = useState([]);
     const [selectedRTOM, setSelectedRTOM] = useState("");
     const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
-    const [expireDate, setexpireDate] = useState([]); // State for data
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [filterType, setFilterType] = useState("");
     const [filterValue, setFilterValue] = useState("");
+    const [filterAccountNo, setFilterAccountNo] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +55,6 @@ export default function AssignedROcaselog() {
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
     const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
-    const [drc_id, setDrcId] = useState(null);
 
     // Filter state for Amount, Case ID, Status, and Date
     const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -62,128 +63,110 @@ export default function AssignedROcaselog() {
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+    const [userData, setUserData] = useState(null);
 
-    // useEffect(() => {
-    //     const getArrearsBands = async () => {
-    //         try {
-    //             const bands = await fetchAllArrearsBands();
-    //             console.log("Arrears bands:", bands);
-    //             setArrearsBands(bands);
-    //         } catch (error) {
-    //             console.error("Error fetching arrears bands:", error);
-    //         }
-    //     };
-
-
-    const [user, setUser] = useState(null);
+    const loadUser = async () => {
+        let token = localStorage.getItem("accessToken");
+        if (!token) {
+          setUserData(null);
+          return;
+        }
+    
+        try {
+          let decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp < currentTime) {
+            token = await refreshAccessToken();
+            if (!token) return;
+            decoded = jwtDecode(token);
+          }
+    
+          setUserData({
+            id: decoded.user_id,
+            role: decoded.role,
+            drc_id: decoded.drc_id,
+            ro_id: decoded.ro_id,
+          });
+        } catch (error) {
+          console.error("Invalid token:", error);
+        }
+      };
+    
+      useEffect(() => {
+        loadUser();
+      }, [localStorage.getItem("accessToken")]);
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await getUserData();
-                setUser(userData);
-                console.log("DRC ID: ", user?.drc_id);
-            } catch (err) {
-                console.log("Error in getting user data : ", err);
-
-            }
-        };
-
-        fetchUserData();
-
-    }, [user?.drc_id]);
-
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                // Step 1: Fetch user_id
-                const userId = await getLoggedUserId();
-                if (!userId) throw new Error("Unable to fetch user ID");
-
-                // Step 2: Fetch drc_id using user_id
-                const userData = await getUserData();
-                setDrcId(userData.drc_id);
-
-                // Step 3: Fetch arrears bands and ro list
-                const arrearsAmounts = await fetchAllArrearsBands();
+        const fetchRTOMs = async () => {
+          try {
+            if (userData?.drc_id) {
+              // Make sure to convert to number if needed
+              const payload = parseInt(userData.drc_id);
+              console.log("Fetching RTOMs for DRC ID:", payload);
+              
+              const arrearsAmounts = await fetchAllArrearsBands();
                 setArrearsAmounts(arrearsAmounts);
-            } catch (error) {
-                console.error("Error fetching data:", error);
+              // Fetch RTOMs by DRC ID
+              const rtomsList = await getActiveRTOMsByDRCID(payload);
+              console.log("RTOM list retrieved:", rtomsList);
+              setRtoms(rtomsList);
+            } else {
+              console.log("No DRC ID available yet");
             }
+          } catch (error) {
+            console.error("Error fetching RTOMs:", error);
+          }
         };
-
-        fetchUserData();
-    }, [user?.drc_id]);
-
-    useEffect(() => {
-        console.log("Route parameter drc_id :", user?.drc_id);
-        const fetchData = async () => {
-            try {
-                if (user?.drc_id) {
-                    const payload = parseInt(user?.drc_id, 10); // Convert drc_id to number
-
-                    // Fetch RTOMs by DRC ID
-                    const rtomsList = await getRTOMsByDRCID(payload);
-                    setRtoms(rtomsList); // Set RTOMs to state
-
-                }
-
-            } catch (error) {
-                console.error("Error fetching RTOMs:", error);
-            }
-        };
-
-        fetchData();
-
-    }, [user?.drc_id]); // Including drc_id to the Dependency array
-
-
+    
+        fetchRTOMs();
+      }, [userData?.drc_id]); // Only depend on userData
 
 
     const handlestartdatechange = (date) => {
         setFromDate(date);
         if (toDate) checkdatediffrence(date, toDate);
-    };
-
-    const handleenddatechange = (date) => {
+      };
+    
+      const handleenddatechange = (date) => {
         if (fromDate) {
-            checkdatediffrence(fromDate, date);
+          checkdatediffrence(fromDate, date);
         }
         setToDate(date);
-
-    }
-
-    const checkdatediffrence = (startDate, endDate) => {
+      }
+    
+      const checkdatediffrence = (startDate, endDate) => {
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
         const diffInMs = end - start;
         const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
         const diffInMonths = diffInDays / 30;
-
+    
         if (diffInMonths > 1) {
-            Swal.fire({
-                title: "Date Range Exceeded",
-                text: "The selected dates have exeeded more than a 1-month gap. we can't proceed.",
-                icon: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                    endDate = endDate;
-                    handleApicall(startDate, endDate);
-                } else {
-                    setToDate(null);
-                    console.log("Dates cleared");
-                }
+          Swal.fire({
+            title: "Date Range Exceeded",
+            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+            icon: "warning",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            confirmButtonColor: "#28a745",
+            cancelButtonText: "No",
+            cancelButtonColor: "#d33",
+          }).then((result) => {
+            if (result.isConfirmed) {
+    
+              endDate = endDate;
+              handleApicall(startDate, endDate);
+            } else {
+              setToDate(null);
+              console.log("Dates cleared");
             }
-            );
-
+          }
+          );
+    
         }
-    };
-
-    // Handle filter function
+      };  
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -222,7 +205,6 @@ export default function AssignedROcaselog() {
             }
 
             if (new Date(fromDate) > new Date(toDate)) {
-
                 Swal.fire({
                     title: "Warning",
                     text: "To date should be greater than or equal to From date",
@@ -232,14 +214,11 @@ export default function AssignedROcaselog() {
                 });
                 setToDate(null);
                 setFromDate(null);
-
                 return;
             };
 
-
-
             const payload = {
-                drc_id: Number(user?.drc_id), // Convert drc_id to number
+                drc_id: Number(userData?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
                 arrears_band: selectedArrearsBand,
                 from_date: formatDate(fromDate),
@@ -275,10 +254,6 @@ export default function AssignedROcaselog() {
             console.error("Error filtering cases:", error);
         }
     };
-
-
-
-
 
 
     // Handle pagination
@@ -345,19 +320,6 @@ export default function AssignedROcaselog() {
                 return true; // Return true if no filter is applied
             });
         }
-        if (fromDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
-                return itemDate >= fromDate;
-            });
-        }
-        if (toDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate <= toDate;
-            });
-        }
-
         setFilteredData(tempData);
         setCurrentPage(1); // Reset pagination when filter changes
     };
