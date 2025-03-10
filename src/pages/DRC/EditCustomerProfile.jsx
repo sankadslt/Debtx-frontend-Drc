@@ -111,7 +111,7 @@ export default function EditCustomerProfile() {
           return;
         }
         const payload = {
-          drc_id: userData.drc_id,
+          drc_id: userData?.drc_id,
           case_id: Number(case_id),
         };
         // Fetch case details for case ID
