@@ -133,7 +133,8 @@ const DistributeTORO = () => {
     const fetchRecoveryOfficers = async () => {
       try {
         if (userData?.drc_id) {
-          const response = await getActiveRODetailsByDrcID(userData?.drc_id);
+          const numericDrcId = Number(userData?.drc_id);
+          const response = await getActiveRODetailsByDrcID(numericDrcId);
     
           // Check if response and response.data exist before mapping
           if (response && response.data) {
