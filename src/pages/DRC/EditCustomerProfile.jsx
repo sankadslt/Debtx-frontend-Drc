@@ -335,15 +335,15 @@ export default function EditCustomerProfile() {
     setContactName("");
   };
 
-  const addEmailInput = () => {
-    // Add a new empty email field to the array
-    setEmailInputs([...emailInputs, ""]);
-  };
+  // const addEmailInput = () => {
+  //   // Add a new empty email field to the array
+  //   setEmailInputs([...emailInputs, ""]);
+  // };
 
-  const addAddressInput = () => {
-    // Add a new empty address field to the array
-    setAddressInputs([...addressInputs, ""]);
-  };
+  // const addAddressInput = () => {
+  //   // Add a new empty address field to the array
+  //   setAddressInputs([...addressInputs, ""]);
+  // };
 
   const handleAddressInputChange = (index, value) => {
     const updatedAddresses = [...addressInputs];

@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
-import { roassignedbydrc } from "../../services/Ro/RO.js";
+import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService.js";
@@ -114,8 +114,8 @@ export default function AssignedCaseListforDRC() {
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (userData.drc_id) {
-          const roData = await roassignedbydrc(userData.drc_id);
+        if (userData?.drc_id) {
+          const roData = await getActiveRODetailsByDrcID(userData?.drc_id);
           setRoList(roData);
         }
       } catch (error) {
@@ -238,7 +238,6 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-
           endDate = endDate;
           handleApicall(startDate, endDate);
         } else {

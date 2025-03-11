@@ -517,17 +517,17 @@ export const getActiveRORequestsforNegotiationandMediation = async (request_mode
 };
 
 // Get Case Details by Case ID
-export const caseDetailsforDRC = async (caseId, drcId) => {
+export const caseDetailsforDRC = async (payload) => {
   try {
     // Validate inputs
-    if (!caseId || !drcId) {
+    if (!payload.case_id || !payload.drc_id) {
       throw new Error("Both Case ID and DRC ID are required.");
     }
     
     // Send a POST request to fetch case details
     const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
-       case_id: caseId,
-       drc_id: drcId
+       case_id: payload.case_id,
+       drc_id: payload.drc_id
     });
     
     // Check if the response indicates an error
