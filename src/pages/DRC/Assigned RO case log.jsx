@@ -14,15 +14,13 @@ import { FaArrowLeft, FaArrowRight, FaSearch, FaEdit } from "react-icons/fa";
 import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
-import { useParams } from "react-router-dom";
-
-
-
-import { fetchAllArrearsBands } from "../../services/case/CaseService";
-
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+import { refreshAccessToken } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
+import { jwtDecode } from "jwt-decode";
+
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -43,12 +41,12 @@ export default function AssignedROcaselog() {
     const [rtoms, setRtoms] = useState([]);
     const [selectedRTOM, setSelectedRTOM] = useState("");
     const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
-
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [filterType, setFilterType] = useState("");
     const [filterValue, setFilterValue] = useState("");
+    const [filterAccountNo, setFilterAccountNo] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,70 +57,116 @@ export default function AssignedROcaselog() {
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
     // Filter state for Amount, Case ID, Status, and Date
-    const [filterRTOM, setFilterRTOM] = useState(""); // RTOM
-    const [filterAmount, setFilterAmount] = useState("");
-    const [arrearsBands, setArrearsBands] = useState([]);
-
+    const [arrearsAmounts, setArrearsAmounts] = useState([]);
+    const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
     const [filterCaseId, setFilterCaseId] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+    const [userData, setUserData] = useState(null);
 
-
-
-    // Use useParams hook to get the drc_id from the URL
-    const { drc_id } = useParams();
-
+    const loadUser = async () => {
+        let token = localStorage.getItem("accessToken");
+        if (!token) {
+          setUserData(null);
+          return;
+        }
+    
+        try {
+          let decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp < currentTime) {
+            token = await refreshAccessToken();
+            if (!token) return;
+            decoded = jwtDecode(token);
+          }
+    
+          setUserData({
+            id: decoded.user_id,
+            role: decoded.role,
+            drc_id: decoded.drc_id,
+            ro_id: decoded.ro_id,
+          });
+        } catch (error) {
+          console.error("Invalid token:", error);
+        }
+      };
+    
+      useEffect(() => {
+        loadUser();
+      }, [localStorage.getItem("accessToken")]);
 
     useEffect(() => {
-        const getArrearsBands = async () => {
-            try {
-                const bands = await fetchAllArrearsBands();
-                console.log("Arrears bands:", bands);
-                setArrearsBands(bands);
-            } catch (error) {
-                console.error("Error fetching arrears bands:", error);
+        const fetchRTOMs = async () => {
+          try {
+            if (userData?.drc_id) {
+              // Make sure to convert to number if needed
+              const payload = parseInt(userData.drc_id);
+              console.log("Fetching RTOMs for DRC ID:", payload);
+              
+              const arrearsAmounts = await fetchAllArrearsBands();
+                setArrearsAmounts(arrearsAmounts);
+              // Fetch RTOMs by DRC ID
+              const rtomsList = await getActiveRTOMsByDRCID(payload);
+              console.log("RTOM list retrieved:", rtomsList);
+              setRtoms(rtomsList);
+            } else {
+              console.log("No DRC ID available yet");
             }
+          } catch (error) {
+            console.error("Error fetching RTOMs:", error);
+          }
         };
+    
+        fetchRTOMs();
+      }, [userData?.drc_id]); // Only depend on userData
 
-        getArrearsBands();
-    }, []);
 
-
-
-    useEffect(() => {
-
-        console.log("Route parameter drc_id :", drc_id);
-        const fetchData = async () => {
-            try {
-                if (drc_id) {
-                    const payload = parseInt(drc_id, 10); // Convert drc_id to number
-
-                    // Fetch RTOMs by DRC ID
-                    const rtomsList = await getRTOMsByDRCID(payload);
-                    setRtoms(rtomsList); // Set RTOMs to state
-
-                }
-
-            } catch (error) {
-                console.error("Error fetching RTOMs:", error);
+    const handlestartdatechange = (date) => {
+        setFromDate(date);
+        if (toDate) checkdatediffrence(date, toDate);
+      };
+    
+      const handleenddatechange = (date) => {
+        if (fromDate) {
+          checkdatediffrence(fromDate, date);
+        }
+        setToDate(date);
+      }
+    
+      const checkdatediffrence = (startDate, endDate) => {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        const diffInMs = end - start;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        const diffInMonths = diffInDays / 30;
+    
+        if (diffInMonths > 1) {
+          Swal.fire({
+            title: "Date Range Exceeded",
+            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+            icon: "warning",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            confirmButtonColor: "#28a745",
+            cancelButtonText: "No",
+            cancelButtonColor: "#d33",
+          }).then((result) => {
+            if (result.isConfirmed) {
+    
+              endDate = endDate;
+              handleApicall(startDate, endDate);
+            } else {
+              setToDate(null);
+              console.log("Dates cleared");
             }
-        };
-
-        fetchData();
-
-    }, [drc_id]); // Including drc_id to the Dependency array
-
-
-
-
-
-
-
-
-
-
-    // Handle filter function
+          }
+          );
+    
+        }
+      };  
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -134,10 +178,49 @@ export default function AssignedROcaselog() {
                 return offsetDate.toISOString().split('T')[0];
             };
 
+            if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "No filter data is selected. Please, select data.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+                return;
+            };
+
+            if ((fromDate && !toDate) || (!fromDate && toDate)) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "Both From Date and To Date must be selected.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "To date should be greater than or equal to From date",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+                return;
+            };
+
             const payload = {
-                drc_id: Number(drc_id), // Convert drc_id to number
+                drc_id: Number(userData?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
-                arrears_band: filterAmount,
+                arrears_band: selectedArrearsBand,
                 from_date: formatDate(fromDate),
                 to_date: formatDate(toDate),
             };
@@ -162,14 +245,15 @@ export default function AssignedROcaselog() {
 
             console.log("Filtered data updated:", filteredlogData); //for debugging
 
+            const endDate = AssignedROcaselog.expire_dtm;
+            const currentDate = new Date();
+            const isPastDate = endDate < currentDate;
 
 
         } catch (error) {
             console.error("Error filtering cases:", error);
         }
     };
-
-
 
 
     // Handle pagination
@@ -197,6 +281,7 @@ export default function AssignedROcaselog() {
         if (fromDate) {
             tempData = tempData.filter((item) => {
                 const itemDate = new Date(item.date);
+                return itemDate >= toDate;
             });
         }
 
@@ -218,36 +303,23 @@ export default function AssignedROcaselog() {
         if (filterStatus) {
             tempData = tempData.filter((item) => item.status.includes(filterStatus));
         }
-        if (filterAmount) {
+        if (selectedArrearsBand) {
             tempData = tempData.filter((item) => {
                 const amount = parseInt(item.amount.replace(/,/g, "")); // Remove commas and parse as integer
-                if (filterAmount === "5-10") {
+                if (selectedArrearsBand === "5-10") {
                     return amount >= 5000 && amount <= 10000;
-                } else if (filterAmount === "10-25") {
+                } else if (selectedArrearsBand === "10-25") {
                     return amount >= 10000 && amount <= 25000;
-                } else if (filterAmount === "25-50") {
+                } else if (selectedArrearsBand === "25-50") {
                     return amount >= 25000 && amount <= 50000;
-                } else if (filterAmount === "50-100") {
+                } else if (selectedArrearsBand === "50-100") {
                     return amount >= 50000 && amount <= 100000;
-                } else if (filterAmount === "100+") {
+                } else if (selectedArrearsBand === "100+") {
                     return amount > 100000;
                 }
                 return true; // Return true if no filter is applied
             });
         }
-        if (fromDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
-                return itemDate >= fromDate;
-            });
-        }
-        if (toDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate <= toDate;
-            });
-        }
-
         setFilteredData(tempData);
         setCurrentPage(1); // Reset pagination when filter changes
     };
@@ -262,26 +334,26 @@ export default function AssignedROcaselog() {
 
     const getStatusIcon = (status) => {
         switch (status.toLowerCase()) {
-          case "open no agent":
-            return <img src={Open_No_Agent} alt="Open No Agent" className="w-5 h-5" />;
-          case "open with agent":
-            return <img src={Open_With_Agent} alt="Open With Agent" className="w-5 h-5" />;
-          case "negotiation settle pending":
-            return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" className="w-5 h-5" />;
-          case "negotiation settle open pending":
-            return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" className="w-5 h-5" />;
-          case "negotiation settle active":
-            return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
-          case "fmb":
-            return <img src={FMB} alt="FMB" className="w-5 h-5" />;
-          case "fmb settle pending":
-            return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" className="w-5 h-5" />;
-          case "fmb settle open pending":
-            return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" className="w-5 h-5" />;
-          case "fmb settle active":
-            return <img src={FMB_Settle_Active} alt="FMB Settle Active" className="w-5 h-5" />;
-          default:
-            return <span className="text-gray-500">N/A</span>;
+            case "open no agent":
+                return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+            case "open with agent":
+                return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+            case "negotiation settle pending":
+                return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+            case "negotiation settle open pending":
+                return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+            case "negotiation settle active":
+                return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+            case "fmb":
+                return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
+            case "fmb settle pending":
+                return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
+            case "fmb settle open pending":
+                return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
+            case "fmb settle active":
+                return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+            default:
+                return <span className="text-gray-500">N/A</span>;
         }
     };
 
@@ -292,7 +364,6 @@ export default function AssignedROcaselog() {
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
-
 
 
                 {/* RTOM Select Dropdown */}
@@ -312,38 +383,38 @@ export default function AssignedROcaselog() {
                         <option disabled>No RTOMs found</option>
                     )}
                 </select>
-
-
-
                 <select
-                    value={filterAmount}
-                    onChange={(e) => setFilterAmount(e.target.value)}
-                    className={`${GlobalStyle.selectBox} h-[43px] border rounded px-2`}
+                    className={GlobalStyle.selectBox}
+                    value={selectedArrearsBand}
+                    onChange={(e) => setSelectedArrearsBand(e.target.value)}
                 >
-                    <option value="" disabled>
+                    <option value="" >
                         Arrears band
                     </option>
-                    {arrearsBands.map(({ key, value }) => (
-                        <option key={key} value={key}>
-                            {value}
-                        </option>
-                    ))}
+                    {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
+                        arrearsAmounts.map(({ key, value }) => (
+                            <option key={key} value={key}>
+                                {value}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No arrears bands available</option>
+                    )}
+
                 </select>
-
-
 
                 <div className={GlobalStyle.datePickerContainer}>
                     <label className={GlobalStyle.dataPickerDate}>Date</label>
                     <DatePicker
                         selected={fromDate}
-                        onChange={(date) => setFromDate(date)}
+                        onChange={handlestartdatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
                     />
                     <DatePicker
                         selected={toDate}
-                        onChange={(date) => setToDate(date)}
+                        onChange={handleenddatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
@@ -412,50 +483,70 @@ export default function AssignedROcaselog() {
                     </thead>
                     <tbody>
                         {filteredDataBySearch.length > 0 ? (
-                            filteredDataBySearch.map((item, index) => (
-                                <tr
-                                    key={index}
-                                    className={`${index % 2 === 0
-                                        ? "bg-white bg-opacity-75"
-                                        : "bg-gray-50 bg-opacity-50"
-                                        } border-b`}
-                                >
-                                    <td className={GlobalStyle.tableData}>
-                                        <a href={`#${item.case_id}`} className="hover:underline">
-                                            {item.case_id}
-                                        </a>
-                                    </td>
-                                    <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                                    <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
-                                    <td className={GlobalStyle.tableData}>{item.area}</td>
-                                    <td className={GlobalStyle.tableData}>{item.remark}</td>
-                                    <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                                    <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString()}</td>
-                                    <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
-                                    <td className={GlobalStyle.tableData}>
-                                        <div className="px-8" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                            <AiFillEye
-                                                onClick={() => navigate(`/drc/ro-monitoring-arrears/${drc_id}/${item.case_id}`)}
-                                                style={{ cursor: "pointer", marginRight: "8px" }}
-                                            />
-                                            <FaEdit
-                                                onClick={() => console.log("Edit clicked")}
-                                                style={{ cursor: "pointer", marginRight: "8px" }}
-                                            />
-                                            <button
-                                                className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                                                style={{ whiteSpace: "nowrap" }}
-                                                onClick={() => navigate(`/pages/DRC/Re-AssignRo/${drc_id}/${item.case_id}`)}
-                                            >
-                                                Re-Assign
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            filteredDataBySearch.map((item, index) => {
+                                // Convert expire_dtm to a JavaScript Date object
+                                const expireDate = new Date(item.expire_dtm);
+                                const today = new Date();
+
+                                // Check if the expire date is in the past
+                                const isPastDate = expireDate < today;
+
+                                return (
+                                    <tr
+                                        key={index}
+                                        className={`${index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
+                                            } border-b`}
+                                    >
+                                        <td className={GlobalStyle.tableData}>
+                                            <a href={`#${item.case_id}`} className="hover:underline">
+                                                {item.case_id}
+                                            </a>
+                                        </td>
+                                        <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                                            {getStatusIcon(item.status)}
+                                        </td>
+                                        <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
+                                        <td className={GlobalStyle.tableData}>{item.area}</td>
+                                        <td className={GlobalStyle.tableData}>{item.remark}</td>
+                                        <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                                        <td className={GlobalStyle.tableData}>{expireDate.toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>
+                                            <div className="px-8 flex items-center gap-2">
+                                                <AiFillEye
+                                                    onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
+                                                    style={{ cursor: "pointer", marginRight: "8px" }}
+                                                />
+
+                                                {/* Show Edit button only if the expire date is in the future */}
+                                                <FaEdit
+                                                    onClick={() => {
+                                                        if (!isPastDate) console.log("Edit clicked");
+                                                    }}
+                                                    style={{
+                                                        cursor: isPastDate ? "not-allowed" : "pointer",
+                                                        color: isPastDate ? "#d3d3d3" : "#000",
+                                                        opacity: isPastDate ? 0.6 : 1,
+                                                    }}
+                                                />
+
+                                                <button
+                                                    className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                                                    style={{ whiteSpace: "nowrap" }}
+                                                    onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
+                                                >
+                                                    Re-Assign
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="9" className={GlobalStyle.tableData}>No data available</td>
+                                <td colSpan="9" className={GlobalStyle.tableData}>
+                                    No data available
+                                </td>
                             </tr>
                         )}
                     </tbody>
@@ -484,6 +575,15 @@ export default function AssignedROcaselog() {
                     <FaArrowRight />
                 </button>
             </div>
+
+            <button
+                onClick={() => navigate(-1)}
+                className={`${GlobalStyle.navButton} `}
+            >
+                <FaArrowLeft />Go Back
+            </button>
+
+
         </div>
     );
 }

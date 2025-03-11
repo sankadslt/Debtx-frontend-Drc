@@ -69,8 +69,12 @@ const GlobalStyle = {
   // Navigation Buttons
   navButtonContainer: "flex justify-center space-x-4 mt-4",
   navButton: "flex items-center gap-2 px-2 py-2 text-[#00256A] border-2 border-[#00256A] rounded-full hover:bg-blue-100 transition-all",
+
+  // Month Counter
+  monthCounterContainer: "flex items-center border border-gray-500 rounded-md w-24",
+  monthCounterNumber: "text-center w-full border-none outline-none bg-transparent",
+  monthCounterButton: "flex flex-col border-l border-gray-500",
+  monthCounterButtonIcon: "px-2 text-xs hover:bg-gray-200",
 };
-
-
 
 export default GlobalStyle;

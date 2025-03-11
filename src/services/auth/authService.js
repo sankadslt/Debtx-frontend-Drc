@@ -1,8 +1,9 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+ 
+const BASE_URL = import.meta.env.VITE_BASE_URL ;
+const AUTH_URL = `${BASE_URL}/auth`;
 
-const BASE_URL = import.meta.env.VITE_BASE_URL; // Base URL from environment variables
-const AUTH_URL = `${BASE_URL}/auth`; // Auth endpoint
 
 // Register a new user
 export const registerUser = async (userData) => {
@@ -32,7 +33,7 @@ export const refreshAccessToken = async () => {
     const response = await axios.post(`${AUTH_URL}/refresh-token`, {}, { withCredentials: true });
     const { accessToken } = response.data;
 
-    // console.log("New Access Token:", accessToken);
+   // console.log("New Access Token:", accessToken);
     localStorage.setItem("accessToken", accessToken);
 
     return accessToken;
@@ -90,7 +91,7 @@ export const getUserData = async () => {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });
-
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error.response?.data || error.message);

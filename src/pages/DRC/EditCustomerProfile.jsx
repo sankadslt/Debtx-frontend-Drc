@@ -11,13 +11,17 @@ Notes: The following page conatins the code for Edit Customer details  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  drcCaseDetails,
+  caseDetailsforDRC,
   updateCustomerContacts,
 } from "../../services/case/CaseService";
-import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+// import axios from "axios";
 import back from "../../assets/images/back.png";
+import {  refreshAccessToken } from "../../services/auth/authService.js";
+import Swal from 'sweetalert2';
+
 
 export default function EditCustomerProfile() {
   // State to manage case details
@@ -31,9 +35,10 @@ export default function EditCustomerProfile() {
     phone: "",
     email: "",
     address: "",
-
-    remark: "",
     identityNumber: "",
+    remark: "",
+    contact_type: "",
+    identification_type: "",
   });
   const navigate = useNavigate();
 
@@ -41,32 +46,79 @@ export default function EditCustomerProfile() {
   const [phoneType, setPhoneType] = useState("");
 
   // NIC
-  const [identityType, setIdentityType] = useState("");
+  const [identification_type, setidentification_type] = useState("");
   const [identityNumber, setIdentityNumber] = useState("");
+  
   // Phone
   const [contacts, setContacts] = useState([]);
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+
   // address
   const [address, setAddress] = useState("");
   const [addressInputs, setAddressInputs] = useState([address]);
+  const [addressError, setAddressError] = useState("");
+
   // email
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [emailInputs, setEmailInputs] = useState([email]);
+
   // validation masseges
   const [validationMessage, setValidationMessage] = useState("");
+  const [userData, setUserData] = useState(null);
+  const { case_id } = useParams();
+  // const [showModal, setShowModal] = useState(false);
+  
+  const loadUser = async () => {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      setUserData(null);
+      return;
+    }
+  
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        token = await refreshAccessToken();
+        if (!token) return;
+        decoded = jwtDecode(token);
+      }
+  
+      setUserData({
+        id: decoded.user_id,
+        role: decoded.role,
+        drc_id: decoded.drc_id,
+        ro_id: decoded.ro_id,
+      });
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  };
+  
+  useEffect(() => {
+    loadUser();
+  }, [localStorage.getItem("accessToken")]);
 
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchCaseDetails = async () => {
       try {
+        if (!userData?.drc_id) {
+          console.log("Missing DRC Id.", userData?.drc_id);
+          return;
+        }
+        const payload = {
+          drc_id: userData?.drc_id,
+          case_id: Number(case_id),
+        };
         // Fetch case details for case ID
-        const caseDetails = await drcCaseDetails(19);
+        const caseDetails = await caseDetailsforDRC(payload);
 
         console.log("Case details:", caseDetails);
+        
         setCaseDetails({
           caseId: caseDetails.case_id,
           customerRef: caseDetails.customer_ref,
@@ -76,26 +128,26 @@ export default function EditCustomerProfile() {
           fullAddress: caseDetails.full_Address,
           nic: caseDetails.nic,
           remark: "",
-          contact_Details: caseDetails.contact_Details,
+          contact_Details: caseDetails.contactDetails,
         });
-        setContacts(caseDetails.contact_Details);
+        setContacts(caseDetails.contactDetails);
       } catch (error) {
         console.error("Error fetching case details:", error.message);
       }
     };
     // Call the fetchCaseDetails function
-    fetchCaseDetails();
-  }, []);
+    if (userData?.drc_id) {
+      fetchCaseDetails();
+  }
+
+  }, [userData?.drc_id, case_id]);
 
   useEffect(() => {
     setContacts(caseDetails.contact_Details);
   }, [caseDetails.contact_Details]);
 
-  const handleEmailChange = (e) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    setEmailError("");
-  };
+
+  
 
   const handlePhoneChange = (e) => {
     const newPhone = e.target.value;
@@ -118,7 +170,41 @@ export default function EditCustomerProfile() {
 
     let isValid = true;
 
+    // Validate mobile number
+    if (!phone) {
+      setPhone("Please enter a valid Mobile number.");
+      isValid = false;
+    }
+
+    // Validate nic
+    if (!addressInputs) {
+      setAddressInputs("Please enter a valid NIC.");
+      isValid = false;
+    }
+
+    // Validate email
+    if (!emailInputs) {
+      setEmailError("Please enter a valid email.");
+      isValid = false;
+    }
+
+    // Validate address
+    if (!addressInputs) {
+      setAddressError("Please enter a valid address.");
+      isValid = false;
+    }
+
     if (isValid) {
+      Swal.fire({
+        title: 'Confirm Submission',
+        text: "Are you sure you want to submit the form details?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
       // Prepare the data object for submission
       const caseData = {
         case_id: caseDetails.caseId,
@@ -128,6 +214,7 @@ export default function EditCustomerProfile() {
         nic: identityNumber,
         address: addressInputs[0],
         remark: caseDetails.remark,
+        identification_type: identification_type,
       };
 
       console.log("caseData", caseData);
@@ -138,16 +225,83 @@ export default function EditCustomerProfile() {
 
         // Check the response status to determine if the submission was successful
         if (response && response.status === 200) {
-          alert("Data submitted successfully!");
+          Swal.fire("Data submitted successfully!");
+
+          // Clear user input fields here
+          setPhone("");
+          setPhoneType("");
+          setPhoneError("");
+          setContactName("");
+
+          setEmail("");
+          setEmailInputs([""]);
+          setEmailError("");
+
+          setAddress("");
+          setAddressInputs([""]);
+          setAddressError("");
+
+          setidentification_type("");
+          setIdentityNumber("");
+          setValidationMessage("");
+
+          // Clear the remark field
+          setCaseDetails((prevDetails) => ({
+            ...prevDetails,
+            remark: "",
+          }));
         } else {
-          alert("Submission failed, please try again.");
+          alert(response.error);
         }
       } catch (error) {
-        console.error("Error submitting data:", error);
-        alert("Failed to submit data. Please try again.");
+        // Handle duplicate mobile number error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: Mobile already exists"
+        ) {
+          setPhoneError(
+            "Mobile number already exists. Please use a different Mobile number."
+          );
+        }
+        // Handle duplicate NIC error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: NIC already exists"
+        ) {
+          setValidationMessage(
+            "NIC/PP/Driving License already exists. Please use a different One."
+          );
+        }
+        // Handle duplicate email error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: Email already exists"
+        ) {
+          setEmailError("Email already exists. Please use a different email.");
+        }
+        // Handle duplicate address error
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error ===
+            "Duplicate data detected: address already exists"
+        ) {
+          setAddressError(
+            "address already exists. Please use a different address."
+          );
+        } else {
+          console.error("Error submitting data:", error);
+          Swal.fire("Failed to submit data. Please try again.");
+        }
       }
     }
-  };
+  })}};
 
   const handlePhoneTypeChange = (event) => {
     setPhoneType(event.target.value);
@@ -157,9 +311,9 @@ export default function EditCustomerProfile() {
     setContactName(event.target.value);
   };
 
-  const handleAddressChange = (event) => {
-    setAddress(event.target.value);
-  };
+  // const handleAddressChange = (event) => {
+  //   setAddress(event.target.value);
+  // };
 
   const handleInputChange = (event, field) => {
     setCaseDetails({
@@ -168,41 +322,41 @@ export default function EditCustomerProfile() {
     });
   };
 
-  const addNewContact = () => {
-    // Check if phone number is empty
-    if (!phone) {
-      setPhoneError("Phone number is required.");
-      return;
-    }
+  // const addNewContact = () => {
+  //   // Check if phone number is empty
+  //   if (!phone) {
+  //     setPhoneError("Phone number is required.");
+  //     return;
+  //   }
 
-    // Clear any previous phone error
-    setPhoneError("");
+  //   // Clear any previous phone error
+  //   setPhoneError("");
 
-    // Create a new contact object
-    const newContact = {
-      Contact: phone,
-      Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
-      Create_By: contactName || "N/A",
-    };
+  //   // Create a new contact object
+  //   const newContact = {
+  //     Contact: phone,
+  //     Contact_Type: phoneType === "Mobile" ? "Mob" : "Land",
+  //     Create_By: contactName || "N/A",
+  //   };
 
-    // Ensure state is updated correctly
-    setContacts((prevContacts) => [...prevContacts, newContact]);
+  //   // Ensure state is updated correctly
+  //   setContacts((prevContacts) => [...prevContacts, newContact]);
 
-    // Clear input fields
-    setPhone("");
-    setPhoneType("");
-    setContactName("");
-  };
+  //   // Clear input fields
+  //   setPhone("");
+  //   setPhoneType("");
+  //   setContactName("");
+  // };
 
-  const addEmailInput = () => {
-    // Add a new empty email field to the array
-    setEmailInputs([...emailInputs, ""]);
-  };
+  // const addEmailInput = () => {
+  //   // Add a new empty email field to the array
+  //   setEmailInputs([...emailInputs, ""]);
+  // };
 
-  const addAddressInput = () => {
-    // Add a new empty address field to the array
-    setAddressInputs([...addressInputs, ""]);
-  };
+  // const addAddressInput = () => {
+  //   // Add a new empty address field to the array
+  //   setAddressInputs([...addressInputs, ""]);
+  // };
 
   const handleAddressInputChange = (index, value) => {
     const updatedAddresses = [...addressInputs];
@@ -213,7 +367,7 @@ export default function EditCustomerProfile() {
 
   // NIC , PP , Driving license add function
   const handleIdentityTypeChange = (event) => {
-    setIdentityType(event.target.value);
+    setidentification_type(event.target.value);
   };
 
   const handleIdentityNumberChange = (e) => {
@@ -221,7 +375,7 @@ export default function EditCustomerProfile() {
     const value = e.target.value;
     setIdentityNumber(value);
     // Validate the identity number based on the selected identity type
-    const message = validateIdentityNumber(identityType, value);
+    const message = validateIdentityNumber(identification_type, value);
     setValidationMessage(message);
   };
 
@@ -268,18 +422,6 @@ export default function EditCustomerProfile() {
     }
   };
 
-  // popup box function
-  const handleConfirmation = async () => {
-    // Close the modal after submission
-    await handleSubmit();
-    setShowModal(false);
-  };
-
-  const handleCancel = () => {
-    // Close the modal without submitting
-    setShowModal(false);
-  };
-
   return (
     <>
       <div className={GlobalStyle.fontPoppins}>
@@ -288,7 +430,7 @@ export default function EditCustomerProfile() {
         </div>
 
         {/* Card box */}
-        <div className={`${GlobalStyle.tableContainer} p-8 max-w-4xl mx-auto `}>
+        <div className={`${GlobalStyle.tableContainer}  bg-white bg-opacity-50 p-8 max-w-4xl mx-auto `}>
           <div className="flex flex-col items-center justify-center mb-4">
             <div
               className={`${GlobalStyle.cardContainer} bg-white shadow-lg rounded-lg p-4`}
@@ -330,7 +472,7 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-                      : {caseDetails.arrearsAmount}
+                      : {caseDetails.arrearsAmount.toLocaleString()}
                     </td>
                   </tr>
 
@@ -341,14 +483,14 @@ export default function EditCustomerProfile() {
                       </p>
                     </td>
                     <td className="text-black">
-                      :{" "}
-                      {caseDetails.lastPaymentDate
-                        ? new Date(caseDetails.lastPaymentDate)
-                            .toISOString()
-                            .split("T")[0]
-                            .replace(/-/g, ".")
-                        : "N/A"}
-                    </td>
+    :{" "}
+    {caseDetails.lastPaymentDate
+      ? new Date(caseDetails.lastPaymentDate)
+          .toISOString()
+          .split("T")[0]
+          .replace(/-/g, ".")
+      : null}  {/* This removes the "N/A" part if lastPaymentDate is undefined */}
+  </td>
                   </tr>
                 </tbody>
               </table>
@@ -423,17 +565,6 @@ export default function EditCustomerProfile() {
                       onChange={handlePhoneChange}
                       className={`${GlobalStyle.inputText} w-40`}
                     />
-                    {phoneError && (
-                      <p
-                        style={{
-                          color: "red",
-                          fontSize: "12px",
-                          marginTop: "4px",
-                        }}
-                      >
-                        {phoneError}
-                      </p>
-                    )}
                   </div>
 
                   {/* Contact Name Input */}
@@ -446,6 +577,24 @@ export default function EditCustomerProfile() {
                   />
                 </div>
               </div>
+              {phoneError && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "red",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {phoneError}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -462,11 +611,12 @@ export default function EditCustomerProfile() {
               <div className="flex gap-4 mb-6" style={{ marginLeft: "170px" }}>
                 {/* Drop down */}
                 <div className="flex flex-col space-y-4">
-                  <h1 className={GlobalStyle.remarkTopic}>NIC</h1>
+                  <h1 className={GlobalStyle.remarkTopic}>{contacts && contacts[0] && contacts[0].identification_type}
+                  </h1>
                   <select
                     className={GlobalStyle.selectBox}
                     onChange={handleIdentityTypeChange}
-                    value={identityType}
+                    value={identification_type}
                   >
                     <option value=""></option>
                     <option value="NIC">NIC</option>
@@ -499,8 +649,6 @@ export default function EditCustomerProfile() {
               {/* NIC, PP, Driving License validation */}
               <div
                 style={{
-                  height: "20px",
-                  marginTop: "8px",
                   marginLeft: "250px",
                 }}
               >
@@ -623,6 +771,11 @@ export default function EditCustomerProfile() {
                     className={`${GlobalStyle.inputText} `}
                     style={{ width: "450px" }}
                   />
+                  {addressError && (
+                    <p style={{ color: "red", fontSize: "12px" }}>
+                      {addressError}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -655,42 +808,11 @@ export default function EditCustomerProfile() {
           <div className="flex justify-end items-center w-full mt-6">
             <button
               className={`${GlobalStyle.buttonPrimary} ml-4`}
-              onClick={() => setShowModal(true)}
+              onClick={handleSubmit}
             >
               Submit
             </button>
           </div>
-
-          {/* Confirmation Modal (POPUP)*/}
-          {showModal && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-              <div
-                className={GlobalStyle.cardContainer}
-                style={{ backgroundColor: "white" }}
-              >
-                <h2 className="text-xl font-semibold mb-4">
-                  Confirm Submission
-                </h2>
-                <p className="mb-6">
-                  Are you sure you want to submit the form details?
-                </p>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg"
-                    onClick={handleCancel}
-                  >
-                    No
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                    onClick={handleConfirmation}
-                  >
-                    Yes
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Back button */}
