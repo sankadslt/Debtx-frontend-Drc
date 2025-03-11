@@ -105,9 +105,12 @@ export default function EditCustomerProfile() {
           console.log("Missing DRC Id.", userData?.drc_id);
           return;
         }
-        
+        const payload = {
+          case_id: Number(case_id),
+          drc_id: userData.drc_id,
+        };
         // FIXED: Corrected parameter order to match the function definition
-        const caseDetails = await caseDetailsforDRC(Number(case_id), userData.drc_id);
+        const caseDetails = await caseDetailsforDRC(payload);
 
         console.log("Case details:", caseDetails);
 
@@ -209,7 +212,7 @@ export default function EditCustomerProfile() {
           console.log("caseData", caseData);
           try {
             // Submit the data and wait for the response
-            const response = await updateCustomerContacts(caseData);
+            const response = await updateCustomerContacts(case_id, userData?.drc_id);
             console.log("response form", response);
 
             // Check the response status to determine if the submission was successful

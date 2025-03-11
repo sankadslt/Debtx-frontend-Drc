@@ -204,7 +204,7 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
     if (!case_id || !drc_id) {
-      throw new Error("Both Case ID and DRC ID are required.");
+      throw new Error("Case ID and DRC ID are required.");
     }
     
     const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
