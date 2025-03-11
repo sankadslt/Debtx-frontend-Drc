@@ -3,7 +3,7 @@ This template is used for the 2.7.2-customer negotiation and 2.7.3-CPE collect f
 Created Date: 2025-01-09
 Created By: sakumini (sakuminic@gmail.com)
 Modified by: Yevin (ytheenura5@gmail.com)
-Last Modified Date: 2025-02-24
+Last Modified Date: 2025-03-05
 Version: node 20
 ui number : 2.7.2,2.7.3
 Dependencies: tailwind css
@@ -14,10 +14,11 @@ import { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import {
+  caseDetailsforDRC,
   drcCaseDetails,
   addNegotiationCase,
   fetchActiveNegotiations,
-  getActiveRORequests,
+  getActiveRORequestsforNegotiationandMediation,
 } from "../../services/case/CaseService";
 
 const Cus_Nego_Customer_Negotiation = () => {
@@ -68,10 +69,11 @@ const Cus_Nego_Customer_Negotiation = () => {
     to: "",
     settle_remark: "",
 
-    drcId: 2,
+    drcId: 7,
     roId: 3,
     requestId: "",
     request: "",
+    request_remark: "",
     intractionId: "",
     todo: "",
     completed: "",
@@ -84,11 +86,12 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [formData, setFormData] = useState(initialFormData);
 
   const caseID = 1;
+  const drcId = 7;
   useEffect(() => {
     // fetch case details
     const fetchCaseDetails = async () => {
       try {
-        const caseDetails = await drcCaseDetails(caseID);
+        const caseDetails = await caseDetailsforDRC(caseID, drcId);
 
         console.log("Case details:", caseDetails);
         setFormData((prevFormData) => ({
@@ -112,6 +115,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         const negotiations = await fetchActiveNegotiations();
         console.log("negotiation:", negotiations);
         setActiveNegotiations(negotiations);
+        
       } catch (error) {
         console.error("Error fetching active negotiations:", error.message);
       }
@@ -120,7 +124,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     // fetch active RO requests
     const fetchRORequests = async () => {
       try {
-        const RO_Requests = await getActiveRORequests();
+        const RO_Requests = await getActiveRORequestsforNegotiationandMediation("Negotiation");
         console.log("RO requests:", RO_Requests);
         setActiveRORequests(RO_Requests);
       } catch (error) {
@@ -134,8 +138,8 @@ const Cus_Nego_Customer_Negotiation = () => {
       fetchCaseDetails();
       setIsSubmitted(false);
     }
-  }, [isSubmitted]);  
-  
+  }, [isSubmitted]);
+
   //calculate date from /to in settlement plan
   useEffect(() => {
     calculateDates(formData.month);
@@ -164,14 +168,16 @@ const Cus_Nego_Customer_Negotiation = () => {
       to: toDate.toISOString().split("T")[0],
     }));
   }
-  
+
   const handleNegotiationSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!formData.caseId) newErrors.caseId = "Case ID is required.";
-    if (!formData.reason) newErrors.reason = "Reason is required.";
-    if (!formData.request) newErrors.request = "Request is required.";
-    if (!formData.nego_remark) newErrors.nego_remark = "Remark is required.";
+    // if (!formData.reason) newErrors.reason = "Reason is required.";
+    // if (!formData.nego_remark) newErrors.nego_remark = "Remark is required.";
+    // if (!formData.request) newErrors.request = "Request is required.";
+    // if (!formData.request_remark)
+      // newErrors.request_remark = "Request remark is required.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -197,6 +203,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         formData.roId,
         formData.requestId,
         formData.request,
+        formData.request_remark,
         formData.intractionId,
         formData.todo,
         formData.completed,
@@ -226,7 +233,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       );
       setFormData((prevFormData) => ({
         ...prevFormData,
-        reasonId: selectedNegotiation ? selectedNegotiation.negotiation_id : "",//set the negotiation id
+        reasonId: selectedNegotiation ? selectedNegotiation.negotiation_id : "", //set the negotiation id
         [name]: value,
       }));
     }
@@ -266,7 +273,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     setShowResponseHistory(!showResponseHistory);
     if (!showResponseHistory) {
       try {
-        const caseDetails = await drcCaseDetails(formData.caseId);
+        const caseDetails = await caseDetailsforDRC(formData.caseId);
         console.log(caseDetails);
         const lastRequests = caseDetails.ro_negotiation_details
           ? caseDetails.ro_negotiation_details.map((negotiation) => ({
@@ -354,6 +361,28 @@ const Cus_Nego_Customer_Negotiation = () => {
             </div>
           )}
 
+          {/* reason remark */}
+          {formData.reason && (
+          <div className="flex items-center gap-4 w-full">
+            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
+              Reason Remark
+            </label>
+            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
+            <textarea
+              name="nego_remark"
+              value={formData.nego_remark}
+              onChange={handleInputChange}
+              className={`${GlobalStyle.remark} w-3/4`}
+              rows={4}
+            />
+          </div>
+          )}
+          {errors.nego_remark && (
+            <div className="text-red-500 text-sm ml-1/4">
+              {errors.nego_remark}
+            </div>
+          )}
+
           {/* request selection */}
           <div className="flex items-center gap-4 w-full">
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
@@ -382,22 +411,25 @@ const Cus_Nego_Customer_Negotiation = () => {
               {errors.request}
             </div>
           )}
-          {/* remark */}
-          <div className="flex items-start gap-4 w-full">
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>Remark</label>
+          {/* request remark */}
+          {formData.request && (
+          <div className="flex items-center gap-4 w-full">
+            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
+              Request Remark
+            </label>
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <textarea
-              name="nego_remark"
-              value={formData.nego_remark}
+              name="request_remark"
+              value={formData.request_remark}
               onChange={handleInputChange}
               className={`${GlobalStyle.remark} w-3/4`}
               rows={4}
             />
           </div>
-
-          {errors.nego_remark && (
+          )}
+          {errors.request_remark && (
             <div className="text-red-500 text-sm ml-1/4">
-              {errors.nego_remark}
+              {errors.request_remark}
             </div>
           )}
         </div>

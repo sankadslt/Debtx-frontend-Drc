@@ -292,6 +292,7 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
     }
 
     const response = await axios.post(`${URL}/List_Behaviors_Of_Case_During_DRC`, payload);
+    console.log("Response from handler: ", response.data);
 
     if (response.data.status === "error") {
       throw new Error(response.data.message);
@@ -479,6 +480,26 @@ export const fetchActiveNegotiations = async () => {
 export const getActiveRORequests = async () => {
   try {
     const response = await axios.post(`${URL}/List_Active_RO_Requests`);
+    const data = response.data.data;
+
+    // Format the response data
+    const activeRORequests = data.map((requests) => ({
+      ro_request_id: requests.ro_request_id,
+      request_description: requests.request_description,
+      intraction_id: requests.intraction_id,
+    }));
+
+    return activeRORequests;
+  } catch (error) {
+    console.error("Error fetching active requests:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Fetch active requests
+export const getActiveRORequestsforNegotiationandMediation = async (request_mode) => {
+  try {
+    const response = await axios.post(`${URL}/List_Active_RO_Requests`,{request_mode});
     const data = response.data.data;
 
     // Format the response data
