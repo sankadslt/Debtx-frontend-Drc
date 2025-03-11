@@ -221,7 +221,7 @@ export default function EditCustomerProfile() {
           console.log("caseData", caseData);
           try {
             // Submit the data and wait for the response
-            const response = await updateCustomerContacts(case_id, userData?.drc_id);
+            const response = await updateCustomerContacts(caseData.case_id, userData?.drc_id, caseData);
             console.log("response form", response);
 
             // Check the response status to determine if the submission was successful
