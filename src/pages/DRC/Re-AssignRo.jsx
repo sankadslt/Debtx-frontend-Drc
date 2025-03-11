@@ -14,8 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { assignROToCase, fetchBehaviorsOfCaseDuringDRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { jwtDecode } from "jwt-decode";
-import { getLoggedUserId, refreshAccessToken } from "../../services/auth/authService";
+import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 import { FaArrowLeft } from "react-icons/fa";
 
@@ -42,36 +41,46 @@ export default function Re_AssignRo() {
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
 
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
+
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
+
   const loadUser = async () => {
-    let token = localStorage.getItem("accessToken");
-    if (!token) {
-      setUserData(null);
-      return;
-    }
-
-    try {
-      let decoded = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp < currentTime) {
-        token = await refreshAccessToken();
-        if (!token) return;
-        decoded = jwtDecode(token);
-      }
-
-      setUserData({
-        id: decoded.user_id,
-        role: decoded.role,
-        drc_id: decoded.drc_id,
-        ro_id: decoded.ro_id,
-      });
-    } catch (error) {
-      console.error("Invalid token:", error);
-    }
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
   };
 
   useEffect(() => {
     loadUser();
-  }, [localStorage.getItem("accessToken")]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,22 +149,32 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (userData?.drc_id) { // Changed from !userData?.drc_id to userData?.drc_id
-          const response = await getActiveRODetailsByDrcID({ drc_id: userData.drc_id }); // Fixed payload structure
-
-          // Map recovery officers with ro_id and other details
-          const officers = response.data.map((officer) => ({
-            ro_id: officer.ro_id,
-            ro_name: officer.ro_name,
-            rtoms_for_ro: officer.rtoms_for_ro,
-          }));
-          setRecoveryOfficers(officers);
+        if (userData?.drc_id) {
+          const numericDrcId = Number(userData?.drc_id);
+          const officers = await getActiveRODetailsByDrcID(numericDrcId);
+    
+          if (Array.isArray(officers)) {
+            // Map recovery officers with ro_id and other details
+            const formattedOfficers = officers.map((officer) => ({
+              ro_id: officer.ro_id,
+              ro_name: officer.ro_name,
+              rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
+            }));
+    
+            setRecoveryOfficers(formattedOfficers);
+            console.log("Recovery Officers:", formattedOfficers);
+          } else {
+            console.error("Invalid response format:", officers);
+            setRecoveryOfficers([]);
+            setError("Failed to fetch recovery officers. Invalid response format.");
+          }
         } else {
-          setError("DRC ID not found in user data.");
+          setError("DRC ID not found in URL.");
         }
       } catch (error) {
         console.error("Error fetching recovery officers:", error);
         setError("Failed to fetch recovery officers.");
+        setRecoveryOfficers([]); // Set empty array to prevent further errors
       }
     };
 

@@ -180,33 +180,4 @@ export const getActiveRODetailsByDrcID = async (drc_id) => {
     console.error("Error retrieving active recovery officers:", error.message);
     throw error;
   }
-};
-
-
-  // export const fetchCaseDetails = async (caseId) => {
-  //   try {
-  //     const response = await axios.post(`${URL}/Case_Details_for_DRC`, { case_id: caseId });
-  //     return response.data; // Return the fetched data
-  //   } catch (error) {
-  //     console.error("Error fetching case details:", error.response?.data || error.message);
-  //     throw error; // Re-throw error if needed for error handling
-  //   }
-  // };
-
-/**
- * Fetches case details for a specific case ID.
- * @param {Number | String} caseId - The ID of the case to fetch.
- * @returns {Promise<Object>} The fetched case details.
- * @throws {Error} Throws an error if the request fails.
- */
-export const drcCaseDetails = async (caseId) => {
-  try {
-    const response = await axios.post(`${URL}/Case_Details_for_DRC`, { case_id: caseId });
-    return response.data; // Return the fetched data
-  } catch (error) {
-    console.error("Error fetching case details:", error.response?.data || error.message);
-    throw error; // Re-throw error to handle it further upstream
-  }
-};
-
-  
+};  

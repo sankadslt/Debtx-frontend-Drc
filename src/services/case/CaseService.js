@@ -204,7 +204,7 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
   try {
     if (!case_id || !drc_id) {
-      throw new Error("Both Case ID and DRC ID are required.");
+      throw new Error("Case ID and DRC ID are required.");
     }
     
     const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
@@ -544,16 +544,17 @@ export const updateCustomerContacts = async (caseData) => {
     if (!caseData.case_id) {
       throw new Error("Case ID is required");
     }
-
-    // Send a POST request to update customer contacts
-    const response = await axios.post(`${URL}/update_customer_contacts`, caseData);
     
     // Check if the response indicates an error
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
     
-    return response.data;
+    console.log('caseData', caseData)
+    // Send a POST request to update customer contacts
+    const response = await axios.post(`${URL}/Update_Customer_Contacts`, caseData);
+    console.log("Update Response:", response);
+    return response;
   } catch (error) {
     console.error("Error updating customer contacts:", error.response?.data || error.message);
     throw error;

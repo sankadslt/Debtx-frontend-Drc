@@ -15,8 +15,7 @@ import { FaChevronDown, FaArrowLeft } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
-import { jwtDecode } from "jwt-decode";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
@@ -41,36 +40,46 @@ export default function RO_Monitoring_CPE() {
         setIsOpen(isOpen === index ? null : index);
     }
 
+    // const loadUser = async () => {
+    //     let token = localStorage.getItem("accessToken");
+    //     if (!token) {
+    //         setUserData(null);
+    //         return;
+    //     }
+
+    //     try {
+    //         let decoded = jwtDecode(token);
+    //         const currentTime = Date.now() / 1000;
+    //         if (decoded.exp < currentTime) {
+    //             token = await refreshAccessToken();
+    //             if (!token) return;
+    //             decoded = jwtDecode(token);
+    //         }
+
+    //         setUserData({
+    //             id: decoded.user_id,
+    //             role: decoded.role,
+    //             drc_id: decoded.drc_id,
+    //             ro_id: decoded.ro_id,
+    //         });
+    //     } catch (error) {
+    //         console.error("Invalid token:", error);
+    //     }
+    // };
+
+    // useEffect(() => {
+    //     loadUser();
+    // }, [localStorage.getItem("accessToken")]);
+
     const loadUser = async () => {
-        let token = localStorage.getItem("accessToken");
-        if (!token) {
-            setUserData(null);
-            return;
-        }
+        const user = await getLoggedUserId();
+        setUserData(user);
+        console.log("User data:", user);
+        };
 
-        try {
-            let decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000;
-            if (decoded.exp < currentTime) {
-                token = await refreshAccessToken();
-                if (!token) return;
-                decoded = jwtDecode(token);
-            }
-
-            setUserData({
-                id: decoded.user_id,
-                role: decoded.role,
-                drc_id: decoded.drc_id,
-                ro_id: decoded.ro_id,
-            });
-        } catch (error) {
-            console.error("Invalid token:", error);
-        }
-    };
-
-    useEffect(() => {
+        useEffect(() => {
         loadUser();
-    }, [localStorage.getItem("accessToken")]);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -119,7 +128,7 @@ export default function RO_Monitoring_CPE() {
         }
     };
 
-    return (
+     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
