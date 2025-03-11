@@ -90,7 +90,7 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
 // Fetch all arrears bands
 export const fetchAllArrearsBands = async () => {
   try {
-    const response = await axios.get(`${URL}/getAllArrearsBands`);
+    const response = await axios.get(`${URL}/ListAllArrearsBands`);
     const data = response.data.data;
 
     // Exclude the _id key and return both the key-value pairs
