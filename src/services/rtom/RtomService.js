@@ -161,7 +161,6 @@ export const getActiveRTOMsByDRCID = async (drc_id) => {
         rtom: rtom.area_name // Adding rtom field for consistency with the model
       }));
       
-      console.log("Active RTOMs:", transformedRTOMs);
       return transformedRTOMs;
     } else {
       console.error("API Error:", response.data?.message || "Unexpected response structure");

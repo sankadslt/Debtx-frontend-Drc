@@ -74,7 +74,7 @@ export const getLoggedUserId = async () => {
       decoded = jwtDecode(token);
     }
 
-    return decoded.user_id; // Return user ID from token
+    return { user_id: decoded.user_id, drc_id:decoded.drc_id || null, ro_id:decoded.ro_id || null, role: decoded.role}; // Return drc ID from token
   } catch (error) {
     console.error("Invalid token:", error);
     return null;

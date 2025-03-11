@@ -165,16 +165,10 @@ export default function MediationBoardCaselist() {
     const fetchRTOMs = async () => {
       try {
         if (userData?.drc_id) {
-          // Make sure to convert to number if needed
-          const payload = parseInt(userData.drc_id);
-          console.log("Fetching RTOMs for DRC ID:", payload);
-          
           // Fetch RTOMs by DRC ID
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
           console.log("RTOM list retrieved:", rtomsList);
           setRtoms(rtomsList);
-        } else {
-          console.log("No DRC ID available yet");
         }
       } catch (error) {
         console.error("Error fetching RTOMs:", error);

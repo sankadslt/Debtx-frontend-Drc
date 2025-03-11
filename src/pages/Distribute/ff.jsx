@@ -1,27 +1,14 @@
-/* Purpose: This template is used for the 2.2 - Distribute TO RO.
-Created Date: 2025-01-08
-Created By: Geeth (eshaneperera@gmail.com)
-Last Modified Date: 2025-01-08
-Modified Date: 2025-02-23
-Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayaka(sasindusrinayaka@gmail.com)
-Version: node 20
-ui number : 2.2
-Dependencies: tailwind css
-Related Files: (routes)
-Notes: This page includes a filter and a table */
-
-
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
-import { listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
-import { assignROToCase } from "../../services/case/CaseService";
-import { fetchAllArrearsBands } from "../../services/case/CaseService";
+import { listHandlingCasesByDRC } from "../../services/case/CaseService.js";
+import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
+import { assignROToCase } from "../../services/case/CaseService.js";
+import { fetchAllArrearsBands } from "../../services/case/CaseService.js";
 import { refreshAccessToken, getLoggedUserId } from "../../services/auth/authService.js";
 import { jwtDecode } from "jwt-decode";
 import Swal from 'sweetalert2';
@@ -160,6 +147,7 @@ const DistributeTORO = () => {
         setRecoveryOfficers([]); // Set empty array to prevent further errors
       }
     };
+    
     fetchData();
     fetchRecoveryOfficers();
 

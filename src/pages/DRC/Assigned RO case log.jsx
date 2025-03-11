@@ -51,9 +51,9 @@ export default function AssignedROcaselog() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 5;
-    const indexOfLastRecord = currentPage * recordsPerPage;
-    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+    // const indexOfLastRecord = currentPage * recordsPerPage;
+    // const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    // const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
     // Filter state for Amount, Case ID, Status, and Date
@@ -101,17 +101,14 @@ export default function AssignedROcaselog() {
           try {
             if (userData?.drc_id) {
               // Make sure to convert to number if needed
-              const payload = parseInt(userData.drc_id);
-              console.log("Fetching RTOMs for DRC ID:", payload);
+              
               
               const arrearsAmounts = await fetchAllArrearsBands();
                 setArrearsAmounts(arrearsAmounts);
               // Fetch RTOMs by DRC ID
-              const rtomsList = await getActiveRTOMsByDRCID(payload);
+              const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
               console.log("RTOM list retrieved:", rtomsList);
               setRtoms(rtomsList);
-            } else {
-              console.log("No DRC ID available yet");
             }
           } catch (error) {
             console.error("Error fetching RTOMs:", error);
