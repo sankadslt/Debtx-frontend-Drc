@@ -56,6 +56,7 @@ const DistributeTORO = () => {
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
   const [userData, setUserData] = useState(null);
+  const [filteredOfficers, setFilteredOfficers] = useState([]);
 
   const loadUser = async () => {
     let token = localStorage.getItem("accessToken");
@@ -135,15 +136,15 @@ const DistributeTORO = () => {
           const numericDrcId = Number(userData?.drc_id);
           const response = await getActiveRODetailsByDrcID(numericDrcId);
 
-          // Map recovery officers with ro_id and other details
+            // Map recovery officers with ro_id and other details
           const officers = response.data.map((officer) => ({
             ro_id: officer.ro_id, // Include ro_id
             ro_name: officer.ro_name,
-            rtoms_for_ro: officer.rtoms_for_ro,
+            rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
           }));
           setRecoveryOfficers(officers);
           console.log("Recovery Officers:", response.data);
-        } else {
+        }else {
           setError("DRC ID not found in URL.");
         }
       } catch (error) {
@@ -151,7 +152,6 @@ const DistributeTORO = () => {
         setError("Failed to fetch recovery officers.");
       }
     };
-
     fetchData();
     fetchRecoveryOfficers();
 
@@ -184,19 +184,8 @@ const DistributeTORO = () => {
         title: "Date Range Exceeded",
         text: "The selected dates have exeeded more than a 1-month gap. we can't proceed.",
         icon: "warning"
-
-      }).then((result) => {
-        if (result.isConfirmed) {
-
-          endDate = endDate;
-          handleApicall(startDate, endDate);
-        } else {
-          setToDate(null);
-          console.log("Dates cleared");
-        }
-      }
-      );
-
+      });
+      setToDate(null);
     }
   };
 
@@ -204,6 +193,8 @@ const DistributeTORO = () => {
   const handleFilter = async () => {
     try {
       setFilteredData([]); // Clear previous results
+      setSelectedRows(new Set()); // Clear row selections
+      setSelectAll(false); // Reset select all
 
       const formatDate = (date) => {
         if (!date) return null;
@@ -219,8 +210,6 @@ const DistributeTORO = () => {
           allowOutsideClick: false,
           allowEscapeKey: false
         });
-        setToDate(null);
-        setFromDate(null);
         return;
       };
 
@@ -239,8 +228,7 @@ const DistributeTORO = () => {
       }
 
 
-      if (new Date(fromDate) > new Date(toDate)) {
-
+      if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
         Swal.fire({
           title: "Warning",
           text: "To date should be greater than or equal to From date",
@@ -262,17 +250,22 @@ const DistributeTORO = () => {
         to_date: formatDate(toDate),
       };
 
-
-
       const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
         setFilteredData(response);
+        setCurrentPage(1); // Reset to first page after filtering
       } else {
         console.error("No valid cases data found in response.");
+        setFilteredData([]);
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
 
@@ -317,16 +310,16 @@ const DistributeTORO = () => {
     setSelectAll(isSelectedAll);
 
     if (isSelectedAll) {
-      // Add all rows to the selected set and log their RTOM Areas and Case IDs
+      // Add all rows to the selected set
       const allSelected = new Set(currentData.map((_, index) => index));
       setSelectedRows(allSelected);
-
-      currentData.forEach((row) => {
-      });
     } else {
       // Deselect all rows
       setSelectedRows(new Set());
     }
+
+    // Update filtered officers based on selection
+    updateFilteredOfficers(isSelectedAll ? currentData.map((_, index) => index) : []);
   };
 
   //Rows with boxes are checked
@@ -337,31 +330,53 @@ const DistributeTORO = () => {
       newSelectedRows.delete(index);
     } else {
       newSelectedRows.add(index);
-      const selectedRow = currentData[index]; // Get the selected row data
-      console.log("Selected RTOM Area:", selectedRow.area); // Log RTOM Area
-      console.log("Selected Case ID:", selectedRow.case_id); // Log Case ID
     }
 
     setSelectedRows(newSelectedRows);
-    console.log("Selected row:", selectedRows);
+    
+    // Update filtered officers based on selected rows
+    updateFilteredOfficers(Array.from(newSelectedRows));
+    
+    // Update select all checkbox state
+    setSelectAll(newSelectedRows.size === currentData.length);
   };
 
-
   // Filter Recovery Officers based on selected RTOM Areas
-  const filteredOfficers = recoveryOfficers.filter((officer) => {
+  const updateFilteredOfficers = (selectedIndices) => {
+    if (selectedIndices.length === 0) {
+      setFilteredOfficers(recoveryOfficers);
+      return;
+    }
+
     // Get RTOM areas of the selected rows
-    const selectedAreas = Array.from(selectedRows).map((index) => currentData[index].area);
+    const selectedAreas = selectedIndices.map((index) => currentData[index].area);
+    
+    // Filter officers who have matching RTOM areas
+    const officers = recoveryOfficers.filter((officer) => {
+      return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
+        officer.rtoms_for_ro.some(rtom => selectedAreas.includes(rtom.name));
+    });
+    
+    setFilteredOfficers(officers);
+    
+    // Reset selected RO if it's no longer in the filtered list
+    if (selectedRO && !officers.some(officer => officer.ro_id.toString() === selectedRO.toString())) {
+      setSelectedRO("");
+    }
+  };
 
-    // Check if officer.rtoms_for_ro exists and is an array
-    return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
-      officer.rtoms_for_ro.some(area => selectedAreas.includes(area.name));
-  });
+  // Update filtered officers when selected rows change
+  useEffect(() => {
+    updateFilteredOfficers(Array.from(selectedRows));
+  }, [selectedRows]);
 
+  // Initialize filtered officers with all officers
+  useEffect(() => {
+    setFilteredOfficers(recoveryOfficers);
+  }, [recoveryOfficers]);
 
   const handleSubmit = async () => {
     try {
-      const selectedRtom = selectedRO;
-
       if (!selectedRO) {
         Swal.fire({
           title: "Error",
@@ -374,7 +389,6 @@ const DistributeTORO = () => {
       }
 
       if (!selectedRows || selectedRows.size === 0) {
-
         Swal.fire({
           title: "Error",
           text: "Please select at least one row before submitting!",
@@ -385,7 +399,8 @@ const DistributeTORO = () => {
         return;
       }
 
-      const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
+      // Find the selected recovery officer by ro_id
+      const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_id.toString() === selectedRO.toString());
 
       if (!selectedOfficer) {
         Swal.fire({
@@ -414,7 +429,6 @@ const DistributeTORO = () => {
       const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
 
       if (selectedCaseIds.length === 0) {
-
         Swal.fire({
           title: "Error",
           text: "No cases selected!",
@@ -446,12 +460,10 @@ const DistributeTORO = () => {
           allowOutsideClick: false,
           allowEscapeKey: false
         });
-
         return;
       }
 
       if (response.status === 'success') {
-
         Swal.fire({
           title: "Success",
           text: "Cases assigned successfully!",
@@ -463,17 +475,15 @@ const DistributeTORO = () => {
       } else {
         Swal.fire({
           title: "Error",
-          text: response.message,
+          text: response.message || "An error occurred while assigning cases.",
           icon: "error",
           allowOutsideClick: false,
           allowEscapeKey: false
         });
-
       }
 
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-
       Swal.fire({
         title: "Error",
         text: "An error occurred while assigning cases.",
@@ -485,6 +495,8 @@ const DistributeTORO = () => {
   };
 
   const getStatusIcon = (status) => {
+    if (!status) return <span className="text-gray-500">N/A</span>;
+    
     switch (status.toLowerCase()) {
       case "open no agent":
         return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
@@ -522,21 +534,6 @@ const DistributeTORO = () => {
           onChange={(e) => {
             const selectedAreaName = e.target.value;
             setSelectedRTOM(selectedAreaName);
-
-            // Find matching recovery officers for the selected RTOM
-            const matchingROs = recoveryOfficers.filter(officer =>
-              officer.rtoms_for_ro.some(rtom => rtom.name === selectedAreaName)
-            );
-
-            if (matchingROs.length > 0) {
-              const firstMatchingRO = matchingROs[0]; // Get the first matching officer
-              // If you want to automatically select an RO, you can set it here
-              // setSelectedRO(firstMatchingRO.ro_id); 
-            } else {
-              // Do not reset RO automatically if no match
-              // setSelectedRO(""); // Reset selected RO if no match
-              console.log(`No matching recovery officer found for ${selectedAreaName}`);
-            }
           }}
         >
           <option value="">RTOM</option>
@@ -616,7 +613,15 @@ const DistributeTORO = () => {
         <table className={GlobalStyle.table}>
           <thead className={GlobalStyle.thead}>
             <tr>
-              <th className={GlobalStyle.tableHeader}></th>
+              <th className={GlobalStyle.tableHeader}>
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="mx-auto"
+                  disabled={currentData.length === 0}
+                />
+              </th>
               <th className={GlobalStyle.tableHeader}>Status</th>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
               <th className={GlobalStyle.tableHeader}>Date</th>
@@ -644,7 +649,7 @@ const DistributeTORO = () => {
                   </td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.created_dtm ? new Date(item.created_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
@@ -654,107 +659,73 @@ const DistributeTORO = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="9" className="text-center">No cases available</td>
+                <td colSpan="9" className="text-center py-4">No cases available</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+      
       {/* Pagination Section */}
-      <div className={GlobalStyle.navButtonContainer}>
-        <button
-          onClick={() => handlePrevNext("prev")}
-          disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
-            }`}
-        >
-          <FaArrowLeft />
-        </button>
-        <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => handlePrevNext("next")}
-          disabled={currentPage === totalPages}
-          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
-            }`}
-        >
-          <FaArrowRight />
-        </button>
-      </div>
+      {filteredDataBySearch.length > 0 && (
+        <div className={GlobalStyle.navButtonContainer}>
+          <button
+            onClick={() => handlePrevNext("prev")}
+            disabled={currentPage === 1}
+            className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""}`}
+          >
+            <FaArrowLeft />
+          </button>
+          <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <button
+            onClick={() => handlePrevNext("next")}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className={`${GlobalStyle.navButton} ${(currentPage === totalPages || totalPages === 0) ? "cursor-not-allowed opacity-50" : ""}`}
+          >
+            <FaArrowRight />
+          </button>
+        </div>
+      )}
 
-      {/* Select All Data Checkbox and Submit Button */}
+      {/* RO Selection and Submit Section */}
       <div className="flex justify-end gap-4 mt-4">
-        {/* Select All Data Checkbox */}
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            className="rounded-lg"
-            checked={selectAll}
-            onChange={handleSelectAll}
-          />
-          Select All Data
-        </label>
-
         {/* Recovery Officer (RO) Select Dropdown */}
         <select
           id="ro-select"
           className={GlobalStyle.selectBox}
-          value={selectedRO || ""}  // Keep the placeholder as default value when nothing is selected
-          onChange={(e) => {
-            const selectedName = e.target.value;
-            if (selectedName) {
-              setSelectedRO(selectedName);  // Update selected RO if the option is valid
-            }
-          }}
+          value={selectedRO}
+          onChange={(e) => setSelectedRO(e.target.value)}
+          disabled={selectedRows.size === 0}
         >
-          {/* Placeholder Option */}
-          <option value="" disabled>
-            Select RO
-          </option>
-
-          {/* Options for Recovery Officers */}
-          {recoveryOfficers && recoveryOfficers.length > 0 ? (
-            recoveryOfficers.map((officer, index) => {
-              // Format the display as "ro_name - rtoms_for_ro.name"
-              const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-              const displayName = `${officer.ro_name} - ${rtomsNames}`;
-
-              return (
-                <option key={`ro-${index}`} value={officer.ro_name}>
-                  {displayName}
-                </option>
-              );
-            })
-          ) : (
-            <option value="" disabled>
-              No officers available
+          <option value="">Select RO</option>
+          {filteredOfficers.map((officer) => (
+            <option key={officer.ro_id} value={officer.ro_id}>
+              {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
             </option>
-          )}
+          ))}
         </select>
 
         {/* Submit Button */}
         <button
-          onClick={() => {
-            handleSubmit();
-
-          }}
-          className={GlobalStyle.buttonPrimary}
-        // disabled={selectedRows.size === 0} // Disable if no rows are selected
+          onClick={handleSubmit}
+          className={`${GlobalStyle.buttonPrimary} ${selectedRows.size === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={selectedRows.size === 0}
         >
           Submit
         </button>
-
       </div>
+      
+      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className={`${GlobalStyle.navButton} `}
+        className={`${GlobalStyle.navButton} mt-4`}
       >
-        <FaArrowLeft />Go Back
+        <FaArrowLeft className="mr-2" />Go Back
       </button>
     </div>
   );
 };
 
 export default DistributeTORO;
-
