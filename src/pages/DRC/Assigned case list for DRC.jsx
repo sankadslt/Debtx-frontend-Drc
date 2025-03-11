@@ -33,7 +33,6 @@ import { Create_Task } from "../../services/task/taskService.js";
 
 
 export default function AssignedCaseListforDRC() {
-  const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
   const [fromDate, setFromDate] = useState(null);
@@ -44,11 +43,6 @@ export default function AssignedCaseListforDRC() {
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  
- 
-
-  const [selectedSource, setSelectedSource] = useState("");
-  const [tableData, setTableData] = useState([]);
   const [userData, setUserData] = useState(null);
 
   // State for search query and filtered data
