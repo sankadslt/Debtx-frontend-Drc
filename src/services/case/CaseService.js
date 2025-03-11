@@ -371,83 +371,62 @@ export const listDRCAllCases = async (payload) => {
 
 
 // Get Case Details by Case ID
-export const drcCaseDetails = async (caseId) => {
+export const drcCaseDetails = async (payload) => {
   try {
-    if (!caseId) {
-      throw new Error("Case ID is required.");
+    if (!payload.drc_id || !payload.case_id) {
+      throw new Error("DRC ID and Case ID are required.");
     }
 
-    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
-       case_id: caseId
-    });
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`,payload);
+    // console.log("Response from handler: ", response.data);
 
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
-
-    // Extract ro_negotiation details safely
-    const roNegotiationDetails = response.data.data.ro_negotiation 
-      ? response.data.data.ro_negotiation.map((negotiation) => ({
-          drc_id: negotiation.drc_id,
-          ro_id: negotiation.ro_id,
-          created_dtm: negotiation.created_dtm,
-          field_reason_id: negotiation.field_reason_id,
-          field_reason: negotiation.field_reason,
-          remark: negotiation.remark,
-        }))
-      : [];
-
-
-      const caseDetails = {
-        case_id: response.data.data.case_id,
-        customer_ref: response.data.data.customer_ref,
-        account_no: response.data.data.account_no,
-        current_arrears_amount: response.data.data.current_arrears_amount,
-        last_payment_date: response.data.data.last_payment_date,
-        ro_negotiation_details: roNegotiationDetails,
-      };
-
-
-    return caseDetails;
+    
+    // Return the successful response
+    return response.data;
+    
   } catch (error) {
-    console.error("Error retrieving case details by ID:", error.response?.data || error.message);
+    console.error("Error retrieving case details for mediation board:", 
+      error.response?.data || error.message);
     throw error;
   }
 };
 
 
 // Add Negotiation Case
-export const addNegotiationCase = async (caseId,settleId,ini_amount, month, from,to,settle_remark,drcId,roId,requestId,request,intractionId,todo,completed,reasonId,reason,nego_remark ) => {
+export const addNegotiationCase = async (payload) => {
   try {
-    if (!caseId || !reason || !request) {
+    if (!payload.caseId || !payload.reason || !payload.request) {
       throw new Error("Case ID, reason, and request are required.");
     }
 
     const response = await axios.post(`${URL}/Customer_Negotiations`, {
-      case_id: caseId,
-      settlement_id: settleId || null,
-      initial_amount: ini_amount || null,
-      calender_month: month || null,
-      duration_from: from || null,
-      duration_to: to || null,
-      settlement_remark:settle_remark || null,
-      drc_id: drcId || null ,
-      ro_id: roId || null,
-      ro_request: request || null,
-      ro_request_id: requestId || null,
-      intraction_id: intractionId || null,
-      todo_on: todo || null,
-      completed_on: completed || null,
-      field_reason: reason,
-      field_reason_id: reasonId || null,
-      remark: nego_remark || null
+      case_id: payload.caseId,
+      initial_amount: payload.ini_amount || null,
+      calender_month: payload.month || null,
+      duration_from: payload.from || null,
+      duration_to: payload.to || null,
+      settlement_remark:payload.settle_remark || null,
+      drc_id: payload.drcId || null ,
+      ro_id: payload.roId || null,
+      request_type: payload.request_description || null,
+      request_comment: payload.request_comment || null,
+      ro_name: payload.ro_name || null,
+      drc: payload.drc || null,
+      request_id: payload.reasonId || null,
+      intraction_id: payload.intractionId || null,
+      field_reason: payload.reason,
+      field_reason_remark: payload.reasonId || null,
+      created_by: payload.created_by || "null",
     });
 
     if (response.data.status === "error") {
+      console.log(response.data.message);
       throw new Error(response.data.message);
     }
-
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error adding negotiation case:", error.response?.data || error.message);
@@ -460,7 +439,7 @@ export const fetchActiveNegotiations = async () => {
   try {
     const response = await axios.post(`${URL}/list_Active_Customer_Negotiations`);
     const data = response.data.data;
-
+    
     // Format the response data
     const activeNegotiations = data.map((negotiation) => ({
       negotiation_id: negotiation.negotiation_id,
@@ -479,7 +458,7 @@ export const fetchActiveNegotiations = async () => {
 // Fetch active requests
 export const getActiveRORequests = async () => {
   try {
-    const response = await axios.post(`${URL}/List_Active_RO_Requests`);
+    const response = await axios.post(`${URL}/List_Active_RO_Requests`,payload);
     const data = response.data.data;
 
     // Format the response data
@@ -517,26 +496,26 @@ export const getActiveRORequestsforNegotiationandMediation = async (request_mode
 };
 
 // Get Case Details by Case ID
-export const caseDetailsforDRC = async (caseId, drcId) => {
+export const caseDetailsforDRC = async (case_id, drc_id) => {
   try {
     // Validate inputs
-    if (!caseId || !drcId) {
+    if (!case_id || !drc_id) {
       throw new Error("Both Case ID and DRC ID are required.");
     }
     
     // Send a POST request to fetch case details
     const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
-       case_id: caseId,
-       drc_id: drcId
+       case_id,
+       drc_id
     });
-    
+    const data = response.data.data;
     // Check if the response indicates an error
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
 
-    console.log(response.data);
-    console.log('response.data.data', response.data.data);
+    // console.log(response.data);
+    // console.log('response.data.data', response.data.data);
     
     // Map the response data to a structured caseDetails object
     const caseDetails = {
@@ -597,5 +576,25 @@ export const ListActiveRORequestsMediation = async () => {
   } catch (error) {
     console.error("Error retrieving RO requests:", error.response?.data?.message || error.message);
     throw error;
+  }
+};
+
+export const addCpeNegotiation = async (caseId, type, cpemodel, serialNo, nego_remark, service, drcId) => {
+  try {
+    const response = await axios.post(`${URL}/add-cpecollect`, {
+      case_id: caseId,
+      Rtype: type,
+      cpemodel: cpemodel,
+      serialNo: serialNo,
+      nego_remark: nego_remark,
+      service: service,
+      drc_id: drcId,  // Include drcId here
+    });
+
+    return response.data;  // Return the response after the data is added
+  } catch (error) {
+    console.error("Error adding CPE details:", error.response?.data || error.message);
+    alert("Error: " + JSON.stringify(error.response?.data, null, 2)); // Show detailed error in alert
+    throw error;  // Rethrow the error so it can be caught elsewhere
   }
 };

@@ -28,6 +28,7 @@ import AssignedROcaselog from "../pages/DRC/Assigned RO case log";
 import EditCustomerProfile from "../pages/DRC/EditCustomerProfile";
 import CustomerNegotiation from "../pages/DRC/Cus_Nego_Customer_Negotiation";
 import DummyPage from "../pages/DummyPage";
+import EditCPECollect from "../pages/DRC/EditCPECollect";
 
 
 const Routers = () => {
@@ -78,6 +79,7 @@ const Routers = () => {
       {/* <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} /> */}
       <Route path="/pages/DRC/EditCustomerProfile/:case_id" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'admin,', 'drc_user', 'drc_admin', 'user']} />} />
       <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin', 'user']} />} />
+      {/* <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} /> */}
     </Routes>
   );
 };
