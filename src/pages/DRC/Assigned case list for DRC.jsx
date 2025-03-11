@@ -16,8 +16,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing G
 import DatePicker from "react-datepicker";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
-import { jwtDecode } from "jwt-decode";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -98,19 +97,15 @@ export default function AssignedCaseListforDRC() {
   //   loadUser();
   // }, [localStorage.getItem("accessToken")]);
 
-
   const loadUser = async () => {
-    try {
-      const userId = await getLoggedUserId();
-    }catch (error) {
-      console.error("Error fetching data:", error);
-    }
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
   };
 
   useEffect(() => {
     loadUser();
   }, []);
-
 
   useEffect(() => {
     const fetchData = async () => {

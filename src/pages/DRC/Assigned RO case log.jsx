@@ -17,9 +17,8 @@ import DatePicker from "react-datepicker";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
-import { jwtDecode } from "jwt-decode";
 
 
 //Status Icons
@@ -65,36 +64,46 @@ export default function AssignedROcaselog() {
     const [toDate, setToDate] = useState(null);
     const [userData, setUserData] = useState(null);
 
+    // const loadUser = async () => {
+    //     let token = localStorage.getItem("accessToken");
+    //     if (!token) {
+    //       setUserData(null);
+    //       return;
+    //     }
+    
+    //     try {
+    //       let decoded = jwtDecode(token);
+    //       const currentTime = Date.now() / 1000;
+    //       if (decoded.exp < currentTime) {
+    //         token = await refreshAccessToken();
+    //         if (!token) return;
+    //         decoded = jwtDecode(token);
+    //       }
+    
+    //       setUserData({
+    //         id: decoded.user_id,
+    //         role: decoded.role,
+    //         drc_id: decoded.drc_id,
+    //         ro_id: decoded.ro_id,
+    //       });
+    //     } catch (error) {
+    //       console.error("Invalid token:", error);
+    //     }
+    //   };
+    
+    //   useEffect(() => {
+    //     loadUser();
+    //   }, [localStorage.getItem("accessToken")]);
+
     const loadUser = async () => {
-        let token = localStorage.getItem("accessToken");
-        if (!token) {
-          setUserData(null);
-          return;
-        }
-    
-        try {
-          let decoded = jwtDecode(token);
-          const currentTime = Date.now() / 1000;
-          if (decoded.exp < currentTime) {
-            token = await refreshAccessToken();
-            if (!token) return;
-            decoded = jwtDecode(token);
-          }
-    
-          setUserData({
-            id: decoded.user_id,
-            role: decoded.role,
-            drc_id: decoded.drc_id,
-            ro_id: decoded.ro_id,
-          });
-        } catch (error) {
-          console.error("Invalid token:", error);
-        }
-      };
-    
-      useEffect(() => {
-        loadUser();
-      }, [localStorage.getItem("accessToken")]);
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
+    };
+
+    useEffect(() => {
+    loadUser();
+    }, []);
 
     useEffect(() => {
         const fetchRTOMs = async () => {
