@@ -9,18 +9,18 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes: The following page conatins the code for the Re-Assign RO  */
 
-import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { assignROToCase, List_Behaviors_Of_Case_During_DRC, updateLastRoDetails } from "../../services/case/CaseService";
+import GlobalStyle from "../../assets/prototype/GlobalStyle";
+import { assignROToCase, fetchBehaviorsOfCaseDuringDRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService";
+import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
   const { case_id } = useParams();
-  const [user, setUser] =useState(null);
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
 
@@ -34,36 +34,68 @@ export default function Re_AssignRo() {
   });
 
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
-  const [settlementDetails, setSettlementDetails] = useState({});
+  const [settlementDetails, setSettlementDetails] = useState([]);
+  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);          
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);       
-      } 
-    };
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
 
-    fetchUserData();
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
+
+  const loadUser = async () => {
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
+  };
+
+  useEffect(() => {
+    loadUser();
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (user?.drc_id && case_id) {
+        if (userData?.drc_id) { // Changed from !userData?.drc_id to userData?.drc_id
+          const payload = {
+            drc_id: parseInt(userData.drc_id),
+            case_id: Number(case_id),
+          };
 
-          const data = await List_Behaviors_Of_Case_During_DRC(user?.drc_id, case_id);
+          const data = await fetchBehaviorsOfCaseDuringDRC(payload);
 
           console.log("Data:", data);
 
           if (data && data.status !== "error") {
-
             const caseDetailsData = data.data.formattedCaseDetails;
 
             // Extract the date portion (YYYY-MM-DD)
@@ -79,7 +111,7 @@ export default function Re_AssignRo() {
               lastPaymentDate: last_payment_date || "",
             });
 
-            const negotiations = data.data.formattedCaseDetails.ro_negotiation || [];
+            const negotiations = caseDetailsData.ro_negotiation || [];
 
             setLastNegotiationDetails(
               negotiations.map((negotiation) => ({
@@ -103,18 +135,12 @@ export default function Re_AssignRo() {
                     : "",
                 },
               ]);
+            } else {
+              setSettlementDetails([]);
             }
-
-
           } else {
             console.error("Error in API response:", data?.message || "Unknown error");
           }
-
-
-          console.log(settlementDetails);
-
-
-
         }
       } catch (error) {
         console.error("Error fetching case details:", error);
@@ -123,35 +149,45 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (user?.drc_id) {
-          const numericDrcId = Number(user?.drc_id);
-          const response = await getActiveRODetailsByDrcID(numericDrcId);
-
-          // Map recovery officers with ro_id and other details
-          const officers = response.data.map((officer) => ({
-            ro_id: officer.ro_id, // Include ro_id
-            ro_name: officer.ro_name,
-            rtoms_for_ro: officer.rtoms_for_ro,
-          }));
-          setRecoveryOfficers(officers);
+        if (userData?.drc_id) {
+          const numericDrcId = Number(userData?.drc_id);
+          const officers = await getActiveRODetailsByDrcID(numericDrcId);
+    
+          if (Array.isArray(officers)) {
+            // Map recovery officers with ro_id and other details
+            const formattedOfficers = officers.map((officer) => ({
+              ro_id: officer.ro_id,
+              ro_name: officer.ro_name,
+              rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
+            }));
+    
+            setRecoveryOfficers(formattedOfficers);
+            console.log("Recovery Officers:", formattedOfficers);
+          } else {
+            console.error("Invalid response format:", officers);
+            setRecoveryOfficers([]);
+            setError("Failed to fetch recovery officers. Invalid response format.");
+          }
         } else {
           setError("DRC ID not found in URL.");
         }
       } catch (error) {
         console.error("Error fetching recovery officers:", error);
         setError("Failed to fetch recovery officers.");
+        setRecoveryOfficers([]); // Set empty array to prevent further errors
       }
     };
 
-    fetchData();
-    fetchRecoveryOfficers();
+    if (userData?.drc_id) {
+      fetchData();
+      fetchRecoveryOfficers();
+    }
+  }, [userData, case_id]);
 
-  }, [user?.drc_id, case_id]);
-
-  const handleTextarea = async(remark) => {
+  const handleTextarea = async (remark) => {
     try {
-      console.log("Data: ", case_id, user?.drc_id, remark);
-      await updateLastRoDetails(case_id, user?.drc_id, remark);
+      console.log("Data: ", case_id, userData?.drc_id, remark);
+      await updateLastRoDetails(case_id, userData?.drc_id, remark);
     } catch (error) {
       console.error("Error in handleTextArea: ", error);
       throw new Error("Failed to update Last RO details");
@@ -167,16 +203,16 @@ export default function Re_AssignRo() {
         Swal.fire("Error", "No Recovery Officer selected!", "error");
         return;
       }
-  
+
       // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
       if (!selectedOfficer) {
         Swal.fire("Error", "Selected Recovery Officer not found!", "error");
         return;
       }
-  
+
       // Get the ro_id of the selected officer
-      const ro_id = selectedOfficer.ro_id; 
+      const ro_id = selectedOfficer.ro_id;
       if (!ro_id) {
         Swal.fire("Error", "Recovery Officer ID is missing.", "error");
         return;
@@ -186,24 +222,24 @@ export default function Re_AssignRo() {
         Swal.fire("Error", "Last RO details are required!", "error");
         return;
       }
-      
+
       try {
         await handleTextarea(textareaValue);
       } catch (error) {
-        console.error("Error in updating last ro details: ", error);   
+        console.error("Error in updating last ro details: ", error);
         Swal.fire("Error", "Failed to update Last Ro details.", "error");
-        return
+        return;
       }
-  
+
       const userId = await getLoggedUserId();
 
-       // Ensure case_id is wrapped in an array
+      // Ensure case_id is wrapped in an array
       const caseIdsArray = Array.isArray(case_id) ? case_id : [case_id];
-  
+
       // Prepare the assignment payload
       const assignmentPayload = {
         caseIds: caseIdsArray,
-        drcId: user?.drc_id,
+        drcId: userData?.drc_id,
         roId: ro_id,
         assigned_by: userId, // Include assigned_by in the payload
       };
@@ -212,19 +248,19 @@ export default function Re_AssignRo() {
       const response = await assignROToCase(assignmentPayload);
       console.log("response: ", response);
 
-       // Check if there are any failed cases
+      // Check if there are any failed cases
       if (response.details?.failed_cases?.length > 0) {
         Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
         return;
       }
-      
+
       if (response.status === 'success') {
         Swal.fire("Success", "Cases assigned successfully!", "success");
         navigate(`/drc/assigned-ro-case-log`);
       } else {
         Swal.fire("Error", response.message, "error");
       }
-  
+
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       Swal.fire("Error", "An error occurred while assigning cases.", "error");
@@ -236,7 +272,6 @@ export default function Re_AssignRo() {
       <div className="flex justify-between items-center mb-8">
         <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
       </div>
-      {/* card box*/}
 
       <div className={`${GlobalStyle.cardContainer || ""}`}>
         {[
@@ -259,28 +294,8 @@ export default function Re_AssignRo() {
         ))}
       </div>
 
-
-      {/* <div className={`${GlobalStyle.cardContainer}`}>
-        <p className="mb-2">
-          <strong>Case ID: {caseDetails.caseId}</strong>
-        </p>
-        <p className="mb-2">
-          <strong>Customer Ref: {caseDetails.customerRef}</strong>{" "}
-        </p>
-        <p className="mb-2">
-          <strong>Account no: {caseDetails.accountNo}</strong>{" "}
-        </p>
-        <p className="mb-2">
-          <strong>Arrears Amount: {caseDetails.arrearsAmount}</strong>{" "}
-        </p>
-        <p className="mb-2">
-          <strong>Last Payment Date: {caseDetails.lastPaymentDate}</strong>{" "}
-        </p>
-      </div> */}
-
-
       {/* remark box */}
-      <div className="mb-6 flex items-center  space-x-6">
+      <div className="mb-6 flex items-center space-x-6">
         <label className={GlobalStyle.remarkTopic}>Last RO details</label>
         <textarea
           value={textareaValue}
@@ -296,7 +311,7 @@ export default function Re_AssignRo() {
       </h2>
 
       {/* Table  */}
-      {<div className="mb-6 ">
+      <div className="mb-6 ">
         <div className={GlobalStyle.tableContainer}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
@@ -307,26 +322,34 @@ export default function Re_AssignRo() {
               </tr>
             </thead>
             <tbody>
-              {lastNegotiationDetails
-                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort latest first
-                .map((item, index) => (
-                  <tr
-                    key={index}
-                    className={
-                      index % 2 === 0
-                        ? GlobalStyle.tableRowEven
-                        : GlobalStyle.tableRowOdd
-                    }
-                  >
-                    <td className={GlobalStyle.tableData}>{item.date}</td>
-                    <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                    <td className={GlobalStyle.tableData}>{item.remark}</td>
-                  </tr>
-                ))}
+              {lastNegotiationDetails.length > 0 ? (
+                lastNegotiationDetails
+                  .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort latest first
+                  .map((item, index) => (
+                    <tr
+                      key={index}
+                      className={
+                        index % 2 === 0
+                          ? GlobalStyle.tableRowEven
+                          : GlobalStyle.tableRowOdd
+                      }
+                    >
+                      <td className={GlobalStyle.tableData}>{item.date}</td>
+                      <td className={GlobalStyle.tableData}>{item.negotiation}</td>
+                      <td className={GlobalStyle.tableData}>{item.remark}</td>
+                    </tr>
+                  ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className={GlobalStyle.tableData}>
+                    No negotiation details available
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-      </div>}
+      </div>
 
       {/* Settlement details section */}
       <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
@@ -334,14 +357,14 @@ export default function Re_AssignRo() {
       </h2>
 
       {/* Table  */}
-      {<div className="mb-6 ">
+      <div className="mb-6 ">
         <div className={GlobalStyle.tableContainer}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>date</th>
-                <th className={GlobalStyle.tableHeader}>status</th>
-                <th className={GlobalStyle.tableHeader}>expires on</th>
+                <th className={GlobalStyle.tableHeader}>Date</th>
+                <th className={GlobalStyle.tableHeader}>Status</th>
+                <th className={GlobalStyle.tableHeader}>Expires on</th>
               </tr>
             </thead>
             <tbody>
@@ -370,14 +393,11 @@ export default function Re_AssignRo() {
             </tbody>
           </table>
         </div>
-      </div>}
-
-
+      </div>
 
       {/* dropdown */}
-      <div className="flex   gap-10">
+      <div className="flex gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
-
         <select
           id="ro-select"
           className={`${GlobalStyle.selectBox}`}
@@ -410,17 +430,18 @@ export default function Re_AssignRo() {
             </option>
           )}
         </select>
-
-
-
       </div>
-
-
 
       {/* Submit Button */}
       <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
       </div>
+      <button
+        onClick={() => navigate(-1)}
+        className={`${GlobalStyle.navButton} `}
+      >
+        <FaArrowLeft />Go Back
+      </button>
     </div>
   );
 }
