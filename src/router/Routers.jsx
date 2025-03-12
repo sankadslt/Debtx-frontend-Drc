@@ -80,6 +80,9 @@ const Routers = () => {
       <Route path="/pages/DRC/EditCustomerProfile/:case_id" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'admin,', 'drc_user', 'drc_admin', 'user']} />} />
       <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin', 'user']} />} />
       {/* <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} /> */}
+
+
+      <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} />
     </Routes>
   );
 };
