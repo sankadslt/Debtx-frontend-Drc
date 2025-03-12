@@ -74,7 +74,7 @@ const StatusIcon = ({ status }) => {
   const statusInfo = STATUS_ICONS[status];
   
   if (!statusInfo) return <span>{status}</span>;
-
+ 
   return (
     <div className="relative group">
       <img 

@@ -58,11 +58,6 @@ const Logs = () => {
           </label>
         </Link> 
       </div>
-        
-      
-
-         
-     
     </div>
   );
 };
