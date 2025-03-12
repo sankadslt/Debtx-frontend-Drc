@@ -1,10 +1,8 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
  
-const BASE_URL = import.meta.env.VITE_BASE_URL ; // Base URL from environment variables
-const AUTH_URL = `${BASE_URL}/auth`; // Auth endpoint
-
-
+const BASE_URL = import.meta.env.VITE_BASE_URL ;
+const AUTH_URL = `${BASE_URL}/auth`;
 
 
 // Register a new user
@@ -29,14 +27,13 @@ export const loginUser = async (userData) => {
   }
 };
 
-
 // Refresh access token
 export const refreshAccessToken = async () => {
   try {
     const response = await axios.post(`${AUTH_URL}/refresh-token`, {}, { withCredentials: true });
     const { accessToken } = response.data;
 
-    console.log("New Access Token:", accessToken);
+   // console.log("New Access Token:", accessToken);
     localStorage.setItem("accessToken", accessToken);
 
     return accessToken;
@@ -77,7 +74,7 @@ export const getLoggedUserId = async () => {
       decoded = jwtDecode(token);
     }
 
-    return decoded.user_id; // Return user ID from token
+    return { user_id: decoded.user_id, drc_id:decoded.drc_id || null, ro_id:decoded.ro_id || null, role: decoded.role}; // Return drc ID from token
   } catch (error) {
     console.error("Invalid token:", error);
     return null;
@@ -94,7 +91,7 @@ export const getUserData = async () => {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });
-
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error.response?.data || error.message);
