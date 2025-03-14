@@ -454,7 +454,6 @@ export const fetchActiveNegotiations = async () => {
   }
 };
 
-
 // Fetch active requests
 export const getActiveRORequests = async () => {
   try {
@@ -535,7 +534,6 @@ export const caseDetailsforDRC = async (payload) => {
     throw error;
   }
 };
-
 
 // Update Customer Profile
 export const updateCustomerContacts = async (caseData) => {
