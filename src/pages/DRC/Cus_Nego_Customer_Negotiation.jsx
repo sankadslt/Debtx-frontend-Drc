@@ -59,37 +59,37 @@ const Cus_Nego_Customer_Negotiation = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
   const payload = {
-    case_id :8,
+    case_id :250,
     drc_id:200,
     ro_id:1
   };
   //form initialization
   const initialFormData = {
     caseId: payload.case_id,
-    customerRef: "",
-    accountNo: "",
-    arrearsAmount: "",
-    lastPaymentDate: "",
-    request_description: "",
-    createdDtm: "",
-    fieldReason: "",
-    remark: "",
-    ini_amount: "",
+    customerRef: null,
+    accountNo: null,
+    arrearsAmount: null,
+    lastPaymentDate: null,
+    request_description: null,
+    createdDtm: null,
+    fieldReason: null,
+    remark: null,
+    ini_amount: null,
     month: 3,
-    from: "",
-    to: "",
-    settle_remark: "",
+    from: null,
+    to: null,
+    settle_remark: null,
     drcId: payload.drc_id,
     roId: payload.ro_id ? payload.ro_id : null,
-    requestId: "",
-    request: "",
-    request_remark: "",
-    intractionId: "",
-    todo: "",
-    completed: "",
+    requestId: null,
+    request: null,
+    request_remark: null,
+    intractionId: null,
+    todo: null,
+    completed: null,
     reasonId: "",
     reason: "",
-    nego_remark: "",
+    nego_remark: null,
     ref_products: [] // Initialize ref_products as an empty array
   };
   const [formData, setFormData] = useState(initialFormData);
@@ -177,7 +177,6 @@ const Cus_Nego_Customer_Negotiation = () => {
       );
       formData.request_description = selectedRequest.request_description;
       formData.intractionId = selectedRequest.intraction_id;
-      console.log("this is the selected requiest ",formData.request_description);
       // Ensure selected request exists before submission
       if (!selectedRequest) {
           alert("Invalid request selected.");
@@ -370,7 +369,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <select
               name="reason"
-              value={formData.reason}
+              value={formData.reason || ""}
               onChange={handleInputChange}
               className={`${GlobalStyle.selectBox} w-3/4`}
             >
@@ -400,7 +399,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <textarea
               name="nego_remark"
-              value={formData.nego_remark}
+              value={formData.nego_remark || ""}
               onChange={handleInputChange}
               className={`${GlobalStyle.remark} w-3/4`}
               rows={4}
@@ -421,7 +420,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <select
               name="request"
-              value={formData.request}
+              value={formData.request || ""}
               onChange={handleInputChange}
               className={`${GlobalStyle.selectBox} w-3/4`}
             >
@@ -450,7 +449,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <textarea
               name="request_remark"
-              value={formData.request_remark}
+              value={formData.request_remark || ""}
               onChange={handleInputChange}
               className={`${GlobalStyle.remark} w-3/4`}
               rows={4}
@@ -537,7 +536,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <label className={`${GlobalStyle.remarkTopic} w-32`}>:</label>
                 <textarea
                   name="settle_remark"
-                  value={formData.settle_remark}
+                  value={formData.settle_remark || ""}
                   onChange={handleInputChange}
                   className={`${GlobalStyle.remark} flex-1`}
                   rows={4}
@@ -692,13 +691,13 @@ const Cus_Nego_Customer_Negotiation = () => {
                       <td className={GlobalStyle.tableData}>
                         {product.product_label || "N/A"}
                       </td>
-                      <td className={GlobalStyle.tableData}>{product.accountNo || "N/A"}</td>
+                      <td className={GlobalStyle.tableData}>{product.product_label || "N/A"}</td>
                       <td className={GlobalStyle.tableData}>{product.service || "N/A"}</td>
                       <td className={GlobalStyle.tableData}>
                         {product.product_ownership || "N/A"}
                       </td>
                       <td className={GlobalStyle.tableData}>{product.rtom || "N/A"}</td>
-                      <td className={GlobalStyle.tableData}>{status}</td>
+                      <td className={GlobalStyle.tableData}>{product.product_status || "N/A"}</td>
                       <td className={GlobalStyle.tableData}>
                         <img
                           src={icon}
@@ -743,7 +742,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       <tr>
           <th className={style.thStyle}>Service Address</th>
           <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
+          <td className={style.tdStyle}>{selectedProduct.service_address}</td>
         </tr>
 
         <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
@@ -754,11 +753,11 @@ const Cus_Nego_Customer_Negotiation = () => {
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_label}</td>
         </tr>
-        <tr>
+        {/* <tr>
         <th className={style.thStyle}>Account No</th>
         <td className={style.tdStyle}>:</td>
         <td className={style.tdStyle}>{formData.accountNo}</td>
-      </tr>
+      </tr> */}
       <tr>
           <th className={style.thStyle}>Service Type</th>
           <td className={style.tdStyle}>:</td>

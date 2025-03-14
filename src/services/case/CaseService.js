@@ -412,13 +412,13 @@ export const addNegotiationCase = async (payload) => {
       drc_id: payload.drcId || null ,
       ro_id: payload.roId || null,
       request_type: payload.request_description || null,
-      request_comment: payload.request_comment || null,
+      request_comment: payload.request_remark || null,
       ro_name: payload.ro_name || null,
       drc: payload.drc || null,
       request_id: payload.reasonId || null,
       intraction_id: payload.intractionId || null,
       field_reason: payload.reason,
-      field_reason_remark: payload.reasonId || null,
+      field_reason_remark: payload.nego_remark || null,
       created_by: payload.created_by || "null",
     });
 
