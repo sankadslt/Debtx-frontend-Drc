@@ -361,6 +361,7 @@ export const listDRCAllCases = async (payload) => {
         action_type: caseData.action_type,
       };
     });
+    console.log("Formatted Cases:", formattedCases);
 
     return formattedCases;
   } catch (error) {
