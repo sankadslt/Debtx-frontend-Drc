@@ -281,7 +281,7 @@ const paginatedData = filteredData.slice(
 
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
-      <h1 className={GlobalStyle.headingLarge}>Case List</h1>
+      <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="flex gap-4 items-center justify-end flex-wrap mt-4 ">
