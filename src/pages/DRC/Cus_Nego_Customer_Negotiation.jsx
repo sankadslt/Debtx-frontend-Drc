@@ -23,6 +23,7 @@ import editIcon from "../../assets/images/edit.png";
 import viewIcon from "../../assets/images/view.png";
 import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
+import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 
 
@@ -46,6 +47,8 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [currentPage1, setCurrentPage1] = useState(1);
   const [currentPage2, setCurrentPage2] = useState(1);
   const location = useLocation();
+  const [drcId, setDrcId] = useState(null);
+  const [roId, setRoId] = useState(null);
   const caseid = location.state?.CaseID;
   console.log("caseid", caseid);
 
@@ -90,7 +93,7 @@ const Cus_Nego_Customer_Negotiation = () => {
   const currentRows2 = lastRequests.slice(startIndex2, endIndex2);
   const totalPages2 = Math.ceil(lastRequests.length / itemsPerPage2);
 
-  // Pagination handler for Requested Additional Details
+  // Pagination handler for Requested Additional Details 
   const handlePrevNext2 = (direction) => {
     if (direction === "prev" && currentPage2 > 1) {
       setCurrentPage2(currentPage2 - 1);
@@ -100,13 +103,34 @@ const Cus_Nego_Customer_Negotiation = () => {
     }
   };
 
+  useEffect(() => {
+    const getuserdetails = async () => {
+      try {
+        const userData = await getLoggedUserId();
+
+        if (userData) {
+          setDrcId(userData.drc_id);
+          setRoId(userData.ro_id);
+          console.log("user drc id", userData.drc_id);
+          console.log("user ro id", userData.ro_id);
+
+        }
+      } catch (error) {
+        console.error("Error fetching user details:", error.message);
+      }
+    };
+    getuserdetails();
+  }, []);
+
+
 
 
   const payload = {
-    case_id : caseid || 250,
-    drc_id:200,
-    ro_id:1
+    case_id : caseid || 250 ,
+    drc_id: drcId || 200 ,
+    ro_id: roId || null,
   };
+  console.log("payload", payload);
   //form initialization
   const initialFormData = {
     caseId: payload.case_id,
@@ -1066,4 +1090,4 @@ const Cus_Nego_Customer_Negotiation = () => {
       
 };
 
-export default Cus_Nego_Customer_Negotiation;
+export default Cus_Nego_Customer_Negotiation; 
