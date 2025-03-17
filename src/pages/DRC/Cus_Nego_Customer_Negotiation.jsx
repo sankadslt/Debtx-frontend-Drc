@@ -23,7 +23,7 @@ import editIcon from "../../assets/images/edit.png";
 import viewIcon from "../../assets/images/view.png";
 import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
-import Swal from "sweetalert";
+import Swal from "sweetalert2";
 
 
 
