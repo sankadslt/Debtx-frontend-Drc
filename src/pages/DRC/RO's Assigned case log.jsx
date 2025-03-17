@@ -279,6 +279,11 @@ const paginatedData = filteredData.slice(
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
 
+  const handleonnegotiation = (case_id) => {
+    navigate("/drc/customer-negotiation", { state: { CaseID: case_id } });
+    console.log("Case ID being passed: ", case_id);
+  }
+
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
       <h1 className={GlobalStyle.headingLarge}>Case List</h1>
@@ -403,10 +408,8 @@ const paginatedData = filteredData.slice(
                       src={edit}
                       alt="Negotiation Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
-                      onClick={() =>
-                        navigate(`/pages/DRC/Mediation Board Response/${row.case_id}`)
-                      }
-                    />
+                      onClick={() => handleonnegotiation(row.case_id)}
+                                          />
                   </td>
                 </tr>
               ))}
