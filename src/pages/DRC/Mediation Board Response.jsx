@@ -21,14 +21,19 @@ import {
   getCaseDetailsbyMediationBoard,
   ListActiveMediationResponse,
   ListActiveRORequestsMediation,
+  Mediation_Board
 } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
+import {getLoggedUserId} from "/src/services/auth/authService.js";
+import Swal from "sweetalert2";
 
 const MediationBoardResponse = () => {
   const { caseId, drcId } = useParams(); // Get parameters from URL
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [createdBy, setcreatedBy] = useState(null);
+  const [roId, setRoId] = useState(null);
 
   // Consolidated case details
   const [caseDetails, setCaseDetails] = useState({
@@ -43,10 +48,12 @@ const MediationBoardResponse = () => {
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
   const [roRequests, setRoRequests] = useState([]);
+  
 
   // Form state
   const [formData, setFormData] = useState({
     request: "",
+    requestId: "",
     customerRepresented: "",
     comment: "",
     requestcomment: "",
@@ -73,6 +80,8 @@ const MediationBoardResponse = () => {
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
   const [isSettlementTableVisible, setIsSettlementTableVisible] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+ 
+  
 
   // Derived state for showing settlement toggle
   const showSettlementToggle =
@@ -155,10 +164,23 @@ const MediationBoardResponse = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "request") {
+    const selectedIndex = e.target.selectedIndex;
+    const selectedOption = e.target.options[selectedIndex];
+    const requestId = selectedOption.getAttribute("data-id");
+
+    setFormData({
+      ...formData,
+      [name]: value, // Store the selected request description
+      requestId: requestId, // Store the associated request ID
+    });
+  } else {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  }
   };
 
   const handleHandoverChange = (e) => {
@@ -206,6 +228,25 @@ const MediationBoardResponse = () => {
       setShowConfirmation(false);
     }
   };
+
+  useEffect(() => {
+      const getuserdetails = async () => {
+        try {
+          const userData = await getLoggedUserId();
+  
+          if (userData) {
+            setcreatedBy(userData.user_id);
+            setRoId(userData.ro_id);
+            console.log("user id", userData.user_id);
+            console.log("user ro id", userData.ro_id);
+  
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error.message);
+        }
+      };
+      getuserdetails();
+    }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -255,28 +296,56 @@ const MediationBoardResponse = () => {
     }
 
     try {
-      // Here you would typically call an API to save the form data
-      console.log("Form submitted:", {
-        ...formData,
-        handoverNonSettlement,
-        nextCallingDate,
-        settlements: showSettlementTable ? settlements : [],
-        caseId,
-        drcId,
-      });
 
-      // Close the confirmation popup
-      setShowConfirmation(false);
+      const payload = {
+        case_id : caseId,
+        drc_id : drcId,
+        ro_id : roId,
+        customer_avilable : formData.customerRepresented.toLocaleLowerCase(), // It should be available but I have made a small sintax for testing.
+        next_calling_date: nextCallingDate,
+        request_id : formData.requestId,
+        request_type : formData.request, // what comes here ?
+        request_comment : formData.requestcomment,
+        handed_over_non_settlement: handoverNonSettlement,
+        // intraction_id : what comes here ?
+        comment : formData.comment,
+        settle : formData.settle,
+        settlement_count : formData.settlementCount,
+        initial_amount : formData.initialAmount,
+        calendar_month : formData.calendarMonth,
+        duration: 
+        formData.durationTo && formData.durationFrom  // check if this is correct
+            ? formData.durationTo - formData.durationFrom 
+            : "",
+        remark : formData.remark,
+        fail_reason : formData.failReason,
+        created_by : createdBy,
+        //settlements: showSettlementTable ? settlements : [],
+      };
 
-      // Simulate successful submission
-      alert("Form submitted successfully!");
+      console.log("Form submitted:", payload);
 
-      // Optional: Reset form or redirect
+      const response = await Mediation_Board(payload);
+      console.log("Response:", response);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Data sent successfully.",
+        confirmButtonColor: "#28a745",
+        });
+      
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
-      setShowConfirmation(false);
-    }
+      const errorMessage = error?.response?.data?.message || 
+                                    error?.message || 
+                                    "An error occurred. Please try again.";
+     Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: errorMessage,
+                confirmButtonColor: "#d33",
+                });
+                    }
   };
 
   // Add this function to toggle settlement table visibility
@@ -446,7 +515,7 @@ const MediationBoardResponse = () => {
               >
                 <option value="">Select Request</option>
                 {roRequests && roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description}>
+                  <option key={request._id} value={request.request_description } data-id={request.ro_request_id}>
                     {request.request_description || "Unnamed Request"}
                   </option>
                 ))}
