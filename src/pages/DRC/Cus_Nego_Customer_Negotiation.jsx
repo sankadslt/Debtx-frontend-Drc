@@ -22,7 +22,9 @@ import {
 import editIcon from "../../assets/images/edit.png"; 
 import viewIcon from "../../assets/images/view.png";
 import Backbtn from "../../assets/images/back.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate  , useLocation} from "react-router-dom";
+import {getLoggedUserId} from "/src/services/auth/authService.js";
+import Swal from "sweetalert2";
 
 
 
@@ -40,29 +42,95 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [caseDetails, setCaseDetails] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const rowsPerPage = 7;
+  const rowsPerPage = 4;
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage1, setCurrentPage1] = useState(1);
+  const [currentPage2, setCurrentPage2] = useState(1);
+  const location = useLocation();
+  const [drcId, setDrcId] = useState(null);
+  const [roId, setRoId] = useState(null);
+  const caseid = location.state?.CaseID;
+  console.log("caseid", caseid);
 
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+
   const currentRows = Array.isArray(lastNagotiation)
     ? lastNagotiation.slice(indexOfFirstRow, indexOfLastRow)
     : [];
   const totalPages = Math.ceil((lastNagotiation?.length || 0) / rowsPerPage);
 
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  // Pagination handler
+  const handlePrevNext = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+    if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const itemsPerPage = 4;
+  const startIndex1 = (currentPage1 - 1) * itemsPerPage;
+  const endIndex1 = startIndex1 + itemsPerPage;
+  const currentRows1 = lastPayment.slice(startIndex1, endIndex1);
+  const totalPages1 = Math.ceil(lastPayment.length / itemsPerPage);
+
+  // Pagination handler for Payment Details
+  const handlePrevNext1 = (direction) => {
+    if (direction === "prev" && currentPage1 > 1) {
+      setCurrentPage1(currentPage - 1);
+    }
+    if (direction === "next" && currentPage1 < totalPages1) {
+      setCurrentPage1(currentPage + 1);
+    }
   };
+
+  const itemsPerPage2 = 4;
+  const startIndex2 = (currentPage2 - 1) * itemsPerPage2;
+  const endIndex2 = startIndex2 + itemsPerPage2;
+  const currentRows2 = lastRequests.slice(startIndex2, endIndex2);
+  const totalPages2 = Math.ceil(lastRequests.length / itemsPerPage2);
+
+  // Pagination handler for Requested Additional Details 
+  const handlePrevNext2 = (direction) => {
+    if (direction === "prev" && currentPage2 > 1) {
+      setCurrentPage2(currentPage2 - 1);
+    }
+    if (direction === "next" && currentPage2 < totalPages2) {
+      setCurrentPage2(currentPage2 + 1);
+    }
+  };
+
+  useEffect(() => {
+    const getuserdetails = async () => {
+      try {
+        const userData = await getLoggedUserId();
+
+        if (userData) {
+          setDrcId(userData.drc_id);
+          setRoId(userData.ro_id);
+          console.log("user drc id", userData.drc_id);
+          console.log("user ro id", userData.ro_id);
+
+        }
+      } catch (error) {
+        console.error("Error fetching user details:", error.message);
+      }
+    };
+    getuserdetails();
+  }, []);
+
+
+
+
   const payload = {
-    case_id :250,
-    drc_id:200,
-    ro_id:1
+    case_id : caseid || 250 ,
+    drc_id: drcId || 200 ,
+    ro_id: roId || null,
   };
+  console.log("payload", payload);
   //form initialization
   const initialFormData = {
     caseId: payload.case_id,
@@ -190,12 +258,28 @@ const Cus_Nego_Customer_Negotiation = () => {
       await addNegotiationCase(subpayload);
       console.log("Form data submitted successfully:", formData);
       alert("Submitted successfully!");
+      Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Data sent successfully.",
+                confirmButtonColor: "#28a745",
+        });
+
       setFormData(initialFormData);
       setIsSubmitted(true);
       setErrors({});
     } catch (error) {
       console.error("Error submitting form data:", error.message);
-    }
+      const errorMessage = error?.response?.data?.message || 
+                              error?.message || 
+                              "An error occurred. Please try again.";
+       Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorMessage,
+          confirmButtonColor: "#d33",
+          });
+              }
   };
 
   const handleInputChange = (e) => {
@@ -611,28 +695,178 @@ const Cus_Nego_Customer_Negotiation = () => {
                 </tbody>
               </table>
             </div>
-            {totalPages > 1 && (
-              <div className={GlobalStyle.navButtonContainer}>
-                <button
-                  onClick={prevPage}
-                  disabled={currentPage === 1}
-                  className={GlobalStyle.navButton}
-                >
-                  <FaArrowLeft />
-                </button>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={nextPage}
-                  disabled={currentPage === totalPages}
-                  className={GlobalStyle.navButton}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-            )}
+             {/* Pagination for Last Negotiation Details */}
+             <div className={GlobalStyle.navButtonContainer}>
+              <button
+                onClick={() => handlePrevNext("prev")}
+                disabled={currentPage === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePrevNext("next")}
+                disabled={currentPage === totalPages}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage === totalPages ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+
+
+          {/* Payment Details Table */}
+          <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+            Payment Details
+          </h3>
+          <div className={GlobalStyle.tableContainer}>
+              <table className={GlobalStyle.table}>
+                <thead>
+                  <tr>
+                    <th className={GlobalStyle.tableHeader}>Date</th>
+                    <th className={GlobalStyle.tableHeader}>Paid Amount</th>
+                    <th className={GlobalStyle.tableHeader}>Settled Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentRows1.length > 0 ? (
+                    currentRows1.map((pay, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(pay.createdDtm).toLocaleDateString()}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {pay.paid_amount}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {pay.settled_balance}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className={GlobalStyle.tableData}>
+                        No Payment Details found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination for Payment Details */}
+            <div className={GlobalStyle.navButtonContainer}>
+              <button
+                onClick={() => handlePrevNext1("prev")}
+                disabled={currentPage1 === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage1 === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+              </button>
+              <span>
+                Page {currentPage1} of {totalPages1}
+              </span>
+              <button
+                onClick={() => handlePrevNext1("next")}
+                disabled={currentPage1 === totalPages1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+
+            {/* Requested Additional Details Table */}
+
+            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+              Requested Additional Details
+            </h3>
+
+            <div className={GlobalStyle.tableContainer}>
+              <table className={GlobalStyle.table}>
+                <thead>
+                  <tr>
+                    <th className={GlobalStyle.tableHeader}>Date</th>
+                    <th className={GlobalStyle.tableHeader}>Request</th>
+                    <th className={GlobalStyle.tableHeader}>Remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentRows2.length > 0 ? (
+                    currentRows2.map((nago, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(nago.createdDtm).toLocaleDateString()}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {nago.field_reason}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {nago.remark}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className={GlobalStyle.tableData}>
+                        No Additional Details Available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination for Requested Additional Details */}
+             <div className={GlobalStyle.navButtonContainer}>
+              <button
+                onClick={() => handlePrevNext2("prev")}
+                disabled={currentPage2 === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage2 === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+              </button>
+              <span>
+                Page {currentPage2} of {totalPages2}
+              </span>
+              <button
+                onClick={() => handlePrevNext2("next")}
+                disabled={currentPage2 === totalPages2}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+            
           </div>
+
         )}
       </div>
     </div>
@@ -856,4 +1090,4 @@ const Cus_Nego_Customer_Negotiation = () => {
       
 };
 
-export default Cus_Nego_Customer_Negotiation;
+export default Cus_Nego_Customer_Negotiation; 
