@@ -516,7 +516,7 @@ const MediationBoardResponse = () => {
                 className={GlobalStyle.selectBox}
                 aria-label="Request type"
               >
-                <option value="">Select Request</option>
+                <option value="" hidden>Select Request</option>
                 {roRequests && roRequests.map((request) => (
                   <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id}>
                     {request.request_description || "Unnamed Request"}
@@ -633,7 +633,7 @@ const MediationBoardResponse = () => {
                     className="w-72 p-2 border rounded-md"
                     aria-label="Fail reason"
                   >
-                    <option value="">Select Response</option>
+                    <option value="" hidden>Select Response</option>
                     {failReasons && failReasons.map((failReason, index) => (
                       <option key={index} value={failReason.mediation_description || ""}>
                         {failReason.mediation_description || "Unnamed Reason"}
