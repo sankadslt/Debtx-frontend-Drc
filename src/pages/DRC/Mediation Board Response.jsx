@@ -54,6 +54,7 @@ const MediationBoardResponse = () => {
   const [formData, setFormData] = useState({
     request: "",
     requestId: "",
+    interactionId: "",
     customerRepresented: "",
     comment: "",
     requestcomment: "",
@@ -169,11 +170,13 @@ const MediationBoardResponse = () => {
     const selectedIndex = e.target.selectedIndex;
     const selectedOption = e.target.options[selectedIndex];
     const requestId = selectedOption.getAttribute("data-id");
+    const interactionId = selectedOption.getAttribute("interaction_id");
 
     setFormData({
       ...formData,
       [name]: value, // Store the selected request description
       requestId: requestId, // Store the associated request ID
+      interactionId: interactionId, // Store the associated interaction ID
     });
   } else {
     setFormData((prev) => ({
@@ -301,13 +304,13 @@ const MediationBoardResponse = () => {
         case_id : caseId,
         drc_id : drcId,
         ro_id : roId,
-        customer_avilable : formData.customerRepresented.toLocaleLowerCase(), // It should be available but I have made a small sintax for testing.
+        customer_available : formData.customerRepresented.toLocaleLowerCase(), // It should be available but I have made a small sintax for testing.
         next_calling_date: nextCallingDate,
         request_id : formData.requestId,
-        request_type : formData.request, // what comes here ?
+        request_type : formData.request,
         request_comment : formData.requestcomment,
         handed_over_non_settlement: handoverNonSettlement,
-        // intraction_id : what comes here ?
+        intraction_id : formData.interactionId,
         comment : formData.comment,
         settle : formData.settle,
         settlement_count : formData.settlementCount,
@@ -515,7 +518,7 @@ const MediationBoardResponse = () => {
               >
                 <option value="">Select Request</option>
                 {roRequests && roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description } data-id={request.ro_request_id}>
+                  <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id}>
                     {request.request_description || "Unnamed Request"}
                   </option>
                 ))}
