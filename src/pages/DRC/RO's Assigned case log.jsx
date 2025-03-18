@@ -407,12 +407,13 @@ const paginatedData = filteredData.slice(
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() => handleonedit(row.case_id)}
                     />
-                    <img
-                      src={edit}
-                      alt="Negotiation Case"
-                      className={`w-6 h-6 cursor-pointer display: inline-block`}
-                      onClick={() => handleonnegotiation(row.case_id)}
-                    />
+                    <button
+                        className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                        style={{ whiteSpace: "nowrap" }}
+                        onClick={() => handleonnegotiation(row.case_id)}
+                    >
+                        Negotiation
+                    </button>
                   </td>
                 </tr>
               ))}
