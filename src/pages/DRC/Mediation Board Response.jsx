@@ -178,12 +178,46 @@ const MediationBoardResponse = () => {
       requestId: requestId, // Store the associated request ID
       interactionId: interactionId, // Store the associated interaction ID
     });
-  } else {
+  } 
+  if (name === "calendarMonth") {
+    if (value === "" || /^[0-9\b]+$/.test(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value, // Temporarily allow full input
+      }));
+    }
+  }
+  else {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name === "calendarMonth") {
+      let numValue = Number(value);
+      if (numValue < 1) numValue = 1;
+      if (numValue > 12) numValue = 12;
+  
+       // Get today's date (DD/MM/YYYY format)
+    const today = new Date();
+    const durationFrom = today.toLocaleDateString("en-GB"); 
+
+    // Calculate durationTo
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
+    const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
+    const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: numValue.toString(), // Store as string
+      durationFrom,
+      durationTo,
+    }));
+    }
   };
 
   const handleHandoverChange = (e) => {
@@ -341,10 +375,7 @@ const MediationBoardResponse = () => {
         settlement_count : formData.settlementCount,
         initial_amount : formData.initialAmount,
         calendar_month : formData.calendarMonth,
-        duration: 
-        formData.durationTo && formData.durationFrom  // check if this is correct
-            ? formData.durationTo - formData.durationFrom 
-            : "",
+        duration: formData.calendarMonth,
         remark : formData.remark,
         fail_reason : formData.failReason,
         created_by : createdBy,
@@ -688,7 +719,7 @@ const MediationBoardResponse = () => {
                 <div className="flex items-center">
                   <span className="w-48 font-semibold">Settlement Count:</span>
                   <input
-                    type="text"
+                    type="number"
                     name="settlementCount"
                     value={formData.settlementCount}
                     onChange={handleInputChange}
@@ -700,7 +731,7 @@ const MediationBoardResponse = () => {
                 <div className="flex items-center">
                   <span className="w-48 font-semibold">Initial Amount:</span>
                   <input
-                    type="text"
+                    type="number"
                     name="initialAmount"
                     value={formData.initialAmount}
                     onChange={handleInputChange}
@@ -716,8 +747,10 @@ const MediationBoardResponse = () => {
                     name="calendarMonth"
                     value={formData.calendarMonth}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     className="w-20 p-2 border rounded-md"
                     min="0"
+                    max="12"
                     aria-label="Calendar month"
                   />
                 </div>
@@ -733,6 +766,7 @@ const MediationBoardResponse = () => {
                       onChange={handleInputChange}
                       className="w-32 p-2 border rounded-md"
                       aria-label="Duration from"
+                      readOnly
                     />
                     <span>To:</span>
                     <input
@@ -742,6 +776,7 @@ const MediationBoardResponse = () => {
                       onChange={handleInputChange}
                       className="w-32 p-2 border rounded-md"
                       aria-label="Duration to"
+                      readOnly
                     />
                   </div>
                 </div>
