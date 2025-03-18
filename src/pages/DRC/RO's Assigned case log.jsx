@@ -21,42 +21,42 @@ import {  getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
 
 // Import status icons with correct file extensions
-import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
-import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
-import MB_Handed_Customer_Info from "../../assets/images/mediationBoard/MB_Handed_Customer_Info.png";
-import MB_Negotiation from "../../assets/images/mediationBoard/MB_Negotiation.png";
-import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Request_Customer_Info.png";
-import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
-import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
+import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
+import RO_Negotiation_Extneded from "../../assets/images/negotiation/RO_Negotiation_Extneded.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/negotiation/RO_Negotiation_Extension_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/negotiation/Negotiation_Settle_Active.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/negotiation/Negotiation_Settle_Open-Pending.png";
+import Negotiation_Settle_Pending from "../../assets/images/negotiation/Negotiation_Settle_Pending.png";
+import RO_Negotiation from "../../assets/images/negotiation/RO_Negotiation.png";
 
 // Status icon mapping
 const STATUS_ICONS = {
   "RO Negotiation FMB Pending": {
-    icon: Forward_to_Mediation_Board,
-    tooltip: "Forward to Mediation Board"
+    icon: RO_Negotiation_FMB_pending,
+    tooltip: "RO Negotiation FMB pending"
   },
   "RO Negotiation Extended": {
-    icon: MB_fail_with_pending_non_settlement,
-    tooltip: "MB fail with pending non settlement"
+    icon: RO_Negotiation_Extneded,
+    tooltip: "RO Negotiation Extneded"
   },
   "RO Negotiation Extension Pending": {
-    icon: MB_Handed_Customer_Info,
-    tooltip: "MB Handed Customer Info"
+    icon: RO_Negotiation_Extension_Pending,
+    tooltip: "RO Negotiation Extension Pending"
   },
   "Negotiation Settle Active": {
-    icon: MB_Negotiation,
-    tooltip: "MB Negotiation"
+    icon: Negotiation_Settle_Active,
+    tooltip: "Negotiation Settle Active"
   },
   "Negotiation Settle Open-Pending": {
-    icon: MB_Request_Customer_Info,
-    tooltip: "MB Request Customer Info"
+    icon: Negotiation_Settle_Open_Pending,
+    tooltip: "Negotiation Settle Open-Pending"
   },
-  "MNegotiation Settle Pending": {
-    icon: MB_Settle_Active,
-    tooltip: "MB Settle Active"
+  "Negotiation Settle Pending": {
+    icon: Negotiation_Settle_Pending,
+    tooltip: "Negotiation Settle Pending"
   },
   "RO Negotiation": {
-    icon: MB_Settle_open_pending,
+    icon: RO_Negotiation,
     tooltip: "MB Settle open pending"
   },
 };
