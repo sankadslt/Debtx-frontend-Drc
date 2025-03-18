@@ -10,7 +10,7 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes: The following page conatins the code for the assigned customer negotiation and cpe collect for DRC  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import {
@@ -25,9 +25,6 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
-
-
-
 
 const Cus_Nego_Customer_Negotiation = () => {
   
@@ -50,7 +47,7 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
   const caseid = location.state?.CaseID;
-  console.log("caseid", caseid);
+  console.log("case_id", caseid);
 
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
@@ -122,15 +119,13 @@ const Cus_Nego_Customer_Negotiation = () => {
     getuserdetails();
   }, []);
 
-
-
-
   const payload = {
     case_id : caseid || 250 ,
     drc_id: drcId || 200 ,
     ro_id: roId || null,
   };
   console.log("payload", payload);
+
   //form initialization
   const initialFormData = {
     caseId: payload.case_id,
@@ -192,7 +187,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     fetchFieldRequest();
     getcasedetails();
     fetchRORequests();
-  }, []);
+  }, [drcId, roId]);
   
   //calculate date from /to in settlement plan
   useEffect(() => {
