@@ -599,3 +599,13 @@ export const addCpeNegotiation = async (caseId, type, cpemodel, serialNo, nego_r
     throw error;  // Rethrow the error so it can be caught elsewhere
   }
 };
+
+export const Mediation_Board = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/Mediation_Board`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding mediation board response:", error.response?.data || error.message);
+    throw error;
+  }
+};
