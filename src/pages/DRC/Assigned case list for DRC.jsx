@@ -125,11 +125,7 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
-
-
-
   const handleCreateTaskForDownload = async ({
-
     fromDate,
     toDate,
   }) => {
@@ -181,12 +177,12 @@ export default function AssignedCaseListforDRC() {
           confirmButtonText: "OK",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Error creating task",
-        icon: "error",
-        confirmButtonText: "OK",
+        icon: "error"
       });
     }
   };
@@ -209,13 +205,6 @@ export default function AssignedCaseListforDRC() {
       setToDate(date);
     }
   };
-
-
-
-
-
-
-
 
   /* const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
@@ -249,10 +238,6 @@ export default function AssignedCaseListforDRC() {
 
     }
   }; */
-
-
-
-
 
   const handleFilter = async () => {
     try {
@@ -341,6 +326,11 @@ export default function AssignedCaseListforDRC() {
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
 

@@ -19,6 +19,7 @@ import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import { listDRCAllCases } from "../../services/case/CaseService";
 import {  getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
+import Swal from 'sweetalert2';
 
 // Import status icons with correct file extensions
 import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
@@ -240,8 +241,14 @@ const fetchCases = async () => {
     setCases(data);
     setCurrentPage(0);
     setHasInitialFetch(true);
-  } catch (err) {
-    setError(err.message || "Failed to fetch cases. Please try again.");
+  } catch (error) {
+    console.error("Error filtering cases:", error);
+    Swal.fire({
+      title: "Error",
+      text: "Failed to fetch filtered data. Please try again.",
+      icon: "error"
+    });
+    setError(error.message || "Failed to fetch cases. Please try again.");
     setCases([]);
   } finally {
     setLoading(false);
@@ -292,7 +299,7 @@ const paginatedData = filteredData.slice(
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
-      {error && <p className="text-red-500">{error}</p>}
+      {/* {error && <p className="text-red-500">{error}</p>} */}
 
       <div className="flex gap-4 items-center justify-end flex-wrap mt-4 ">
         {/* Dropdown for RTOM */}
@@ -404,15 +411,17 @@ const paginatedData = filteredData.slice(
                     <img
                       src={edit}
                       alt="Edit Case"
+                      title="Edit Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() => handleonedit(row.case_id)}
                     />
-                    <img
-                      src={edit}
-                      alt="Negotiation Case"
-                      className={`w-6 h-6 cursor-pointer display: inline-block`}
+                    <button
+                      className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                      style={{ whiteSpace: "nowrap", cursor: "pointer", marginRight: "8px"}}
                       onClick={() => handleonnegotiation(row.case_id)}
-                    />
+                    >
+                      Negotiation
+                    </button>
                   </td>
                 </tr>
               ))}

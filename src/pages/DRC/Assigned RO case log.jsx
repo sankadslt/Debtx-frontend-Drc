@@ -110,10 +110,8 @@ export default function AssignedROcaselog() {
           try {
             if (userData?.drc_id) {
               // Make sure to convert to number if needed
-              
-              
               const arrearsAmounts = await fetchAllArrearsBands();
-                setArrearsAmounts(arrearsAmounts);
+              setArrearsAmounts(arrearsAmounts);
               // Fetch RTOMs by DRC ID
               const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
               console.log("RTOM list retrieved:", rtomsList);
@@ -139,6 +137,16 @@ export default function AssignedROcaselog() {
         }
         setToDate(date);
       }
+
+      const handleonvisiable = (case_id) => {
+        navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+      }
+
+      const handleonreassign = (case_id) => {
+        navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+      }
     
       const checkdatediffrence = (startDate, endDate) => {
         const start = new Date(startDate).getTime();
@@ -161,7 +169,6 @@ export default function AssignedROcaselog() {
             cancelButtonColor: "#d33",
           }).then((result) => {
             if (result.isConfirmed) {
-    
               endDate = endDate;
               handleApicall(startDate, endDate);
             } else {
@@ -170,8 +177,7 @@ export default function AssignedROcaselog() {
             }
           }
           );
-    
-        }
+        };
       };  
     const handleFilter = async () => {
         try {
@@ -254,13 +260,15 @@ export default function AssignedROcaselog() {
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
             const isPastDate = endDate < currentDate;
-
-
-        } catch (error) {
+        }catch (error) {
             console.error("Error filtering cases:", error);
+            Swal.fire({
+            title: "Error",
+            text: "Failed to fetch filtered data. Please try again.",
+            icon: "error"
+            });
         }
     };
-
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -366,11 +374,9 @@ export default function AssignedROcaselog() {
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
-
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
-
 
                 {/* RTOM Select Dropdown */}
                 <select
@@ -427,7 +433,6 @@ export default function AssignedROcaselog() {
                     />
                 </div>
 
-
                 <button
                     onClick={handleFilter}
                     className={`${GlobalStyle.buttonPrimary}`}
@@ -449,8 +454,6 @@ export default function AssignedROcaselog() {
                     <FaSearch className={GlobalStyle.searchBarIcon} />
                 </div>
             </div>
-
-
 
             {/* Table Section */}
             <div className={GlobalStyle.tableContainer}>
@@ -482,9 +485,7 @@ export default function AssignedROcaselog() {
                                 End Date
                             </th>
                             <th scope="col" className={GlobalStyle.tableHeader}>
-
                             </th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -520,7 +521,7 @@ export default function AssignedROcaselog() {
                                         <td className={GlobalStyle.tableData}>
                                             <div className="px-8 flex items-center gap-2">
                                                 <AiFillEye
-                                                    onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
+                                                    onClick={() => handleonvisiable(item.case_id)}
                                                     style={{ cursor: "pointer", marginRight: "8px" }}
                                                 />
 
@@ -538,8 +539,8 @@ export default function AssignedROcaselog() {
 
                                                 <button
                                                     className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                                                    style={{ whiteSpace: "nowrap" }}
-                                                    onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
+                                                    style={{ whiteSpace: "nowrap"}}
+                                                    onClick={() => handleonreassign(item.case_id)}
                                                 >
                                                     Re-Assign
                                                 </button>
@@ -588,8 +589,6 @@ export default function AssignedROcaselog() {
             >
                 <FaArrowLeft />Go Back
             </button>
-
-
         </div>
     );
 }
