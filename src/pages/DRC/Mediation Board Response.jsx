@@ -258,7 +258,12 @@ const MediationBoardResponse = () => {
     if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
       if (!formData.comment.trim()) {
-        alert("Please enter a comment");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
@@ -267,17 +272,32 @@ const MediationBoardResponse = () => {
     } else {
       // Regular validation for non-handover cases
       if (formData.customerRepresented === "") {
-        alert("Please select whether customer is represented");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select whether customer is represented",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
       if (formData.customerRepresented === "Yes" && formData.settle === "") {
-        alert("Please select whether customer agrees to settle");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select whether customer agrees to settle",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
       if (showFailReasonFields && !formData.failReason) {
-        alert("Please select a fail reason");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select a fail reason",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
@@ -292,7 +312,12 @@ const MediationBoardResponse = () => {
         });
 
         if (!isValid) {
-          alert("Please fill in all settlement details");
+          Swal.fire({
+            icon: "warning",
+            title: "Warning",
+            text: "Please fill in all settlement details",
+            confirmButtonColor: "#d33",
+            });
           return;
         }
       }
@@ -304,7 +329,7 @@ const MediationBoardResponse = () => {
         case_id : caseId,
         drc_id : drcId,
         ro_id : roId,
-        customer_available : formData.customerRepresented.toLocaleLowerCase(), // It should be available but I have made a small sintax for testing.
+        customer_available : formData.customerRepresented.toLocaleLowerCase(), 
         next_calling_date: nextCallingDate,
         request_id : formData.requestId,
         request_type : formData.request,
