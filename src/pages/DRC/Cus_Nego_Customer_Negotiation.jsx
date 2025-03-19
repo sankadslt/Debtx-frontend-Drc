@@ -25,7 +25,6 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
-// import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
   
@@ -47,7 +46,8 @@ const Cus_Nego_Customer_Negotiation = () => {
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
-  const case_id = location.state?.CaseID;
+  const caseid = location.state?.CaseID;
+  console.log("case_id", caseid);
 
   const [userData, setUserData] = useState(null); 
   //pagination
@@ -113,9 +113,16 @@ const Cus_Nego_Customer_Negotiation = () => {
   loadUser();
   }, []);
 
+  const payload = {
+    case_id : caseid || 250 ,
+    drc_id: drcId || 200 ,
+    ro_id: roId || null,
+  };
+  console.log("payload", payload);
+
   //form initialization
   const initialFormData = {
-    caseId: case_id,
+    caseId: caseid,
     customerRef: null,
     accountNo: null,
     arrearsAmount: null,
@@ -150,7 +157,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         if (drcId) {
           const payload = {
             drc_id : parseInt(drcId),
-            case_id : parseInt(case_id)
+            case_id : parseInt(caseid)
           }  
 
           const caseDetails = await drcCaseDetails(payload);
@@ -271,7 +278,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       //   ref_products: []
       // }
       console.log("Form data submitted successfully:", formData);
-      await addNegotiationCase(subpayload);
+      await addNegotiationCase(formData);
       alert("Submitted successfully!");
       Swal.fire({
           icon: "success",

@@ -11,7 +11,7 @@ Notes: The following page conatins the code for Edit Customer details  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   caseDetailsforDRC,
   updateCustomerContacts,
@@ -39,6 +39,8 @@ export default function EditCustomerProfile() {
   const navigate = useNavigate();
 
   const [contacts, setContacts] = useState([]);
+  const location = useLocation();
+  const case_id = location.state?.CaseID;
 
   // NIC
   const [identification_type, setidentification_type] = useState("");
@@ -64,7 +66,7 @@ export default function EditCustomerProfile() {
   // validation masseges
   const [validationMessage, setValidationMessage] = useState("");
   const [userData, setUserData] = useState(null);
-  const { case_id } = useParams();
+  // const { case_id } = useParams();
   
   // const loadUser = async () => {
   //   let token = localStorage.getItem("accessToken");
