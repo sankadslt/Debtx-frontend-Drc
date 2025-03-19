@@ -402,7 +402,7 @@ export const addNegotiationCase = async (payload) => {
     if (!payload.caseId || !payload.reason || !payload.request) {
       throw new Error("Case ID, reason, and request are required.");
     }
-
+console.log(" this is the service drc id ", payload.drcId);
     const response = await axios.post(`${URL}/Customer_Negotiations`, {
       case_id: payload.caseId,
       initial_amount: payload.ini_amount || null,
