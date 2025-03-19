@@ -398,6 +398,7 @@ export const drcCaseDetails = async (payload) => {
 // Add Negotiation Case
 export const addNegotiationCase = async (payload) => {
   try {
+    console.log("this is the service one", payload);
     if (!payload.caseId || !payload.reason || !payload.request) {
       throw new Error("Case ID, reason, and request are required.");
     }

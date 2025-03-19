@@ -10,7 +10,7 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes: The following page conatins the code for the assigned customer negotiation and cpe collect for DRC  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import {
@@ -25,9 +25,7 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
-
-
-
+// import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
   
@@ -49,9 +47,9 @@ const Cus_Nego_Customer_Negotiation = () => {
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
-  const caseid = location.state?.CaseID;
-  console.log("caseid", caseid);
+  const case_id = location.state?.CaseID;
 
+  const [userData, setUserData] = useState(null); 
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
@@ -103,37 +101,21 @@ const Cus_Nego_Customer_Negotiation = () => {
     }
   };
 
+  const loadUser = async () => {
+  const user = await getLoggedUserId();
+  setUserData(user);
+  setDrcId(user.drc_id);
+  setRoId(user.ro_id);
+  console.log("User data:", user);
+  };
+
   useEffect(() => {
-    const getuserdetails = async () => {
-      try {
-        const userData = await getLoggedUserId();
-
-        if (userData) {
-          setDrcId(userData.drc_id);
-          setRoId(userData.ro_id);
-          console.log("user drc id", userData.drc_id);
-          console.log("user ro id", userData.ro_id);
-
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error.message);
-      }
-    };
-    getuserdetails();
+  loadUser();
   }, []);
 
-
-
-
-  const payload = {
-    case_id : caseid || 250 ,
-    drc_id: drcId || 200 ,
-    ro_id: roId || null,
-  };
-  console.log("payload", payload);
   //form initialization
   const initialFormData = {
-    caseId: payload.case_id,
+    caseId: case_id,
     customerRef: null,
     accountNo: null,
     arrearsAmount: null,
@@ -146,9 +128,9 @@ const Cus_Nego_Customer_Negotiation = () => {
     month: 3,
     from: null,
     to: null,
-    settle_remark: null,
-    drcId: payload.drc_id,
-    roId: payload.ro_id ? payload.ro_id : null,
+    settlement_remark: null,
+    drcId: drcId,
+    roId: roId || null,
     requestId: null,
     request: null,
     request_remark: null,
@@ -161,12 +143,19 @@ const Cus_Nego_Customer_Negotiation = () => {
     ref_products: [] // Initialize ref_products as an empty array
   };
   const [formData, setFormData] = useState(initialFormData);
+  
   useEffect(() => {
     const getcasedetails = async () => {
       try {
-        const caseDetails = await drcCaseDetails(payload);
-        setCaseDetails(caseDetails.data);
-        // console.log("case detaoils", caseDetails.data);
+        if (drcId) {
+          const payload = {
+            drc_id : parseInt(drcId),
+            case_id : parseInt(case_id)
+          }  
+
+          const caseDetails = await drcCaseDetails(payload);
+          setCaseDetails(caseDetails.data);
+        }
       } catch (error) {
         console.error("Error fetching case details:", error.message);
       }
@@ -183,7 +172,6 @@ const Cus_Nego_Customer_Negotiation = () => {
     const fetchFieldRequest = async () => {
       try {
         const field_request = await fetchActiveNegotiations();
-        // console.log("Field Reason :", field_request);
         setActiveNegotiations(field_request);
       } catch (error) {
         console.error("Error fetching field reason:", error.message);
@@ -192,7 +180,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     fetchFieldRequest();
     getcasedetails();
     fetchRORequests();
-  }, []);
+  }, [drcId, roId]);
   
   //calculate date from /to in settlement plan
   useEffect(() => {
@@ -238,7 +226,6 @@ const Cus_Nego_Customer_Negotiation = () => {
     };
     
     try {
-
       // Find the selected request details
       const selectedRequest = activeRORequests.find(
           (request) => request.ro_request_id === parseInt(formData.requestId)
@@ -251,18 +238,46 @@ const Cus_Nego_Customer_Negotiation = () => {
           return;
       }
 
-      const subpayload = 
-      {...formData,
-      };
-      console.log(subpayload);
-      await addNegotiationCase(subpayload);
+      // const subpayload = 
+      // {...formData,
+      // };
+
+      // const subpayload = {
+      //   caseId: parseInt(case_id),
+      //   customerRef: formData.customerRef,
+      //   accountNo: formData.accountNo,
+      //   arrearsAmount: formData.arrearsAmount,
+      //   lastPaymentDate: formData.lastPaymentDate,
+      //   request_description: formData.request_description,
+      //   createdDtm: formData.createdDtm,
+      //   fieldReason: formData.,
+      //   remark: formData,
+      //   ini_amount: formData,
+      //   month: 3,
+      //   from: formData,
+      //   to: formData,
+      //   settlement_remark: formData,
+      //   drcId: parseInt(drcId),
+      //   roId: roId || null,
+      //   requestId: formData,
+      //   request: formData,
+      //   request_remark: formData,
+      //   intractionId: formData,
+      //   todo: formData,
+      //   completed: formData,
+      //   reasonId: "",
+      //   reason: "",
+      //   nego_remark: formData,
+      //   ref_products: []
+      // }
       console.log("Form data submitted successfully:", formData);
+      await addNegotiationCase(subpayload);
       alert("Submitted successfully!");
       Swal.fire({
-                icon: "success",
-                title: "Success",
-                text: "Data sent successfully.",
-                confirmButtonColor: "#28a745",
+          icon: "success",
+          title: "Success",
+          text: "Data sent successfully.",
+          confirmButtonColor: "#28a745",
         });
 
       setFormData(initialFormData);
@@ -270,16 +285,14 @@ const Cus_Nego_Customer_Negotiation = () => {
       setErrors({});
     } catch (error) {
       console.error("Error submitting form data:", error.message);
-      const errorMessage = error?.response?.data?.message || 
-                              error?.message || 
-                              "An error occurred. Please try again.";
-       Swal.fire({
+      const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+        Swal.fire({
           icon: "error",
           title: "Error",
           text: errorMessage,
           confirmButtonColor: "#d33",
-          });
-              }
+        });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -864,9 +877,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <FaArrowRight />
               </button>
             </div>
-            
           </div>
-
         )}
       </div>
     </div>
