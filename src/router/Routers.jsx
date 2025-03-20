@@ -13,12 +13,10 @@ import PrototypeB from "../assets/prototype/prototypeB";
 import PrototypeC from "../assets/prototype/prototypeC";
 
  {/* Distribute Imports */}
- 
 import DistributeTORO from "../pages/Distribute/DistributeTORO";
 
 
 {/* DRC Imports */}
-
 import Dummy from "../pages/DRC/Dummy";
 import AssignedCaseListforDRC from "../pages/DRC/Assigned case list for DRC";
 import RO_Monitoring from "../pages/DRC/RO Monitoring (Arrears) and (CPE)";
@@ -30,6 +28,7 @@ import AssignedROcaselog from "../pages/DRC/Assigned RO case log";
 import EditCustomerProfile from "../pages/DRC/EditCustomerProfile";
 import CustomerNegotiation from "../pages/DRC/Cus_Nego_Customer_Negotiation";
 import DummyPage from "../pages/DummyPage";
+import EditCPECollect from "../pages/DRC/EditCPECollect";
 
 
 const Routers = () => {
@@ -78,8 +77,12 @@ const Routers = () => {
       {/* DRC/RO Routes for 2.6 to 2.7.1 - Negotiation*/}
       <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
       {/* <Route path="/drc/ro-s-assigned-case-log" element={<ProtectedRoute element={<ROsAssignedcaseLog />} allowedRoles={['superadmin']} />} /> */}
-      <Route path="/pages/DRC/EditCustomerProfile/:drc_id/:case_id" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'admin,', 'drc_user', 'drc_admin', 'user']} />} />
+      <Route path="/pages/DRC/EditCustomerProfile/:case_id" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'admin,', 'drc_user', 'drc_admin', 'user']} />} />
       <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin', 'user']} />} />
+      {/* <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} /> */}
+
+
+      <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} />
     </Routes>
   );
 };

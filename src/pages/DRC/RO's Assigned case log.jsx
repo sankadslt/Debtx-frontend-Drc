@@ -17,8 +17,7 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import { listDRCAllCases } from "../../services/case/CaseService";
-import { jwtDecode } from "jwt-decode";
-import {  refreshAccessToken } from "../../services/auth/authService.js";
+import {  getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
 
 // Import status icons with correct file extensions
@@ -118,36 +117,47 @@ export default function ROsAssignedcaselog() {
 //   fetchUserData();
 // }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
+// const loadUser = async () => {
+//   let token = localStorage.getItem("accessToken");
+//   if (!token) {
+//     setUserData(null);
+//     return;
+//   }
+
+//   try {
+//     let decoded = jwtDecode(token);
+//     const currentTime = Date.now() / 1000;
+//     if (decoded.exp < currentTime) {
+//       token = await refreshAccessToken();
+//       if (!token) return;
+//       decoded = jwtDecode(token);
+//     }
+
+//     setUserData({
+//       id: decoded.user_id,
+//       role: decoded.role,
+//       drc_id: decoded.drc_id,
+//       ro_id: decoded.ro_id,
+//     });
+//   } catch (error) {
+//     console.error("Invalid token:", error);
+//   }
+// };
+
+// useEffect(() => {
+//   loadUser();
+// }, [localStorage.getItem("accessToken")]);
+
+
 const loadUser = async () => {
-  let token = localStorage.getItem("accessToken");
-  if (!token) {
-    setUserData(null);
-    return;
-  }
-
-  try {
-    let decoded = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp < currentTime) {
-      token = await refreshAccessToken();
-      if (!token) return;
-      decoded = jwtDecode(token);
-    }
-
-    setUserData({
-      id: decoded.user_id,
-      role: decoded.role,
-      drc_id: decoded.drc_id,
-      ro_id: decoded.ro_id,
-    });
-  } catch (error) {
-    console.error("Invalid token:", error);
-  }
+  const user = await getLoggedUserId();
+  setUserData(user);
+  console.log("User data:", user);
 };
 
 useEffect(() => {
   loadUser();
-}, [localStorage.getItem("accessToken")]);
+}, []);
 
 
 // Then update your useEffect that fetches RTOMs
@@ -155,16 +165,10 @@ useEffect(() => {
   const fetchRTOMs = async () => {
     try {
       if (userData?.drc_id) {
-        // Make sure to convert to number if needed
-        const payload = parseInt(userData.drc_id);
-        console.log("Fetching RTOMs for DRC ID:", payload);
-        
         // Fetch RTOMs by DRC ID
-        const rtomsList = await getActiveRTOMsByDRCID(payload);
+        const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
         console.log("RTOM list retrieved:", rtomsList);
         setRtoms(rtomsList);
-      } else {
-        console.log("No DRC ID available yet");
       }
     } catch (error) {
       console.error("Error fetching RTOMs:", error);
@@ -277,7 +281,7 @@ const paginatedData = filteredData.slice(
 
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
-      <h1 className={GlobalStyle.headingLarge}>Case List</h1>
+      <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="flex gap-4 items-center justify-end flex-wrap mt-4 ">
@@ -392,7 +396,7 @@ const paginatedData = filteredData.slice(
                       alt="Edit Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() =>
-                        navigate(`/pages/DRC/EditCustomerProfile/${row.userData?.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/EditCustomerProfile/${row.case_id}`)
                       }
                     />
                     <img
@@ -400,7 +404,7 @@ const paginatedData = filteredData.slice(
                       alt="Negotiation Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
                       onClick={() =>
-                        navigate(`/pages/DRC/Mediation Board Response/${row.userData?.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/Mediation Board Response/${row.case_id}`)
                       }
                     />
                   </td>
