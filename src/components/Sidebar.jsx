@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { MdSpaceDashboard } from "react-icons/md";
 import { IoIosListBox } from "react-icons/io";
+import { FaBuildingUser } from "react-icons/fa6";
 import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../services/auth/authService";
@@ -42,76 +43,51 @@ const Sidebar = ({ onHoverChange }) => {
 
   // Menu structure with nested subtopics and roles for each sub-item
   const menuItems = [
-    { icon: MdSpaceDashboard, label: "Dashboard", link: "/dashboard", roles: ["superadmin", "admin", "user", 'drc_admin'], subItems: [] },
+    {
+      icon: MdSpaceDashboard,
+      label: "Dashboard",
+      link: "/dashboard",
+      roles: ["superadmin", "admin", "user", "drc_admin"],
+      subItems: [],
+    },
+    {
+      icon: FaBuildingUser,
+      label: "RO List",
+      link: "/dashboard",
+      roles: ["superadmin", "admin", "user", "drc_admin"],
+      subItems: [],
+    },
     {
       icon: IoIosListBox,
-      label: "DRC",
-      roles: ["superadmin", "admin", "user" , 'drc_admin', 'drc_user'],
+      label: "Case",
+      roles: ["superadmin", "admin", "user", "drc_admin", "drc_user"],
       subItems: [
         {
-          label: "DRC",
-          roles: ["superadmin", "admin", 'drc_admin', 'drc_user'],
-          subItems: [
-            {
-              label: "Assigned Case List for DRC",
-              link: "/drc/assigned-case-list-for-drc", // Static route
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-            { 
-              label: "Distribute To RO", 
-              link: "/pages/Distribute/DistributeTORO", 
-              roles: ["superadmin, admin", 'drc_admin', 'drc_user'] 
-            },
-            { 
-              label: "Assigned RO Case Log", 
-              link: "/drc/assigned-ro-case-log", 
-              roles: ["superadmin", "admin", "drc_admin", 'drc_user'] 
-            },
-            // { 
-            //   label: "RO Monitoring (Arrears) and (CPE)", 
-            //   link: "/drc/ro-monitoring-arrears", 
-            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
-            // },
-            // { 
-            //   label: "Re-Assign-Ro", 
-            //   link: "/pages/DRC/Re-AssignRo", 
-            //   roles: ["superadmin", "admin", 'drc_admin', 'drc_user'] 
-            // },
-          ],
+          label: "Case List",
+          link: "/dashboard",
+          roles: ["superadmin", "admin", "drc_admin", "drc_user"],
         },
         {
-          label: "DRC / RO",
+          label: "RO Assigned Case List",
+          link: "/dashboard",
           roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-          subItems: [
-            { 
-              label: "Mediation Board Case List", 
-              link: "/drc/mediation-board-case-list", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
-            },
-            { 
-              label: "Mediation Board Response", 
-              link: "/pages/DRC/Mediation Board Response", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
-            },
-            { 
-              label: "RO Assigned Case Log", 
-              link: "/drc/ro-s-assigned-case-log", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
-            },
-            { 
-              label: "Edit Customer Profile", 
-              link: "/drc/customer-negotiation", 
-              roles: ["superadmin", "admin", 'drc_admin', 'drc_user', 'user'] 
-            },
-          ],
         },
-        { label: "Dummy", link: "/dashboard", roles: ["superadmin"] },
+        { label: "Negotiation Case List", 
+          link: "/dashboard", 
+          roles: ["superadmin", "admin", "drc_admin", "drc_user"] 
+        },
+        { label: "Mediation Board List", 
+          link: "/dashboard", 
+          roles: ["superadmin", "admin", "drc_admin", "drc_user"] 
+        },
       ],
     },
   ];
 
   // Filter menu items based on user role
-  const filteredMenuItems = userRole ? menuItems.filter(item => item.roles.includes(userRole)) : [];
+  const filteredMenuItems = userRole
+    ? menuItems.filter((item) => item.roles.includes(userRole))
+    : [];
 
   // Handle submenu toggle on click
   const handleClick = (level, index, hasSubItems) => {
@@ -155,20 +131,24 @@ const Sidebar = ({ onHoverChange }) => {
     return (
       <ul className={`ml-8 mt-2 space-y-2 ${!isHovered ? "hidden" : ""}`}>
         {subItems
-          .filter(subItem => subItem.roles.includes(userRole)) // Filter sub-items based on user role
+          .filter((subItem) => subItem.roles.includes(userRole)) // Filter sub-items based on user role
           .map((subItem, subIndex) => {
             const isExpanded = expandedItems[level] === subIndex;
             return (
               <li key={subIndex}>
                 <Link
                   to={subItem.link || "#"}
-                  onClick={() => handleClick(level, subIndex, !!subItem.subItems)}
+                  onClick={() =>
+                    handleClick(level, subIndex, !!subItem.subItems)
+                  }
                   className="block px-3 py-2 rounded-lg text-sm font-medium transition"
                 >
                   {subItem.label}
                 </Link>
                 {isExpanded && subItem.subItems && (
-                  <div className="ml-4">{renderSubItems(subItem.subItems, level + 1)}</div>
+                  <div className="ml-4">
+                    {renderSubItems(subItem.subItems, level + 1)}
+                  </div>
                 )}
               </li>
             );
@@ -206,7 +186,9 @@ const Sidebar = ({ onHoverChange }) => {
                 <item.icon className="w-6 h-6 text-white" />
                 {isHovered && <span>{item.label}</span>}
               </Link>
-              {expandedItems[0] === index && item.subItems && <div>{renderSubItems(item.subItems, 1)}</div>}
+              {expandedItems[0] === index && item.subItems && (
+                <div>{renderSubItems(item.subItems, 1)}</div>
+              )}
             </li>
           );
         })}
@@ -216,28 +198,6 @@ const Sidebar = ({ onHoverChange }) => {
 };
 
 export default Sidebar;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
 import { Link, useLocation } from "react-router-dom";
