@@ -396,31 +396,31 @@ export const drcCaseDetails = async (payload) => {
 
 
 // Add Negotiation Case
-export const addNegotiationCase = async (payload) => {
+export const addNegotiationCase = async (formData , DRC_ID) => {
   try {
-    console.log("this is the service one", payload);
-    if (!payload.caseId || !payload.reason || !payload.request) {
+    console.log("this is the service one", formData);
+    if (!formData.caseId || !formData.reason || !formData.request) {
       throw new Error("Case ID, reason, and request are required.");
     }
-console.log(" this is the service drc id ", payload.drcId);
+console.log(" this is the service drc id ", DRC_ID);
     const response = await axios.post(`${URL}/Customer_Negotiations`, {
-      case_id: payload.caseId,
-      initial_amount: payload.ini_amount || null,
-      calender_month: payload.month || null,
-      duration_from: payload.from || null,
-      duration_to: payload.to || null,
-      settlement_remark:payload.settle_remark || null,
-      drc_id: payload.drcId || null ,
-      ro_id: payload.roId || null,
-      request_type: payload.request_description || null,
-      request_comment: payload.request_remark || null,
-      ro_name: payload.ro_name || null,
-      drc: payload.drc || null,
-      request_id: payload.reasonId || null,
-      intraction_id: payload.intractionId || null,
-      field_reason: payload.reason,
-      field_reason_remark: payload.nego_remark || null,
-      created_by: payload.created_by || "null",
+      case_id: formData.caseId,
+      initial_amount: formData.ini_amount || null,
+      calender_month: formData.month || null,
+      duration_from: formData.from || null,
+      duration_to: formData.to || null,
+      settlement_remark:formData.settle_remark || null,
+      drc_id: DRC_ID || null ,
+      ro_id: formData.roId || null,
+      request_type: formData.request_description || null,
+      request_comment: formData.request_remark || null,
+      ro_name: formData.ro_name || null,
+      drc: formData.drc || null,
+      request_id: formData.reasonId || null,
+      intraction_id: formData.intractionId || null,
+      field_reason: formData.reason,
+      field_reason_remark: formData.nego_remark || null,
+      created_by: formData.created_by || "null",
     });
 
     if (response.data.status === "error") {
