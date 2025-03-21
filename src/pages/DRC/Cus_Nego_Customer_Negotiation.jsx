@@ -385,23 +385,21 @@ const Cus_Nego_Customer_Negotiation = () => {
   const handleIconClickbutton = (actionType, product) => {
     if (actionType === "Not Submit") {
       setSelectedProduct(product);
-      setShowDetailedView(false);   
-    }else{
-      setSelectedProduct(product); 
-      setShowDetailedView(true);   
-  
-      // Include caseId, customerRef, and Service_address when navigating to edit page
+      setShowDetailedView(false);  
       // navigate("/drc/customer-negotiation-editcpe", {
       //   state: {
       //     product: product,
       //     caseId: payload.case_id,
       //     drcId: formData.drcId,  // Pass drcId here
-      //    customerRef: formData.customerRef,
-      //      accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
+      //     customerRef: formData.customerRef,
+      //     accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
       //     serviceAddress: product.Service_address,
-      //      // Ensure other relevant details are passed
       //   }
-      // });
+      // }); 
+      navigate("/drc/customer-negotiation-editcpe");
+    }else{
+      setSelectedProduct(product); 
+      setShowDetailedView(true); 
     }
   };
   //common style for card container
