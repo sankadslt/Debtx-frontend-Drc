@@ -610,3 +610,13 @@ export const Mediation_Board = async (payload) => {
     throw error;
   }
 };
+
+export const RO_CPE_Collection = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/RO_CPE_Collection`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding CP collect response:", error.response?.data || error.message);
+    throw error;
+  }
+};

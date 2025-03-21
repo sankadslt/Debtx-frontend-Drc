@@ -56,7 +56,6 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
 
   const location = useLocation();
   const { product, caseId, customerRef, accountNo, drcId } = location.state || {};  // Destructure drcId here
-
   const navigate = useNavigate();
 
   useEffect(() => {
