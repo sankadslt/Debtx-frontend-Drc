@@ -68,105 +68,105 @@ export default function AssignedROcaselog() {
     const loadUser = async () => {
         let token = localStorage.getItem("accessToken");
         if (!token) {
-          setUserData(null);
-          return;
+            setUserData(null);
+            return;
         }
-    
+
         try {
-          let decoded = jwtDecode(token);
-          const currentTime = Date.now() / 1000;
-          if (decoded.exp < currentTime) {
-            token = await refreshAccessToken();
-            if (!token) return;
-            decoded = jwtDecode(token);
-          }
-    
-          setUserData({
-            id: decoded.user_id,
-            role: decoded.role,
-            drc_id: decoded.drc_id,
-            ro_id: decoded.ro_id,
-          });
+            let decoded = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            if (decoded.exp < currentTime) {
+                token = await refreshAccessToken();
+                if (!token) return;
+                decoded = jwtDecode(token);
+            }
+
+            setUserData({
+                id: decoded.user_id,
+                role: decoded.role,
+                drc_id: decoded.drc_id,
+                ro_id: decoded.ro_id,
+            });
         } catch (error) {
-          console.error("Invalid token:", error);
+            console.error("Invalid token:", error);
         }
-      };
-    
-      useEffect(() => {
+    };
+
+    useEffect(() => {
         loadUser();
-      }, [localStorage.getItem("accessToken")]);
+    }, [localStorage.getItem("accessToken")]);
 
     useEffect(() => {
         const fetchRTOMs = async () => {
-          try {
-            if (userData?.drc_id) {
-              // Make sure to convert to number if needed
-              const payload = parseInt(userData.drc_id);
-              console.log("Fetching RTOMs for DRC ID:", payload);
-              
-              const arrearsAmounts = await fetchAllArrearsBands();
-                setArrearsAmounts(arrearsAmounts);
-              // Fetch RTOMs by DRC ID
-              const rtomsList = await getActiveRTOMsByDRCID(payload);
-              console.log("RTOM list retrieved:", rtomsList);
-              setRtoms(rtomsList);
-            } else {
-              console.log("No DRC ID available yet");
+            try {
+                if (userData?.drc_id) {
+                    // Make sure to convert to number if needed
+                    const payload = parseInt(userData.drc_id);
+                    console.log("Fetching RTOMs for DRC ID:", payload);
+
+                    const arrearsAmounts = await fetchAllArrearsBands();
+                    setArrearsAmounts(arrearsAmounts);
+                    // Fetch RTOMs by DRC ID
+                    const rtomsList = await getActiveRTOMsByDRCID(payload);
+                    console.log("RTOM list retrieved:", rtomsList);
+                    setRtoms(rtomsList);
+                } else {
+                    console.log("No DRC ID available yet");
+                }
+            } catch (error) {
+                console.error("Error fetching RTOMs:", error);
             }
-          } catch (error) {
-            console.error("Error fetching RTOMs:", error);
-          }
         };
-    
+
         fetchRTOMs();
-      }, [userData?.drc_id]); // Only depend on userData
+    }, [userData?.drc_id]); // Only depend on userData
 
 
     const handlestartdatechange = (date) => {
         setFromDate(date);
         if (toDate) checkdatediffrence(date, toDate);
-      };
-    
-      const handleenddatechange = (date) => {
+    };
+
+    const handleenddatechange = (date) => {
         if (fromDate) {
-          checkdatediffrence(fromDate, date);
+            checkdatediffrence(fromDate, date);
         }
         setToDate(date);
-      }
-    
-      const checkdatediffrence = (startDate, endDate) => {
+    }
+
+    const checkdatediffrence = (startDate, endDate) => {
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
         const diffInMs = end - start;
         const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
         const diffInMonths = diffInDays / 30;
-    
+
         if (diffInMonths > 1) {
-          Swal.fire({
-            title: "Date Range Exceeded",
-            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
-            icon: "warning",
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showCancelButton: true,
-            confirmButtonText: "Yes",
-            confirmButtonColor: "#28a745",
-            cancelButtonText: "No",
-            cancelButtonColor: "#d33",
-          }).then((result) => {
-            if (result.isConfirmed) {
-    
-              endDate = endDate;
-              handleApicall(startDate, endDate);
-            } else {
-              setToDate(null);
-              console.log("Dates cleared");
+            Swal.fire({
+                title: "Date Range Exceeded",
+                text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+                icon: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                confirmButtonText: "Yes",
+                confirmButtonColor: "#28a745",
+                cancelButtonText: "No",
+                cancelButtonColor: "#d33",
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    endDate = endDate;
+                    handleApicall(startDate, endDate);
+                } else {
+                    setToDate(null);
+                    console.log("Dates cleared");
+                }
             }
-          }
-          );
-    
+            );
+
         }
-      };  
+    };
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
