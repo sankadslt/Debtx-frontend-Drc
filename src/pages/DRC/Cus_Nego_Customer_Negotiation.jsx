@@ -239,7 +239,10 @@ const Cus_Nego_Customer_Negotiation = () => {
           alert("Invalid request selected.");
           return;
       }
-      await addNegotiationCase(formData);
+      console.log("Form Data:", formData);
+      const DRC_ID = initialFormData.drcId;
+      console.log("Form data drc id :",  DRC_ID);
+      await addNegotiationCase(formData , DRC_ID);
       alert("Submitted successfully!");
       Swal.fire({
           icon: "success",
@@ -431,7 +434,7 @@ const Cus_Nego_Customer_Negotiation = () => {
               onChange={handleInputChange}
               className={`${GlobalStyle.selectBox} w-3/4`}
             >
-              <option value="">Select Reason</option>
+              <option value="" hidden>Select Reason</option>
               {activeNegotiations.map((negotiation) => (
                 <option
                   key={negotiation.negotiation_id}
@@ -477,12 +480,12 @@ const Cus_Nego_Customer_Negotiation = () => {
             </label>
             <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
             <select
-              name="request"
+              name="request" 
               value={formData.request || ""}
               onChange={handleInputChange}
               className={`${GlobalStyle.selectBox} w-3/4`}
             >
-              <option value="">Select Request</option>
+              <option value="" hidden>Select Request</option>
               {activeRORequests.map((RO_Requests) => (
                 <option
                   key={RO_Requests.ro_request_id}
@@ -649,7 +652,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                         }
                       >
                         <td className={GlobalStyle.tableData}>
-                          {new Date(nago.createdDtm).toLocaleDateString()}
+                          {new Date(nago.createdDtm).toLocaleDateString("en-GB")}
                         </td>
                         <td className={GlobalStyle.tableData}>
                           {nago.field_reason}
@@ -720,7 +723,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                         }
                       >
                         <td className={GlobalStyle.tableData}>
-                          {new Date(pay.createdDtm).toLocaleDateString()}
+                          {new Date(pay.createdDtm).toLocaleDateString("en-GB")}
                         </td>
                         <td className={GlobalStyle.tableData}>
                           {pay.paid_amount}
@@ -793,7 +796,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                         }
                       >
                         <td className={GlobalStyle.tableData}>
-                          {new Date(nago.createdDtm).toLocaleDateString()}
+                          {new Date(nago.createdDtm).toLocaleDateString("en-GB")}
                         </td>
                         <td className={GlobalStyle.tableData}>
                           {nago.field_reason}
