@@ -18,6 +18,10 @@ import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import Backbtn from "../../assets/images/back.png";
 import { useLocation, useNavigate } from "react-router-dom";
+import {RO_CPE_Collection} from  "../../services/case/CaseService";
+import {getLoggedUserId} from "/src/services/auth/authService.js";
+import Swal from "sweetalert2";
+
 
 const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const [formData, setFormData] = useState({
@@ -50,6 +54,8 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const location = useLocation();
   const { product, caseId, customerRef, accountNo, drcId, serviceAddress } = location.state || {};
   const navigate = useNavigate();
+  const [roId, setRoId] = useState("");
+  const [DRC, setDRCID] = useState("");
   useEffect(() => {
     if (product) {
       setSelectedProduct({
@@ -96,39 +102,58 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  useEffect(() => {
+    const loadUser = async () => {  
+      const userId = await getLoggedUserId();
+      setRoId(userId.ro_id);
+      setDRCID(userId.drc_id);
+      console.log("RO ID:", roId);
+      console.log("DRC ID:", DRC);
+    };
+    loadUser();
+  }, []);
 
-  const cpeSubmit = (event) => {
-    event.preventDefault();
-  
-    const caseId = formData.caseId;
-    const type = formData.type;
-    const cpemodel = formData.cpemodel;
-    const serialNo = formData.serialNo.trim();
-    const nego_remark = formData.nego_remark.trim();
-    const service = formData.service ? formData.service.trim() : "";  
-    const drcId = formData.drcId;  
+  const cpeSubmit = () => {
+    
+    
+    const cpeData = {
+      case_id: caseId,
+      drc_id: DRC ,
+      ro_id: roId || null,
+      order_id: null,
+      product_label: selectedProduct.product_label,
+      service_type: selectedProduct.service,
+      cp_type: formData.type,
+      cpe_model: formData.cpemodel,
+      serial_no: formData.serialNo,
+      remark: formData.nego_remark,
+    };
 
-    if (!serialNo || !nego_remark || !service) {
-      alert("Serial Number, Remark, and Service cannot be empty.");
-      return;
-    }
-  
-    addCpeNegotiation(caseId, type, cpemodel, serialNo, nego_remark, service, drcId)
-      .then((data) => {
-        alert("CPE details added successfully!");
-        setFormData({
-          ...formData,
-          serialNo: "",
-          nego_remark: "",
-          type: "",
-          service: "",  
-          drcId: "",  
+    console.log("CPE Data:", cpeData);
+
+    const cpeCollect = async () => {
+      try {
+        const response = await RO_CPE_Collection(cpeData);
+        console.log("CPE Collect Response:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Data sent successfully.",
+          confirmButtonColor: "#28a745",
         });
-      })
-      .catch((error) => {
-        alert("Failed to add CPE details: " + error.message);
-      });
-  };
+      } catch (error) {
+        console.error("Error submitting CPE data:", error);
+        const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+                Swal.fire({
+                  icon: "error",
+                  title: "Error",
+                  text: errorMessage,
+                  confirmButtonColor: "#d33",
+                });
+      }
+    }
+    cpeCollect();
+  }
 
 
   const style = {
