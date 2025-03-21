@@ -12,17 +12,16 @@ Notes: The following page conatins the code for both the UI's */
 
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaArrowLeft } from "react-icons/fa6";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
-import { jwtDecode } from "jwt-decode";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 
 export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Customer Negotiation");
     const [userData, setUserData] = useState(null);
-    const { case_id } = useParams();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(null);
     const [cusNegotiationData, setCusNegotiationData] = useState({
         caseDetails: {},
@@ -30,6 +29,8 @@ export default function RO_Monitoring_CPE() {
         paymentData: {},
         additionalData: { ro_negotiation: [], ro_requests: [] }
     });
+    const case_id = location.state?.CaseID;
+    console.log("caseid", case_id);
 
     // Tab click handler
     const handleTabClick = (tab) => {
@@ -41,36 +42,46 @@ export default function RO_Monitoring_CPE() {
         setIsOpen(isOpen === index ? null : index);
     }
 
+    // const loadUser = async () => {
+    //     let token = localStorage.getItem("accessToken");
+    //     if (!token) {
+    //         setUserData(null);
+    //         return;
+    //     }
+
+    //     try {
+    //         let decoded = jwtDecode(token);
+    //         const currentTime = Date.now() / 1000;
+    //         if (decoded.exp < currentTime) {
+    //             token = await refreshAccessToken();
+    //             if (!token) return;
+    //             decoded = jwtDecode(token);
+    //         }
+
+    //         setUserData({
+    //             id: decoded.user_id,
+    //             role: decoded.role,
+    //             drc_id: decoded.drc_id,
+    //             ro_id: decoded.ro_id,
+    //         });
+    //     } catch (error) {
+    //         console.error("Invalid token:", error);
+    //     }
+    // };
+
+    // useEffect(() => {
+    //     loadUser();
+    // }, [localStorage.getItem("accessToken")]);
+
     const loadUser = async () => {
-        let token = localStorage.getItem("accessToken");
-        if (!token) {
-            setUserData(null);
-            return;
-        }
+        const user = await getLoggedUserId();
+        setUserData(user);
+        console.log("User data:", user);
+        };
 
-        try {
-            let decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000;
-            if (decoded.exp < currentTime) {
-                token = await refreshAccessToken();
-                if (!token) return;
-                decoded = jwtDecode(token);
-            }
-
-            setUserData({
-                id: decoded.user_id,
-                role: decoded.role,
-                drc_id: decoded.drc_id,
-                ro_id: decoded.ro_id,
-            });
-        } catch (error) {
-            console.error("Invalid token:", error);
-        }
-    };
-
-    useEffect(() => {
+        useEffect(() => {
         loadUser();
-    }, [localStorage.getItem("accessToken")]);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {

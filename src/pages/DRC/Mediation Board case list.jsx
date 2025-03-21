@@ -21,8 +21,7 @@ import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseServ
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
-import { jwtDecode } from "jwt-decode";
-import {  refreshAccessToken } from "../../services/auth/authService.js";
+import {  getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -75,7 +74,7 @@ const StatusIcon = ({ status }) => {
   const statusInfo = STATUS_ICONS[status];
   
   if (!statusInfo) return <span>{status}</span>;
-
+ 
   return (
     <div className="relative group">
       <img 
@@ -128,53 +127,57 @@ export default function MediationBoardCaselist() {
   // }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
 
 
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
+
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
+  
+
   const loadUser = async () => {
-    let token = localStorage.getItem("accessToken");
-    if (!token) {
-      setUserData(null);
-      return;
-    }
-
-    try {
-      let decoded = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp < currentTime) {
-        token = await refreshAccessToken();
-        if (!token) return;
-        decoded = jwtDecode(token);
-      }
-
-      setUserData({
-        id: decoded.user_id,
-        role: decoded.role,
-        drc_id: decoded.drc_id,
-        ro_id: decoded.ro_id,
-      });
-    } catch (error) {
-      console.error("Invalid token:", error);
-    }
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
   };
 
   useEffect(() => {
     loadUser();
-  }, [localStorage.getItem("accessToken")]);
-  
+  }, []);
 
   // Then update your useEffect that fetches RTOMs
   useEffect(() => {
     const fetchRTOMs = async () => {
       try {
         if (userData?.drc_id) {
-          // Make sure to convert to number if needed
-          const payload = parseInt(userData.drc_id);
-          console.log("Fetching RTOMs for DRC ID:", payload);
-          
           // Fetch RTOMs by DRC ID
-          const rtomsList = await getActiveRTOMsByDRCID(payload);
+          const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
           console.log("RTOM list retrieved:", rtomsList);
           setRtoms(rtomsList);
-        } else {
-          console.log("No DRC ID available yet");
         }
       } catch (error) {
         console.error("Error fetching RTOMs:", error);
@@ -259,9 +262,14 @@ const fetchCases = async () => {
     setCases(Array.isArray(data) ? data : []);
     setCurrentPage(0);
     setHasInitialFetch(true);
-  } catch (err) {
-    console.error("Error fetching cases:", err);
-    setError(err.message || "Failed to fetch cases. Please try again.");
+  } catch (error) {
+    console.error("Error filtering cases:", error);
+    Swal.fire({
+      title: "Error",
+      text: "Failed to fetch filtered data. Please try again.",
+      icon: "error"
+    });
+    setError(error.message || "Failed to fetch cases. Please try again.");
     setCases([]);
   } finally {
     setLoading(false);
@@ -379,7 +387,7 @@ const handleFilterClick = () => {
         </button>
       </div>
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {/* {error && <div className="text-red-500 mb-4">{error}</div>} */}
 
       <div className="flex flex-col">
         <div className="mb-4 flex justify-start">

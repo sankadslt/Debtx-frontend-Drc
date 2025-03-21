@@ -17,9 +17,8 @@ import DatePicker from "react-datepicker";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
-import { jwtDecode } from "jwt-decode";
 
 
 //Status Icons
@@ -51,9 +50,9 @@ export default function AssignedROcaselog() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 5;
-    const indexOfLastRecord = currentPage * recordsPerPage;
-    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+    // const indexOfLastRecord = currentPage * recordsPerPage;
+    // const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    // const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
     // Filter state for Amount, Case ID, Status, and Date
@@ -65,57 +64,62 @@ export default function AssignedROcaselog() {
     const [toDate, setToDate] = useState(null);
     const [userData, setUserData] = useState(null);
 
+    // const loadUser = async () => {
+    //     let token = localStorage.getItem("accessToken");
+    //     if (!token) {
+    //       setUserData(null);
+    //       return;
+    //     }
+    
+    //     try {
+    //       let decoded = jwtDecode(token);
+    //       const currentTime = Date.now() / 1000;
+    //       if (decoded.exp < currentTime) {
+    //         token = await refreshAccessToken();
+    //         if (!token) return;
+    //         decoded = jwtDecode(token);
+    //       }
+    
+    //       setUserData({
+    //         id: decoded.user_id,
+    //         role: decoded.role,
+    //         drc_id: decoded.drc_id,
+    //         ro_id: decoded.ro_id,
+    //       });
+    //     } catch (error) {
+    //       console.error("Invalid token:", error);
+    //     }
+    //   };
+    
+    //   useEffect(() => {
+    //     loadUser();
+    //   }, [localStorage.getItem("accessToken")]);
+
     const loadUser = async () => {
-        let token = localStorage.getItem("accessToken");
-        if (!token) {
-            setUserData(null);
-            return;
-        }
-
-        try {
-            let decoded = jwtDecode(token);
-            const currentTime = Date.now() / 1000;
-            if (decoded.exp < currentTime) {
-                token = await refreshAccessToken();
-                if (!token) return;
-                decoded = jwtDecode(token);
-            }
-
-            setUserData({
-                id: decoded.user_id,
-                role: decoded.role,
-                drc_id: decoded.drc_id,
-                ro_id: decoded.ro_id,
-            });
-        } catch (error) {
-            console.error("Invalid token:", error);
-        }
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
     };
 
     useEffect(() => {
-        loadUser();
-    }, [localStorage.getItem("accessToken")]);
+    loadUser();
+    }, []);
 
     useEffect(() => {
         const fetchRTOMs = async () => {
-            try {
-                if (userData?.drc_id) {
-                    // Make sure to convert to number if needed
-                    const payload = parseInt(userData.drc_id);
-                    console.log("Fetching RTOMs for DRC ID:", payload);
-
-                    const arrearsAmounts = await fetchAllArrearsBands();
-                    setArrearsAmounts(arrearsAmounts);
-                    // Fetch RTOMs by DRC ID
-                    const rtomsList = await getActiveRTOMsByDRCID(payload);
-                    console.log("RTOM list retrieved:", rtomsList);
-                    setRtoms(rtomsList);
-                } else {
-                    console.log("No DRC ID available yet");
-                }
-            } catch (error) {
-                console.error("Error fetching RTOMs:", error);
+          try {
+            if (userData?.drc_id) {
+              // Make sure to convert to number if needed
+              const arrearsAmounts = await fetchAllArrearsBands();
+              setArrearsAmounts(arrearsAmounts);
+              // Fetch RTOMs by DRC ID
+              const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
+              console.log("RTOM list retrieved:", rtomsList);
+              setRtoms(rtomsList);
             }
+          } catch (error) {
+            console.error("Error fetching RTOMs:", error);
+          }
         };
 
         fetchRTOMs();
@@ -132,9 +136,19 @@ export default function AssignedROcaselog() {
             checkdatediffrence(fromDate, date);
         }
         setToDate(date);
-    }
+      }
 
-    const checkdatediffrence = (startDate, endDate) => {
+      const handleonvisiable = (case_id) => {
+        navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+      }
+
+      const handleonreassign = (case_id) => {
+        navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+      }
+    
+      const checkdatediffrence = (startDate, endDate) => {
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
         const diffInMs = end - start;
@@ -142,31 +156,29 @@ export default function AssignedROcaselog() {
         const diffInMonths = diffInDays / 30;
 
         if (diffInMonths > 1) {
-            Swal.fire({
-                title: "Date Range Exceeded",
-                text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
-                icon: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showCancelButton: true,
-                confirmButtonText: "Yes",
-                confirmButtonColor: "#28a745",
-                cancelButtonText: "No",
-                cancelButtonColor: "#d33",
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                    endDate = endDate;
-                    handleApicall(startDate, endDate);
-                } else {
-                    setToDate(null);
-                    console.log("Dates cleared");
-                }
+          Swal.fire({
+            title: "Date Range Exceeded",
+            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+            icon: "warning",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            confirmButtonColor: "#28a745",
+            cancelButtonText: "No",
+            cancelButtonColor: "#d33",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              endDate = endDate;
+              handleApicall(startDate, endDate);
+            } else {
+              setToDate(null);
+              console.log("Dates cleared");
             }
-            );
-
-        }
-    };
+          }
+          );
+        };
+      };  
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -248,13 +260,15 @@ export default function AssignedROcaselog() {
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
             const isPastDate = endDate < currentDate;
-
-
-        } catch (error) {
+        }catch (error) {
             console.error("Error filtering cases:", error);
+            Swal.fire({
+            title: "Error",
+            text: "Failed to fetch filtered data. Please try again.",
+            icon: "error"
+            });
         }
     };
-
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -360,11 +374,9 @@ export default function AssignedROcaselog() {
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
-
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
-
 
                 {/* RTOM Select Dropdown */}
                 <select
@@ -421,7 +433,6 @@ export default function AssignedROcaselog() {
                     />
                 </div>
 
-
                 <button
                     onClick={handleFilter}
                     className={`${GlobalStyle.buttonPrimary}`}
@@ -443,8 +454,6 @@ export default function AssignedROcaselog() {
                     <FaSearch className={GlobalStyle.searchBarIcon} />
                 </div>
             </div>
-
-
 
             {/* Table Section */}
             <div className={GlobalStyle.tableContainer}>
@@ -476,9 +485,7 @@ export default function AssignedROcaselog() {
                                 End Date
                             </th>
                             <th scope="col" className={GlobalStyle.tableHeader}>
-
                             </th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -514,7 +521,7 @@ export default function AssignedROcaselog() {
                                         <td className={GlobalStyle.tableData}>
                                             <div className="px-8 flex items-center gap-2">
                                                 <AiFillEye
-                                                    onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
+                                                    onClick={() => handleonvisiable(item.case_id)}
                                                     style={{ cursor: "pointer", marginRight: "8px" }}
                                                 />
 
@@ -532,8 +539,8 @@ export default function AssignedROcaselog() {
 
                                                 <button
                                                     className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                                                    style={{ whiteSpace: "nowrap" }}
-                                                    onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
+                                                    style={{ whiteSpace: "nowrap"}}
+                                                    onClick={() => handleonreassign(item.case_id)}
                                                 >
                                                     Re-Assign
                                                 </button>
@@ -582,8 +589,6 @@ export default function AssignedROcaselog() {
             >
                 <FaArrowLeft />Go Back
             </button>
-
-
         </div>
     );
 }

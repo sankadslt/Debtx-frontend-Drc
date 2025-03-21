@@ -14,10 +14,9 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
-import { roassignedbydrc } from "../../services/Ro/RO.js";
+import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
-import { jwtDecode } from "jwt-decode";
-import { refreshAccessToken } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -33,7 +32,6 @@ import { Create_Task } from "../../services/task/taskService.js";
 
 
 export default function AssignedCaseListforDRC() {
-  const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
   const [fromDate, setFromDate] = useState(null);
@@ -44,11 +42,6 @@ export default function AssignedCaseListforDRC() {
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  
- 
-
-  const [selectedSource, setSelectedSource] = useState("");
-  const [tableData, setTableData] = useState([]);
   const [userData, setUserData] = useState(null);
 
   // State for search query and filtered data
@@ -73,39 +66,46 @@ export default function AssignedCaseListforDRC() {
   };
 
 
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
+
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
+
   const loadUser = async () => {
-    let token = localStorage.getItem("accessToken");
-    if (!token) {
-      setUserData(null);
-      return;
-    }
-
-    try {
-      let decoded = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      if (decoded.exp < currentTime) {
-        token = await refreshAccessToken();
-        if (!token) return;
-        decoded = jwtDecode(token);
-      }
-
-      setUserData({
-        id: decoded.user_id,
-        role: decoded.role,
-        drc_id: decoded.drc_id,
-        ro_id: decoded.ro_id,
-      });
-    } catch (error) {
-      console.error("Invalid token:", error);
-    }
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
   };
 
   useEffect(() => {
     loadUser();
-  }, [localStorage.getItem("accessToken")]);
-
-
-
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,8 +114,8 @@ export default function AssignedCaseListforDRC() {
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (userData.drc_id) {
-          const roData = await roassignedbydrc(userData.drc_id);
+        if (userData?.drc_id) {
+          const roData = await getActiveRODetailsByDrcID(userData?.drc_id);
           setRoList(roData);
         }
       } catch (error) {
@@ -125,11 +125,7 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
-
-
-
   const handleCreateTaskForDownload = async ({
-
     fromDate,
     toDate,
   }) => {
@@ -181,12 +177,12 @@ export default function AssignedCaseListforDRC() {
           confirmButtonText: "OK",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Error creating task",
-        icon: "error",
-        confirmButtonText: "OK",
+        icon: "error"
       });
     }
   };
@@ -210,13 +206,6 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-
-
-
-
-
-
-
   /* const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
@@ -238,7 +227,6 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-
           endDate = endDate;
           handleApicall(startDate, endDate);
         } else {
@@ -250,10 +238,6 @@ export default function AssignedCaseListforDRC() {
 
     }
   }; */
-
-
-
-
 
   const handleFilter = async () => {
     try {
@@ -342,6 +326,11 @@ export default function AssignedCaseListforDRC() {
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
 
