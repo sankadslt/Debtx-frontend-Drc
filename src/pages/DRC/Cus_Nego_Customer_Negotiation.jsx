@@ -386,17 +386,16 @@ const Cus_Nego_Customer_Negotiation = () => {
     if (actionType === "Not Submit") {
       setSelectedProduct(product);
       setShowDetailedView(false);  
-      // navigate("/drc/customer-negotiation-editcpe", {
-      //   state: {
-      //     product: product,
-      //     caseId: payload.case_id,
-      //     drcId: formData.drcId,  // Pass drcId here
-      //     customerRef: formData.customerRef,
-      //     accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
-      //     serviceAddress: product.Service_address,
-      //   }
-      // }); 
-      navigate("/drc/customer-negotiation-editcpe");
+      navigate("/drc/customer-negotiation-editcpe", {
+        state: {
+          product: product,
+          caseId: payload.case_id,
+          drcId: formData.drcId,  // Pass drcId here
+          customerRef: formData.customerRef,
+          accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
+          serviceAddress: product.Service_address,
+        }
+      });
     }else{
       setSelectedProduct(product); 
       setShowDetailedView(true); 

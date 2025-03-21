@@ -56,6 +56,7 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
 
   const location = useLocation();
   const { product, caseId, customerRef, accountNo, drcId } = location.state || {};  // Destructure drcId here
+  console.log("this is the product ", product);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -151,23 +152,29 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const renderCPEEditForm = () => (
     <div className="p-6 rounded-lg ml-32">
       <div className={`${GlobalStyle.cardContainer}`}>
-        <tr>
-          <th className={style.thStyle}>Case ID</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.caseId}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Customer Ref</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.customerRef}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Service Address</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
-        </tr>
+        <table>
+          <tbody>
+            <tr>
+              <th className={style.thStyle}>Case ID</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{formData.caseId}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Customer Ref</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{formData.customerRef}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Service Address</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
+            </tr>
+          </tbody>
+        </table>
         <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
-        <tr>
+        <table>
+          <tbody>
+          <tr>
           <th className={style.thStyle}>Telephone No</th>
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_label}</td>
@@ -187,6 +194,8 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
         </tr>
+          </tbody>
+        </table>
       </div>
 
       <div className={`${GlobalStyle.cardContainer}`} style={{ minWidth: "600px" }}>
