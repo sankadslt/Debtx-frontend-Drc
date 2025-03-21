@@ -25,12 +25,13 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
+// import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
   
   const [activeTab, setActiveTab] = useState("negotiation");
   const [showResponseHistory, setShowResponseHistory] = useState(false);
-  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
+  // const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [lastRequests, setLastRoRequests] = useState([]);
   const [lastNagotiation, setLastRONagotiation] = useState([]);
   const [lastPayment, setLastROPayment] = useState([]);
@@ -46,9 +47,11 @@ const Cus_Nego_Customer_Negotiation = () => {
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
-  const caseid = location.state?.CaseID;
-  console.log("case_id", caseid);
 
+  const case_id = location.state?.CaseID;
+  console.log("case_id", case_id);
+
+  const [userData, setUserData] = useState(null); 
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
@@ -101,67 +104,84 @@ const Cus_Nego_Customer_Negotiation = () => {
   };
 
   useEffect(() => {
-    const getuserdetails = async () => {
-      try {
-        const userData = await getLoggedUserId();
-
-        if (userData) {
-          setDrcId(userData.drc_id);
-          setRoId(userData.ro_id);
-          console.log("user drc id", userData.drc_id);
-          console.log("user ro id", userData.ro_id);
-
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error.message);
-      }
-    };
-    getuserdetails();
+    const loadUser = async () => {
+      const userData = await getLoggedUserId();
+      setUserData(userData);
+      setDrcId(userData.drc_id);
+      setRoId(userData.ro_id);
+      console.log("User data:", userData);
+      };
+    loadUser();
   }, []);
 
-  const payload = {
-    case_id : caseid || 250 ,
-    drc_id: drcId || 200 ,
-    ro_id: roId || null,
-  };
-  console.log("payload", payload);
+
+  // useEffect(() => {
+  //   const getuserdetails = async () => {
+  //     try {
+  //       const userData = await getLoggedUserId();
+
+  //       if (userData) {
+  //         setDrcId(userData.drc_id);
+  //         setRoId(userData.ro_id);
+  //         console.log("user drc id", userData.drc_id);
+  //         console.log("user ro id", userData.ro_id);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching user details:", error.message);
+  //     }
+  //   };
+  //   getuserdetails();
+  // }, []);
+
+  // const payload = {
+  //   case_id : caseid || 250 ,
+  //   drc_id: drcId || 200 ,
+  //   ro_id: roId || null,
+  // };
+  // console.log("payload", payload);
 
   //form initialization
   const initialFormData = {
-    caseId: payload.case_id,
+    case_id: case_id, // Use case_id instead of caseId
     customerRef: null,
     accountNo: null,
     arrearsAmount: null,
     lastPaymentDate: null,
     request_description: null,
     createdDtm: null,
-    fieldReason: null,
+    field_reason: null, // Use field_reason instead of reason
     remark: null,
     ini_amount: null,
     month: 3,
     from: null,
     to: null,
-    settle_remark: null,
-    drcId: payload.drc_id,
-    roId: payload.ro_id ? payload.ro_id : null,
-    requestId: null,
+    settlement_remark: null,
+    drc_id: drcId, // Use drc_id instead of drcId
+    ro_id: roId || null, // Use ro_id instead of roId
+    request_id: null, // Use request_id instead of requestId
     request: null,
     request_remark: null,
-    intractionId: null,
+    intraction_id: null, // Use intraction_id instead of intractionId
     todo: null,
     completed: null,
-    reasonId: "",
-    reason: "",
-    nego_remark: null,
-    ref_products: [] // Initialize ref_products as an empty array
+    reason_id: "", // Use reason_id instead of reasonId
+    ref_products: [],
   };
   const [formData, setFormData] = useState(initialFormData);
+  
   useEffect(() => {
     const getcasedetails = async () => {
       try {
-        const caseDetails = await drcCaseDetails(payload);
-        setCaseDetails(caseDetails.data);
+        if (drcId) {
+          const payload = {
+            drc_id : parseInt(drcId),
+            case_id : parseInt(case_id)
+          }  
+
+          const caseDetails = await drcCaseDetails(payload);
+          setCaseDetails(caseDetails.data);
         // console.log("case detaoils", caseDetails.data);
+        }
       } catch (error) {
         console.error("Error fetching case details:", error.message);
       }
@@ -219,63 +239,81 @@ const Cus_Nego_Customer_Negotiation = () => {
   }
   const handleNegotiationSubmit = async (e) => {
     e.preventDefault();
-
+  
     const newErrors = {};
-    if (!formData.caseId) newErrors.caseId = "Case ID is required.";
-    if (!formData.reason) newErrors.reason = "Reason is required.";
-    if (!formData.nego_remark) newErrors.nego_remark = "Remark is required." ;
+    if (!formData.case_id) newErrors.case_id = "Case ID is required.";
+    if (!formData.field_reason) newErrors.field_reason = "Field reason is required.";
+    if (!formData.remark) newErrors.remark = "Remark is required.";
     if (!formData.request) newErrors.request = "Request is required.";
     if (!formData.request_remark) newErrors.request_remark = "Request remark is required.";
     if (Object.keys(newErrors).length > 0) {
-      console.log("this is the errors" , newErrors, "this is the data", formData);
-      setErrors(newErrors); 
-      return; 
-    };
-    
+      setErrors(newErrors);
+      return;
+    }
+  
     try {
-
-      // Find the selected request details
       const selectedRequest = activeRORequests.find(
-          (request) => request.ro_request_id === parseInt(formData.requestId)
+        (request) => request.ro_request_id === parseInt(formData.request_id)
       );
       formData.request_description = selectedRequest.request_description;
-      formData.intractionId = selectedRequest.intraction_id;
-      // Ensure selected request exists before submission
+      formData.intraction_id = selectedRequest.intraction_id;
+  
       if (!selectedRequest) {
-          alert("Invalid request selected.");
-          return;
+        alert("Invalid request selected.");
+        return;
       }
-
-      const subpayload = 
-      {...formData,
+  
+      const subpayload = {
+        case_id: formData.case_id,
+        drc_id: formData.drc_id,
+        ro_id: formData.ro_id,
+        field_reason: formData.field_reason,
+        field_reason_remark: formData.remark,
+        request_id: formData.request_id,
+        request_type: formData.request_description,
+        request_comment: formData.request_remark,
+        intraction_id: formData.intraction_id,
+        initial_amount: formData.ini_amount,
+        calender_month: formData.month,
+        duration_from: formData.from,
+        duration_to: formData.to,
+        settlement_remark: formData.settlement_remark,
       };
-      console.log(subpayload);
+  
+      console.log("Payload being sent:", subpayload); // Debug payload
+  
       await addNegotiationCase(subpayload);
-      console.log("Form data submitted successfully:", formData);
-      alert("Submitted successfully!");
       Swal.fire({
-                icon: "success",
-                title: "Success",
-                text: "Data sent successfully.",
-                confirmButtonColor: "#28a745",
-        });
-
+        icon: "success",
+        title: "Success",
+        text: "Data sent successfully.",
+        confirmButtonColor: "#28a745",
+      });
+  
       setFormData(initialFormData);
       setIsSubmitted(true);
       setErrors({});
     } catch (error) {
       console.error("Error submitting form data:", error.message);
-      const errorMessage = error?.response?.data?.message || 
-                              error?.message || 
-                              "An error occurred. Please try again.";
-       Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: errorMessage,
-          confirmButtonColor: "#d33",
-          });
-              }
+      const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+        confirmButtonColor: "#d33",
+      });
+    }
   };
+
+  useEffect(() => {
+    if (drcId && roId) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        drc_id: drcId,
+        ro_id: roId,
+      }));
+    }
+  }, [drcId, roId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -380,15 +418,15 @@ const Cus_Nego_Customer_Negotiation = () => {
       navigate("/drc/customer-negotiation-editcpe", {
         state: {
           product: product,
-          caseId: payload.case_id,
-          drcId: formData.drcId,  // Pass drcId here
+          caseId: case_id,
+          drcId: formData.drc_id,  // Pass drcId here
          customerRef: formData.customerRef,
            accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
           serviceAddress: product.Service_address,
            // Ensure other relevant details are passed
         }
       });
-    }
+    };
   };
   //common style for card container
   const style = {
@@ -859,9 +897,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <FaArrowRight />
               </button>
             </div>
-            
           </div>
-
         )}
       </div>
     </div>
@@ -1004,7 +1040,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       <div className={`${GlobalStyle.cardContainer}`}>
       <h1 className={`${style.thStyle} underline mt-4 mb-4`}>RCMP Details</h1>
         <tr>
-        <th className={style.thStyle}> Status</th>
+        <th className={style.thStyle}>Status</th>
         <td className={style.tdStyle}>:</td>
         <td className={style.tdStyle}>{ }</td>
         </tr>
