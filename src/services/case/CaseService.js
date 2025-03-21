@@ -409,8 +409,8 @@ export const addNegotiationCase = async (payload) => {
       calender_month: payload.month || null,
       duration_from: payload.from || null,
       duration_to: payload.to || null,
-      settlement_remark:payload.settle_remark || null,
-      drc_id: payload.drcId || null ,
+      settlement_remark:payload.settlement_remark || null,
+      drc_id: payload.drc_id || null ,
       ro_id: payload.roId || null,
       request_type: payload.request_description || null,
       request_comment: payload.request_remark || null,
@@ -605,5 +605,15 @@ export const addCpeNegotiation = async (caseId, type, cpemodel, serialNo, nego_r
     console.error("Error adding CPE details:", error.response?.data || error.message);
     alert("Error: " + JSON.stringify(error.response?.data, null, 2)); // Show detailed error in alert
     throw error;  // Rethrow the error so it can be caught elsewhere
+  }
+};
+
+export const Mediation_Board = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/Mediation_Board`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding mediation board response:", error.response?.data || error.message);
+    throw error;
   }
 };

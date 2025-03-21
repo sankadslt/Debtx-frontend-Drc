@@ -769,7 +769,7 @@ Notes: The following page conatins the code for Edit Customer details  */
 
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   caseDetailsforDRC,
   updateCustomerContacts,
@@ -797,6 +797,8 @@ export default function EditCustomerProfile() {
   const navigate = useNavigate();
 
   const [contacts, setContacts] = useState([]);
+  const location = useLocation();
+  const case_id = location.state?.CaseID;
 
   // NIC
   const [customer_identification_type, setcustomer_identification_type] = useState("");
@@ -822,7 +824,38 @@ export default function EditCustomerProfile() {
   // validation masseges
   const [validationMessage, setValidationMessage] = useState("");
   const [userData, setUserData] = useState(null);
-  const { case_id } = useParams();
+  // const { case_id } = useParams();
+  
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
+  
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+  
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+  
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
 
   const loadUser = async () => {
     const user = await getLoggedUserId();

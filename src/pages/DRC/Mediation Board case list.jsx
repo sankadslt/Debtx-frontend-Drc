@@ -262,9 +262,14 @@ const fetchCases = async () => {
     setCases(Array.isArray(data) ? data : []);
     setCurrentPage(0);
     setHasInitialFetch(true);
-  } catch (err) {
-    console.error("Error fetching cases:", err);
-    setError(err.message || "Failed to fetch cases. Please try again.");
+  } catch (error) {
+    console.error("Error filtering cases:", error);
+    Swal.fire({
+      title: "Error",
+      text: "Failed to fetch filtered data. Please try again.",
+      icon: "error"
+    });
+    setError(error.message || "Failed to fetch cases. Please try again.");
     setCases([]);
   } finally {
     setLoading(false);
@@ -382,7 +387,7 @@ const handleFilterClick = () => {
         </button>
       </div>
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {/* {error && <div className="text-red-500 mb-4">{error}</div>} */}
 
       <div className="flex flex-col">
         <div className="mb-4 flex justify-start">

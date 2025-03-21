@@ -19,44 +19,45 @@ import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import { listDRCAllCases } from "../../services/case/CaseService";
 import {  getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
+import Swal from 'sweetalert2';
 
 // Import status icons with correct file extensions
-import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
-import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
-import MB_Handed_Customer_Info from "../../assets/images/mediationBoard/MB_Handed_Customer_Info.png";
-import MB_Negotiation from "../../assets/images/mediationBoard/MB_Negotiation.png";
-import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Request_Customer_Info.png";
-import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
-import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
+import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
+import RO_Negotiation_Extneded from "../../assets/images/negotiation/RO_Negotiation_Extneded.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/negotiation/RO_Negotiation_Extension_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/negotiation/Negotiation_Settle_Active.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/negotiation/Negotiation_Settle_Open-Pending.png";
+import Negotiation_Settle_Pending from "../../assets/images/negotiation/Negotiation_Settle_Pending.png";
+import RO_Negotiation from "../../assets/images/negotiation/RO_Negotiation.png";
 
 // Status icon mapping
 const STATUS_ICONS = {
   "RO Negotiation FMB Pending": {
-    icon: Forward_to_Mediation_Board,
-    tooltip: "Forward to Mediation Board"
+    icon: RO_Negotiation_FMB_pending,
+    tooltip: "RO Negotiation FMB pending"
   },
   "RO Negotiation Extended": {
-    icon: MB_fail_with_pending_non_settlement,
-    tooltip: "MB fail with pending non settlement"
+    icon: RO_Negotiation_Extneded,
+    tooltip: "RO Negotiation Extneded"
   },
   "RO Negotiation Extension Pending": {
-    icon: MB_Handed_Customer_Info,
-    tooltip: "MB Handed Customer Info"
+    icon: RO_Negotiation_Extension_Pending,
+    tooltip: "RO Negotiation Extension Pending"
   },
   "Negotiation Settle Active": {
-    icon: MB_Negotiation,
-    tooltip: "MB Negotiation"
+    icon: Negotiation_Settle_Active,
+    tooltip: "Negotiation Settle Active"
   },
   "Negotiation Settle Open-Pending": {
-    icon: MB_Request_Customer_Info,
-    tooltip: "MB Request Customer Info"
+    icon: Negotiation_Settle_Open_Pending,
+    tooltip: "Negotiation Settle Open-Pending"
   },
-  "MNegotiation Settle Pending": {
-    icon: MB_Settle_Active,
-    tooltip: "MB Settle Active"
+  "Negotiation Settle Pending": {
+    icon: Negotiation_Settle_Pending,
+    tooltip: "Negotiation Settle Pending"
   },
   "RO Negotiation": {
-    icon: MB_Settle_open_pending,
+    icon: RO_Negotiation,
     tooltip: "MB Settle open pending"
   },
 };
@@ -240,8 +241,14 @@ const fetchCases = async () => {
     setCases(data);
     setCurrentPage(0);
     setHasInitialFetch(true);
-  } catch (err) {
-    setError(err.message || "Failed to fetch cases. Please try again.");
+  } catch (error) {
+    console.error("Error filtering cases:", error);
+    Swal.fire({
+      title: "Error",
+      text: "Failed to fetch filtered data. Please try again.",
+      icon: "error"
+    });
+    setError(error.message || "Failed to fetch cases. Please try again.");
     setCases([]);
   } finally {
     setLoading(false);
@@ -279,10 +286,20 @@ const paginatedData = filteredData.slice(
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
 
+  const handleonnegotiation = (case_id) => {
+    navigate("/drc/customer-negotiation", { state: { CaseID: case_id } });
+    console.log("Case ID being passed: ", case_id);
+  }
+
+  const handleonedit = (case_id) => {
+    navigate("/pages/DRC/EditCustomerProfile", { state: { CaseID: case_id } });
+    console.log("Case ID being passed: ", case_id);
+  }
+
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
-      {error && <p className="text-red-500">{error}</p>}
+      {/* {error && <p className="text-red-500">{error}</p>} */}
 
       <div className="flex gap-4 items-center justify-end flex-wrap mt-4 ">
         {/* Dropdown for RTOM */}
@@ -394,19 +411,17 @@ const paginatedData = filteredData.slice(
                     <img
                       src={edit}
                       alt="Edit Case"
+                      title="Edit Case"
                       className={`w-6 h-6 cursor-pointer display: inline-block`}
-                      onClick={() =>
-                        navigate(`/pages/DRC/EditCustomerProfile/${row.case_id}`)
-                      }
+                      onClick={() => handleonedit(row.case_id)}
                     />
-                    <img
-                      src={edit}
-                      alt="Negotiation Case"
-                      className={`w-6 h-6 cursor-pointer display: inline-block`}
-                      onClick={() =>
-                        navigate(`/pages/DRC/Mediation Board Response/${row.case_id}`)
-                      }
-                    />
+                    <button
+                      className={`${GlobalStyle.buttonPrimary} mx-auto`}
+                      style={{ whiteSpace: "nowrap", cursor: "pointer", marginRight: "8px"}}
+                      onClick={() => handleonnegotiation(row.case_id)}
+                    >
+                      Negotiation
+                    </button>
                   </td>
                 </tr>
               ))}
