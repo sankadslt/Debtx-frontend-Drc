@@ -239,39 +239,6 @@ const Cus_Nego_Customer_Negotiation = () => {
           alert("Invalid request selected.");
           return;
       }
-
-      // const subpayload = 
-      // {...formData,
-      // };
-
-      // const subpayload = {
-      //   caseId: parseInt(case_id),
-      //   customerRef: formData.customerRef,
-      //   accountNo: formData.accountNo,
-      //   arrearsAmount: formData.arrearsAmount,
-      //   lastPaymentDate: formData.lastPaymentDate,
-      //   request_description: formData.request_description,
-      //   createdDtm: formData.createdDtm,
-      //   fieldReason: formData.,
-      //   remark: formData,
-      //   ini_amount: formData,
-      //   month: 3,
-      //   from: formData,
-      //   to: formData,
-      //   settlement_remark: formData,
-      //   drcId: parseInt(drcId),
-      //   roId: roId || null,
-      //   requestId: formData,
-      //   request: formData,
-      //   request_remark: formData,
-      //   intractionId: formData,
-      //   todo: formData,
-      //   completed: formData,
-      //   reasonId: "",
-      //   reason: "",
-      //   nego_remark: formData,
-      //   ref_products: []
-      // }
       await addNegotiationCase(formData);
       alert("Submitted successfully!");
       Swal.fire({

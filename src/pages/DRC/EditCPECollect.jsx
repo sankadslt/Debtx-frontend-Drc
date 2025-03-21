@@ -75,8 +75,7 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
         service: product.service || "",
         drcId: drcId || "",  // Set drcId 
       }));
-    }
-
+    };
     if (caseId) {
       drcCaseDetails(caseId)
         .then((data) => {
@@ -90,15 +89,11 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
         .catch((error) => {
           console.error("Error fetching case details:", error);
         });
-    }
-
+    };
     if (drcId) {
       console.log("drcId:", drcId);
-    }
+    };
   }, [product, caseId, customerRef, accountNo, drcId]);
-
-
-
 
   const handleBackClick = () => {
     navigate("/drc/customer-negotiation");
