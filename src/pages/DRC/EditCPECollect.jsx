@@ -14,9 +14,6 @@
   - This file contains the implementation  CPE Collect edit part .
 */
 
-
-
-
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { drcCaseDetails, addCpeNegotiation } from "../../services/case/CaseService";
@@ -34,14 +31,12 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     serialNo: "",
     nego_remark: "",
   });
-
   const [selectedProduct, setSelectedProduct] = useState({
     Service_address: "",
     product_label: "",
     service: "",
     product_ownership: "",
   });
-
   const modelOptions = {
     adsl: ["ZTE W300", "ZTE H108L", "Prolink 5004NK", "Tplink TDW8951ND", "Fiberhome HG110", "Prolink PRS 1140", "Prolink PRS  1841", "Fiberhome HG180"],
     ont: ["ONT1", "ONT2"],
@@ -53,19 +48,17 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     "poe injector": ["PD-3501G", "PD-9001GR"],
     "android box": ["SEI 300SLT"],
   };
-
   const location = useLocation();
-  const { product, caseId, customerRef, accountNo, drcId } = location.state || {};  // Destructure drcId here
-  console.log("this is the product ", product);
+  const { product, caseId, customerRef, accountNo, drcId, serviceAddress } = location.state || {};
   const navigate = useNavigate();
-
   useEffect(() => {
     if (product) {
       setSelectedProduct({
-        Service_address: product.Service_address || "",
+        Service_address: product.service_address || "",
         product_label: product.product_label || "",
         service: product.service || "",
         product_ownership: product.product_ownership || "",
+        service_address: product.service_address || "",
       });
       setFormData((prevData) => ({
         ...prevData,
@@ -170,14 +163,9 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
         <table>
           <tbody>
           <tr>
-          <th className={style.thStyle}>Telephone No</th>
+          <th className={style.thStyle}>Product Label</th>
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_label}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Account No</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.accountNo}</td>
         </tr>
         <tr>
           <th className={style.thStyle}>Service Type</th>

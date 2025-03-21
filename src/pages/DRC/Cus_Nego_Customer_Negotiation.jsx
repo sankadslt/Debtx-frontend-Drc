@@ -351,6 +351,7 @@ const Cus_Nego_Customer_Negotiation = () => {
 
   const handleIconClickbutton = (actionType, product) => {
     if (actionType === "Not Submit") {
+      console.log("this is the form data ", formData);
       setSelectedProduct(product);
       setShowDetailedView(false);  
       navigate("/drc/customer-negotiation-editcpe", {
@@ -358,7 +359,7 @@ const Cus_Nego_Customer_Negotiation = () => {
           product: product,
           caseId: payload.case_id,
           drcId: formData.drcId,  // Pass drcId here
-          customerRef: formData.customerRef,
+          customerRef: caseDetails.customer_ref,
           accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
           serviceAddress: product.Service_address,
         }
