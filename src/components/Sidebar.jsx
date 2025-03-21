@@ -69,7 +69,7 @@ const Sidebar = ({ onHoverChange }) => {
         },
         {
           label: "RO Assigned Case List",
-          link: "/dashboard",
+          link: "/drc/assigned-ro-case-log",
           roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
         },
         { label: "Negotiation Case List", 
