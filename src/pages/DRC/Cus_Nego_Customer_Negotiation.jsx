@@ -47,7 +47,6 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
   const caseid = location.state?.CaseID;
-  console.log("case_id", caseid);
 
   const [userData, setUserData] = useState(null); 
   //pagination
@@ -106,7 +105,6 @@ const Cus_Nego_Customer_Negotiation = () => {
   setUserData(user);
   setDrcId(user.drc_id);
   setRoId(user.ro_id);
-  console.log("User data:", user);
   };
 
   useEffect(() => {
@@ -118,7 +116,6 @@ const Cus_Nego_Customer_Negotiation = () => {
     drc_id: drcId || 200 ,
     ro_id: roId || null,
   };
-  console.log("payload", payload);
 
   //form initialization
   const initialFormData = {
@@ -170,7 +167,6 @@ const Cus_Nego_Customer_Negotiation = () => {
     const fetchRORequests = async () => {
       try {
         const RO_Requests = await getActiveRORequestsforNegotiationandMediation("Negotiation");
-        console.log("RO requests:", RO_Requests);
         setActiveRORequests(RO_Requests);
       } catch (error) {
         console.error("Error fetching active requests:", error.message);
@@ -227,7 +223,6 @@ const Cus_Nego_Customer_Negotiation = () => {
     if (!formData.request) newErrors.request = "Request is required.";
     if (!formData.request_remark) newErrors.request_remark = "Request remark is required.";
     if (Object.keys(newErrors).length > 0) {
-      console.log("this is the errors" , newErrors, "this is the data", formData);
       setErrors(newErrors); 
       return; 
     };
@@ -277,7 +272,6 @@ const Cus_Nego_Customer_Negotiation = () => {
       //   nego_remark: formData,
       //   ref_products: []
       // }
-      console.log("Form data submitted successfully:", formData);
       await addNegotiationCase(formData);
       alert("Submitted successfully!");
       Swal.fire({
@@ -393,7 +387,6 @@ const Cus_Nego_Customer_Negotiation = () => {
       setSelectedProduct(product);
       setShowDetailedView(false);   
     }else{
-      console.log("this is the selected products ", product);
       setSelectedProduct(product); 
       setShowDetailedView(true);   
   
