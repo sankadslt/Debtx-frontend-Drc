@@ -16,7 +16,6 @@
 
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
-import { drcCaseDetails, addCpeNegotiation } from "../../services/case/CaseService";
 import Backbtn from "../../assets/images/back.png";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -69,23 +68,23 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
         drcId: drcId || "",  // Set drcId 
       }));
     };
-    if (caseId) {
-      drcCaseDetails(caseId)
-        .then((data) => {
-          setFormData((prevData) => ({
-            ...prevData,
-            caseId: data.case_id,
-            customerRef: data.customer_ref,
-            accountNo: data.account_no,
-          }));
-        })
-        .catch((error) => {
-          console.error("Error fetching case details:", error);
-        });
-    };
-    if (drcId) {
-      console.log("drcId:", drcId);
-    };
+    // if (caseId) {
+    //   drcCaseDetails(caseId)
+    //     .then((data) => {
+    //       setFormData((prevData) => ({
+    //         ...prevData,
+    //         caseId: data.case_id,
+    //         customerRef: data.customer_ref,
+    //         accountNo: data.account_no,
+    //       }));
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error fetching case details:", error);
+    //     });
+    // };
+    // if (drcId) {
+    //   console.log("drcId:", drcId);
+    // };
   }, [product, caseId, customerRef, accountNo, drcId]);
 
   const handleBackClick = () => {
