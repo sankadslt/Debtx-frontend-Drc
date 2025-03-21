@@ -386,33 +386,29 @@ const Cus_Nego_Customer_Negotiation = () => {
 
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showEditForm, setShowEditForm] = useState(false);  // For edit form visibility
   const navigate = useNavigate(); // Initialize navigate function
 
-  
-
-  const handleIconClick = (actionType, product) => {
-    if (actionType === "view") {
-      setSelectedProduct(product);  // Set the selected product for detailed view
-      setShowDetailedView(true);    // Show the detailed view
-      setShowEditForm(false);       // Ensure edit form is hidden
-    } else if (actionType === "edit") {
-      setSelectedProduct(product);  // Set the selected product for edit form
-      setShowEditForm(true);        // Show the edit form
-      setShowDetailedView(false);   // Ensure detailed view is hidden
+  const handleIconClickbutton = (actionType, product) => {
+    if (actionType === "Not Submit") {
+      setSelectedProduct(product);
+      setShowDetailedView(false);   
+    }else{
+      console.log("this is the selected products ", product);
+      setSelectedProduct(product); 
+      setShowDetailedView(true);   
   
       // Include caseId, customerRef, and Service_address when navigating to edit page
-      navigate("/drc/customer-negotiation-editcpe", {
-        state: {
-          product: product,
-          caseId: payload.case_id,
-          drcId: formData.drcId,  // Pass drcId here
-         customerRef: formData.customerRef,
-           accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
-          serviceAddress: product.Service_address,
-           // Ensure other relevant details are passed
-        }
-      });
+      // navigate("/drc/customer-negotiation-editcpe", {
+      //   state: {
+      //     product: product,
+      //     caseId: payload.case_id,
+      //     drcId: formData.drcId,  // Pass drcId here
+      //    customerRef: formData.customerRef,
+      //      accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
+      //     serviceAddress: product.Service_address,
+      //      // Ensure other relevant details are passed
+      //   }
+      // });
     }
   };
   //common style for card container
@@ -951,13 +947,13 @@ const Cus_Nego_Customer_Negotiation = () => {
                       <td className={GlobalStyle.tableData}>{product.rtom || "N/A"}</td>
                       <td className={GlobalStyle.tableData}>{product.product_status || "N/A"}</td>
                       <td className={GlobalStyle.tableData}>
-                        <img
-                          src={icon}
-                          width="20"
-                          height="20"
-                          alt={actionType}
+                        <img 
+                          src={product.product_status === "Not Submit" ? editIcon : viewIcon} 
+                          alt="Product Icon" 
+                          width={24} 
+                          height={24} 
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleIconClick(actionType, product)}
+                          onClick={() => handleIconClickbutton(product.product_status,product)}
                         />
                       </td>
                     </tr>
@@ -979,82 +975,84 @@ const Cus_Nego_Customer_Negotiation = () => {
   {/*Deatils View */}
   const renderDetailedView = () => (
     <div className="p-6 rounded-lg ml-32">
-    <div className={`${GlobalStyle.cardContainer}`}>
-
-        <tr>
-        <th className={style.thStyle}>Case ID</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{caseDetails.case_id}</td>
-        </tr>
-        <tr>
-        <th className={style.thStyle}>Customer Ref</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
-      </tr>
-      <tr>
-          <th className={style.thStyle}>Service Address</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.service_address}</td>
-        </tr>
-
-        <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
-
-
-        <tr>
-          <th className={style.thStyle}>Telephone No</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.product_label}</td>
-        </tr>
-        {/* <tr>
-        <th className={style.thStyle}>Account No</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{formData.accountNo}</td>
-      </tr> */}
-      <tr>
-          <th className={style.thStyle}>Service Type</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.service || "N/A"}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Ownership</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
-        </tr>
-
-      </div>
-
-
       <div className={`${GlobalStyle.cardContainer}`}>
-      <h1 className={`${style.thStyle} underline mt-4 mb-4`}>RCMP Details</h1>
-        <tr>
-        <th className={style.thStyle}> Status</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{ }</td>
-        </tr>
-        <tr>
-        <th className={style.thStyle}>Status DTM</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{ }</td>
-      </tr>
-      <tr>
-        <th className={style.thStyle}>Submission Date </th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{ }</td>
-      </tr>
-      <tr>
-        <th className={style.thStyle}>Response Date </th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{ }</td>
-      </tr>
-      <tr>
-        <th className={style.thStyle}>Response Reason</th>
-        <td className={style.tdStyle}>:</td>
-        <td className={style.tdStyle}>{ }</td>
-      </tr>
+        <table>
+          <tbody>
+          <tr>
+              <th className={style.thStyle}>Case ID</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{caseDetails.case_id}</td>
+              </tr>
+              <tr>
+              <th className={style.thStyle}>Customer Ref</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Service Address</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.service_address}</td>
+            </tr>
+          </tbody>
+        </table>
+            <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
+        <table>
+          <tbody>
+            <tr>
+              <th className={style.thStyle}>Telephone No</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.product_label}</td>
+            </tr>
+              {/* <tr>
+              <th className={style.thStyle}>Account No</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{formData.accountNo}</td>
+            </tr> */}
+            <tr>
+              <th className={style.thStyle}>Service Type</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.service || "N/A"}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Ownership</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      
-
-
+      <div className={`${GlobalStyle.cardContainer}`}>
+        <h1 className={`${style.thStyle} underline mt-4 mb-4`}>RCMP Details</h1>
+        <table>
+          <tbody>
+          <tr>
+              <th className={style.thStyle}> Status</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{ }</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Status DTM</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{ }</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Submission Date </th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{ }</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Response Date </th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{ }</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Response Reason</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{ }</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       {/* Back Button */}
       <button
         className="px-6 py-2 mb-8 mt-8 mr-auto rounded-md"
@@ -1064,13 +1062,10 @@ const Cus_Nego_Customer_Negotiation = () => {
         }}
       >
         <img src={Backbtn} alt="Back" className="w-7 h-7" />
-  
-      </button>
-      
-      
+
+      </button>   
     </div>
   );
-
   return (
     <div className="p-4 min-h-screen">
       <h1 className={`${GlobalStyle.headingLarge} mb-6`}>
