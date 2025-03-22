@@ -70,7 +70,7 @@ export default function AssignedROcaselog() {
     //       setUserData(null);
     //       return;
     //     }
-    
+
     //     try {
     //       let decoded = jwtDecode(token);
     //       const currentTime = Date.now() / 1000;
@@ -79,7 +79,7 @@ export default function AssignedROcaselog() {
     //         if (!token) return;
     //         decoded = jwtDecode(token);
     //       }
-    
+
     //       setUserData({
     //         id: decoded.user_id,
     //         role: decoded.role,
@@ -90,95 +90,139 @@ export default function AssignedROcaselog() {
     //       console.error("Invalid token:", error);
     //     }
     //   };
-    
+
     //   useEffect(() => {
     //     loadUser();
     //   }, [localStorage.getItem("accessToken")]);
 
     const loadUser = async () => {
-    const user = await getLoggedUserId();
-    setUserData(user);
-    console.log("User data:", user);
+        const user = await getLoggedUserId();
+        setUserData(user);
+        console.log("User data:", user);
     };
 
     useEffect(() => {
-    loadUser();
+        loadUser();
     }, []);
 
     useEffect(() => {
+
+        console.log("fromDatea:", fromDate);
+        console.log("toDate:", toDate);
         const fetchRTOMs = async () => {
-          try {
-            if (userData?.drc_id) {
-              // Make sure to convert to number if needed
-              const arrearsAmounts = await fetchAllArrearsBands();
-              setArrearsAmounts(arrearsAmounts);
-              // Fetch RTOMs by DRC ID
-              const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
-              console.log("RTOM list retrieved:", rtomsList);
-              setRtoms(rtomsList);
+            try {
+                if (userData?.drc_id) {
+                    // Make sure to convert to number if needed
+                    const arrearsAmounts = await fetchAllArrearsBands();
+                    setArrearsAmounts(arrearsAmounts);
+                    // Fetch RTOMs by DRC ID
+                    const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
+                    console.log("RTOM list retrieved:", rtomsList);
+                    setRtoms(rtomsList);
+                }
+            } catch (error) {
+                console.error("Error fetching RTOMs:", error);
             }
-          } catch (error) {
-            console.error("Error fetching RTOMs:", error);
-          }
         };
-    
+
         fetchRTOMs();
-      }, [userData?.drc_id]); // Only depend on userData
+    }, [userData?.drc_id]); // Only depend on userData
+
+    const handleonvisiable = (case_id) => {
+        navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+    }
+
+    const handleonreassign = (case_id) => {
+        navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+    }
+
 
 
     const handlestartdatechange = (date) => {
-        setFromDate(date);
-        if (toDate) checkdatediffrence(date, toDate);
-      };
-    
-      const handleenddatechange = (date) => {
-        if (fromDate) {
-          checkdatediffrence(fromDate, date);
+        if (date === null) {
+            setFromDate(null);
+            return;
         }
-        setToDate(date);
-      }
 
-      const handleonvisiable = (case_id) => {
-        navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
-        console.log("Case ID being passed: ", case_id);
-      }
+        if (toDate) {
 
-      const handleonreassign = (case_id) => {
-        navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
-        console.log("Case ID being passed: ", case_id);
-      }
-    
-      const checkdatediffrence = (startDate, endDate) => {
+            if (date > toDate) {
+
+                Swal.fire({
+                    title: "Warning",
+                    text: "The 'From' date cannot be later than the 'To' date.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                });
+                return;
+            } else {
+                checkdatediffrence(date, toDate);
+                setFromDate(date);
+            }
+
+        } else {
+
+            setFromDate(date);
+
+        }
+
+
+    };
+    const handleenddatechange = (date) => {
+        if (date === null) {
+            setToDate(null);
+            return;
+        }
+
+        if (fromDate) {
+            if (date < fromDate) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "The 'To' date cannot be before the 'From' date.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                });
+                return;
+            } else {
+                checkdatediffrence(fromDate, date);
+                setToDate(date);
+            }
+        } else {
+            setToDate(date);
+        }
+    };
+
+
+    const checkdatediffrence = (startDate, endDate) => {
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
         const diffInMs = end - start;
         const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
         const diffInMonths = diffInDays / 30;
-    
+
         if (diffInMonths > 1) {
-          Swal.fire({
-            title: "Date Range Exceeded",
-            text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
-            icon: "warning",
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showCancelButton: true,
-            confirmButtonText: "Yes",
-            confirmButtonColor: "#28a745",
-            cancelButtonText: "No",
-            cancelButtonColor: "#d33",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              endDate = endDate;
-              handleApicall(startDate, endDate);
-            } else {
-              setToDate(null);
-              console.log("Dates cleared");
+            Swal.fire({
+                title: "Date Range Exceeded",
+                text: "The selected dates have more than a 1-month gap.",
+                icon: "warning",
+                confirmButtonText: "OK",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    endDate = endDate;
+
+                } else {
+                    setToDate(null);
+                    console.log("Dates cleared");
+                }
             }
-          }
-          );
+            );
         };
-      };  
+    };
+
+
+
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -260,12 +304,12 @@ export default function AssignedROcaselog() {
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
             const isPastDate = endDate < currentDate;
-        }catch (error) {
+        } catch (error) {
             console.error("Error filtering cases:", error);
             Swal.fire({
-            title: "Error",
-            text: "Failed to fetch filtered data. Please try again.",
-            icon: "error"
+                title: "Error",
+                text: "Failed to fetch filtered data. Please try again.",
+                icon: "error"
             });
         }
     };
@@ -539,7 +583,7 @@ export default function AssignedROcaselog() {
 
                                                 <button
                                                     className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                                                    style={{ whiteSpace: "nowrap"}}
+                                                    style={{ whiteSpace: "nowrap" }}
                                                     onClick={() => handleonreassign(item.case_id)}
                                                 >
                                                     Re-Assign
