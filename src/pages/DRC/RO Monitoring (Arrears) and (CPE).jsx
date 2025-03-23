@@ -186,7 +186,7 @@ export default function RO_Monitoring_CPE() {
                                         <FaChevronDown className={`w-4 h-4 transition-transform ${isOpen === index ? "rotate-180" : "rotate-0"}`} />
                                     </span>
                                 </button>
-                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-96" : "max-h-0"}`}>
+                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-fit" : "max-h-0"}`}>
                                     <div className="flex flex-col items-center justify-center">
                                         <div className={`${GlobalStyle.cardContainer}`}>
                                             {[
