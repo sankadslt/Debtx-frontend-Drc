@@ -302,14 +302,14 @@ export default function ROsAssignedcaselog() {
 
       setCases([]); // Clear previous results
 
-     /*  // Format the date to 'YYYY-MM-DD' format
-      const formatDate = (date) => {
-        if (!date) return null;
-        const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-        return offsetDate.toISOString().split('T')[0];
-      }; */
+      /*  // Format the date to 'YYYY-MM-DD' format
+       const formatDate = (date) => {
+         if (!date) return null;
+         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+         return offsetDate.toISOString().split('T')[0];
+       }; */
 
-      if (!filters.rtom  && !filters.action_type && !fromDate && !toDate) {
+      if (!filters.rtom && !filters.action_type && !fromDate && !toDate) {
         Swal.fire({
           title: "Warning",
           text: "No filter data is selected. Please, select data.",
@@ -505,8 +505,8 @@ export default function ROsAssignedcaselog() {
               <tr
                 key={row.case_id}
                 className={`${index % 2 === 0
-                    ? "bg-white bg-opacity-75"
-                    : "bg-gray-50 bg-opacity-50"
+                  ? "bg-white bg-opacity-75"
+                  : "bg-gray-50 bg-opacity-50"
                   } border-b`}
               >
                 <td className={GlobalStyle.tableData}>{row.case_id}</td>
@@ -514,7 +514,9 @@ export default function ROsAssignedcaselog() {
                   <StatusIcon status={row.status} />
                 </td>
                 <td className={GlobalStyle.tableData}>
-                  {new Date(row.created_dtm).toLocaleDateString()}
+                  {row.created_dtm
+                    ? new Date(row.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}
                 </td>
                 <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                 <td className={GlobalStyle.tableData}>

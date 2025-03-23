@@ -551,14 +551,18 @@ export default function AssignedROcaselog() {
                                             </a>
                                         </td>
                                         <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-                                            {getStatusIcon(item.status)}
+                                            {getStatusIcon(item.status || "N/A")}
                                         </td>
-                                        <td className={GlobalStyle.tableData}>{item.current_arrears_amount}</td>
-                                        <td className={GlobalStyle.tableData}>{item.area}</td>
-                                        <td className={GlobalStyle.tableData}>{item.remark}</td>
-                                        <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                                        <td className={GlobalStyle.tableData}>{new Date(item.assigned_date).toLocaleDateString()}</td>
-                                        <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}>{item.ro_name || "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}>{item.assigned_date
+                                            ? new Date(item.assigned_date).toLocaleDateString("en-GB")
+                                            : "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}> {item.expire_dtm
+                                            ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
+                                            : "N/A"} </td>
                                         <td className={GlobalStyle.tableData}>
                                             <div className="px-8 flex items-center gap-2">
                                                 <AiFillEye

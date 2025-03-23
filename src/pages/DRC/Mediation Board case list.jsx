@@ -413,6 +413,8 @@ export default function MediationBoardCaselist() {
     }
 
     fetchCases();
+
+    
   };
   // Data filtering and pagination
   const filteredData = cases.filter((row) =>
@@ -436,6 +438,8 @@ export default function MediationBoardCaselist() {
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
+
+  
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -554,15 +558,24 @@ export default function MediationBoardCaselist() {
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                     <StatusIcon status={row.status} />
                   </td>
+
+                  
+
                   <td className={GlobalStyle.tableData}>
-                    {new Date(row.created_dtm).toLocaleDateString()}
+                   {row.created_dtm
+                      ? new Date(row.created_dtm).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </td>
                   <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                   <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_board_count || 0}
                   </td>
-                  <td className={GlobalStyle.tableData}>{new Date(row.next_calling_date).toLocaleDateString()}</td>
+
+
+                  <td className={GlobalStyle.tableData}>{row.created_dtm
+                      ? new Date(row.next_calling_date).toLocaleDateString("en-GB")
+                      : "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     <img
                       src={edit}
