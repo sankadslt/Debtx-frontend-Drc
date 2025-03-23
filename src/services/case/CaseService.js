@@ -23,6 +23,7 @@ export const listHandlingCasesByDRC = async (payload) => {
         case_id: caseData.case_id,
         status: caseData.status, // Added status field
         created_dtm: caseData.created_dtm,
+        assigned_date: caseData.assigned_date,
         current_arrears_amount: caseData.current_arreas_amount, 
         area: caseData.area,
         remark: caseData.remark || null,

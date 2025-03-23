@@ -63,7 +63,7 @@ const Sidebar = ({ onHoverChange }) => {
       roles: ["superadmin", "admin", "user", "drc_admin", "drc_user"],
       subItems: [
         {
-          label: "Case List",
+          label: "Distribution",
           roles: ["superadmin", "admin", "drc_admin", "drc_user"],
           subItems: [
             {
@@ -72,7 +72,7 @@ const Sidebar = ({ onHoverChange }) => {
               roles: ["superadmin", "admin", "drc_admin", "drc_user"],
             },
             {
-              label: "Distribution",
+              label: "Distribute To RO",
               link: "/pages/Distribute/DistributeTORO",
               roles: ["superadmin", "admin", "drc_admin", "drc_user"],
             },
@@ -83,7 +83,7 @@ const Sidebar = ({ onHoverChange }) => {
             },
           ],
         },
-        { label: "Negotiation Case List",
+        { label: "Negotiation",
           roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
           subItems: [
             {
@@ -93,7 +93,7 @@ const Sidebar = ({ onHoverChange }) => {
             },
           ]  
         },
-        { label: "Mediation Board List",
+        { label: "Mediation Board",
           roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
           subItems: [
             {

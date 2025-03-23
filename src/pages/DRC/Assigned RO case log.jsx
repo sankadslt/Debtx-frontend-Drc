@@ -210,9 +210,6 @@ export default function AssignedROcaselog() {
                 confirmButtonText: "OK",
             }).then((result) => {
                 if (result.isConfirmed) {
-                    endDate = endDate;
-
-                } else {
                     setToDate(null);
                     console.log("Dates cleared");
                 }
@@ -560,7 +557,7 @@ export default function AssignedROcaselog() {
                                         <td className={GlobalStyle.tableData}>{item.area}</td>
                                         <td className={GlobalStyle.tableData}>{item.remark}</td>
                                         <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                                        <td className={GlobalStyle.tableData}>{expireDate.toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>{new Date(item.assigned_date).toLocaleDateString()}</td>
                                         <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
                                         <td className={GlobalStyle.tableData}>
                                             <div className="px-8 flex items-center gap-2">

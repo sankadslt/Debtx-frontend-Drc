@@ -268,9 +268,6 @@ export default function ROsAssignedcaselog() {
         confirmButtonText: "OK",
       }).then((result) => {
         if (result.isConfirmed) {
-          endDate = endDate;
-
-        } else {
           setToDate(null);
           console.log("Dates cleared");
         }
