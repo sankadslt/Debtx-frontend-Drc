@@ -857,13 +857,13 @@ export default function EditCustomerProfile() {
   //   loadUser();
   // }, [localStorage.getItem("accessToken")]);
 
-  const loadUser = async () => {
-    const user = await getLoggedUserId();
-    setUserData(user);
-    console.log("User data:", user);
-  };
-
   useEffect(() => {
+    const loadUser = async () => {
+      const user = await getLoggedUserId();
+      setUserData(user);
+      console.log("User data:", user);
+    };
+
     loadUser();
   }, []);
 
@@ -878,6 +878,7 @@ export default function EditCustomerProfile() {
         case_id: Number(case_id),
         drc_id: userData.drc_id,
       };
+      console.log("Payload:", payload);
       // FIXED: Corrected parameter order to match the function definition
       const caseDetails = await caseDetailsforDRC(payload);
 

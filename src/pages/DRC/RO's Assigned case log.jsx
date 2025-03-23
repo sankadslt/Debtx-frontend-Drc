@@ -149,14 +149,13 @@ export default function ROsAssignedcaselog() {
   //   loadUser();
   // }, [localStorage.getItem("accessToken")]);
 
-
-  const loadUser = async () => {
-    const user = await getLoggedUserId();
-    setUserData(user);
-    console.log("User data:", user);
-  };
-
   useEffect(() => {
+    const loadUser = async () => {
+      const user = await getLoggedUserId();
+      setUserData(user);
+      console.log("User data:", user);
+    };
+
     loadUser();
   }, []);
 
