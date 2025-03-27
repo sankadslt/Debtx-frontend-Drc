@@ -21,14 +21,19 @@ import {
   getCaseDetailsbyMediationBoard,
   ListActiveMediationResponse,
   ListActiveRORequestsMediation,
+  Mediation_Board
 } from "../../services/case/CaseService";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
+import {getLoggedUserId} from "/src/services/auth/authService.js";
+import Swal from "sweetalert2";
 
 const MediationBoardResponse = () => {
   const { caseId, drcId } = useParams(); // Get parameters from URL
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [createdBy, setcreatedBy] = useState(null);
+  const [roId, setRoId] = useState(null);
 
   // Consolidated case details
   const [caseDetails, setCaseDetails] = useState({
@@ -43,10 +48,13 @@ const MediationBoardResponse = () => {
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
   const [roRequests, setRoRequests] = useState([]);
+  
 
   // Form state
   const [formData, setFormData] = useState({
     request: "",
+    requestId: "",
+    interactionId: "",
     customerRepresented: "",
     comment: "",
     requestcomment: "",
@@ -73,6 +81,8 @@ const MediationBoardResponse = () => {
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
   const [isSettlementTableVisible, setIsSettlementTableVisible] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+ 
+  
 
   // Derived state for showing settlement toggle
   const showSettlementToggle =
@@ -155,10 +165,59 @@ const MediationBoardResponse = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "request") {
+    const selectedIndex = e.target.selectedIndex;
+    const selectedOption = e.target.options[selectedIndex];
+    const requestId = selectedOption.getAttribute("data-id");
+    const interactionId = selectedOption.getAttribute("interaction_id");
+
+    setFormData({
+      ...formData,
+      [name]: value, // Store the selected request description
+      requestId: requestId, // Store the associated request ID
+      interactionId: interactionId, // Store the associated interaction ID
+    });
+  } 
+  if (name === "calendarMonth") {
+    if (value === "" || /^[0-9\b]+$/.test(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value, // Temporarily allow full input
+      }));
+    }
+  }
+  else {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name === "calendarMonth") {
+      let numValue = Number(value);
+      if (numValue < 1) numValue = 1;
+      if (numValue > 12) numValue = 12;
+  
+       // Get today's date (DD/MM/YYYY format)
+    const today = new Date();
+    const durationFrom = today.toLocaleDateString("en-GB"); 
+
+    // Calculate durationTo
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
+    const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
+    const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: numValue.toString(), // Store as string
+      durationFrom,
+      durationTo,
+    }));
+    }
   };
 
   const handleHandoverChange = (e) => {
@@ -207,6 +266,25 @@ const MediationBoardResponse = () => {
     }
   };
 
+  useEffect(() => {
+      const getuserdetails = async () => {
+        try {
+          const userData = await getLoggedUserId();
+  
+          if (userData) {
+            setcreatedBy(userData.user_id);
+            setRoId(userData.ro_id);
+            console.log("user id", userData.user_id);
+            console.log("user ro id", userData.ro_id);
+  
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error.message);
+        }
+      };
+      getuserdetails();
+    }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -214,7 +292,12 @@ const MediationBoardResponse = () => {
     if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
       if (!formData.comment.trim()) {
-        alert("Please enter a comment");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
@@ -223,17 +306,32 @@ const MediationBoardResponse = () => {
     } else {
       // Regular validation for non-handover cases
       if (formData.customerRepresented === "") {
-        alert("Please select whether customer is represented");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select whether customer is represented",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
       if (formData.customerRepresented === "Yes" && formData.settle === "") {
-        alert("Please select whether customer agrees to settle");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select whether customer agrees to settle",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
       if (showFailReasonFields && !formData.failReason) {
-        alert("Please select a fail reason");
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select a fail reason",
+          confirmButtonColor: "#d33",
+          });
         return;
       }
 
@@ -248,35 +346,65 @@ const MediationBoardResponse = () => {
         });
 
         if (!isValid) {
-          alert("Please fill in all settlement details");
+          Swal.fire({
+            icon: "warning",
+            title: "Warning",
+            text: "Please fill in all settlement details",
+            confirmButtonColor: "#d33",
+            });
           return;
         }
       }
     }
 
     try {
-      // Here you would typically call an API to save the form data
-      console.log("Form submitted:", {
-        ...formData,
-        handoverNonSettlement,
-        nextCallingDate,
-        settlements: showSettlementTable ? settlements : [],
-        caseId,
-        drcId,
-      });
 
-      // Close the confirmation popup
-      setShowConfirmation(false);
+      const payload = {
+        case_id : caseId,
+        drc_id : drcId,
+        ro_id : roId,
+        customer_available : formData.customerRepresented.toLocaleLowerCase(), 
+        next_calling_date: nextCallingDate,
+        request_id : formData.requestId,
+        request_type : formData.request,
+        request_comment : formData.requestcomment,
+        handed_over_non_settlement: handoverNonSettlement,
+        intraction_id : formData.interactionId,
+        comment : formData.comment,
+        settle : formData.settle,
+        settlement_count : formData.settlementCount,
+        initial_amount : formData.initialAmount,
+        calendar_month : formData.calendarMonth,
+        duration: formData.calendarMonth,
+        remark : formData.remark,
+        fail_reason : formData.failReason,
+        created_by : createdBy,
+        //settlements: showSettlementTable ? settlements : [],
+      };
 
-      // Simulate successful submission
-      alert("Form submitted successfully!");
+      console.log("Form submitted:", payload);
 
-      // Optional: Reset form or redirect
+      const response = await Mediation_Board(payload);
+      console.log("Response:", response);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Data sent successfully.",
+        confirmButtonColor: "#28a745",
+        });
+      
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
-      setShowConfirmation(false);
-    }
+      const errorMessage = error?.response?.data?.message || 
+                                    error?.message || 
+                                    "An error occurred. Please try again.";
+     Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: errorMessage,
+                confirmButtonColor: "#d33",
+                });
+                    }
   };
 
   // Add this function to toggle settlement table visibility
@@ -444,9 +572,9 @@ const MediationBoardResponse = () => {
                 className={GlobalStyle.selectBox}
                 aria-label="Request type"
               >
-                <option value="">Select Request</option>
+                <option value="" hidden>Select Request</option>
                 {roRequests && roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description}>
+                  <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id}>
                     {request.request_description || "Unnamed Request"}
                   </option>
                 ))}
@@ -561,7 +689,7 @@ const MediationBoardResponse = () => {
                     className="w-72 p-2 border rounded-md"
                     aria-label="Fail reason"
                   >
-                    <option value="">Select Response</option>
+                    <option value="" hidden>Select Response</option>
                     {failReasons && failReasons.map((failReason, index) => (
                       <option key={index} value={failReason.mediation_description || ""}>
                         {failReason.mediation_description || "Unnamed Reason"}
@@ -591,7 +719,7 @@ const MediationBoardResponse = () => {
                 <div className="flex items-center">
                   <span className="w-48 font-semibold">Settlement Count:</span>
                   <input
-                    type="text"
+                    type="number"
                     name="settlementCount"
                     value={formData.settlementCount}
                     onChange={handleInputChange}
@@ -603,7 +731,7 @@ const MediationBoardResponse = () => {
                 <div className="flex items-center">
                   <span className="w-48 font-semibold">Initial Amount:</span>
                   <input
-                    type="text"
+                    type="number"
                     name="initialAmount"
                     value={formData.initialAmount}
                     onChange={handleInputChange}
@@ -619,8 +747,10 @@ const MediationBoardResponse = () => {
                     name="calendarMonth"
                     value={formData.calendarMonth}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                     className="w-20 p-2 border rounded-md"
                     min="0"
+                    max="12"
                     aria-label="Calendar month"
                   />
                 </div>
@@ -636,6 +766,7 @@ const MediationBoardResponse = () => {
                       onChange={handleInputChange}
                       className="w-32 p-2 border rounded-md"
                       aria-label="Duration from"
+                      readOnly
                     />
                     <span>To:</span>
                     <input
@@ -645,6 +776,7 @@ const MediationBoardResponse = () => {
                       onChange={handleInputChange}
                       className="w-32 p-2 border rounded-md"
                       aria-label="Duration to"
+                      readOnly
                     />
                   </div>
                 </div>

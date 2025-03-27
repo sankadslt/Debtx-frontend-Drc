@@ -10,7 +10,7 @@ Related Files: (routes)
 Notes: The following page conatins the code for the Re-Assign RO  */
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { assignROToCase, fetchBehaviorsOfCaseDuringDRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
@@ -20,7 +20,7 @@ import { FaArrowLeft } from "react-icons/fa";
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
-  const { case_id } = useParams();
+  const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
 
@@ -40,6 +40,8 @@ export default function Re_AssignRo() {
 
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
+  const case_id = location.state?.CaseID;
+  console.log("caseid", case_id);
 
   // const loadUser = async () => {
   //   let token = localStorage.getItem("accessToken");

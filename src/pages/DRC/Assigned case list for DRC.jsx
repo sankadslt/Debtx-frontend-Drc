@@ -125,11 +125,7 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
-
-
-
   const handleCreateTaskForDownload = async ({
-
     fromDate,
     toDate,
   }) => {
@@ -181,12 +177,12 @@ export default function AssignedCaseListforDRC() {
           confirmButtonText: "OK",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Error creating task",
-        icon: "error",
-        confirmButtonText: "OK",
+        icon: "error"
       });
     }
   };
@@ -194,30 +190,41 @@ export default function AssignedCaseListforDRC() {
 
   const handlestartdatechange = (date) => {
     if (toDate && date > toDate) {
-      setError("The 'From' date cannot be later than the 'To' date.");
-    } else {
+      
+      Swal.fire({
+        title: "Warning",
+        text: "The 'From' date cannot be later than the 'To' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setFromDate(null);
+    } 
+    
+    
+    
+    else {
       setError("");
       setFromDate(date);
     }
   };
 
-  const handleenddatechange = (date) => {
+   const handleenddatechange = (date) => {
     if (fromDate && date < fromDate) {
-      setError("The 'To' date cannot be earlier than the 'From' date.");
+      
+      Swal.fire({
+        title: "Warning",
+        text: "The 'To' date cannot be earlier than the 'From' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setToDate(null);
     } else {
       setError("");
       setToDate(date);
     }
-  };
+  }; 
 
-
-
-
-
-
-
-
-  /* const checkdatediffrence = (startDate, endDate) => {
+  const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
     const diffInMs = end - start;
@@ -248,11 +255,7 @@ export default function AssignedCaseListforDRC() {
       );
 
     }
-  }; */
-
-
-
-
+  }; 
 
   const handleFilter = async () => {
     try {
@@ -341,6 +344,11 @@ export default function AssignedCaseListforDRC() {
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
 
