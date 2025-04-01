@@ -445,7 +445,11 @@ const handleFilterClick = () => {
                       }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
                       onClick={() =>
                         row.status !== "MB_fail_with_pending_non_settlement" &&
-                        navigate(`/pages/DRC/Mediation Board Response/${row.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/Mediation Board Response`, {
+                          state: { DRc_id: userData.drc_id, CAse_id: row.case_id },
+                        }  )
+                      
+
                       } // Prevent navigation for "MB_fail_with_pending_non_settlement"
                     />
                   </td>
