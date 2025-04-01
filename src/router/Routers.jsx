@@ -71,7 +71,7 @@ const Routers = () => {
       <Route path="/drc/mediation-board-case-list" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
       {/* <Route path="/drc/mediation-board-case-list/:drc_id" element={<ProtectedRoute element={<MediationBoardcaselist />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} /> */}
       {/* <Route path="/pages/DRC/Mediation Board Response" element={<ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} /> */}
-      <Route path="/pages/DRC/Mediation Board Response/:drcId/:caseId" element={ <ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
+      <Route path="/pages/DRC/Mediation Board Response" element={ <ProtectedRoute element={<Mediation_board_response />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'user']} />} />
 
 
       {/* DRC/RO Routes for 2.6 to 2.7.1 - Negotiation*/}
