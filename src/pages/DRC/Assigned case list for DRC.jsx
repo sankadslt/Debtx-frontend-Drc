@@ -1,8 +1,8 @@
 /*Purpose: This template is used for the 2.1- Assigned case list for DRC
 Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
-Last Modified Date: 2025-02-18
-Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
+Last Modified Date: 2025-03-04
+Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayka (sasindusrinayaka@gmail.com)
 Version: node 20
 ui number : 2.1
 Dependencies: tailwind css
@@ -14,9 +14,9 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
-import { roassignedbydrc } from "../../services/Ro/RO.js";
+import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
@@ -28,16 +28,21 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import { Create_Task } from "../../services/task/taskService.js";
+
 
 export default function AssignedCaseListforDRC() {
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState("");
+
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
 
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
   const [selectedArrearsAmount, setSelectedArrearsAmount] = useState("");
   const [roList, setRoList] = useState([]);
   const [selectedRo, setSelectedRo] = useState("");
-  const [drc_id, setDrcId] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,56 +65,200 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-  // Filter state
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+
+  // const loadUser = async () => {
+  //   let token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     setUserData(null);
+  //     return;
+  //   }
+
+  //   try {
+  //     let decoded = jwtDecode(token);
+  //     const currentTime = Date.now() / 1000;
+  //     if (decoded.exp < currentTime) {
+  //       token = await refreshAccessToken();
+  //       if (!token) return;
+  //       decoded = jwtDecode(token);
+  //     }
+
+  //     setUserData({
+  //       id: decoded.user_id,
+  //       role: decoded.role,
+  //       drc_id: decoded.drc_id,
+  //       ro_id: decoded.ro_id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Invalid token:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   loadUser();
+  // }, [localStorage.getItem("accessToken")]);
+
+  const loadUser = async () => {
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserData();
-        setUser(userData);
-        console.log("DRC ID: ", user?.drc_id);
-      } catch (err) {
-        console.log("Eror in retrieving DRC ID: ", err);
-      }
-    };
-
-    fetchUserData();
-  }, [user?.drc_id]);
+    loadUser();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Step 1: Fetch user_id
-        const userId = await getLoggedUserId();
-        if (!userId) throw new Error("Unable to fetch user ID");
-
-        // Step 2: Fetch drc_id using user_id
-        const userData = await getUserData();
-        setDrcId(userData.drc_id);
-
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
-        if (user?.drc_id) {
-          const roData = await roassignedbydrc(user?.drc_id);
+        if (userData?.drc_id) {
+          const roData = await getActiveRODetailsByDrcID(userData?.drc_id);
           setRoList(roData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-
     }
     fetchData();
+  }, [userData?.drc_id]);
 
-  }, [user?.drc_id]);
+  const handleCreateTaskForDownload = async ({
+    fromDate,
+    toDate,
+  }) => {
+    if (!fromDate && !toDate) {
+      Swal.fire({
+        title: "Warning",
+        text: "Please provide a date range before creating a task.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      return; // Stop function execution
+    }
 
-  // Handle filtering cases
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      Swal.fire({
+        title: "Incomplete Date Range",
+        text: "Both From Date and To Date must be selected together.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      title: "Confirm Task Creation",
+      text: "Are you sure you want to create this task?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, create it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      const filteredParams = {
+
+        FromDate: fromDate,
+        ToDate: toDate,
+      };
+
+      const response = await Create_Task(filteredParams);
+
+      if (response.status === 201) {
+        Swal.fire({
+          title: "Success",
+          text: "Task successfully created",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      }
+    } catch (error) {
+      console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Error creating task",
+        icon: "error"
+      });
+    }
+  };
+
+
+  const handlestartdatechange = (date) => {
+    if (toDate && date > toDate) {
+      
+      Swal.fire({
+        title: "Warning",
+        text: "The 'From' date cannot be later than the 'To' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setFromDate(null);
+    } 
+    
+    
+    
+    else {
+      setError("");
+      setFromDate(date);
+    }
+  };
+
+   const handleenddatechange = (date) => {
+    if (fromDate && date < fromDate) {
+      
+      Swal.fire({
+        title: "Warning",
+        text: "The 'To' date cannot be earlier than the 'From' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setToDate(null);
+    } else {
+      setError("");
+      setToDate(date);
+    }
+  }; 
+
+  const checkdatediffrence = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const diffInMs = end - start;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30;
+
+    if (diffInMonths > 1) {
+      Swal.fire({
+        title: "Date Range Exceeded",
+        text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        confirmButtonColor: "#28a745",
+        cancelButtonText: "No",
+        cancelButtonColor: "#d33",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          endDate = endDate;
+          handleApicall(startDate, endDate);
+        } else {
+          setToDate(null);
+          console.log("Dates cleared");
+        }
+      }
+      );
+
+    }
+  }; 
+
   const handleFilter = async () => {
     try {
-
       setFilteredData([]);
 
       const formatDate = (date) => {
@@ -118,19 +267,65 @@ export default function AssignedCaseListforDRC() {
         return offsetDate.toISOString().split("T")[0];
       };
 
-      if (!selectedArrearsAmount && !selectedRo && !fromDate && !toDate) {
-        Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
-        return;
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
 
-      };
-
-      if (new Date(fromDate) > new Date(toDate)) {
-        Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+      if (!selectedArrearsAmount && !selectedRo && !from && !to) {
+        Swal.fire({
+          title: "Missing Filters",
+          text: "Please select at least one filter.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
         return;
-      };
+      }
+
+      if ((from && !to) || (!from && to)) {
+        Swal.fire({
+          title: "Incomplete Date Range",
+          text: "Both From Date and To Date must be selected together.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      if (from && to && from > to) {
+        Swal.fire({
+          title: "Invalid Date Range",
+          text: "To Date should be greater than or equal to From Date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      if (from && to) {
+        const monthDiff = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+        if (monthDiff > 1 || (monthDiff === 1 && to.getDate() > from.getDate())) {
+          Swal.fire({
+            title: "Long Date Range",
+            text: "The selected date range exceeds one month. Consider creating a task instead.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Create Task",
+            cancelButtonText: "Cancel",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              handleCreateTaskForDownload({
+                arrears_band: selectedArrearsAmount,
+                ro_id: selectedRo,
+                fromDate: formatDate(fromDate),
+                toDate: formatDate(toDate),
+              });
+            }
+          });
+          return;
+        }
+      }
 
       const payload = {
-        drc_id: Number(user?.drc_id),
+        drc_id: Number(userData.drc_id),
         arrears_band: selectedArrearsAmount || "",
         ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
@@ -149,8 +344,14 @@ export default function AssignedCaseListforDRC() {
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
+
 
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
@@ -221,18 +422,18 @@ export default function AssignedCaseListforDRC() {
           ))}
         </select>
 
-        <div className={`${GlobalStyle.datePickerContainer} flex items-center gap-2`}>
+        <div className={GlobalStyle.datePickerContainer}>
           <label className={GlobalStyle.dataPickerDate}>Date</label>
           <DatePicker
             selected={fromDate}
-            onChange={(date) => setFromDate(date)}
+            onChange={handlestartdatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}
           />
           <DatePicker
             selected={toDate}
-            onChange={(date) => setToDate(date)}
+            onChange={handleenddatechange}
             dateFormat="dd/MM/yyyy"
             placeholderText="dd/MM/yyyy"
             className={GlobalStyle.inputText}

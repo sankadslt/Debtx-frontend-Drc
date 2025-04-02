@@ -15,10 +15,11 @@ import { AiFillEye } from "react-icons/ai";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import DatePicker from "react-datepicker";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService";
-import { getRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
-import { getLoggedUserId, getUserData } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+
 
 //Status Icons
 import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -39,21 +40,20 @@ export default function AssignedROcaselog() {
     const [rtoms, setRtoms] = useState([]);
     const [selectedRTOM, setSelectedRTOM] = useState("");
     const [filteredlogData, setFilteredlogData] = useState([]); // State for filtered data
-    const [expireDate, setexpireDate] = useState([]); // State for data
     // State for search query and filtered data
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [filterType, setFilterType] = useState("");
     const [filterValue, setFilterValue] = useState("");
+    const [filterAccountNo, setFilterAccountNo] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 5;
-    const indexOfLastRecord = currentPage * recordsPerPage;
-    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+    // const indexOfLastRecord = currentPage * recordsPerPage;
+    // const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    // const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
-    const [drc_id, setDrcId] = useState(null);
 
     // Filter state for Amount, Case ID, Status, and Date
     const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -62,83 +62,164 @@ export default function AssignedROcaselog() {
     const [filterStatus, setFilterStatus] = useState("");
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
+    const [userData, setUserData] = useState(null);
 
-    // useEffect(() => {
-    //     const getArrearsBands = async () => {
-    //         try {
-    //             const bands = await fetchAllArrearsBands();
-    //             console.log("Arrears bands:", bands);
-    //             setArrearsBands(bands);
-    //         } catch (error) {
-    //             console.error("Error fetching arrears bands:", error);
-    //         }
-    //     };
+    // const loadUser = async () => {
+    //     let token = localStorage.getItem("accessToken");
+    //     if (!token) {
+    //       setUserData(null);
+    //       return;
+    //     }
 
+    //     try {
+    //       let decoded = jwtDecode(token);
+    //       const currentTime = Date.now() / 1000;
+    //       if (decoded.exp < currentTime) {
+    //         token = await refreshAccessToken();
+    //         if (!token) return;
+    //         decoded = jwtDecode(token);
+    //       }
 
-    const [user, setUser] = useState(null);
+    //       setUserData({
+    //         id: decoded.user_id,
+    //         role: decoded.role,
+    //         drc_id: decoded.drc_id,
+    //         ro_id: decoded.ro_id,
+    //       });
+    //     } catch (error) {
+    //       console.error("Invalid token:", error);
+    //     }
+    //   };
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await getUserData();
-                setUser(userData);
-                console.log("DRC ID: ", user?.drc_id);
-            } catch (err) {
-                console.log("Error in getting user data : ", err);
+    //   useEffect(() => {
+    //     loadUser();
+    //   }, [localStorage.getItem("accessToken")]);
 
-            }
-        };
-
-        fetchUserData();
-
-    }, [user?.drc_id]);
-
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                // Step 1: Fetch user_id
-                const userId = await getLoggedUserId();
-                if (!userId) throw new Error("Unable to fetch user ID");
-
-                // Step 2: Fetch drc_id using user_id
-                const userData = await getUserData();
-                setDrcId(userData.drc_id);
-
-                // Step 3: Fetch arrears bands and ro list
-                const arrearsAmounts = await fetchAllArrearsBands();
-                setArrearsAmounts(arrearsAmounts);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
-        fetchUserData();
-    }, [user?.drc_id]);
+    const loadUser = async () => {
+        const user = await getLoggedUserId();
+        setUserData(user);
+        console.log("User data:", user);
+    };
 
     useEffect(() => {
-        console.log("Route parameter drc_id :", user?.drc_id);
-        const fetchData = async () => {
-            try {
-                if (user?.drc_id) {
-                    const payload = parseInt(user?.drc_id, 10); // Convert drc_id to number
+        loadUser();
+    }, []);
 
+    useEffect(() => {
+
+        console.log("fromDatea:", fromDate);
+        console.log("toDate:", toDate);
+        const fetchRTOMs = async () => {
+            try {
+                if (userData?.drc_id) {
+                    // Make sure to convert to number if needed
+                    const arrearsAmounts = await fetchAllArrearsBands();
+                    setArrearsAmounts(arrearsAmounts);
                     // Fetch RTOMs by DRC ID
-                    const rtomsList = await getRTOMsByDRCID(payload);
-                    setRtoms(rtomsList); // Set RTOMs to state
-
+                    const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
+                    console.log("RTOM list retrieved:", rtomsList);
+                    setRtoms(rtomsList);
                 }
-
             } catch (error) {
                 console.error("Error fetching RTOMs:", error);
             }
         };
 
-        fetchData();
+        fetchRTOMs();
+    }, [userData?.drc_id]); // Only depend on userData
 
-    }, [user?.drc_id]); // Including drc_id to the Dependency array
+    const handleonvisiable = (case_id) => {
+        navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+    }
 
-    // Handle filter function
+    const handleonreassign = (case_id) => {
+        navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
+        console.log("Case ID being passed: ", case_id);
+    }
+
+
+
+    const handlestartdatechange = (date) => {
+        if (date === null) {
+            setFromDate(null);
+            return;
+        }
+
+        if (toDate) {
+
+            if (date > toDate) {
+
+                Swal.fire({
+                    title: "Warning",
+                    text: "The 'From' date cannot be later than the 'To' date.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                });
+                return;
+            } else {
+                checkdatediffrence(date, toDate);
+                setFromDate(date);
+            }
+
+        } else {
+
+            setFromDate(date);
+
+        }
+
+
+    };
+    const handleenddatechange = (date) => {
+        if (date === null) {
+            setToDate(null);
+            return;
+        }
+
+        if (fromDate) {
+            if (date < fromDate) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "The 'To' date cannot be before the 'From' date.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                });
+                return;
+            } else {
+                checkdatediffrence(fromDate, date);
+                setToDate(date);
+            }
+        } else {
+            setToDate(date);
+        }
+    };
+
+
+    const checkdatediffrence = (startDate, endDate) => {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        const diffInMs = end - start;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        const diffInMonths = diffInDays / 30;
+
+        if (diffInMonths > 1) {
+            Swal.fire({
+                title: "Date Range Exceeded",
+                text: "The selected dates have more than a 1-month gap.",
+                icon: "warning",
+                confirmButtonText: "OK",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    setToDate(null);
+                    console.log("Dates cleared");
+                }
+            }
+            );
+        };
+    };
+
+
+
     const handleFilter = async () => {
         try {
             setFilteredData([]); // Clear previous results
@@ -151,21 +232,46 @@ export default function AssignedROcaselog() {
             };
 
             if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
-                Swal.fire("Warning", "No filter data is selected. Please, select data.", "warning");
+                Swal.fire({
+                    title: "Warning",
+                    text: "No filter data is selected. Please, select data.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
                 return;
-
             };
 
+            if ((fromDate && !toDate) || (!fromDate && toDate)) {
+                Swal.fire({
+                    title: "Warning",
+                    text: "Both From Date and To Date must be selected.",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
+                return;
+            }
 
             if (new Date(fromDate) > new Date(toDate)) {
-                Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
+                Swal.fire({
+                    title: "Warning",
+                    text: "To date should be greater than or equal to From date",
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                setToDate(null);
+                setFromDate(null);
                 return;
             };
 
-
-
             const payload = {
-                drc_id: Number(user?.drc_id), // Convert drc_id to number
+                drc_id: Number(userData?.drc_id), // Convert drc_id to number
                 rtom: selectedRTOM,
                 arrears_band: selectedArrearsBand,
                 from_date: formatDate(fromDate),
@@ -195,17 +301,15 @@ export default function AssignedROcaselog() {
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
             const isPastDate = endDate < currentDate;
-
-
         } catch (error) {
             console.error("Error filtering cases:", error);
+            Swal.fire({
+                title: "Error",
+                text: "Failed to fetch filtered data. Please try again.",
+                icon: "error"
+            });
         }
     };
-
-
-
-
-
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -271,19 +375,6 @@ export default function AssignedROcaselog() {
                 return true; // Return true if no filter is applied
             });
         }
-        if (fromDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date); // Assuming date field exists
-                return itemDate >= fromDate;
-            });
-        }
-        if (toDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate <= toDate;
-            });
-        }
-
         setFilteredData(tempData);
         setCurrentPage(1); // Reset pagination when filter changes
     };
@@ -324,12 +415,9 @@ export default function AssignedROcaselog() {
     return (
         <div className={GlobalStyle.fontPoppins}>
             {/* Title */}
-
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
             <div className="flex items-center justify-end gap-4 mt-20 mb-4">
-
-
 
                 {/* RTOM Select Dropdown */}
                 <select
@@ -353,7 +441,7 @@ export default function AssignedROcaselog() {
                     value={selectedArrearsBand}
                     onChange={(e) => setSelectedArrearsBand(e.target.value)}
                 >
-                    <option value="" disabled>
+                    <option value="" >
                         Arrears band
                     </option>
                     {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
@@ -372,20 +460,19 @@ export default function AssignedROcaselog() {
                     <label className={GlobalStyle.dataPickerDate}>Date</label>
                     <DatePicker
                         selected={fromDate}
-                        onChange={(date) => setFromDate(date)}
+                        onChange={handlestartdatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
                     />
                     <DatePicker
                         selected={toDate}
-                        onChange={(date) => setToDate(date)}
+                        onChange={handleenddatechange}
                         dateFormat="dd/MM/yyyy"
                         placeholderText="dd/MM/yyyy"
                         className={GlobalStyle.inputText}
                     />
                 </div>
-
 
                 <button
                     onClick={handleFilter}
@@ -408,8 +495,6 @@ export default function AssignedROcaselog() {
                     <FaSearch className={GlobalStyle.searchBarIcon} />
                 </div>
             </div>
-
-
 
             {/* Table Section */}
             <div className={GlobalStyle.tableContainer}>
@@ -441,9 +526,7 @@ export default function AssignedROcaselog() {
                                 End Date
                             </th>
                             <th scope="col" className={GlobalStyle.tableHeader}>
-
                             </th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -474,12 +557,12 @@ export default function AssignedROcaselog() {
                                         <td className={GlobalStyle.tableData}>{item.area}</td>
                                         <td className={GlobalStyle.tableData}>{item.remark}</td>
                                         <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                                        <td className={GlobalStyle.tableData}>{expireDate.toLocaleDateString()}</td>
+                                        <td className={GlobalStyle.tableData}>{new Date(item.assigned_date).toLocaleDateString()}</td>
                                         <td className={GlobalStyle.tableData}>{new Date(item.expire_dtm).toLocaleDateString()}</td>
                                         <td className={GlobalStyle.tableData}>
                                             <div className="px-8 flex items-center gap-2">
                                                 <AiFillEye
-                                                    onClick={() => navigate(`/drc/ro-monitoring-arrears/${item.case_id}`)}
+                                                    onClick={() => handleonvisiable(item.case_id)}
                                                     style={{ cursor: "pointer", marginRight: "8px" }}
                                                 />
 
@@ -498,7 +581,7 @@ export default function AssignedROcaselog() {
                                                 <button
                                                     className={`${GlobalStyle.buttonPrimary} mx-auto`}
                                                     style={{ whiteSpace: "nowrap" }}
-                                                    onClick={() => navigate(`/pages/DRC/Re-AssignRo/${item.case_id}`)}
+                                                    onClick={() => handleonreassign(item.case_id)}
                                                 >
                                                     Re-Assign
                                                 </button>
@@ -540,6 +623,13 @@ export default function AssignedROcaselog() {
                     <FaArrowRight />
                 </button>
             </div>
+
+            <button
+                onClick={() => navigate(-1)}
+                className={`${GlobalStyle.navButton} `}
+            >
+                <FaArrowLeft />Go Back
+            </button>
         </div>
     );
 }
