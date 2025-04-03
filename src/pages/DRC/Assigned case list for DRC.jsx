@@ -190,7 +190,7 @@ export default function AssignedCaseListforDRC() {
 
   const handlestartdatechange = (date) => {
     if (toDate && date > toDate) {
-      
+
       Swal.fire({
         title: "Warning",
         text: "The 'From' date cannot be later than the 'To' date.",
@@ -198,19 +198,16 @@ export default function AssignedCaseListforDRC() {
         confirmButtonText: "OK",
       });
       setFromDate(null);
-    } 
-    
-    
-    
+    }
     else {
       setError("");
       setFromDate(date);
     }
   };
 
-   const handleenddatechange = (date) => {
+  const handleenddatechange = (date) => {
     if (fromDate && date < fromDate) {
-      
+
       Swal.fire({
         title: "Warning",
         text: "The 'To' date cannot be earlier than the 'From' date.",
@@ -222,7 +219,7 @@ export default function AssignedCaseListforDRC() {
       setError("");
       setToDate(date);
     }
-  }; 
+  };
 
   const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
@@ -245,7 +242,7 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-          endDate = endDate;
+          endDate = end;
           handleApicall(startDate, endDate);
         } else {
           setToDate(null);
@@ -255,7 +252,7 @@ export default function AssignedCaseListforDRC() {
       );
 
     }
-  }; 
+  };
 
   const handleFilter = async () => {
     try {
@@ -488,15 +485,16 @@ export default function AssignedCaseListforDRC() {
                 >
                   <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                  <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.created_dtm
+                    ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
-                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime())
-                      ? new Date(item.expire_dtm).toLocaleDateString("en-CA")
-                      : "N/A"
-                    }
+                    {item.expire_dtm
+                      ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
 

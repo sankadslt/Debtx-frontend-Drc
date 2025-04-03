@@ -211,7 +211,7 @@ const DistributeTORO = () => {
   };
   const handleenddatechange = (date) => {
     if (date === null) {
-      setToDate(null); 
+      setToDate(null);
       return;
     }
 
@@ -716,12 +716,17 @@ const DistributeTORO = () => {
                   </td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.created_dtm ? new Date(item.created_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+
+                  <td className={GlobalStyle.tableData}> {item.created_dtm
+                    ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+                  <td className={GlobalStyle.tableData}>  {item.expire_dtm
+                    ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}  </td>
                 </tr>
               ))
             ) : (

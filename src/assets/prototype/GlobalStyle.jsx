@@ -12,6 +12,7 @@ const GlobalStyle = {
 
   // Button Styles
   buttonPrimary: "px-5 py-1 text-[#00256A] border-2 border-[#00256A] rounded-full hover:bg-[#00256A] hover:text-white transition-all",
+  buttonRemove: "px-5 py-1 text-[#950606] border-2 border-[#950606] rounded-full hover:bg-[#950606] hover:text-white transition-all",
 
   // Input Styles
   inputText: "px-5 py-1 opacity-80 border-2 border-[#0056A2] border-opacity-30 rounded-lg bg-white text-gray-600",
@@ -19,7 +20,7 @@ const GlobalStyle = {
   inputSearch: "px-4 py-2 pl-10 w-64 rounded-full border border-blue-400 bg-blue-200 text-sm text-blue-900 placeholder:text-blue-600 outline-none focus:ring focus:ring-blue-400 focus:border-blue-500 opacity-80",
 
   // Select/Dropdown Styles
-  selectBox: "py-1 border-2 border-[#0056A2] border-opacity-30 rounded-lg bg-white text-left w-40",
+  selectBox: "py-1 border-2 border-[#0056A2] border-opacity-30 rounded-lg bg-white text-left w-full max-w-40 sm:max-w-48 md:max-w-56 lg:max-w-64",
 
   // Card Styles
   cardContainer: "p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 w-6/12",
@@ -53,13 +54,14 @@ const GlobalStyle = {
   searchBarIcon: "absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400",
 
   // Table Styles
-  tableContainer: "overflow-hidden rounded-lg shadow-md border border-[#0087FF] border-opacity-15 bg-[#77BFFF] bg-opacity-25",
-  table: "min-w-full text-sm text-left text-gray-500",
-  thead: "text-xs text-[#718EBF] uppercase bg-gray-500 bg-opacity-75",
-  tableHeader: "text-[18px] text-[#3B5E99] uppercase bg-gray-50 bg-opacity-75 px-6 py-3 text-center",
-  tableRowEven: "bg-white bg-opacity-75 border-b py-6", // Increased vertical padding for more height
-  tableRowOdd: "bg-gray-50 bg-opacity-50 border-b py-6", // Increased vertical padding for more height
-  tableData: "text-[16px] text-center py-4 text-black", // Added padding for table data cells as well
+  tableContainer: "overflow-hidden rounded-lg shadow-md bg-[#77BFFF] bg-opacity-25 table-auto", // No outer border
+  table: "min-w-full text-sm text-left text-gray-500", // No outer border
+  thead: "text-xs text-[#718EBF] uppercase bg-gray-500 bg-opacity-75", // No border in the header
+  tableHeader: "text-[18px] text-[#3B5E99] uppercase bg-gray-50 bg-opacity-75 px-6 py-3 text-center border-r border-white", // Border only between columns
+  tableRowEven: "bg-white bg-opacity-75 py-6", // No border on the outer edges, only between columns
+  tableRowOdd: "bg-gray-50 bg-opacity-50 py-6", // No border on the outer edges, only between columns
+  tableData: "text-[16px] text-left py-4 text-black pl-2 border-r border-white", // Border between columns
+  tableCurrency: "text-[16px] text-right py-4 text-red-500 pr-2 border-r border-white", // Border between columns
 
   // Miscellaneous
   errorText: "text-red-500 mt-2 text-[16px] text-center",
@@ -75,6 +77,14 @@ const GlobalStyle = {
   monthCounterNumber: "text-center w-full border-none outline-none bg-transparent",
   monthCounterButton: "flex flex-col border-l border-gray-500",
   monthCounterButtonIcon: "px-2 text-xs hover:bg-gray-200",
+
+  // Pop_up box
+  popupBoxContainer: "fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center",
+  popupBoxBody: "bg-white p-6 rounded-md shadow-lg w-3/4",
+  popupBox: "flex justify-between items-center mb-4",
+  popupBoxTitle: "text-xl font-bold flex-grow text-center",
+  popupBoxCloseButton: "text-red-500 text-lg font-bold",
+
 };
 
 export default GlobalStyle;
