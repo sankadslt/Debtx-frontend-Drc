@@ -11,6 +11,7 @@ const PrototypeC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [month, setMonth] = useState(1); // Month counter state
   const [userRole, setUserRole] = useState(null); // Role-Based Button
+  const [showPopup, setShowPopup] = useState(false);
 
   // State variables for filters
   const [status, setStatus] = useState("");
@@ -454,6 +455,39 @@ const PrototypeC = () => {
           >
             <FaArrowRight />
           </button>
+        </div>
+      )}
+
+      {/* Pop_up Button */}
+      <div className="flex justify-start gap-4 mt-4">
+        <button
+          className={`${GlobalStyle.buttonPrimary}`}
+          onClick={() => setShowPopup(true)}
+        >
+          POP_UP
+        </button>
+      </div>
+
+      {/* Log History Popup */}
+      {showPopup && (
+        <div className={GlobalStyle.popupBoxContainer}>
+          <div className={GlobalStyle.popupBoxBody}>
+            <div className={GlobalStyle.popupBox}>
+              <h2 className={GlobalStyle.popupBoxTitle}>
+                Pop up
+              </h2>
+
+              <button
+                className={GlobalStyle.popupBoxCloseButton}
+                onClick={() => setShowPopup(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div>
+              <p>content here</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

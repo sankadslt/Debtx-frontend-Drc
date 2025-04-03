@@ -77,6 +77,14 @@ const GlobalStyle = {
   monthCounterNumber: "text-center w-full border-none outline-none bg-transparent",
   monthCounterButton: "flex flex-col border-l border-gray-500",
   monthCounterButtonIcon: "px-2 text-xs hover:bg-gray-200",
+
+  // Pop_up box
+  popupBoxContainer: "fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center",
+  popupBoxBody: "bg-white p-6 rounded-md shadow-lg w-3/4",
+  popupBox: "flex justify-between items-center mb-4",
+  popupBoxTitle: "text-xl font-bold flex-grow text-center",
+  popupBoxCloseButton: "text-red-500 text-lg font-bold",
+
 };
 
 export default GlobalStyle;
