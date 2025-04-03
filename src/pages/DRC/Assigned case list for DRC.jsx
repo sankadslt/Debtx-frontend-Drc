@@ -28,7 +28,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { Create_Task } from "../../services/task/taskService.js";
+import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
 
 
 export default function AssignedCaseListforDRC() {
@@ -125,10 +125,16 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
-  const handleCreateTaskForDownload = async ({
-    fromDate,
-    toDate,
-  }) => {
+  const handleCreateTaskForDownload = async ({ arrears_band, ro_id, fromDate, toDate }) => {
+    const params = {
+      arrears_band: arrears_band || "",
+      ro_id: ro_id ? Number(ro_id) : "",
+      from_date: fromDate,
+      to_date: toDate,
+    };
+
+    console.log("Params sent to API: ", params);
+
     if (!fromDate && !toDate) {
       Swal.fire({
         title: "Warning",
@@ -163,11 +169,10 @@ export default function AssignedCaseListforDRC() {
     try {
       const filteredParams = {
 
-        FromDate: fromDate,
-        ToDate: toDate,
+        params
       };
 
-      const response = await Create_Task(filteredParams);
+      const response = await Create_Task_Assigned_Case_for_DRC(filteredParams);
 
       if (response.status === 201) {
         Swal.fire({
@@ -224,7 +229,7 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-  const checkdatediffrence = (startDate, endDate) => {
+  /* const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
     const diffInMs = end - start;
@@ -255,7 +260,7 @@ export default function AssignedCaseListforDRC() {
       );
 
     }
-  };
+  }; */
 
   const handleFilter = async () => {
     try {
