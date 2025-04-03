@@ -199,9 +199,6 @@ export default function AssignedCaseListforDRC() {
       });
       setFromDate(null);
     }
-
-
-
     else {
       setError("");
       setFromDate(date);
@@ -245,7 +242,7 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-          endDate = endDate;
+          endDate = end;
           handleApicall(startDate, endDate);
         } else {
           setToDate(null);
