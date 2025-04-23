@@ -28,7 +28,7 @@ import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
 import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
 import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
 import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { Create_Task } from "../../services/task/taskService.js";
+import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
 
 
 export default function AssignedCaseListforDRC() {
@@ -125,14 +125,16 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
+  const handleCreateTaskForDownload = async ({ arrears_band, ro_id, fromDate, toDate }) => {
+    const params = {
+      arrears_band: arrears_band || "",
+      ro_id: ro_id ? Number(ro_id) : "",
+      from_date: fromDate,
+      to_date: toDate,
+    };
 
+    console.log("Params sent to API: ", params);
 
-
-  const handleCreateTaskForDownload = async ({
-
-    fromDate,
-    toDate,
-  }) => {
     if (!fromDate && !toDate) {
       Swal.fire({
         title: "Warning",
@@ -167,11 +169,10 @@ export default function AssignedCaseListforDRC() {
     try {
       const filteredParams = {
 
-        FromDate: fromDate,
-        ToDate: toDate,
+        params
       };
 
-      const response = await Create_Task(filteredParams);
+      const response = await Create_Task_Assigned_Case_for_DRC(filteredParams);
 
       if (response.status === 201) {
         Swal.fire({
@@ -181,12 +182,12 @@ export default function AssignedCaseListforDRC() {
           confirmButtonText: "OK",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Error creating task",
-        icon: "error",
-        confirmButtonText: "OK",
+        icon: "error"
       });
     }
   };
@@ -194,8 +195,16 @@ export default function AssignedCaseListforDRC() {
 
   const handlestartdatechange = (date) => {
     if (toDate && date > toDate) {
-      setError("The 'From' date cannot be later than the 'To' date.");
-    } else {
+
+      Swal.fire({
+        title: "Warning",
+        text: "The 'From' date cannot be later than the 'To' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setFromDate(null);
+    }
+    else {
       setError("");
       setFromDate(date);
     }
@@ -203,19 +212,19 @@ export default function AssignedCaseListforDRC() {
 
   const handleenddatechange = (date) => {
     if (fromDate && date < fromDate) {
-      setError("The 'To' date cannot be earlier than the 'From' date.");
+
+      Swal.fire({
+        title: "Warning",
+        text: "The 'To' date cannot be earlier than the 'From' date.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      });
+      setToDate(null);
     } else {
       setError("");
       setToDate(date);
     }
   };
-
-
-
-
-
-
-
 
   /* const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
@@ -238,7 +247,7 @@ export default function AssignedCaseListforDRC() {
         cancelButtonColor: "#d33",
       }).then((result) => {
         if (result.isConfirmed) {
-          endDate = endDate;
+          endDate = end;
           handleApicall(startDate, endDate);
         } else {
           setToDate(null);
@@ -249,10 +258,6 @@ export default function AssignedCaseListforDRC() {
 
     }
   }; */
-
-
-
-
 
   const handleFilter = async () => {
     try {
@@ -341,6 +346,11 @@ export default function AssignedCaseListforDRC() {
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error"
+      });
     }
   };
 
@@ -480,15 +490,16 @@ export default function AssignedCaseListforDRC() {
                 >
                   <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
-                  <td className={GlobalStyle.tableData}>{new Date(item.created_dtm).toLocaleDateString("en-CA") || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.created_dtm
+                    ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}</td>
                   <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
-                    {item.expire_dtm && !isNaN(new Date(item.expire_dtm).getTime())
-                      ? new Date(item.expire_dtm).toLocaleDateString("en-CA")
-                      : "N/A"
-                    }
+                    {item.expire_dtm
+                      ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
 
