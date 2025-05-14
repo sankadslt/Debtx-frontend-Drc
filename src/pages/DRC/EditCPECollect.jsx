@@ -14,14 +14,14 @@
   - This file contains the implementation  CPE Collect edit part .
 */
 
-
-
-
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
-import { drcCaseDetails, addCpeNegotiation } from "../../services/case/CaseService";
 import Backbtn from "../../assets/images/back.png";
 import { useLocation, useNavigate } from "react-router-dom";
+import {RO_CPE_Collection} from  "../../services/case/CaseService";
+import {getLoggedUserId} from "/src/services/auth/authService.js";
+import Swal from "sweetalert2";
+
 
 const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const [formData, setFormData] = useState({
@@ -34,14 +34,12 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     serialNo: "",
     nego_remark: "",
   });
-
   const [selectedProduct, setSelectedProduct] = useState({
     Service_address: "",
     product_label: "",
     service: "",
     product_ownership: "",
   });
-
   const modelOptions = {
     adsl: ["ZTE W300", "ZTE H108L", "Prolink 5004NK", "Tplink TDW8951ND", "Fiberhome HG110", "Prolink PRS 1140", "Prolink PRS  1841", "Fiberhome HG180"],
     ont: ["ONT1", "ONT2"],
@@ -53,19 +51,19 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     "poe injector": ["PD-3501G", "PD-9001GR"],
     "android box": ["SEI 300SLT"],
   };
-
   const location = useLocation();
-  const { product, caseId, customerRef, accountNo, drcId } = location.state || {};  // Destructure drcId here
-
+  const { product, caseId, customerRef, accountNo, drcId, serviceAddress } = location.state || {};
   const navigate = useNavigate();
-
+  const [roId, setRoId] = useState("");
+  const [DRC, setDRCID] = useState("");
   useEffect(() => {
     if (product) {
       setSelectedProduct({
-        Service_address: product.Service_address || "",
+        Service_address: product.service_address || "",
         product_label: product.product_label || "",
         service: product.service || "",
         product_ownership: product.product_ownership || "",
+        service_address: product.service_address || "",
       });
       setFormData((prevData) => ({
         ...prevData,
@@ -75,30 +73,25 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
         service: product.service || "",
         drcId: drcId || "",  // Set drcId 
       }));
-    }
-
-    if (caseId) {
-      drcCaseDetails(caseId)
-        .then((data) => {
-          setFormData((prevData) => ({
-            ...prevData,
-            caseId: data.case_id,
-            customerRef: data.customer_ref,
-            accountNo: data.account_no,
-          }));
-        })
-        .catch((error) => {
-          console.error("Error fetching case details:", error);
-        });
-    }
-
-    if (drcId) {
-      console.log("drcId:", drcId);
-    }
+    };
+    // if (caseId) {
+    //   drcCaseDetails(caseId)
+    //     .then((data) => {
+    //       setFormData((prevData) => ({
+    //         ...prevData,
+    //         caseId: data.case_id,
+    //         customerRef: data.customer_ref,
+    //         accountNo: data.account_no,
+    //       }));
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error fetching case details:", error);
+    //     });
+    // };
+    // if (drcId) {
+    //   console.log("drcId:", drcId);
+    // };
   }, [product, caseId, customerRef, accountNo, drcId]);
-
-
-
 
   const handleBackClick = () => {
     navigate("/drc/customer-negotiation");
@@ -109,39 +102,58 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  useEffect(() => {
+    const loadUser = async () => {  
+      const userId = await getLoggedUserId();
+      setRoId(userId.ro_id);
+      setDRCID(userId.drc_id);
+      console.log("RO ID:", roId);
+      console.log("DRC ID:", DRC);
+    };
+    loadUser();
+  }, []);
 
-  const cpeSubmit = (event) => {
-    event.preventDefault();
-  
-    const caseId = formData.caseId;
-    const type = formData.type;
-    const cpemodel = formData.cpemodel;
-    const serialNo = formData.serialNo.trim();
-    const nego_remark = formData.nego_remark.trim();
-    const service = formData.service ? formData.service.trim() : "";  
-    const drcId = formData.drcId;  
+  const cpeSubmit = () => {
+    
+    
+    const cpeData = {
+      case_id: caseId,
+      drc_id: DRC ,
+      ro_id: roId || null,
+      order_id: null,
+      product_label: selectedProduct.product_label,
+      service_type: selectedProduct.service,
+      cp_type: formData.type,
+      cpe_model: formData.cpemodel,
+      serial_no: formData.serialNo,
+      remark: formData.nego_remark,
+    };
 
-    if (!serialNo || !nego_remark || !service) {
-      alert("Serial Number, Remark, and Service cannot be empty.");
-      return;
-    }
-  
-    addCpeNegotiation(caseId, type, cpemodel, serialNo, nego_remark, service, drcId)
-      .then((data) => {
-        alert("CPE details added successfully!");
-        setFormData({
-          ...formData,
-          serialNo: "",
-          nego_remark: "",
-          type: "",
-          service: "",  
-          drcId: "",  
+    console.log("CPE Data:", cpeData);
+
+    const cpeCollect = async () => {
+      try {
+        const response = await RO_CPE_Collection(cpeData);
+        console.log("CPE Collect Response:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Data sent successfully.",
+          confirmButtonColor: "#28a745",
         });
-      })
-      .catch((error) => {
-        alert("Failed to add CPE details: " + error.message);
-      });
-  };
+      } catch (error) {
+        console.error("Error submitting CPE data:", error);
+        const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+                Swal.fire({
+                  icon: "error",
+                  title: "Error",
+                  text: errorMessage,
+                  confirmButtonColor: "#d33",
+                });
+      }
+    }
+    cpeCollect();
+  }
 
 
   const style = {
@@ -152,31 +164,32 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const renderCPEEditForm = () => (
     <div className="p-6 rounded-lg ml-32">
       <div className={`${GlobalStyle.cardContainer}`}>
-        <tr>
-          <th className={style.thStyle}>Case ID</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.caseId}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Customer Ref</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.customerRef}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Service Address</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
-        </tr>
+        <table>
+          <tbody>
+            <tr>
+              <th className={style.thStyle}>Case ID</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{formData.caseId}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Customer Ref</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{formData.customerRef}</td>
+            </tr>
+            <tr>
+              <th className={style.thStyle}>Service Address</th>
+              <td className={style.tdStyle}>:</td>
+              <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
+            </tr>
+          </tbody>
+        </table>
         <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
-        <tr>
-          <th className={style.thStyle}>Telephone No</th>
+        <table>
+          <tbody>
+          <tr>
+          <th className={style.thStyle}>Product Label</th>
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_label}</td>
-        </tr>
-        <tr>
-          <th className={style.thStyle}>Account No</th>
-          <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{formData.accountNo}</td>
         </tr>
         <tr>
           <th className={style.thStyle}>Service Type</th>
@@ -188,6 +201,8 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
           <td className={style.tdStyle}>:</td>
           <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
         </tr>
+          </tbody>
+        </table>
       </div>
 
       <div className={`${GlobalStyle.cardContainer}`} style={{ minWidth: "600px" }}>

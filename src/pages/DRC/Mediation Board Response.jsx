@@ -27,14 +27,22 @@ import { useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
+import { useLocation } from "react-router-dom";
+
 
 const MediationBoardResponse = () => {
-  const { caseId, drcId } = useParams(); // Get parameters from URL
+  //const { caseId, drcId } = useParams(); // Get parameters from URL
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [createdBy, setcreatedBy] = useState(null);
   const [roId, setRoId] = useState(null);
+  const location = useLocation(); 
 
+  const caseId = location.state?.CAse_id ; // Get caseId from state if available
+  const drcId = location.state?.DRc_id ; // Get drcId from state if available
+
+  console.log(" passed caseId", caseId);
+  console.log("passed drcId", drcId);
   // Consolidated case details
   const [caseDetails, setCaseDetails] = useState({
     caseId: "",
