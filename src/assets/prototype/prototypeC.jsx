@@ -468,14 +468,12 @@ const PrototypeC = () => {
         </button>
       </div>
 
-      {/* Log History Popup */}
+      {/* Popup */}
       {showPopup && (
         <div className={GlobalStyle.popupBoxContainer}>
           <div className={GlobalStyle.popupBoxBody}>
             <div className={GlobalStyle.popupBox}>
-              <h2 className={GlobalStyle.popupBoxTitle}>
-                Pop up
-              </h2>
+              <h2 className={GlobalStyle.popupBoxTitle}>Pop up</h2>
 
               <button
                 className={GlobalStyle.popupBoxCloseButton}
@@ -490,6 +488,50 @@ const PrototypeC = () => {
           </div>
         </div>
       )}
+
+      {/* Form */}
+      <div className="flex gap-4 mt-4 justify-center">
+        <div className={GlobalStyle.cardContainer}>
+          <h2 className={`${GlobalStyle.headingMedium} text-center mb-4`}>
+            Form Template
+          </h2>
+
+          <form className="flex flex-col gap-4">
+            {/* Text Input */}
+            <div className="flex flex-col">
+              <label className={`${GlobalStyle.headingSmall} mb-1`}>
+                Input
+              </label>
+              <input
+                type="text"
+                placeholder="Enter Input"
+                className={GlobalStyle.inputText}
+              />
+            </div>
+
+            {/* Select Box */}
+            <div className="flex flex-col">
+              <label className={`${GlobalStyle.headingSmall} mb-1`}>
+                Select Option
+              </label>
+              <select className={GlobalStyle.selectBox}>
+                <option value="">Select an option</option>
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+                <option value="option3">Option 3</option>
+              </select>
+            </div>
+
+            {/* Button */}
+            <button
+              type="submit"
+              className={`${GlobalStyle.buttonPrimary} mt-4`}
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
