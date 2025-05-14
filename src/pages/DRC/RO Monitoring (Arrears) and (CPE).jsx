@@ -12,7 +12,7 @@ Notes: The following page conatins the code for both the UI's */
 
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaArrowLeft } from "react-icons/fa6";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
@@ -21,7 +21,7 @@ export default function RO_Monitoring_CPE() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Customer Negotiation");
     const [userData, setUserData] = useState(null);
-    const { case_id } = useParams();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(null);
     const [cusNegotiationData, setCusNegotiationData] = useState({
         caseDetails: {},
@@ -29,6 +29,8 @@ export default function RO_Monitoring_CPE() {
         paymentData: {},
         additionalData: { ro_negotiation: [], ro_requests: [] }
     });
+    const case_id = location.state?.CaseID;
+    console.log("caseid", case_id);
 
     // Tab click handler
     const handleTabClick = (tab) => {
@@ -184,7 +186,7 @@ export default function RO_Monitoring_CPE() {
                                         <FaChevronDown className={`w-4 h-4 transition-transform ${isOpen === index ? "rotate-180" : "rotate-0"}`} />
                                     </span>
                                 </button>
-                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-96" : "max-h-0"}`}>
+                                <div className={`transition-[max-height] duration-300 overflow-hidden ${isOpen === index ? "max-h-fit" : "max-h-0"}`}>
                                     <div className="flex flex-col items-center justify-center">
                                         <div className={`${GlobalStyle.cardContainer}`}>
                                             {[

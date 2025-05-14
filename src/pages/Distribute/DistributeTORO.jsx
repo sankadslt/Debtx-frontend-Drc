@@ -119,6 +119,9 @@ const DistributeTORO = () => {
 
   // Fetch data and RTOMs when drc_id changes
   useEffect(() => {
+
+    console.log("fromDatea:", fromDate);
+    console.log("toDate:", toDate);
     const fetchData = async () => {
       try {
         if (userData?.drc_id) {
@@ -144,7 +147,7 @@ const DistributeTORO = () => {
         if (userData?.drc_id) {
           const numericDrcId = Number(userData?.drc_id);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
-    
+
           if (Array.isArray(officers)) {
             // Map recovery officers with ro_id and other details
             const formattedOfficers = officers.map((officer) => ({
@@ -152,7 +155,7 @@ const DistributeTORO = () => {
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
             }));
-    
+
             setRecoveryOfficers(formattedOfficers);
             console.log("Recovery Officers:", formattedOfficers);
           } else {
@@ -177,17 +180,59 @@ const DistributeTORO = () => {
 
 
   const handlestartdatechange = (date) => {
-    setFromDate(date);
-    if (toDate) checkdatediffrence(date, toDate);
+    if (date === null) {
+      setFromDate(null);
+      return;
+    }
+
+    if (toDate) {
+
+      if (date > toDate) {
+
+        Swal.fire({
+          title: "Warning",
+          text: "The 'From' date cannot be later than the 'To' date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      } else {
+        checkdatediffrence(date, toDate);
+        setFromDate(date);
+      }
+
+    } else {
+
+      setFromDate(date);
+
+    }
+
+
+  };
+  const handleenddatechange = (date) => {
+    if (date === null) {
+      setToDate(null);
+      return;
+    }
+
+    if (fromDate) {
+      if (date < fromDate) {
+        Swal.fire({
+          title: "Warning",
+          text: "The 'To' date cannot be before the 'From' date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      } else {
+        checkdatediffrence(fromDate, date);
+        setToDate(date);
+      }
+    } else {
+      setToDate(date);
+    }
   };
 
-  const handleenddatechange = (date) => {
-    if (fromDate) {
-      checkdatediffrence(fromDate, date);
-    }
-    setToDate(date);
-
-  }
 
   const checkdatediffrence = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
@@ -199,11 +244,17 @@ const DistributeTORO = () => {
     if (diffInMonths > 1) {
       Swal.fire({
         title: "Date Range Exceeded",
-        text: "The selected dates have exeeded more than a 1-month gap. we can't proceed.",
-        icon: "warning"
-      });
-      setToDate(null);
-    }
+        text: "The selected dates have more than a 1-month gap.",
+        icon: "warning",
+        confirmButtonText: "OK",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setToDate(null);
+          console.log("Dates cleared");
+        }
+      }
+      );
+    };
   };
 
 
@@ -221,11 +272,10 @@ const DistributeTORO = () => {
 
       if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
         Swal.fire({
-          title: "Warning",
-          text: "No filter data is selected. Please, select data.",
+          title: "Missing Filters",
+          text: "Please select at least one filter.",
           icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false
+          confirmButtonText: "OK",
         });
         return;
       };
@@ -350,10 +400,10 @@ const DistributeTORO = () => {
     }
 
     setSelectedRows(newSelectedRows);
-    
+
     // Update filtered officers based on selected rows
     updateFilteredOfficers(Array.from(newSelectedRows));
-    
+
     // Update select all checkbox state
     setSelectAll(newSelectedRows.size === currentData.length);
   };
@@ -367,15 +417,15 @@ const DistributeTORO = () => {
 
     // Get RTOM areas of the selected rows
     const selectedAreas = selectedIndices.map((index) => currentData[index].area);
-    
+
     // Filter officers who have matching RTOM areas
     const officers = recoveryOfficers.filter((officer) => {
       return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
         officer.rtoms_for_ro.some(rtom => selectedAreas.includes(rtom.name));
     });
-    
+
     setFilteredOfficers(officers);
-    
+
     // Reset selected RO if it's no longer in the filtered list
     if (selectedRO && !officers.some(officer => officer.ro_id.toString() === selectedRO.toString())) {
       setSelectedRO("");
@@ -513,7 +563,7 @@ const DistributeTORO = () => {
 
   const getStatusIcon = (status) => {
     if (!status) return <span className="text-gray-500">N/A</span>;
-    
+
     switch (status.toLowerCase()) {
       case "open no agent":
         return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
@@ -666,12 +716,17 @@ const DistributeTORO = () => {
                   </td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.created_dtm ? new Date(item.created_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+
+                  <td className={GlobalStyle.tableData}> {item.created_dtm
+                    ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.expire_dtm ? new Date(item.expire_dtm).toLocaleDateString("en-CA") : "N/A"} </td>
+                  <td className={GlobalStyle.tableData}>  {item.expire_dtm
+                    ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}  </td>
                 </tr>
               ))
             ) : (
@@ -682,7 +737,7 @@ const DistributeTORO = () => {
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination Section */}
       {filteredDataBySearch.length > 0 && (
         <div className={GlobalStyle.navButtonContainer}>
@@ -733,7 +788,7 @@ const DistributeTORO = () => {
           Submit
         </button>
       </div>
-      
+
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}

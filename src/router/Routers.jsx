@@ -6,7 +6,6 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Unauthorized from "../components/Unauthorized";
 import UserProfile from "../pages/userProfile";
 import CreateTask from "../pages/createTasks";
-
 import Dashboard from "../pages/Dashboard";
 import PrototypeA from "../assets/prototype/prototypeA";
 import PrototypeB from "../assets/prototype/prototypeB";
@@ -49,7 +48,7 @@ const Routers = () => {
       <Route path="/prototypeB" element={<ProtectedRoute element={<PrototypeB />} allowedRoles={['superadmin']} />} />
       <Route path="/prototypeC" element={<ProtectedRoute element={<PrototypeC />} allowedRoles={['superadmin']} />} />
 
-     {/* Distribute Routes 2.2 */}
+      {/* Distribute Routes 2.2 */}
      
       <Route path="/pages/Distribute/DistributeTORO" element={<ProtectedRoute element={<DistributeTORO />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin']} />} />
 
@@ -60,11 +59,11 @@ const Routers = () => {
       <Route path="/drc/assigned-case-list-for-drc" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-case-list-for-drc/:drc_id" element={<ProtectedRoute element={<AssignedCaseListforDRC />} allowedRoles={['superadmin']} />} /> */}
       {/* <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin', 'admin']} />} /> */}
-      <Route path="/drc/ro-monitoring-arrears/:case_id" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/drc/ro-monitoring-arrears" element={<ProtectedRoute element={<RO_Monitoring />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
       <Route path="/drc/assigned-ro-case-log" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin','drc_user', 'drc_admin']} />} />
       {/* <Route path="/drc/assigned-ro-case-log/:drc_id" element={<ProtectedRoute element={<AssignedROcaselog />} allowedRoles={['superadmin']} />} /> */}
       {/* <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin']} />} /> */}
-      <Route path="/pages/DRC/Re-AssignRo/:case_id" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
+      <Route path="/pages/DRC/Re-AssignRo" element={<ProtectedRoute element={<Re_AssignRo />} allowedRoles={['superadmin', 'drc_user', 'drc_admin']} />} />
 
 
       {/* DRC/RO Routes for 2.15 to 2.16 - Mediation Board*/}
@@ -82,7 +81,9 @@ const Routers = () => {
       {/* <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} /> */}
 
 
+
       <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin', 'admin', 'drc_user', 'drc_admin', 'user']}  />} />
+
     </Routes>
   );
 };

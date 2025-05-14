@@ -25,12 +25,13 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
+// import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
   
   const [activeTab, setActiveTab] = useState("negotiation");
   const [showResponseHistory, setShowResponseHistory] = useState(false);
-  const [showSubmitMessage, setShowSubmitMessage] = useState(false);
+  // const [showSubmitMessage, setShowSubmitMessage] = useState(false);
   const [lastRequests, setLastRoRequests] = useState([]);
   const [lastNagotiation, setLastRONagotiation] = useState([]);
   const [lastPayment, setLastROPayment] = useState([]);
@@ -46,7 +47,9 @@ const Cus_Nego_Customer_Negotiation = () => {
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
+
   const caseid = location.state?.CaseID;
+
 
   const [userData, setUserData] = useState(null); 
   //pagination
@@ -100,6 +103,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     }
   };
 
+
   const loadUser = async () => {
   const user = await getLoggedUserId();
   setUserData(user);
@@ -126,7 +130,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     lastPaymentDate: null,
     request_description: null,
     createdDtm: null,
-    fieldReason: null,
+    field_reason: null, // Use field_reason instead of reason
     remark: null,
     ini_amount: null,
     month: 3,
@@ -136,15 +140,14 @@ const Cus_Nego_Customer_Negotiation = () => {
     drcId: drcId,
     roId: roId || null,
     requestId: null,
+
     request: null,
     request_remark: null,
-    intractionId: null,
+    intraction_id: null, // Use intraction_id instead of intractionId
     todo: null,
     completed: null,
-    reasonId: "",
-    reason: "",
-    nego_remark: null,
-    ref_products: [] // Initialize ref_products as an empty array
+    reason_id: "", // Use reason_id instead of reasonId
+    ref_products: [],
   };
   const [formData, setFormData] = useState(initialFormData);
   
@@ -215,11 +218,11 @@ const Cus_Nego_Customer_Negotiation = () => {
   }
   const handleNegotiationSubmit = async (e) => {
     e.preventDefault();
-
+  
     const newErrors = {};
-    if (!formData.caseId) newErrors.caseId = "Case ID is required.";
-    if (!formData.reason) newErrors.reason = "Reason is required.";
-    if (!formData.nego_remark) newErrors.nego_remark = "Remark is required." ;
+    if (!formData.case_id) newErrors.case_id = "Case ID is required.";
+    if (!formData.field_reason) newErrors.field_reason = "Field reason is required.";
+    if (!formData.remark) newErrors.remark = "Remark is required.";
     if (!formData.request) newErrors.request = "Request is required.";
     if (!formData.request_remark) newErrors.request_remark = "Request remark is required.";
     if (Object.keys(newErrors).length > 0) {
@@ -230,15 +233,16 @@ const Cus_Nego_Customer_Negotiation = () => {
     try {
       // Find the selected request details
       const selectedRequest = activeRORequests.find(
-          (request) => request.ro_request_id === parseInt(formData.requestId)
+        (request) => request.ro_request_id === parseInt(formData.request_id)
       );
       formData.request_description = selectedRequest.request_description;
-      formData.intractionId = selectedRequest.intraction_id;
-      // Ensure selected request exists before submission
+      formData.intraction_id = selectedRequest.intraction_id;
+  
       if (!selectedRequest) {
-          alert("Invalid request selected.");
-          return;
+        alert("Invalid request selected.");
+        return;
       }
+
       console.log("Form Data:", formData);
       const DRC_ID = initialFormData.drcId;
       console.log("Form data drc id :",  DRC_ID);
@@ -250,13 +254,13 @@ const Cus_Nego_Customer_Negotiation = () => {
           text: "Data sent successfully.",
           confirmButtonColor: "#28a745",
         });
-
       setFormData(initialFormData);
       setIsSubmitted(true);
       setErrors({});
     } catch (error) {
       console.error("Error submitting form data:", error.message);
       const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -265,6 +269,16 @@ const Cus_Nego_Customer_Negotiation = () => {
         });
     }
   };
+
+  useEffect(() => {
+    if (drcId && roId) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        drc_id: drcId,
+        ro_id: roId,
+      }));
+    }
+  }, [drcId, roId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -367,10 +381,12 @@ const Cus_Nego_Customer_Negotiation = () => {
           serviceAddress: product.Service_address,
         }
       });
+
     }else{
       setSelectedProduct(product); 
       setShowDetailedView(true); 
     }
+
   };
   //common style for card container
   const style = {
@@ -1013,6 +1029,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             </tr>
           </tbody>
         </table>
+
       </div>
       {/* Back Button */}
       <button
