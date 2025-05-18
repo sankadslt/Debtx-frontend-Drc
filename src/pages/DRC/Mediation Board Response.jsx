@@ -23,12 +23,16 @@ import {
   ListActiveRORequestsMediation,
   Mediation_Board
 } from "../../services/case/CaseService";
-import { useParams } from "react-router-dom";
+import { data, useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router-dom";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; // Importing useNavigate for navigation
 
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
 
 const MediationBoardResponse = () => {
   //const { caseId, drcId } = useParams(); // Get parameters from URL
@@ -37,10 +41,10 @@ const MediationBoardResponse = () => {
   const [createdBy, setcreatedBy] = useState(null);
   const [roId, setRoId] = useState(null);
   const location = useLocation(); 
-
+  const navigate = useNavigate(); // Initialize useNavigate
   const caseId = location.state?.CAse_id ; // Get caseId from state if available
   const drcId = location.state?.DRc_id ; // Get drcId from state if available
-
+   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   console.log(" passed caseId", caseId);
   console.log("passed drcId", drcId);
   // Consolidated case details
@@ -56,7 +60,96 @@ const MediationBoardResponse = () => {
   const [handoverNonSettlement, setHandoverNonSettlement] = useState("");
   const [nextCallingDate, setNextCallingDate] = useState("");
   const [roRequests, setRoRequests] = useState([]);
+
+  const [historyTables, setHistoryTables] = useState([]); 
+  const [lastRoRequests, setLastRoRequests] = useState([]);
+  const [mediationBoardHistory, setMediationBoardHistory] = useState([]);
+  const [lastROPayment, setLastROPayment] = useState([]);
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage1, setCurrentPage1] = useState(1);
+  const [currentPage2, setCurrentPage2] = useState(1);
+
+
+   // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
+
+  //Pagnation for the mediation board history
+  const rowsPerPage = 4;
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentRows = mediationBoardHistory.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(mediationBoardHistory.length / rowsPerPage);
+
+
+  // Pagination handler for Mediation Board History
+  const handlePrevNext = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+    if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+
+  // Pagination for Payment Details
+  const itemsPerPage = 4;
+  const startIndex1 = (currentPage1 - 1) * itemsPerPage;
+  const endIndex1 = startIndex1 + itemsPerPage;
+  const currentRows1 = lastROPayment.slice(startIndex1, endIndex1);
+  const totalPages1 = Math.ceil(lastROPayment.length / itemsPerPage);
+
+  // Pagination handler for Payment Details
+  const handlePrevNext1 = (direction) => {
+    if (direction === "prev" && currentPage1 > 1) {
+      setCurrentPage1(currentPage1 - 1);
+    }
+    if (direction === "next" && currentPage1 < totalPages1) {
+      setCurrentPage1(currentPage1 + 1);
+    }
+  };
+  
+
+  // Pagination for RO Requests
+
+  const itemsPerPage2 = 4;
+  const startIndex2 = (currentPage2 - 1) * itemsPerPage2;
+  const endIndex2 = startIndex2 + itemsPerPage2;
+  const currentRows2 = lastRoRequests.slice(startIndex2, endIndex2);
+  const totalPages2 = Math.ceil(lastRoRequests.length / itemsPerPage2);
+
+
+  // Pagination handler for RO Requests
+  const handlePrevNext2 = (direction) => {
+    if (direction === "prev" && currentPage2 > 1) {
+      setCurrentPage2(currentPage2 - 1);
+    }
+    if (direction === "next" && currentPage2 < totalPages2) {
+      setCurrentPage2(currentPage2 + 1);
+    }
+  };
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -98,10 +191,40 @@ const MediationBoardResponse = () => {
     formData.customerRepresented === "Yes" &&
     formData.settle === "Yes";
 
+
+     useEffect(() => {
+      const getuserdetails = async () => {
+        try {
+          const userData = await getLoggedUserId();
+  
+          if (userData) {
+            setcreatedBy(userData.user_id);
+            
+            setRoId(userData.ro_id);
+            console.log("user id", userData.user_id);
+            console.log("user drc id", userData.drc_id);
+            console.log("user ro id", userData.ro_id);
+  
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error.message);
+        }
+      };
+      getuserdetails();
+    }, []);
+
   // Fetch case details when component mounts
   useEffect(() => {
+
+
+
     const fetchCaseDetails = async () => {
-      if (!caseId || !drcId) {
+
+        const userData1 = await getLoggedUserId();
+
+        console.log("Within the function drc id", userData1.drc_id);
+
+      if (!caseId || !drcId) { // Check if caseId and drcId are available
         setError("Case ID and DRC ID are required");
         setIsLoading(false);
         return;
@@ -109,22 +232,30 @@ const MediationBoardResponse = () => {
 
       try {
         // Fetch all data in parallel
-        const [data, failReasonsList, roRequestsList] = await Promise.all([
-          getCaseDetailsbyMediationBoard(caseId, drcId),
+        const [casedetails, failReasonsList, roRequestsList] = await Promise.all([
+          getCaseDetailsbyMediationBoard(caseId, drcId , userData1.ro_id),
           ListActiveMediationResponse(),
           ListActiveRORequestsMediation(), // This now fetches only mediation mode requests
         ]);
 
+        const data = casedetails.data;
+        const callingRound = casedetails.callingRound;
+        console.log("Calling Round:", callingRound);
+
+        console.log("Data fetched:", data);
+        
         setCaseDetails({
-          caseId: data.case_id || "",
-          customerRef: data.customer_ref || "",
-          accountNo: data.account_no || "",
-          arrearsAmount: data.current_arrears_amount || "",
-          lastPaymentDate: data.last_payment_date
-            ? format(new Date(data.last_payment_date), "yyyy-MM-dd")
+          caseId: data[0].case_id || "",
+          customerRef: data[0].customer_ref || "",
+          accountNo: data[0].account_no || "",
+          arrearsAmount: data[0].current_arrears_amount || "",
+          lastPaymentDate: data[0].last_payment_date
+            ? format(new Date(data[0].last_payment_date), "yyyy-MM-dd")
             : "",
-          callingRound: data.calling_round || 0,
+          callingRound: callingRound || 0,
         });
+        setHistoryTables(data[0]); 
+          console.log("History Tables:", historyTables);
         setFailReasons(failReasonsList || []);
         setRoRequests(roRequestsList || []);
         setIsLoading(false);
@@ -189,10 +320,33 @@ const MediationBoardResponse = () => {
   } 
   if (name === "calendarMonth") {
     if (value === "" || /^[0-9\b]+$/.test(value)) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value, // Temporarily allow full input
-      }));
+        const numValue = Number(value);
+
+      if (numValue >= 1 && numValue <= 12){
+         
+        // Get today's date (DD/MM/YYYY format)
+        const today = new Date();
+         const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        const durationFrom = startOfNextMonth.toLocaleDateString("en-GB"); 
+
+        // Calculate durationTo
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
+        const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
+        const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+
+        setFormData((prev) => ({
+          ...prev,
+          [name]: numValue.toString(), // Store as string
+          durationFrom,
+          durationTo,
+        }));
+
+      }
+
+      // setFormData((prev) => ({
+      //   ...prev,
+      //   [name]: value, // Temporarily allow full input
+      // }));
     }
   }
   else {
@@ -274,24 +428,7 @@ const MediationBoardResponse = () => {
     }
   };
 
-  useEffect(() => {
-      const getuserdetails = async () => {
-        try {
-          const userData = await getLoggedUserId();
-  
-          if (userData) {
-            setcreatedBy(userData.user_id);
-            setRoId(userData.ro_id);
-            console.log("user id", userData.user_id);
-            console.log("user ro id", userData.ro_id);
-  
-          }
-        } catch (error) {
-          console.error("Error fetching user details:", error.message);
-        }
-      };
-      getuserdetails();
-    }, []);
+ 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -304,7 +441,7 @@ const MediationBoardResponse = () => {
           icon: "warning",
           title: "Warning",
           text: "Please enter a comment",
-          confirmButtonColor: "#d33",
+          confirmButtonColor: "#f1c40f"
           });
         return;
       }
@@ -318,7 +455,7 @@ const MediationBoardResponse = () => {
           icon: "warning",
           title: "Warning",
           text: "Please select whether customer is represented",
-          confirmButtonColor: "#d33",
+          confirmButtonColor: "#f1c40f",
           });
         return;
       }
@@ -328,7 +465,7 @@ const MediationBoardResponse = () => {
           icon: "warning",
           title: "Warning",
           text: "Please select whether customer agrees to settle",
-          confirmButtonColor: "#d33",
+          confirmButtonColor: "#f1c40f",
           });
         return;
       }
@@ -338,7 +475,7 @@ const MediationBoardResponse = () => {
           icon: "warning",
           title: "Warning",
           text: "Please select a fail reason",
-          confirmButtonColor: "#d33",
+          confirmButtonColor: "#f1c40f",
           });
         return;
       }
@@ -358,7 +495,7 @@ const MediationBoardResponse = () => {
             icon: "warning",
             title: "Warning",
             text: "Please fill in all settlement details",
-            confirmButtonColor: "#d33",
+            confirmButtonColor: "#f1c40f",
             });
           return;
         }
@@ -456,6 +593,48 @@ const MediationBoardResponse = () => {
     );
   }
 
+   const handleBack = () => {
+    navigate ("/drc/mediation-board-case-list") ; // Go back to the previous page
+  };
+
+  const handleResponseHistoryClick = async () => {
+    setShowResponseHistory(!showResponseHistory);
+    if (!showResponseHistory) {
+      try {
+        const lastRequests = historyTables.ro_requests
+          ? historyTables.ro_requests.map((ro_request) => ({
+              createdDtm: ro_request.created_dtm,
+              field_reason: ro_request.ro_request,
+              remark: ro_request.ro_request_remark ? ro_request.ro_request_remark :  "",
+            }))
+          : [];
+        setLastRoRequests(lastRequests);
+
+        const mediationbordhistory = historyTables.mediation_board
+        ? historyTables.mediation_board.map((media_board) => ({
+            callingdate: media_board.mediation_board_calling_dtm,
+            customerrep: media_board.customer_available,
+            agreetosettle: media_board.agree_to_settle || "",
+            remark: media_board.comment ? media_board.comment :  "",
+          }))
+        : [];
+        setMediationBoardHistory(mediationbordhistory);
+
+        const lastPayment = historyTables.money_transactions
+        ? historyTables.money_transactions.map((ro_payment) => ({
+            createdDtm: ro_payment.payment_Dtm,
+            paid_amount: ro_payment.payment,
+            settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced :  "",
+          }))
+        : [];
+        setLastROPayment(lastPayment);
+
+      } catch (error) {
+        console.error("Error fetching negotiation history:", error.message);
+      }
+    }
+  };
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <div className="mb-8">
@@ -463,375 +642,436 @@ const MediationBoardResponse = () => {
       </div>
 
       {/* Case Details Card - Always visible */}
-      <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
-        <table className="w-full">
-          <tbody>
-            <tr className="flex items-start py-1">
-              <td className="font-bold w-48">Case ID</td>
-              <td className="px-2 font-bold">:</td>
-              <td className="text-gray-700">{caseDetails.caseId}</td>
-            </tr>
-            <tr className="flex items-start py-1">
-              <td className="font-bold w-48">Customer Ref</td>
-              <td className="px-2 font-bold">:</td>
-              <td className="text-gray-700">{caseDetails.customerRef}</td>
-            </tr>
-            <tr className="flex items-start py-1">
-              <td className="font-bold w-48">Account No</td>
-              <td className="px-2 font-bold">:</td>
-              <td className="text-gray-700">{caseDetails.accountNo}</td>
-            </tr>
-            <tr className="flex items-start py-1">
-              <td className="font-bold w-48">Arrears Amount</td>
-              <td className="px-2 font-bold">:</td>
-              <td className="text-gray-700">{caseDetails.arrearsAmount}</td>
-            </tr>
-            <tr className="flex items-start py-1">
-              <td className="font-bold w-48">Last Payment Date</td>
-              <td className="px-2 font-bold">:</td>
-              <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div className="flex justify-center items-center">
+          <div className={`${GlobalStyle.cardContainer}`}>
+            <table className="w-full  ">
+              <tbody>
+                <tr className="flex items-start py-1">
+                  <td className="font-bold w-48">Case ID</td>
+                  <td className="px-2 font-bold">:</td>
+                  <td className="text-gray-700">{caseDetails.caseId}</td>
+                </tr>
+                <tr className="flex items-start py-1">
+                  <td className="font-bold w-48">Customer Ref</td>
+                  <td className="px-2 font-bold">:</td>
+                  <td className="text-gray-700">{caseDetails.customerRef}</td>
+                </tr>
+                <tr className="flex items-start py-1">
+                  <td className="font-bold w-48">Account No</td>
+                  <td className="px-2 font-bold">:</td>
+                  <td className="text-gray-700">{caseDetails.accountNo}</td>
+                </tr>
+                <tr className="flex items-start py-1">
+                  <td className="font-bold w-48">Arrears Amount</td>
+                  <td className="px-2 font-bold">:</td>
+                  <td className="text-gray-700">{caseDetails.arrearsAmount}</td>
+                </tr>
+                <tr className="flex items-start py-1">
+                  <td className="font-bold w-48">Last Payment Date</td>
+                  <td className="px-2 font-bold">:</td>
+                  <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
       </div>
 
       {/* Calling Round Card - Always visible */}
-      <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
-        <table className="w-full">
-          <tbody>
-            <tr className="flex items-start py-1">
-              <td className="font-semibold w-48">Calling Round</td>
-              <td className="px-4 font-semibold">:</td>
-              <td className="text-gray-700">{caseDetails.callingRound}</td>
-            </tr>
+      <div className="flex justify-center items-center  ">
+          <div
+          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto`}
+        >
 
-            {caseDetails.callingRound >= 3 && (
-              <tr className="flex items-start py-1">
-                <td className="font-semibold w-48">Handover Non-Settlement</td>
-                <td className="px-4 font-semibold">:</td>
-                <td>
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="handoverNonSettlement"
-                        value="Yes"
-                        checked={handoverNonSettlement === "Yes"}
-                        onChange={handleHandoverChange}
-                        className="mr-2"
-                        aria-label="Yes for handover non-settlement"
-                      />
-                      Yes
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="handoverNonSettlement"
-                        value="No"
-                        checked={handoverNonSettlement === "No"}
-                        onChange={handleHandoverChange}
-                        className="mr-2"
-                        aria-label="No for handover non-settlement"
-                      />
-                      No
-                    </label>
+            <h2 className={`${GlobalStyle.headingMedium} mb-4 text-center`}>
+              <strong>Mediation Board Form </strong>
+            </h2>
+            <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
+              <table className="w-full">
+                <tbody>
+                  <tr className="flex items-start py-1">
+                    <td className="font-semibold w-48">Calling Round</td>
+                    <td className="px-4 font-semibold">:</td>
+                    <td className="text-gray-700">{caseDetails.callingRound}</td>
+                  </tr>
+
+                  {caseDetails.callingRound >= 3 && (
+                    <tr className="flex items-start py-1">
+                      <td className="font-semibold w-48">Handover Non-Settlement</td>
+                      <td className="px-4 font-semibold">:</td>
+                      <td>
+                        <div className="flex gap-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="handoverNonSettlement"
+                              value="Yes"
+                              checked={handoverNonSettlement === "Yes"}
+                              onChange={handleHandoverChange}
+                              className="mr-2"
+                              aria-label="Yes for handover non-settlement"
+                            />
+                            Yes
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="handoverNonSettlement"
+                              value="No"
+                              checked={handoverNonSettlement === "No"}
+                              onChange={handleHandoverChange}
+                              className="mr-2"
+                              aria-label="No for handover non-settlement"
+                            />
+                            No
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Only show Next Calling Date when needed */}
+                  {(caseDetails.callingRound < 3 ||
+                    (caseDetails.callingRound >= 3 &&
+                      handoverNonSettlement === "No")) && (
+                      <tr className="flex items-start py-1">
+                        <td className="font-semibold w-48">Next Calling Date</td>
+                        <td className="px-4 font-semibold">:</td>
+                        <td>
+                          <input
+                            type="date"
+                            value={nextCallingDate}
+                            onChange={handleNextCallingDateChange}
+                            className="p-2 border rounded-md w-72"
+                            disabled={
+                              caseDetails.callingRound >= 3 &&
+                              handoverNonSettlement === "Yes"
+                            }
+                            aria-label="Next calling date"
+                          />
+                        </td>
+                      </tr>
+                    )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Main Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Only show these fields when NOT in simplified mode */}
+              {!isSimplifiedForm && (
+                <>
+                  <div className="flex items-center">
+                    <span className="w-48 font-semibold">Request : </span>
+                    <select
+                      name="request"
+                      value={formData.request}
+                      onChange={handleInputChange}
+                      className={GlobalStyle.selectBox}
+                      aria-label="Request type"
+                      style={{ color: formData.request === "" ? "gray" : "black" }}
+                    >
+                      <option value="" hidden>Select Request</option>
+                      {roRequests && roRequests.map((request) => (
+                        <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id} style={{ color: "black" }}>
+                          {request.request_description || "Unnamed Request"}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </td>
-              </tr>
-            )}
 
-            {/* Only show Next Calling Date when needed */}
-            {(caseDetails.callingRound < 3 ||
-              (caseDetails.callingRound >= 3 &&
-                handoverNonSettlement === "No")) && (
-                <tr className="flex items-start py-1">
-                  <td className="font-semibold w-48">Next Calling Date</td>
-                  <td className="px-4 font-semibold">:</td>
-                  <td>
-                    <input
-                      type="date"
-                      value={nextCallingDate}
-                      onChange={handleNextCallingDateChange}
-                      className="p-2 border rounded-md w-72"
-                      disabled={
-                        caseDetails.callingRound >= 3 &&
-                        handoverNonSettlement === "Yes"
-                      }
-                      aria-label="Next calling date"
-                    />
-                  </td>
-                </tr>
+                  {formData.request && (
+                    <div className="flex">
+                      <span className="w-48 font-semibold">Request Remark:</span>
+                      <textarea
+                        name="requestcomment"
+                        value={formData.requestcomment}
+                        onChange={handleInputChange}
+                        className={GlobalStyle.remark}
+                        rows="5"
+                        aria-label="Comment"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center">
+                    <span className="font-semibold">Customer Represented : </span>
+                    <div className="ml-4 flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="customerRepresented"
+                          value="Yes"
+                          checked={formData.customerRepresented === "Yes"}
+                          onChange={handleInputChange}
+                          className="mr-2"
+                          aria-label="Yes for customer represented"
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="customerRepresented"
+                          value="No"
+                          checked={formData.customerRepresented === "No"}
+                          onChange={handleInputChange}
+                          className="mr-2"
+                          aria-label="No for customer represented"
+                        />
+                        No
+                      </label>
+
+
+
+                    </div>
+                  </div>
+
+
+                  {/* Comment section - Moved directly below customer represented */}
+
+                  {formData.customerRepresented === "Yes" && (
+                    
+                    <div className="flex items-center">
+                      <span className="w-48 font-semibold mb-6">Agree to Settle : </span>
+                      <div className="ml-4 flex gap-4">
+                        <label className="flex items-center mb-6">
+                          <input
+                            type="radio"
+                            name="settle"
+                            value="Yes"
+                            checked={formData.settle === "Yes"}
+                            onChange={(e) => {
+                              if(caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")){
+                                
+                                Swal.fire({
+                                  icon: "warning",
+                                  title: "Warning",
+                                  text: "Handover Non-settlement has not been provided.",
+                                  confirmButtonColor: "#f1c40f",
+                                });
+                                e.preventDefault();
+                              }
+                              else{
+                                handleInputChange(e);
+                              }
+                            }}
+                            className="mr-2"
+                            aria-label="Yes for settle"
+                            // disabled={caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes"}
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center mb-6">
+                          <input
+                            type="radio"
+                            name="settle"
+                            value="No"
+                            checked={formData.settle === "No"}
+                            
+                            onChange={(e) => {
+                              if(caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")){
+                                Swal.fire({
+                                  icon: "warning",
+                                  title: "Warning",
+                                  text: "Handover Non-settlement has not been provided.",
+                                  confirmButtonColor: "#f1c40f",
+                                });
+                                e.preventDefault();
+                              }
+                              else{
+                                handleInputChange(e);
+                              }
+                            }}
+                            className="mr-2"
+                            aria-label="No for settle"
+                          />
+                          No
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comment section - Only shown when customer is not represented */}
+                  {formData.customerRepresented === "No" && (
+                    <div className="flex">
+                      <span className="w-48 font-semibold">Comment:</span>
+                      <textarea
+                        name="comment"
+                        value={formData.comment}
+                        onChange={handleInputChange}
+                        className={GlobalStyle.remark}
+                        rows="5"
+                        aria-label="Comment"
+                      />
+                    </div>
+                  )}
+
+                  {showFailReasonFields && (
+                    <div>
+                      <div className="flex items-center">
+                        <span className="w-48 font-semibold">Fail Reason:</span>
+                        <select
+                          name="failReason"
+                          value={formData.failReason}
+                          onChange={handleInputChange}
+                          className={GlobalStyle.selectBox}
+                          aria-label="Fail reason"
+                          style={{ color: formData.failReason === "" ? "gray" : "black" }}
+                        >
+                          <option value="" hidden>Select Response</option>
+                          {failReasons && failReasons.map((failReason, index) => (
+                            <option key={index} value={failReason.mediation_description || ""} style={{ color: "black" }}>
+                              {failReason.mediation_description || "Unnamed Reason"}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {formData.failReason && (
+                        <div className="flex mt-2">
+                          <span className="w-48 font-semibold">Comment:</span>
+                          <textarea
+                            name="failComment"
+                            value={formData.failComment}
+                            onChange={handleInputChange}
+                            className={GlobalStyle.remark}
+                            rows="4"
+                            aria-label="Fail reason comment"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {showSettlementFields && (
+                    <>
+                      <div >
+                        <h2 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
+                          <strong>Settlement Plan Creation</strong>
+                        </h2>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="w-48 font-semibold">Settlement Count:</span>
+                        <input
+                          type="number"
+                          name="settlementCount"
+                          value={formData.settlementCount}
+                          onChange={handleInputChange}
+                          className="w-72 p-2 border rounded-md"
+                          aria-label="Settlement count"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="w-48 font-semibold">Initial Amount:</span>
+                        <input
+                          type="number"
+                          name="initialAmount"
+                          value={formData.initialAmount}
+                          onChange={handleInputChange}
+                          className="w-72 p-2 border rounded-md"
+                          aria-label="Initial amount"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="w-48 font-semibold">Calendar Month:</span>
+                        <input
+                          type="number"
+                          name="calendarMonth"
+                          value={formData.calendarMonth}
+                          onChange={handleInputChange}
+                          //onBlur={handleBlur}
+                          className="w-20 p-2 border rounded-md"
+                          min="0"
+                          max="12"
+                          onKeyDown={(e) => e.preventDefault()} //  Prevent keyboard input
+                          aria-label="Calendar month"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="w-48 font-semibold">Duration:</span>
+                        <div className="flex items-center space-x-4">
+                          <span>From:</span>
+                          <input
+                            type="text"
+                            name="durationFrom"
+                            value={formData.durationFrom}
+                            onChange={handleInputChange}
+                            className="w-32 p-2 border rounded-md"
+                            aria-label="Duration from"
+                            readOnly
+                          />
+                          <span>To:</span>
+                          <input
+                            type="text"
+                            name="durationTo"
+                            value={formData.durationTo}
+                            onChange={handleInputChange}
+                            className="w-32 p-2 border rounded-md"
+                            aria-label="Duration to"
+                            readOnly
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex">
+                        <span className="w-48 font-semibold">Remark:</span>
+                        <textarea
+                          name="remark"
+                          value={formData.remark}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md"
+                          rows="4"
+                          aria-label="Remark"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
               )}
-          </tbody>
-        </table>
-      </div>
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Only show these fields when NOT in simplified mode */}
-        {!isSimplifiedForm && (
-          <>
-            <div className="flex items-center">
-              <span className="w-48 font-semibold">Request : </span>
-              <select
-                name="request"
-                value={formData.request}
-                onChange={handleInputChange}
-                className={GlobalStyle.selectBox}
-                aria-label="Request type"
-              >
-                <option value="" hidden>Select Request</option>
-                {roRequests && roRequests.map((request) => (
-                  <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id}>
-                    {request.request_description || "Unnamed Request"}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {formData.request && (
-              <div className="flex">
-                <span className="w-48 font-semibold">Request Remark:</span>
-                <textarea
-                  name="requestcomment"
-                  value={formData.requestcomment}
-                  onChange={handleInputChange}
-                  className={GlobalStyle.remark}
-                  rows="5"
-                  aria-label="Comment"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center">
-              <span className="font-semibold">Customer Represented : </span>
-              <div className="ml-4 flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="customerRepresented"
-                    value="Yes"
-                    checked={formData.customerRepresented === "Yes"}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                    aria-label="Yes for customer represented"
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="customerRepresented"
-                    value="No"
-                    checked={formData.customerRepresented === "No"}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                    aria-label="No for customer represented"
-                  />
-                  No
-                </label>
-
-
-
-              </div>
-            </div>
-
-
-            {/* Comment section - Moved directly below customer represented */}
-
-            {formData.customerRepresented === "Yes" && (
-              <div className="flex items-center">
-                <span className="w-48 font-semibold">Settle : </span>
-                <div className="ml-4 flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="settle"
-                      value="Yes"
-                      checked={formData.settle === "Yes"}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                      aria-label="Yes for settle"
-                    />
-                    Yes
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="settle"
-                      value="No"
-                      checked={formData.settle === "No"}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                      aria-label="No for settle"
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Comment section - Only shown when customer is not represented */}
-            {formData.customerRepresented === "No" && (
-              <div className="flex">
-                <span className="w-48 font-semibold">Comment:</span>
-                <textarea
-                  name="comment"
-                  value={formData.comment}
-                  onChange={handleInputChange}
-                  className={GlobalStyle.remark}
-                  rows="5"
-                  aria-label="Comment"
-                />
-              </div>
-            )}
-
-            {showFailReasonFields && (
-              <div>
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Fail Reason:</span>
-                  <select
-                    name="failReason"
-                    value={formData.failReason}
-                    onChange={handleInputChange}
-                    className="w-72 p-2 border rounded-md"
-                    aria-label="Fail reason"
-                  >
-                    <option value="" hidden>Select Response</option>
-                    {failReasons && failReasons.map((failReason, index) => (
-                      <option key={index} value={failReason.mediation_description || ""}>
-                        {failReason.mediation_description || "Unnamed Reason"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {formData.failReason && (
-                  <div className="flex mt-2">
-                    <span className="w-48 font-semibold">Comment:</span>
-                    <textarea
-                      name="failComment"
-                      value={formData.failComment}
-                      onChange={handleInputChange}
-                      className={GlobalStyle.remark}
-                      rows="4"
-                      aria-label="Fail reason comment"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {showSettlementFields && (
-              <>
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Settlement Count:</span>
-                  <input
-                    type="number"
-                    name="settlementCount"
-                    value={formData.settlementCount}
-                    onChange={handleInputChange}
-                    className="w-72 p-2 border rounded-md"
-                    aria-label="Settlement count"
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Initial Amount:</span>
-                  <input
-                    type="number"
-                    name="initialAmount"
-                    value={formData.initialAmount}
-                    onChange={handleInputChange}
-                    className="w-72 p-2 border rounded-md"
-                    aria-label="Initial amount"
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Calendar Month:</span>
-                  <input
-                    type="number"
-                    name="calendarMonth"
-                    value={formData.calendarMonth}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className="w-20 p-2 border rounded-md"
-                    min="0"
-                    max="12"
-                    aria-label="Calendar month"
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Duration:</span>
-                  <div className="flex items-center space-x-4">
-                    <span>From:</span>
-                    <input
-                      type="text"
-                      name="durationFrom"
-                      value={formData.durationFrom}
-                      onChange={handleInputChange}
-                      className="w-32 p-2 border rounded-md"
-                      aria-label="Duration from"
-                      readOnly
-                    />
-                    <span>To:</span>
-                    <input
-                      type="text"
-                      name="durationTo"
-                      value={formData.durationTo}
-                      onChange={handleInputChange}
-                      className="w-32 p-2 border rounded-md"
-                      aria-label="Duration to"
-                      readOnly
-                    />
-                  </div>
-                </div>
-
+              {/* Comment section for simplified form only */}
+              {isSimplifiedForm && (
                 <div className="flex">
-                  <span className="w-48 font-semibold">Remark:</span>
+                  <span className="w-48 font-semibold">Comment:</span>
                   <textarea
-                    name="remark"
-                    value={formData.remark}
+                    name="comment"
+                    value={formData.comment}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
-                    rows="4"
-                    aria-label="Remark"
+                    className={GlobalStyle.remark}
+                    rows="5"
+                    aria-label="Comment"
                   />
                 </div>
-              </>
-            )}
-          </>
-        )}
+              )}
 
-        {/* Comment section for simplified form only */}
-        {isSimplifiedForm && (
-          <div className="flex">
-            <span className="w-48 font-semibold">Comment:</span>
-            <textarea
-              name="comment"
-              value={formData.comment}
-              onChange={handleInputChange}
-              className={GlobalStyle.remark}
-              rows="5"
-              aria-label="Comment"
-            />
+              {/* Submit and Response History buttons - Always visible */}
+              <div className="flex justify-end mt-6">
+
+                 <div>
+                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button
+                        type="submit"
+                        className={GlobalStyle.buttonPrimary}
+                        aria-label="Submit form"
+                      >
+                        Submit
+                </button>
+                  )}
+                </div>
+                {/* <button
+                  type="submit"
+                  className={GlobalStyle.buttonPrimary}
+                  aria-label="Submit form"
+                >
+                  Submit
+                </button> */}
+              </div>
+            </form>
           </div>
-        )}
-
-        {/* Submit and Response History buttons - Always visible */}
-        <div className="flex justify-end mt-6">
-          <button
-            type="submit"
-            className={GlobalStyle.buttonPrimary}
-            aria-label="Submit form"
-          >
-            Submit
-          </button>
-        </div>
-      </form>
-
+      </div>
       {/* Settlement 1 toggle - Only shown when conditions are met */}
       {showSettlementToggle && (
         <div className="mt-6">
@@ -852,7 +1092,7 @@ const MediationBoardResponse = () => {
                   <thead className={GlobalStyle.thead}>
                     <tr>
                       <th scope="col" className={GlobalStyle.tableHeader}>
-                        Seq.No
+                        Seq. No
                       </th>
                       <th scope="col" className={GlobalStyle.tableHeader}>
                         Installment Settle Amount
@@ -882,38 +1122,50 @@ const MediationBoardResponse = () => {
         </div>
       )}
 
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowResponseHistory(!showResponseHistory)}
-          className={GlobalStyle.buttonPrimary}
-          aria-label="Toggle response history"
-        >
+      <div className="mt-6  mb-8">
+         <div>
+                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button
+                    type="button"
+                    // onClick={() => setShowResponseHistory(!showResponseHistory)}
+                    className={`${GlobalStyle.buttonPrimary} ml-16`}
+                  onClick={handleResponseHistoryClick}
+                    
+                  >
           Response History
         </button>
+                  )}
+                </div>
+        {/* <button
+          type="button"
+          // onClick={() => setShowResponseHistory(!showResponseHistory)}
+           className={`${GlobalStyle.buttonPrimary} ml-16`}
+         onClick={handleResponseHistoryClick}
+          
+        >
+          Response History
+        </button> */}
       </div>
+
+      
 
       {/* Response History Popup */}
       {showResponseHistory && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div className="bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-auto relative">
+        <div className="mb-8">
+          {/* <div className="bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-auto relative"> */}
             {/* Close Button with X Icon */}
-            <button
+            {/* <button
               className="absolute top-4 right-4 text-gray-700 hover:text-gray-900"
               onClick={() => setShowResponseHistory(false)}
               aria-label="Close response history"
             >
               <X size={24} />
-            </button>
-
+            </button> */}
+        
             {/* Mediation Board Response History Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins">
+            <h3 className={`${GlobalStyle.headingMedium} mt-10 mb-4`}>
               Mediation Board Response History
-            </h2>
+            </h3>
             <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
@@ -932,45 +1184,80 @@ const MediationBoardResponse = () => {
                     </th>
                   </tr>
                 </thead>
+                
                 <tbody>
-                  {[
-                    {
-                      callingDate: "2024-02-10",
-                      customerRepresented: "Yes/No",
-                      agreeToSettle: "Yes/No",
-                      remark: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${index % 2 === 0
-                        ? "bg-white bg-opacity-75"
-                        : "bg-gray-50 bg-opacity-50"
-                        } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>
-                        {entry.callingDate}
+                  {currentRows.length > 0 ? (
+                    currentRows.map((entry, index) => (
+
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                         <td className={GlobalStyle.tableData}>
+                          {new Date(entry.callingDate).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {entry.customerrep}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {entry.agreetosettle}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {entry.remark}
+                        </td>
+
+                      </tr>
+                    ))
+                  
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className= {GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                        No response history available.
                       </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.customerRepresented}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.agreeToSettle}
-                      </td>
-                      <td className={GlobalStyle.tableData}>{entry.remark}</td>
                     </tr>
-                  ))}
-                </tbody>
+                  )}
+                  </tbody>
               </table>
             </div>
 
+            {/* Pagnation for the Mediation Borard table  */}
+             <div className={GlobalStyle.navButtonContainer}>
+              <button
+                onClick= {() => handlePrevNext ("prev")}
+                disabled={currentPage === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+                </button>
+                <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => handlePrevNext("next")}
+                disabled={currentPage === totalPages}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage === totalPages ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+
+
             {/* Payment Details Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
+            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
               Payment Details
-            </h2>
+            </h3>
             <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
+                <thead className={GlobalStyle.thead} >
                   <tr>
                     <th scope="col" className={GlobalStyle.tableHeader}>
                       Date
@@ -983,41 +1270,75 @@ const MediationBoardResponse = () => {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {[
-                    {
-                      date: "2024-02-10",
-                      paidAmount: "3000",
-                      settledBalance: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${index % 2 === 0
-                        ? "bg-white bg-opacity-75"
-                        : "bg-gray-50 bg-opacity-50"
-                        } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>{entry.date}</td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.paidAmount}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {entry.settledBalance}
+                  {currentRows1.length > 0 ? (
+                    currentRows1.map((entry, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className={GlobalStyle.tableCurrency}>
+                          {entry.paid_amount}
+                        </td>
+                        <td className={GlobalStyle.tableCurrency}>
+                          {entry.settled_balance}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                        No payment history available.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
+            {/* Pagnation for the Payment table  */}
+
+            <div className={GlobalStyle.navButtonContainer}>
+              <button
+
+                onClick= {() => handlePrevNext1 ("prev")}
+                disabled={currentPage1 === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage1 === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+                </button>
+                <span>
+                Page {currentPage1} of {totalPages1}
+              </span>
+              <button
+
+                onClick={() => handlePrevNext1("next")}
+                disabled={currentPage1 === totalPages1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+
             {/* Requested Additional Details Table */}
-            <h2 className="text-2xl font-semibold mb-2 font-poppins mt-6">
+            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
               Requested Additional Details
-            </h2>
+            </h3>
             <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
+                <thead className={GlobalStyle.thead} >
                   <tr>
                     <th scope="col" className={GlobalStyle.tableHeader}>
                       Date
@@ -1030,32 +1351,69 @@ const MediationBoardResponse = () => {
                     </th>
                   </tr>
                 </thead>
+                
                 <tbody>
-                  {[
-                    {
-                      date: "2024-02-10",
-                      request: "....",
-                      remark: "....",
-                    },
-                  ].map((entry, index) => (
-                    <tr
-                      key={index}
-                      className={`${index % 2 === 0
-                        ? "bg-white bg-opacity-75"
-                        : "bg-gray-50 bg-opacity-50"
-                        } border-b`}
-                    >
-                      <td className={GlobalStyle.tableData}>{entry.date}</td>
-                      <td className={GlobalStyle.tableData}>{entry.request}</td>
-                      <td className={GlobalStyle.tableData}>{entry.remark}</td>
+                  {currentRows2.length > 0 ? (
+                    currentRows2.map((entry, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {entry.field_reason}
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                          {entry.remark}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                        No requested additional details available.
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
+            {/* Pagnation for the Requested Additional Details table  */}
+            <div className={GlobalStyle.navButtonContainer}>
+              <button
+                onClick={() => handlePrevNext2("prev")}
+                disabled={currentPage2 === 1}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage2 === 1 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowLeft />
+                </button>
+                <span>
+                Page {currentPage2} of {totalPages2}
+              </span>
+              <button
+                onClick={() => handlePrevNext2("next")}
+                disabled={currentPage2 === totalPages2}
+                className={`${GlobalStyle.navButton} ${
+                  currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
+                }`}
+              >
+                <FaArrowRight />
+              </button>
+            </div>
+
+          {/* </div> */}
         </div>
       )}
+
+
 
       {/* Confirmation Popup */}
       {showConfirmation && (
@@ -1086,6 +1444,18 @@ const MediationBoardResponse = () => {
           </div>
         </div>
       )}
+
+      <div className="mt-4" style={{ cursor: 'pointer' }}>
+          {/* <img
+            src={back}
+            alt="Back"
+            title="Back"
+            style={{ width: "50px", height: "auto" }}
+          /> */}
+           <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
+         <FaArrowLeft className="mr-2" />
+        </button>
+        </div>
     </div>
   );
 };
