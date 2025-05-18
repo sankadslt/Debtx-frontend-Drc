@@ -25,6 +25,11 @@ import Backbtn from "../../assets/images/back.png";
 import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
+
+
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
+
 // import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
@@ -47,10 +52,13 @@ const Cus_Nego_Customer_Negotiation = () => {
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [roId, setRoId] = useState(null);
+   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
 
   const caseid = location.state?.CaseID;
 
+  const actiontype = location.state?.ActionType;
 
+  //console.log("Case details passed to the paghe:", caseDetails);
   const [userData, setUserData] = useState(null); 
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
@@ -80,10 +88,10 @@ const Cus_Nego_Customer_Negotiation = () => {
   // Pagination handler for Payment Details
   const handlePrevNext1 = (direction) => {
     if (direction === "prev" && currentPage1 > 1) {
-      setCurrentPage1(currentPage - 1);
+      setCurrentPage1(currentPage1 - 1);
     }
     if (direction === "next" && currentPage1 < totalPages1) {
-      setCurrentPage1(currentPage + 1);
+      setCurrentPage1(currentPage1 + 1);
     }
   };
 
@@ -92,6 +100,30 @@ const Cus_Nego_Customer_Negotiation = () => {
   const endIndex2 = startIndex2 + itemsPerPage2;
   const currentRows2 = lastRequests.slice(startIndex2, endIndex2);
   const totalPages2 = Math.ceil(lastRequests.length / itemsPerPage2);
+
+  // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
+
 
   // Pagination handler for Requested Additional Details 
   const handlePrevNext2 = (direction) => {
@@ -157,11 +189,14 @@ const Cus_Nego_Customer_Negotiation = () => {
         if (drcId) {
           const payload = {
             drc_id : parseInt(drcId),
-            case_id : parseInt(caseid)
+            case_id : parseInt(caseid),
+            ro_id : roId,
           }  
 
           const caseDetails = await drcCaseDetails(payload);
-          setCaseDetails(caseDetails.data);
+          console.log("Payload for case details:", payload);
+          setCaseDetails(caseDetails.data[0]);
+          //console.log("Case Details Passed to the setCaseDetails:", caseDetails);
         }
       } catch (error) {
         console.error("Error fetching case details:", error.message);
@@ -341,7 +376,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         const lastNagotiation = caseDetails.ro_negotiation
         ? caseDetails.ro_negotiation.map((ro_nago) => ({
             createdDtm: ro_nago.created_dtm,
-            field_reason: ro_nago.field_reason,
+            field_reason: ro_nago.feild_reason,
             remark: ro_nago.remark ? ro_nago.remark :  "",
           }))
         : [];
@@ -387,7 +422,14 @@ const Cus_Nego_Customer_Negotiation = () => {
       setShowDetailedView(true); 
     }
 
+
   };
+
+  const handleBack = () => {
+    navigate ("/drc/ro-s-assigned-case-log") ; // Go back to the previous page
+  };
+
+
   //common style for card container
   const style = {
     thStyle: "text-left font-bold text-black text-l",
@@ -398,6 +440,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     <div>
       <div className=" p-6 rounded-lg ">
         {/* Case Details Card */}
+        <div className="flex justify-center items-center">
         <div className={`${GlobalStyle.cardContainer}`}>
           <table className={`${GlobalStyle.table} `}>
             <tbody>
@@ -436,210 +479,238 @@ const Cus_Nego_Customer_Negotiation = () => {
             </tbody>
           </table>
         </div>
-
-        <div className="flex flex-col space-y-4 w-3/4">
-          {/* Reason Selection */}
-          <div className="flex items-center gap-4 w-full">
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
-              Field Reason
-            </label>
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
-            <select
-              name="reason"
-              value={formData.reason || ""}
-              onChange={handleInputChange}
-              className={`${GlobalStyle.selectBox} w-3/4`}
-            >
-              <option value="" hidden>Select Reason</option>
-              {activeNegotiations.map((negotiation) => (
-                <option
-                  key={negotiation.negotiation_id}
-                  value={negotiation.negotiation_description}
-                >
-                  {negotiation.negotiation_description}
-                </option>
-              ))}
-            </select>
-          </div>
-          {errors.reason && (
-            <div className="text-red-500 text-sm ml-36 mb-5">
-              {errors.reason}
-            </div>
-          )}
-
-          {/* reason remark */}
-          {formData.reason && (
-          <div className="flex items-center gap-4 w-full">
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
-              Reason Remark
-            </label>
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
-            <textarea
-              name="nego_remark"
-              value={formData.nego_remark || ""}
-              onChange={handleInputChange}
-              className={`${GlobalStyle.remark} w-3/4`}
-              rows={4}
-            />
-          </div>
-          )}
-          {errors.nego_remark && (
-            <div className="text-red-500 text-sm ml-1/4">
-              {errors.nego_remark}
-            </div>
-          )}
-
-          {/* request selection */}
-          <div className="flex items-center gap-4 w-full">
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
-              Request
-            </label>
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
-            <select
-              name="request" 
-              value={formData.request || ""}
-              onChange={handleInputChange}
-              className={`${GlobalStyle.selectBox} w-3/4`}
-            >
-              <option value="" hidden>Select Request</option>
-              {activeRORequests.map((RO_Requests) => (
-                <option
-                  key={RO_Requests.ro_request_id}
-                  value={RO_Requests.request_description}
-                >
-                  {RO_Requests.request_description}
-                </option>
-              ))}
-            </select>
-          </div>
-          {errors.request && (
-            <div className="text-red-500 text-sm ml-36 mb-5">
-              {errors.request}
-            </div>
-          )}
-          {/* request remark */}
-          {formData.request && (
-          <div className="flex items-center gap-4 w-full">
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>
-              Request Remark
-            </label>
-            <label className={`${GlobalStyle.remarkTopic} w-1/4`}>:</label>
-            <textarea
-              name="request_remark"
-              value={formData.request_remark || ""}
-              onChange={handleInputChange}
-              className={`${GlobalStyle.remark} w-3/4`}
-              rows={4}
-            />
-          </div>
-          )}
-          {errors.request_remark && (
-            <div className="text-red-500 text-sm ml-1/4">
-              {errors.request_remark}
-            </div>
-          )}
         </div>
-
-        {/* settlement plan */}
-        {formData.reason === "Agreed To Settle" && (
-          <div className="space-y-4 mb-6 w-3/4">
-            <div>
-              <h1 className="font-bold text-xl underline">
-                Settlement Creation Plan{" "}
-              </h1>
-            </div>
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center gap-4">
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>
-                  Initial Amount
+        <div
+          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto`}
+        > 
+            <div >
+            <div className="flex flex-col space-y-4 items-center justify-center">
+              {/* Reason Selection */}
+              <div className="flex items-center gap-4 w-full">
+                <label className={`${GlobalStyle.remarkTopic} `}>
+                  Field Reason
                 </label>
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>:</label>
-                <input
-                  type="text"
-                  name="ini_amount"
-                  value={formData.ini_amount}
+                <label className={`${GlobalStyle.remarkTopic} ml-5 `}>:</label>
+                <select
+                  name="reason"
+                  value={formData.reason || ""}
                   onChange={handleInputChange}
-                  className={`${GlobalStyle.inputText} flex-1`}
-                />
+                  className={`${GlobalStyle.selectBox} ml-2 `}
+                >
+                  <option value="" hidden>Select Reason</option>
+                  {activeNegotiations.map((negotiation) => (
+                    <option
+                      key={negotiation.negotiation_id}
+                      value={negotiation.negotiation_description}
+                    >
+                      {negotiation.negotiation_description}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <div className="flex items-center gap-4">
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>
-                  Calendar Month
-                </label>
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>:</label>
-                <input
-                  type="number"
-                  name="month"
-                  value={formData.month}
-                  onChange={handleInputChange}
-                  className={`${GlobalStyle.inputText} flex-1`}
-                />
-              </div>
-
-              <div className="flex items-center gap-4">
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>
-                  Duration
-                </label>
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>:</label>
-                <div className="flex items-center gap-4 flex-1">
-                  <label className={GlobalStyle.remarkTopic}>From:</label>
-                  <input
-                    type="date"
-                    name="from"
-                    id="fromDate"
-                    value={formData.from}
-                    onChange={handleInputChange}
-                    className={`${GlobalStyle.inputText} flex-1`}
-                    disabled
-                  />
-                  <label className={GlobalStyle.remarkTopic}>To:</label>
-                  <input
-                    type="date"
-                    name="to"
-                    id="toDate"
-                    value={formData.to}
-                    onChange={handleInputChange}
-                    className={`${GlobalStyle.inputText} flex-1`}
-                    disabled
-                  />
+              {errors.reason && (
+                <div className="text-red-500 text-sm ml-36 mb-5">
+                  {errors.reason}
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-4">
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>
-                  Remark
+              {/* reason remark */}
+              {formData.reason && (
+              <div className="flex items-center gap-4 w-full">
+                <label className={`${GlobalStyle.remarkTopic} `}>
+                  Reason Remark
                 </label>
-                <label className={`${GlobalStyle.remarkTopic} w-32`}>:</label>
+                <label className={`${GlobalStyle.remarkTopic} `}>:</label>
                 <textarea
-                  name="settle_remark"
-                  value={formData.settle_remark || ""}
+                  name="nego_remark"
+                  value={formData.nego_remark || ""}
                   onChange={handleInputChange}
-                  className={`${GlobalStyle.remark} flex-1`}
+                  className={`${GlobalStyle.remark} ml-2`}
                   rows={4}
                 />
               </div>
+              )}
+              {errors.nego_remark && (
+                <div className="text-red-500 text-sm ml-1/4">
+                  {errors.nego_remark}
+                </div>
+              )}
+
+              {/* request selection */}
+              <div className="flex items-center gap-4 w-full">
+                <label className={`${GlobalStyle.remarkTopic} mr-3 `}>
+                  Request
+                </label>
+                <label className={`${GlobalStyle.remarkTopic} ml-10`}>:</label>
+                <select
+                  name="request" 
+                  value={formData.request || ""}
+                  onChange={handleInputChange}
+                  className={`${GlobalStyle.selectBox} ml-3`}
+                >
+                  <option value="" hidden>Select Request</option>
+                  {activeRORequests.map((RO_Requests) => (
+                    <option
+                      key={RO_Requests.ro_request_id}
+                      value={RO_Requests.request_description}
+                    >
+                      {RO_Requests.request_description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.request && (
+                <div className="text-red-500 text-sm ml-36 mb-5">
+                  {errors.request}
+                </div>
+              )}
+              {/* request remark */}
+              {formData.request && (
+              <div className="flex items-center gap-4 w-full">
+                <label className={`${GlobalStyle.remarkTopic} `}>
+                  Request Remark
+                </label>
+                <label className={`${GlobalStyle.remarkTopic} mr-2`}>:</label>
+                <textarea
+                  name="request_remark"
+                  value={formData.request_remark || ""}
+                  onChange={handleInputChange}
+                  className={`${GlobalStyle.remark} `}
+                  rows={4}
+                />
+              </div>
+              )}
+              {errors.request_remark && (
+                <div className="text-red-500 text-sm ml-1/4">
+                  {errors.request_remark}
+                </div>
+              )}
             </div>
-          </div>
-        )}
-        <div className="flex justify-end mb-8 mt-3 w-3/4">
-          <button
-            onClick={handleNegotiationSubmit}
-            className={GlobalStyle.buttonPrimary}
-          >
-            Submit
-          </button>
-        </div>
+            </div>
+
+            {/* settlement plan */}
+            {formData.reason === "Agreed To Settle" && (
+              <div className="flex justify-center items-center">
+              <div className="space-y-4 mb-6 mt-4 ">
+                <div>
+                   <h1 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
+                    <strong>Settlement Plan Creation</strong>
+                  </h1>
+                </div>
+                <div className="flex-col space-y-4 items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <label className={`${GlobalStyle.remarkTopic} `}>
+                      Initial Amount
+                    </label>
+                    <label className={`${GlobalStyle.remarkTopic} ml-3`}>:</label>
+                    <input
+                      type="text"
+                      name="ini_amount"
+                      value={formData.ini_amount}
+                      onChange={handleInputChange}
+                      className={`${GlobalStyle.inputText} ml-1 `}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <label className={`${GlobalStyle.remarkTopic} `}>
+                      Calendar Month
+                    </label>
+                    <label className={`${GlobalStyle.remarkTopic} `}>:</label>
+                    <input
+                      type="number"
+                      name="month"
+                      value={formData.month}
+                      onChange={handleInputChange}
+                      className={`${GlobalStyle.inputText} ml-1`}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <label className={`${GlobalStyle.remarkTopic}`}>
+                      Duration
+                    </label>
+                    <label className={`${GlobalStyle.remarkTopic} `}>:</label>
+                    <div className="flex items-center gap-4 ">
+                      <label className={GlobalStyle.remarkTopic}>From:</label>
+                      <input
+                        type="date"
+                        name="from"
+                        id="fromDate"
+                        value={formData.from}
+                        onChange={handleInputChange}
+                        className={`${GlobalStyle.inputText} `}
+                        disabled
+                      />
+                      <label className={GlobalStyle.remarkTopic}>To:</label>
+                      <input
+                        type="date"
+                        name="to"
+                        id="toDate"
+                        value={formData.to}
+                        onChange={handleInputChange}
+                        className={`${GlobalStyle.inputText} `}
+                        disabled
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <label className={`${GlobalStyle.remarkTopic} mr-7 `}>
+                      Remark
+                    </label>
+                    <label className={`${GlobalStyle.remarkTopic} ml-8`}>:</label>
+                    <textarea
+                      name="settle_remark"
+                      value={formData.settle_remark || ""}
+                      onChange={handleInputChange}
+                      className={`${GlobalStyle.remark} `}
+                      rows={4}
+                    />
+                  </div>
+                </div>
+              </div>
+              </div>
+            )}
+            <div className="flex justify-end mb-8 mt-3 ">
+              <div>
+                {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                  <button
+                  onClick={handleNegotiationSubmit}
+                  className={GlobalStyle.buttonPrimary}
+                >
+                  Submit
+                </button>
+                  )}
+                </div>
+              {/* <button
+                onClick={handleNegotiationSubmit}
+                className={GlobalStyle.buttonPrimary}
+              >
+                Submit
+              </button> */}
+            </div>
+            </div>
       </div>
 
       <div>
         <div className="flex justify-start gap-4 mb-8">
-          <button
+          <div>
+            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+              <button
+                onClick={handleResponseHistoryClick}
+                className={GlobalStyle.buttonPrimary}
+              >
+                Response History
+              </button>
+              )}
+            </div>
+          {/* <button
             onClick={handleResponseHistoryClick}
             className={GlobalStyle.buttonPrimary}
           >
             Response History
-          </button>
+          </button> */}
         </div>
         {/* Load after clicking response history button */}
         {showResponseHistory && (
@@ -649,7 +720,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             </h3>
             <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
-                <thead>
+                <thead className={GlobalStyle.thead}>
                   <tr>
                     <th className={GlobalStyle.tableHeader}>Date</th>
                     <th className={GlobalStyle.tableHeader}>Negotiation</th>
@@ -680,7 +751,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" className={GlobalStyle.tableData}>
+                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                         No Last negotiations found.
                       </td>
                     </tr>
@@ -720,7 +791,7 @@ const Cus_Nego_Customer_Negotiation = () => {
           </h3>
           <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
-                <thead>
+                <thead className={GlobalStyle.thead}>
                   <tr>
                     <th className={GlobalStyle.tableHeader}>Date</th>
                     <th className={GlobalStyle.tableHeader}>Paid Amount</th>
@@ -741,17 +812,17 @@ const Cus_Nego_Customer_Negotiation = () => {
                         <td className={GlobalStyle.tableData}>
                           {new Date(pay.createdDtm).toLocaleDateString("en-GB")}
                         </td>
-                        <td className={GlobalStyle.tableData}>
+                        <td className={GlobalStyle.tableCurrency}>
                           {pay.paid_amount}
                         </td>
-                        <td className={GlobalStyle.tableData}>
+                        <td className={GlobalStyle.tableCurrency}>
                           {pay.settled_balance}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" className={GlobalStyle.tableData}>
+                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                         No Payment Details found.
                       </td>
                     </tr>
@@ -793,7 +864,7 @@ const Cus_Nego_Customer_Negotiation = () => {
 
             <div className={GlobalStyle.tableContainer}>
               <table className={GlobalStyle.table}>
-                <thead>
+                <thead className={GlobalStyle.thead}>
                   <tr>
                     <th className={GlobalStyle.tableHeader}>Date</th>
                     <th className={GlobalStyle.tableHeader}>Request</th>
@@ -824,7 +895,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" className={GlobalStyle.tableData}>
+                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                         No Additional Details Available.
                       </td>
                     </tr>
@@ -867,8 +938,8 @@ const Cus_Nego_Customer_Negotiation = () => {
     return (
       <div>
         {/* Case Details Section */}
-        <div className="p-6 rounded-lg ml-8">
-          <div className={`${GlobalStyle.cardContainer}`}>
+        <div className="flex justify-center items-center mt-6 mb-4">
+          <div className={`${GlobalStyle.cardContainer} `}>
             <table className={GlobalStyle.table}>
               <tbody>
                 <tr>
@@ -1068,15 +1139,37 @@ const Cus_Nego_Customer_Negotiation = () => {
               ? "border-b-2 border-blue-500 font-bold"
               : "text-gray-500"
           }`}
-          onClick={() => setActiveTab("cpe")}
+          onClick={() => {
+            if (actiontype === "Arrears Collect"){
+              return; // Prevent tab switch
+            }
+            setActiveTab("cpe");
+          }}
         >
           CPE Collect
         </button>
       </div>
-  
+
       {/* Conditional Rendering */}
       {showDetailedView ? renderDetailedView() : activeTab === "negotiation" ? renderNegotiationView() : renderCPEView()}
+
+      {/* Back Button */}
+
+      <div className="mt-4" style={{ cursor: 'pointer' }}>
+          {/* <img
+            src={back}
+            alt="Back"
+            title="Back"
+            style={{ width: "50px", height: "auto" }}
+          /> */}
+           <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
+         <FaArrowLeft className="mr-2" />
+        </button>
+        </div>
+
     </div>
+
+    
   );
       
 };
