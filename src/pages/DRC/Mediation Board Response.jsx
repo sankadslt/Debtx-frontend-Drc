@@ -21,7 +21,8 @@ import {
   getCaseDetailsbyMediationBoard,
   ListActiveMediationResponse,
   ListActiveRORequestsMediation,
-  Mediation_Board
+  Mediation_Board,
+  List_Settlement_Details_Owen_By_SettlementID_and_DRCID
 } from "../../services/case/CaseService";
 import { data, useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
@@ -174,44 +175,88 @@ const MediationBoardResponse = () => {
 
   // Settlement table state
   const [settlements, setSettlements] = useState([
-    { id: 1, seqNo: 1, installmentSettleAmount: "", planDate: "", installmentPaidAmount: "" },
+    { id: 1, seqNo: 109, installmentSettleAmount: "", planDate: "", installmentPaidAmount: 100 },
   ]);
   const [showSettlementTable, setShowSettlementTable] = useState(false);
-
+  const [settlementdata, setSettlementdata] = useState([]);
+  const [settlementCount, setSettlementCount] = useState(0);
   const [showResponseHistory, setShowResponseHistory] = useState(false);
+
+
   const [isSettlementExpanded, setIsSettlementExpanded] = useState(false);
   const [isSettlementTableVisible, setIsSettlementTableVisible] = useState(false);
+
   const [showConfirmation, setShowConfirmation] = useState(false);
  
-  
+  const [visibleTables, setVisibleTables] = useState({}); // state for the settlement tables visibility
 
+    const toggleSettlementTable = (index) => {
+    setVisibleTables((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  // Get the data for the settlement table 
+  useEffect(() => {
+    const fetchSettlementDetails = async () => {
+
+      const userData2 = await getLoggedUserId();
+
+      console.log("Within the function drc id and ro id", userData2.drc_id, userData2.ro_id);
+      if (!caseId || !drcId) { // Check if caseId and drcId are available
+        setError("Case ID and DRC ID are required");
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await List_Settlement_Details_Owen_By_SettlementID_and_DRCID(caseId, userData2.drc_id, userData2.ro_id);
+
+        setSettlementdata (response.data)
+        setSettlementCount(response.data.length)
+        console.log("Settlement length :", response.data.length);
+        console.log("Settlement data fetched:", response.data);
+
+      } catch (error) {
+        console.error("Error fetching settlement data:", error);
+        setError(error.message || "Failed to fetch settlement data");
+        setIsLoading(false);
+      }
+    };
+    fetchSettlementDetails();
+  }, [caseId, drcId]);
+
+
+
+
+ 
   // Derived state for showing settlement toggle
   const showSettlementToggle =
-    handoverNonSettlement === "No" &&
+    //handoverNonSettlement === "No" &&
     formData.customerRepresented === "Yes" &&
     formData.settle === "Yes";
 
 
-     useEffect(() => {
-      const getuserdetails = async () => {
-        try {
-          const userData = await getLoggedUserId();
-  
-          if (userData) {
-            setcreatedBy(userData.user_id);
-            
-            setRoId(userData.ro_id);
-            console.log("user id", userData.user_id);
-            console.log("user drc id", userData.drc_id);
-            console.log("user ro id", userData.ro_id);
-  
-          }
-        } catch (error) {
-          console.error("Error fetching user details:", error.message);
+    useEffect(() => {
+    const getuserdetails = async () => {
+      try {
+        const userData = await getLoggedUserId();
+
+        if (userData) {
+          setcreatedBy(userData.user_id);
+          
+          setRoId(userData.ro_id);
+          console.log("user id", userData.user_id);
+          console.log("user drc id", userData.drc_id);
+          console.log("user ro id", userData.ro_id);
+
         }
-      };
-      getuserdetails();
-    }, []);
+      } catch (error) {
+        console.error("Error fetching user details:", error.message);
+      }
+    };
+    getuserdetails();
+  }, []);
 
   // Fetch case details when component mounts
   useEffect(() => {
@@ -270,37 +315,37 @@ const MediationBoardResponse = () => {
   }, [caseId, drcId]);
 
   // Update settlement table when settlement count changes
-  useEffect(() => {
-    if (
-      formData.settlementCount &&
-      !isNaN(parseInt(formData.settlementCount))
-    ) {
-      const count = parseInt(formData.settlementCount);
-      const newSettlements = [];
+  // useEffect(() => {
+  //   if (
+  //     formData.settlementCount &&
+  //     !isNaN(parseInt(formData.settlementCount))
+  //   ) {
+  //     const count = parseInt(formData.settlementCount);
+  //     const newSettlements = [];
 
-      for (let i = 1; i <= count; i++) {
-        newSettlements.push({
-          id: i,
-          seqNo: i,
-          month: `Month ${i}`,
-          dueDate: "",
-          amount: "",
-          status: "Pending",
-          installmentSettleAmount: "",
-          planDate: "",
-          installmentPaidAmount: ""
-        });
-      }
+  //     for (let i = 1; i <= count; i++) {
+  //       newSettlements.push({
+  //         id: i,
+  //         seqNo: i,
+  //         month: `Month ${i}`,
+  //         dueDate: "",
+  //         amount: "",
+  //         status: "Pending",
+  //         installmentSettleAmount: "",
+  //         planDate: "",
+  //         installmentPaidAmount: ""
+  //       });
+  //     }
 
-      setSettlements(newSettlements);
+  //     setSettlements(newSettlements);
 
-      if (count > 0) {
-        setShowSettlementTable(true);
-      } else {
-        setShowSettlementTable(false);
-      }
-    }
-  }, [formData.settlementCount]);
+  //     if (count > 0) {
+  //       setShowSettlementTable(true);
+  //     } else {
+  //       setShowSettlementTable(false);
+  //     }
+  //   }
+  // }, [formData.settlementCount]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -393,40 +438,40 @@ const MediationBoardResponse = () => {
     setNextCallingDate(e.target.value);
   };
 
-  const handleSettlementChange = (id, field, value) => {
-    setSettlements(
-      settlements.map((settlement) =>
-        settlement.id === id ? { ...settlement, [field]: value } : settlement
-      )
-    );
-  };
+  // const handleSettlementChange = (id, field, value) => {
+  //   setSettlements(
+  //     settlements.map((settlement) =>
+  //       settlement.id === id ? { ...settlement, [field]: value } : settlement
+  //     )
+  //   );
+  // };
 
   // Add the missing handleConfirmedSubmit function
-  const handleConfirmedSubmit = async () => {
-    try {
-      // Here you would typically call an API to save the form data
-      console.log("Form submitted:", {
-        ...formData,
-        handoverNonSettlement,
-        nextCallingDate,
-        settlements: showSettlementTable ? settlements : [],
-        caseId,
-        drcId,
-      });
+  // const handleConfirmedSubmit = async () => {
+  //   try {
+  //     // Here you would typically call an API to save the form data
+  //     console.log("Form submitted:", {
+  //       ...formData,
+  //       handoverNonSettlement,
+  //       nextCallingDate,
+  //       settlements: showSettlementTable ? settlements : [],
+  //       caseId,
+  //       drcId,
+  //     });
 
-      // Close the confirmation popup
-      setShowConfirmation(false);
+  //     // Close the confirmation popup
+  //     setShowConfirmation(false);
 
-      // Simulate successful submission
-      alert("Form submitted successfully!");
+  //     // Simulate successful submission
+  //     alert("Form submitted successfully!");
 
-      // Optional: Reset form or redirect
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
-      setShowConfirmation(false);
-    }
-  };
+  //     // Optional: Reset form or redirect
+  //   } catch (error) {
+  //     console.error("Error submitting form:", error);
+  //     alert("Failed to submit form. Please try again.");
+  //     setShowConfirmation(false);
+  //   }
+  // };
 
  
 
@@ -434,7 +479,7 @@ const MediationBoardResponse = () => {
     e.preventDefault();
 
     // Adjust validation based on handover status
-    if (caseDetails.callingRound === 3 && handoverNonSettlement === "Yes") {
+    if (caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
       if (!formData.comment.trim()) {
         Swal.fire({
@@ -446,10 +491,71 @@ const MediationBoardResponse = () => {
         return;
       }
 
-      setShowConfirmation(true);
+      // Show confirmation popup
+      const result = await Swal.fire({
+      title: "Confirmation",
+      text: "Are you sure you want to submit the Non-Settlement letter?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, submit",
+      cancelButtonText: "No",
+    });
+      if (!result.isConfirmed) {
+        //setShowConfirmation(true);
+        return; // User clicked "No", do not submit
+      }
+      // Proceed with submission
+      try {
+      const payload = {
+        case_id : caseId,
+        drc_id : drcId,
+        ro_id : roId,
+        customer_available : formData.customerRepresented.toLocaleLowerCase(), 
+        next_calling_date: nextCallingDate,
+        request_id : formData.requestId,
+        request_type : formData.request,
+        request_comment : formData.requestcomment,
+        handed_over_non_settlement: handoverNonSettlement,
+        intraction_id : formData.interactionId,
+        comment : formData.comment,
+        settle : formData.settle,
+        settlement_count : settlementCount,
+        initial_amount : formData.initialAmount,
+        calendar_month : formData.calendarMonth,
+        duration: formData.calendarMonth,
+        remark : formData.remark,
+        fail_reason : formData.failReason,
+        created_by : createdBy
+      };
+
+      console.log("Form submitted:", payload);
+      const response = await Mediation_Board(payload);
+      console.log("Response:", response);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Data sent successfully.",
+        confirmButtonColor: "#28a745",
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      const errorMessage = error?.response?.data?.message ||
+        error?.message ||
+        "An error occurred. Please try again.";
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+        confirmButtonColor: "#d33",
+      });
+    }
       return;
-    } else {
-      // Regular validation for non-handover cases
+    } 
+
+    else {
+    // Regular validation for non-handover cases
       if (formData.customerRepresented === "") {
         Swal.fire({
           icon: "warning",
@@ -500,8 +606,9 @@ const MediationBoardResponse = () => {
           return;
         }
       }
-    }
+    
 
+    //regular api call
     try {
 
       const payload = {
@@ -517,7 +624,7 @@ const MediationBoardResponse = () => {
         intraction_id : formData.interactionId,
         comment : formData.comment,
         settle : formData.settle,
-        settlement_count : formData.settlementCount,
+        settlement_count : settlementCount,
         initial_amount : formData.initialAmount,
         calendar_month : formData.calendarMonth,
         duration: formData.calendarMonth,
@@ -550,12 +657,14 @@ const MediationBoardResponse = () => {
                 confirmButtonColor: "#d33",
                 });
                     }
+    }
   };
 
-  // Add this function to toggle settlement table visibility
-  const toggleSettlementTable = () => {
-    setIsSettlementTableVisible(!isSettlementTableVisible);
-  };
+
+  // // Add this function to toggle settlement table visibility
+  // const toggleSettlementTable = () => {
+  //   setIsSettlementTableVisible(!isSettlementTableVisible);
+  // };
 
   // Show additional fields when customer is represented and agrees to settle
   const showSettlementFields =
@@ -952,14 +1061,21 @@ const MediationBoardResponse = () => {
                       </div>
                       <div className="flex items-center">
                         <span className="w-48 font-semibold">Settlement Count:</span>
-                        <input
+                         <span
+                            className="w-72 p-2 border rounded-md "
+                            aria-label="Settlement count"
+                          >
+                            {settlementCount}
+                          </span>
+
+                        {/* <input
                           type="number"
                           name="settlementCount"
                           value={formData.settlementCount}
                           onChange={handleInputChange}
                           className="w-72 p-2 border rounded-md"
                           aria-label="Settlement count"
-                        />
+                        /> */}
                       </div>
 
                       <div className="flex items-center">
@@ -1010,7 +1126,7 @@ const MediationBoardResponse = () => {
                             value={formData.durationTo}
                             onChange={handleInputChange}
                             className="w-32 p-2 border rounded-md"
-                            aria-label="Duration to"
+                            aria-label="Duration to" 
                             readOnly
                           />
                         </div>
@@ -1035,7 +1151,7 @@ const MediationBoardResponse = () => {
               {/* Comment section for simplified form only */}
               {isSimplifiedForm && (
                 <div className="flex">
-                  <span className="w-48 font-semibold">Comment:</span>
+                  <span className="w-48 font-semibold">Non-settlement comment:</span>
                   <textarea
                     name="comment"
                     value={formData.comment}
@@ -1075,17 +1191,19 @@ const MediationBoardResponse = () => {
       {/* Settlement 1 toggle - Only shown when conditions are met */}
       {showSettlementToggle && (
         <div className="mt-6">
-          <button
-            type="button"
-            onClick={toggleSettlementTable}
-            className={`${GlobalStyle.buttonSecondary} bg-[rgb(56,75,92)] text-white p-2 flex items-center justify-between w-full`}
-            aria-label="Toggle settlement 1 details"
-          >
-            <span>Settlement 1</span>
-            <span>{isSettlementTableVisible ? "▲" : "▼"}</span>
-          </button>
+          {settlementdata?.map((settlement, index) => (
+            <div key={index} className="mb-4">
+              <button
+                type="button"
+                onClick={() => toggleSettlementTable(index)}
+                className={`${GlobalStyle.buttonSecondary} bg-[rgb(56,75,92)] text-white p-2 flex items-center justify-between w-full`}
+                aria-label={`Toggle settlement ${index + 1} details`}
+              >
+                <span>{`Settlement ${index + 1}`}</span>
+                <span>{visibleTables[index] ? "▲" : "▼"}</span>
+              </button>
 
-          {isSettlementTableVisible && (
+          { visibleTables[index] && (
             <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-200">
               <div className={GlobalStyle.tableContainer}>
                 <table className={GlobalStyle.table}>
@@ -1106,12 +1224,12 @@ const MediationBoardResponse = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {settlements && settlements.map((settlement) => (
-                      <tr key={settlement.id} className="bg-white bg-opacity-75 border-b">
-                        <td className={GlobalStyle.tableData}>{settlement.seqNo}</td>
-                        <td className={GlobalStyle.tableData}>{settlement.installmentSettleAmount}</td>
-                        <td className={GlobalStyle.tableData}>{settlement.planDate}</td>
-                        <td className={GlobalStyle.tableData}>{settlement.installmentPaidAmount}</td>
+                    {settlement.settlement_plan?.map((installment, i) => (
+                      <tr key={i} className="bg-white bg-opacity-75 border-b">
+                        <td className={GlobalStyle.tableData}>{installment.installment_seq}</td>
+                        <td className={GlobalStyle.tableCurrency}>{installment.Installment_Settle_Amount}</td>
+                        <td className={GlobalStyle.tableData}>{new Date (installment.Plan_Date).toLocaleDateString("en-GB")}</td>
+                        <td className={GlobalStyle.tableCurrency}>{installment.Installment_Paid_Amount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1119,6 +1237,8 @@ const MediationBoardResponse = () => {
               </div>
             </div>
           )}
+        </div>
+          ))}
         </div>
       )}
 
@@ -1416,7 +1536,7 @@ const MediationBoardResponse = () => {
 
 
       {/* Confirmation Popup */}
-      {showConfirmation && (
+      {/* {showConfirmation && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           aria-modal="true"
@@ -1443,7 +1563,7 @@ const MediationBoardResponse = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="mt-4" style={{ cursor: 'pointer' }}>
           {/* <img
@@ -1458,6 +1578,8 @@ const MediationBoardResponse = () => {
         </div>
     </div>
   );
+
 };
+
 
 export default MediationBoardResponse;
