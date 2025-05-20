@@ -26,6 +26,8 @@ import { useNavigate  , useLocation} from "react-router-dom";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 
+import { Tooltip } from "react-tooltip";
+
 
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService";
@@ -408,6 +410,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       setShowDetailedView(false);  
       navigate("/drc/customer-negotiation-editcpe", {
         state: {
+         
           product: product,
           caseId: payload.case_id,
           drcId: formData.drcId,  // Pass drcId here
@@ -1001,8 +1004,11 @@ const Cus_Nego_Customer_Negotiation = () => {
                           width={24} 
                           height={24} 
                           style={{ cursor: "pointer" }}
+                          data-tooltip-id="tooltip"
+                          data-tooltip-content={product.product_status === "Not Submit" ? "Edit" : "View"}
                           onClick={() => handleIconClickbutton(product.product_status,product)}
                         />
+                        <Tooltip id="tooltip" place="bottom" className="tooltip"  />
                       </td>
                     </tr>
                   );
@@ -1011,7 +1017,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <tr>
                   <td colSpan="7" className={`${GlobalStyle.tableData} text-center`}>
                     No products available
-                  </td>
+                  </td> 
                 </tr>
               )}
             </tbody>
@@ -1103,16 +1109,22 @@ const Cus_Nego_Customer_Negotiation = () => {
 
       </div>
       {/* Back Button */}
-      <button
+      {/* <button
         className="px-6 py-2 mb-8 mt-8 mr-auto rounded-md"
         onClick={() => {
           setActiveTab("cpe"); // Switch back to CPE view
           setShowDetailedView(false); // Hide detailed view
         }}
-      >
-        <img src={Backbtn} alt="Back" className="w-7 h-7" />
+      > */}
+        <button className={GlobalStyle.buttonPrimary}  
+        onClick={() => {
+          setActiveTab("cpe"); // Switch back to CPE view
+          setShowDetailedView(false); // Hide detailed view
+        }}>
+         <FaArrowLeft className="mr-2" />
+        </button>
 
-      </button>   
+      {/* </button>    */}
     </div>
   );
   return (
