@@ -17,11 +17,17 @@
 import React, { useState, useEffect } from "react";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import Backbtn from "../../assets/images/back.png";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import {RO_CPE_Collection} from  "../../services/case/CaseService";
 import {getLoggedUserId} from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 
+import { Tooltip } from "react-tooltip";
+
+
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
 
 const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const [formData, setFormData] = useState({
@@ -56,6 +62,7 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   const navigate = useNavigate();
   const [roId, setRoId] = useState("");
   const [DRC, setDRCID] = useState("");
+  const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   useEffect(() => {
     if (product) {
       setSelectedProduct({
@@ -94,13 +101,37 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   }, [product, caseId, customerRef, accountNo, drcId]);
 
   const handleBackClick = () => {
-    navigate("/drc/customer-negotiation");
+    navigate("/drc/customer-negotiation" , {state: {CaseID : caseId }});
+
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {  
@@ -263,14 +294,22 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
           </div>
         </div>
       </div>
-
+          
       <div className="flex gap-4 mb-4 ml-[800px] mt-16">
-        <button onClick={cpeSubmit} className={GlobalStyle.buttonPrimary}>Submit</button>
+        <div>
+                {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                  <button onClick={cpeSubmit} className={GlobalStyle.buttonPrimary}>Submit</button>
+                  )}
+                </div>
+        {/* <button onClick={cpeSubmit} className={GlobalStyle.buttonPrimary}>Submit</button> */}
       </div>
 
-      <button className="px-6 py-2 mb-8 rounded-md" onClick={handleBackClick}>
+      {/* <button className="px-6 py-2 mb-8 rounded-md" onClick={handleBackClick}>
         <img src={Backbtn} alt="Back" className="w-7 h-7" />
-      </button>
+      </button> */}
+      <button className={GlobalStyle.buttonPrimary} onClick={handleBackClick}>
+         <FaArrowLeft className="mr-2" />
+        </button>
 
     </div>
   );
