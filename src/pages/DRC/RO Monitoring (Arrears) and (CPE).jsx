@@ -437,7 +437,7 @@ export default function RO_Monitoring_CPE() {
                                                     } border-b`}
                                             >
                                                 <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableData}>{item.status || "N/A"}</td>
+                                                <td className={GlobalStyle.tableData}>{item.settlement_status || "N/A"}</td>
                                                 <td className={GlobalStyle.tableData}>{formatDate(item.expire_date)}</td>
                                             </tr>
                                         ))
@@ -579,7 +579,7 @@ export default function RO_Monitoring_CPE() {
 
                         <div>
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={() => navigate("/drc/assigned-ro-case-log")}
                                 className={GlobalStyle.navButton}
                             >
                                 <FaArrowLeft />Go Back
