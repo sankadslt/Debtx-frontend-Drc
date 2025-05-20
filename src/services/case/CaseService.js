@@ -642,3 +642,19 @@ export const RO_CPE_Collection = async (payload) => {
     throw error;
   }
 };
+
+export const List_Settlement_Details_Owen_By_SettlementID_and_DRCID = async (Case_id, Drc_id, Ro_id ) => {
+  try {
+    const response = await axios.post(`${URL}/List_Settlement_Details_Owen_By_SettlementID_and_DRCID`, 
+      {
+        case_id: Case_id,
+        drc_id: Drc_id,
+        ro_id: Ro_id
+      });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error adding CP collect response:", error.response?.data || error.message);
+    throw error;
+  }
+};
