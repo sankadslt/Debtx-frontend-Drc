@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getUserData } from "../auth/authService";
+import { getLoggedUserId } from "../auth/authService";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL; 
 const TASK_URL = `${BASE_URL}/task`;
@@ -154,8 +155,8 @@ export const Task_for_Download_Incidents = async (incidentData) => {
 
   export const Create_Task_Assigned_Case_for_DRC = async (filteredParams) => {
     try {
-      const user = await getUserData();
-  
+      // const user = await getUserData();
+      const user = await getLoggedUserId();
   
       const taskData = {
         Template_Task_Id: 34,
