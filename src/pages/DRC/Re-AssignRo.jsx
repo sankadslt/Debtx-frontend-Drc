@@ -3,6 +3,7 @@ Created Date: 2025-01-07
 Created By: Sanjaya (sanjayaperera80@gmail.com)
 Last Modified Date: 2025-02-19
 Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu srinayaka(sasindusrinayaka@gmail.com)
+Modified By: Janani Kumarasiri (jkktg001@gmail.com)
 Version: node 20
 ui number : 2.5
 Dependencies: tailwind css
@@ -23,6 +24,7 @@ export default function Re_AssignRo() {
   const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // State to manage case details
   const [caseDetails, setCaseDetails] = useState({
@@ -43,37 +45,6 @@ export default function Re_AssignRo() {
   const case_id = location.state?.CaseID;
   console.log("caseid", case_id);
 
-  // const loadUser = async () => {
-  //   let token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     setUserData(null);
-  //     return;
-  //   }
-
-  //   try {
-  //     let decoded = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     if (decoded.exp < currentTime) {
-  //       token = await refreshAccessToken();
-  //       if (!token) return;
-  //       decoded = jwtDecode(token);
-  //     }
-
-  //     setUserData({
-  //       id: decoded.user_id,
-  //       role: decoded.role,
-  //       drc_id: decoded.drc_id,
-  //       ro_id: decoded.ro_id,
-  //     });
-  //   } catch (error) {
-  //     console.error("Invalid token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadUser();
-  // }, [localStorage.getItem("accessToken")]);
-
   const loadUser = async () => {
     const user = await getLoggedUserId();
     setUserData(user);
@@ -93,6 +64,7 @@ export default function Re_AssignRo() {
             case_id: Number(case_id),
           };
 
+          setIsLoading(true);
           const data = await fetchBehaviorsOfCaseDuringDRC(payload);
 
           console.log("Data:", data);
@@ -116,11 +88,18 @@ export default function Re_AssignRo() {
             const negotiations = caseDetailsData.ro_negotiation || [];
 
             setLastNegotiationDetails(
-              negotiations.map((negotiation) => ({
-                date: negotiation.created_dtm.split("T")[0], // Keep only the date
-                negotiation: negotiation.feild_reason,
-                remark: negotiation.remark,
+              (negotiations || []).map((negotiation) => ({
+                date: negotiation?.created_dtm
+                  ? negotiation.created_dtm.split("T")[0]
+                  : "N/A",
+                negotiation: negotiation?.feild_reason || "N/A",
+                remark: negotiation?.remark || "N/A",
               }))
+              // negotiations.map((negotiation) => ({
+              //   date: negotiation.created_dtm.split("T")[0], // Keep only the date
+              //   negotiation: negotiation.feild_reason,
+              //   remark: negotiation.remark,
+              // }))
             );
 
             const settlementDetailsData = data.data.settlementData;
@@ -142,10 +121,30 @@ export default function Re_AssignRo() {
             }
           } else {
             console.error("Error in API response:", data?.message || "Unknown error");
+            Swal.fire({
+              title: "Error",
+              text: "Error fetching case details.",
+              icon: "error",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+            })
           }
         }
       } catch (error) {
         console.error("Error fetching case details:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching case details.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -153,8 +152,10 @@ export default function Re_AssignRo() {
       try {
         if (userData?.drc_id) {
           const numericDrcId = Number(userData?.drc_id);
+
+          setIsLoading(true);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
-    
+
           if (Array.isArray(officers)) {
             // Map recovery officers with ro_id and other details
             const formattedOfficers = officers.map((officer) => ({
@@ -162,21 +163,42 @@ export default function Re_AssignRo() {
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
             }));
-    
+
             setRecoveryOfficers(formattedOfficers);
             console.log("Recovery Officers:", formattedOfficers);
           } else {
             console.error("Invalid response format:", officers);
+
+            Swal.fire({
+              title: "Error",
+              text: "Error fetching recovery officers details.",
+              icon: "error",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+            })
             setRecoveryOfficers([]);
             setError("Failed to fetch recovery officers. Invalid response format.");
           }
         } else {
-          setError("DRC ID not found in URL.");
+          // setError("DRC ID not found in URL.");
         }
       } catch (error) {
         console.error("Error fetching recovery officers:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching recovery officers details.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         setError("Failed to fetch recovery officers.");
         setRecoveryOfficers([]); // Set empty array to prevent further errors
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -268,6 +290,14 @@ export default function Re_AssignRo() {
       Swal.fire("Error", "An error occurred while assigning cases.", "error");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
@@ -403,7 +433,8 @@ export default function Re_AssignRo() {
         <select
           id="ro-select"
           className={`${GlobalStyle.selectBox}`}
-          style={{ width: "600px" }}
+          // style={{ width: "600px" }}
+          style={{ color: selectedRO === "" ? "gray" : "black" }}
           value={selectedRO || ""}
           onChange={(e) => {
             const selectedName = e.target.value;
@@ -412,7 +443,7 @@ export default function Re_AssignRo() {
             }
           }}
         >
-          <option value="" disabled>
+          <option value="" hidden>
             Select RO
           </option>
           {recoveryOfficers && recoveryOfficers.length > 0 ? (

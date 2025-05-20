@@ -4,6 +4,7 @@ Created By: Geeth (eshaneperera@gmail.com)
 Last Modified Date: 2025-01-08
 Modified Date: 2025-02-23
 Modified By: Geeth(eshaneperera@gmail.com), Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayaka(sasindusrinayaka@gmail.com)
+Modified By: Janani Kumarasiri (jkktg001@gmail.com)
 Version: node 20
 ui number : 2.2
 Dependencies: tailwind css
@@ -26,15 +27,23 @@ import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 
 //Status Icons
-import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
-import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
-import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
-import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
-import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
-import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
-import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
-import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
-import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
+import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
+import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Settle_Active.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/Negotiation_new/RO Negotiation extend pending.png";
+import RO_Negotiation_Extended from "../../assets/images/Negotiation_new/RO Negotiation extended.png";
+import RO_Negotiation_FMB_Pending from "../../assets/images/Negotiation_new/RO_Negotiation_FMB_Pending.png";
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
+
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
@@ -57,37 +66,6 @@ const DistributeTORO = () => {
   const [userData, setUserData] = useState(null);
   const [filteredOfficers, setFilteredOfficers] = useState([]);
 
-  // const loadUser = async () => {
-  //   let token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     setUserData(null);
-  //     return;
-  //   }
-
-  //   try {
-  //     let decoded = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     if (decoded.exp < currentTime) {
-  //       token = await refreshAccessToken();
-  //       if (!token) return;
-  //       decoded = jwtDecode(token);
-  //     }
-
-  //     setUserData({
-  //       id: decoded.user_id,
-  //       role: decoded.role,
-  //       drc_id: decoded.drc_id,
-  //       ro_id: decoded.ro_id,
-  //     });
-  //   } catch (error) {
-  //     console.error("Invalid token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadUser();
-  // }, [localStorage.getItem("accessToken")]);
-
   const loadUser = async () => {
     const user = await getLoggedUserId();
     setUserData(user);
@@ -102,15 +80,30 @@ const DistributeTORO = () => {
     const fetchUserData = async () => {
       try {
         if (!userData?.drc_id) {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
+          // setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
           return;
         }
         // Step 3: Fetch arrears bands and ro list
+        setLoading(true);
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
 
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // console.error("Error fetching data:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching data",
+          icon: "error",
+          // allowOutsideClick: false,
+          // allowEscapeKey: false,
+          // showCancelButton: true,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+          // cancelButtonText: "No",
+          // cancelButtonColor: "#d33",
+        })
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -120,23 +113,36 @@ const DistributeTORO = () => {
   // Fetch data and RTOMs when drc_id changes
   useEffect(() => {
 
-    console.log("fromDatea:", fromDate);
-    console.log("toDate:", toDate);
+    // console.log("fromDatea:", fromDate);
+    // console.log("toDate:", toDate);
     const fetchData = async () => {
       try {
         if (userData?.drc_id) {
           const payload = parseInt(userData?.drc_id);
 
+          setLoading(true);
           // Fetch RTOMs
           const rtomsList = await getActiveRTOMsByDRCID(payload);
           setRtoms(rtomsList);
 
         } else {
-          setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
+          // setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to fetch data. Please try again later.");
+        // console.error("Error fetching data:", error);
+        // setError("Failed to fetch data. Please try again later.");
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch data. Please try again later.",
+          icon: "error",
+          // allowOutsideClick: false,
+          // allowEscapeKey: false,
+          // showCancelButton: true,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+          // cancelButtonText: "No",
+          // cancelButtonColor: "#d33",
+        })
       } finally {
         setLoading(false);
       }
@@ -146,6 +152,8 @@ const DistributeTORO = () => {
       try {
         if (userData?.drc_id) {
           const numericDrcId = Number(userData?.drc_id);
+
+          setLoading(true);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
 
           if (Array.isArray(officers)) {
@@ -157,19 +165,45 @@ const DistributeTORO = () => {
             }));
 
             setRecoveryOfficers(formattedOfficers);
-            console.log("Recovery Officers:", formattedOfficers);
+            // console.log("Recovery Officers:", formattedOfficers);
           } else {
-            console.error("Invalid response format:", officers);
+            // console.error("Invalid response format:", officers);
+            Swal.fire({
+              title: "Error",
+              text: "Failed to fetch recovery officers. Invalid response format.",
+              icon: "error",
+              // allowOutsideClick: false,
+              // allowEscapeKey: false,
+              // showCancelButton: true,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+              // cancelButtonText: "No",
+              // cancelButtonColor: "#d33",
+            })
             setRecoveryOfficers([]);
-            setError("Failed to fetch recovery officers. Invalid response format.");
+            // setError("Failed to fetch recovery officers. Invalid response format.");
           }
         } else {
-          setError("DRC ID not found in URL.");
+          // setError("DRC ID not found in URL.");
         }
       } catch (error) {
-        console.error("Error fetching recovery officers:", error);
-        setError("Failed to fetch recovery officers.");
+        // console.error("Error fetching recovery officers:", error);
+        // setError("Failed to fetch recovery officers.");
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch recovery officers.",
+          icon: "error",
+          // allowOutsideClick: false,
+          // allowEscapeKey: false,
+          // showCancelButton: true,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+          // cancelButtonText: "No",
+          // cancelButtonColor: "#d33",
+        })
         setRecoveryOfficers([]); // Set empty array to prevent further errors
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -194,6 +228,7 @@ const DistributeTORO = () => {
           text: "The 'From' date cannot be later than the 'To' date.",
           icon: "warning",
           confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         return;
       } else {
@@ -222,6 +257,7 @@ const DistributeTORO = () => {
           text: "The 'To' date cannot be before the 'From' date.",
           icon: "warning",
           confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         return;
       } else {
@@ -247,10 +283,11 @@ const DistributeTORO = () => {
         text: "The selected dates have more than a 1-month gap.",
         icon: "warning",
         confirmButtonText: "OK",
+        confirmButtonColor: "#f1c40f"
       }).then((result) => {
         if (result.isConfirmed) {
           setToDate(null);
-          console.log("Dates cleared");
+          // console.log("Dates cleared");
         }
       }
       );
@@ -263,6 +300,7 @@ const DistributeTORO = () => {
       setFilteredData([]); // Clear previous results
       setSelectedRows(new Set()); // Clear row selections
       setSelectAll(false); // Reset select all
+      setCurrentPage(1); // Reset to first page after filtering
 
       const formatDate = (date) => {
         if (!date) return null;
@@ -276,6 +314,7 @@ const DistributeTORO = () => {
           text: "Please select at least one filter.",
           icon: "warning",
           confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         return;
       };
@@ -287,7 +326,9 @@ const DistributeTORO = () => {
           text: "Both From Date and To Date must be selected.",
           icon: "warning",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         setToDate(null);
         setFromDate(null);
@@ -301,7 +342,9 @@ const DistributeTORO = () => {
           text: "To date should be greater than or equal to From date",
           icon: "warning",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         setToDate(null);
         setFromDate(null);
@@ -317,25 +360,52 @@ const DistributeTORO = () => {
         to_date: formatDate(toDate),
       };
 
+      setLoading(true);
       const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
         setFilteredData(response);
         setCurrentPage(1); // Reset to first page after filtering
       } else {
-        console.error("No valid cases data found in response.");
+        // console.error("No valid cases data found in response.");
+        Swal.fire({
+          title: "Error",
+          text: "No valid cases data found in response.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         setFilteredData([]);
       }
     } catch (error) {
-      console.error("Error filtering cases:", error);
+      // console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Failed to fetch filtered data. Please try again.",
-        icon: "error"
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleClear = () => {
+    setSelectedRTOM("");
+    setSelectedRO("");
+    setFromDate(null);
+    setToDate(null);
+    setFilteredData([]);
+    setSearchQuery("");
+    setSelectAll(false);
+    setSelectedRows(new Set());
+    setFilteredOfficers(recoveryOfficers); // Reset filtered officers to all officers
+  };
 
   //Search Logic
   const searchInNestedObject = (obj, query) => {
@@ -450,7 +520,9 @@ const DistributeTORO = () => {
           text: "No Recovery Officer selected!",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
         });
         return;
       }
@@ -461,7 +533,9 @@ const DistributeTORO = () => {
           text: "Please select at least one row before submitting!",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
         });
         return;
       }
@@ -475,7 +549,9 @@ const DistributeTORO = () => {
           text: "Selected Recovery Officer not found!",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
         });
         return;
       }
@@ -525,7 +601,9 @@ const DistributeTORO = () => {
           text: "The RTOM area does not match any RTOM area assigned to Recovery Officer",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
         });
         return;
       }
@@ -536,7 +614,9 @@ const DistributeTORO = () => {
           text: "Cases assigned successfully!",
           icon: "success",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#28a745"
         });
         navigate(`/drc/assigned-ro-case-log`);
       } else {
@@ -545,7 +625,9 @@ const DistributeTORO = () => {
           text: response.message || "An error occurred while assigning cases.",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
         });
       }
 
@@ -556,109 +638,187 @@ const DistributeTORO = () => {
         text: "An error occurred while assigning cases.",
         icon: "error",
         allowOutsideClick: false,
-        allowEscapeKey: false
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
       });
     }
   };
 
-  const getStatusIcon = (status) => {
-    if (!status) return <span className="text-gray-500">N/A</span>;
+  // const getStatusIcon = (status) => {
+  //   if (!status) return <span className="text-gray-500">N/A</span>;
 
+  //   switch (status.toLowerCase()) {
+  //     case "open no agent":
+  //       return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+  //     case "open with agent":
+  //       return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+  //     case "negotiation settle pending":
+  //       return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+  //     case "negotiation settle open pending":
+  //       return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+  //     case "negotiation settle active":
+  //       return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+  //     case "fmb":
+  //       return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
+  //     case "fmb settle pending":
+  //       return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
+  //     case "fmb settle open pending":
+  //       return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
+  //     case "fmb settle active":
+  //       return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+  //     default:
+  //       return <span className="text-gray-500">N/A</span>;
+  //   }
+  // };
+
+  const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
-      case "open no agent":
-        return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+      // case "open no agent":
+      //   return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
-        return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+        return Open_With_Agent;
+      case "ro negotiation":
+        return RO_Negotiation;
       case "negotiation settle pending":
-        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+        return Negotiation_Settle_Pending;
       case "negotiation settle open pending":
-        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+        return Negotiation_Settle_Open_Pending;
       case "negotiation settle active":
-        return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
-      case "fmb":
-        return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
-      case "fmb settle pending":
-        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
-      case "fmb settle open pending":
-        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
-      case "fmb settle active":
-        return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+        return Negotiation_Settle_Active;
+      case "ro negotiation extension pending":
+        return RO_Negotiation_Extension_Pending;
+      case "ro negotiation extended":
+        return RO_Negotiation_Extended;
+      case "ro negotiation fmb pending":
+        return RO_Negotiation_FMB_Pending;
+      case "mb negotiation":
+        return MB_Negotiation;
+      case "mb request customer-info":
+        return MB_Request_Customer_Info;
+      case "mb handover customer-info":
+        return MB_Handover_Customer_Info;
+      case "mb fail with pending non-settlement":
+        return MB_Fail_with_Pending_Non_Settlement;
+      case "forward to mediation board":
+        return FMB;
+      case "mb settle pending":
+        return MB_Settle_Pending;
+      case "mb settle open pending":
+        return MB_Settle_Open_Pending;
+      case "mb settle active":
+        return MB_Settle_Active;
       default:
         return <span className="text-gray-500">N/A</span>;
     }
   };
 
+  // render status icon with tooltip
+  const renderStatusIcon = (status) => {
+    const iconPath = getStatusIcon(status);
+
+    if (!iconPath) {
+      return <span>{status}</span>;
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <img
+          src={iconPath}
+          alt={status}
+          title={status}
+          className="w-6 h-6"
+        />
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h1 className={GlobalStyle.headingLarge}>Distribution</h1>
 
-      <div className="flex items-center justify-end gap-4 mt-20 mb-4">
+      <div className={`${GlobalStyle.cardContainer} w-full`}>
+        <div className="flex items-center justify-end w-full space-x-3">
 
-        {/* RTOM Select Dropdown */}
-        <select
-          className={GlobalStyle.selectBox}
-          value={selectedRTOM}
-          onChange={(e) => {
-            const selectedAreaName = e.target.value;
-            setSelectedRTOM(selectedAreaName);
-          }}
-        >
-          <option value="">RTOM</option>
-          {rtoms.length > 0 ? (
-            rtoms.map((rtom) => (
-              <option key={rtom.rtom_id} value={rtom.area_name}>
-                {rtom.area_name}
-              </option>
-            ))
-          ) : (
-            <option disabled>No RTOMs found</option>
-          )}
-        </select>
+          {/* RTOM Select Dropdown */}
+          <select
+            className={GlobalStyle.selectBox}
+            value={selectedRTOM}
+            onChange={(e) => {
+              const selectedAreaName = e.target.value;
+              setSelectedRTOM(selectedAreaName);
+            }}
+            style={{ color: selectedRTOM === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>RTOM</option>
+            {rtoms.length > 0 ? (
+              rtoms.map((rtom) => (
+                <option key={rtom.rtom_id} value={rtom.area_name}>
+                  {rtom.area_name}
+                </option>
+              ))
+            ) : (
+              <option disabled>No RTOMs found</option>
+            )}
+          </select>
 
 
-        {/* Arrears Band Select Dropdown */}
-        <select
-          className={GlobalStyle.selectBox}
-          value={selectedArrearsBand}
-          onChange={(e) => setSelectedArrearsBand(e.target.value)}
-        >
-          <option value="">Arrears Band</option>
-          {arrearsAmounts.length > 0 ? (
-            arrearsAmounts.map((band, index) => (
-              <option key={index} value={band.key}>
-                {band.value}
-              </option>
-            ))
-          ) : (
-            <option value="">Loading...</option>
-          )}
-        </select>
+          {/* Arrears Band Select Dropdown */}
+          <select
+            className={GlobalStyle.selectBox}
+            value={selectedArrearsBand}
+            onChange={(e) => setSelectedArrearsBand(e.target.value)}
+            style={{ color: selectedArrearsBand === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>Arrears Band</option>
+            {arrearsAmounts.length > 0 ? (
+              arrearsAmounts.map((band, index) => (
+                <option key={index} value={band.key}>
+                  {band.value}
+                </option>
+              ))
+            ) : (
+              <option value="">Loading...</option>
+            )}
+          </select>
 
-        {/* Date Picker */}
-        <div className="flex flex-col ">
-          <div className={GlobalStyle.datePickerContainer}>
-            <label className={GlobalStyle.dataPickerDate}>Date</label>
-            <DatePicker
-              selected={fromDate}
-              onChange={handlestartdatechange}
-              dateFormat="dd/MM/yyyy"
-              placeholderText="dd/MM/yyyy"
-              className={GlobalStyle.inputText}
-            />
-            <DatePicker
-              selected={toDate}
-              onChange={handleenddatechange}
-              dateFormat="dd/MM/yyyy"
-              placeholderText="dd/MM/yyyy"
-              className={GlobalStyle.inputText}
-            />
+          {/* Date Picker */}
+          <div className="flex flex-col ">
+            <div className={GlobalStyle.datePickerContainer}>
+              <label className={GlobalStyle.dataPickerDate}>Date</label>
+              <DatePicker
+                selected={fromDate}
+                onChange={handlestartdatechange}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="From Date"
+                className={GlobalStyle.inputText}
+              />
+              <DatePicker
+                selected={toDate}
+                onChange={handleenddatechange}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="To Date"
+                className={GlobalStyle.inputText}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Filter Button */}
-        <button onClick={handleFilter} className={`${GlobalStyle.buttonPrimary}`}>
-          Filter
-        </button>
+          {/* Filter Button */}
+          <button onClick={handleFilter} className={`${GlobalStyle.buttonPrimary}`}>
+            Filter
+          </button>
+          <button onClick={handleClear} className={`${GlobalStyle.buttonRemove}`}>
+            Clear
+          </button>
+        </div>
       </div>
 
       {/* Search Section */}
@@ -689,8 +849,8 @@ const DistributeTORO = () => {
                   disabled={currentData.length === 0}
                 />
               </th>
-              <th className={GlobalStyle.tableHeader}>Status</th>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
+              <th className={GlobalStyle.tableHeader}>Status</th>
               <th className={GlobalStyle.tableHeader}>Date</th>
               <th className={GlobalStyle.tableHeader}>Amount</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
@@ -714,9 +874,8 @@ const DistributeTORO = () => {
                       className="mx-auto"
                     />
                   </td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
-
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : "N/A"} </td>
@@ -770,8 +929,9 @@ const DistributeTORO = () => {
           value={selectedRO}
           onChange={(e) => setSelectedRO(e.target.value)}
           disabled={selectedRows.size === 0}
+          style={{ color: selectedRO === "" ? "gray" : "black" }}
         >
-          <option value="">Select RO</option>
+          <option value="" hidden>Select RO</option>
           {filteredOfficers.map((officer) => (
             <option key={officer.ro_id} value={officer.ro_id}>
               {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}

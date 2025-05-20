@@ -3,6 +3,7 @@ Created Date: 2024-01-08
 Created By: Chamath (chamathjayasanka20@gmail.com)
 Last Modified Date:2025-02-18
 Modified by: Nimesh Perera(nimeshmathew999@gmail.com)
+Modified By: Janani Kumarasiri (jkktg001@gmail.com)
 Version: node 20
 ui number : 2.3
 Dependencies: tailwind css
@@ -22,16 +23,31 @@ import Swal from 'sweetalert2';
 
 
 //Status Icons
-import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
-import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
-import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
-import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
-import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
-import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
-import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
-import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
-import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-
+// import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
+// import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
+// import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
+// import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
+// import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
+// import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
+// import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
+// import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
+// import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
+import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
+import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
+import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Settle_Active.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/Negotiation_new/RO Negotiation extend pending.png";
+import RO_Negotiation_Extended from "../../assets/images/Negotiation_new/RO Negotiation extended.png";
+import RO_Negotiation_FMB_Pending from "../../assets/images/Negotiation_new/RO_Negotiation_FMB_Pending.png";
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
 
 export default function AssignedROcaselog() {
 
@@ -49,11 +65,12 @@ export default function AssignedROcaselog() {
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const recordsPerPage = 5;
-    // const indexOfLastRecord = currentPage * recordsPerPage;
-    // const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    // const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+    const recordsPerPage = 10;
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
     const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Filter state for Amount, Case ID, Status, and Date
     const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -63,37 +80,6 @@ export default function AssignedROcaselog() {
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
     const [userData, setUserData] = useState(null);
-
-    // const loadUser = async () => {
-    //     let token = localStorage.getItem("accessToken");
-    //     if (!token) {
-    //       setUserData(null);
-    //       return;
-    //     }
-
-    //     try {
-    //       let decoded = jwtDecode(token);
-    //       const currentTime = Date.now() / 1000;
-    //       if (decoded.exp < currentTime) {
-    //         token = await refreshAccessToken();
-    //         if (!token) return;
-    //         decoded = jwtDecode(token);
-    //       }
-
-    //       setUserData({
-    //         id: decoded.user_id,
-    //         role: decoded.role,
-    //         drc_id: decoded.drc_id,
-    //         ro_id: decoded.ro_id,
-    //       });
-    //     } catch (error) {
-    //       console.error("Invalid token:", error);
-    //     }
-    //   };
-
-    //   useEffect(() => {
-    //     loadUser();
-    //   }, [localStorage.getItem("accessToken")]);
 
     const loadUser = async () => {
         const user = await getLoggedUserId();
@@ -107,12 +93,13 @@ export default function AssignedROcaselog() {
 
     useEffect(() => {
 
-        console.log("fromDatea:", fromDate);
-        console.log("toDate:", toDate);
+        // console.log("fromDatea:", fromDate);
+        // console.log("toDate:", toDate);
         const fetchRTOMs = async () => {
             try {
                 if (userData?.drc_id) {
                     // Make sure to convert to number if needed
+                    setIsLoading(true);
                     const arrearsAmounts = await fetchAllArrearsBands();
                     setArrearsAmounts(arrearsAmounts);
                     // Fetch RTOMs by DRC ID
@@ -121,7 +108,18 @@ export default function AssignedROcaselog() {
                     setRtoms(rtomsList);
                 }
             } catch (error) {
-                console.error("Error fetching RTOMs:", error);
+                // console.error("Error fetching RTOMs:", error);
+                Swal.fire({
+                    title: "Error",
+                    text: "Error fetching data",
+                    icon: "error",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: "Yes",
+                    confirmButtonColor: "#d33",
+                })
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -155,6 +153,7 @@ export default function AssignedROcaselog() {
                     text: "The 'From' date cannot be later than the 'To' date.",
                     icon: "warning",
                     confirmButtonText: "OK",
+                    confirmButtonColor: "#f1c40f"
                 });
                 return;
             } else {
@@ -183,6 +182,7 @@ export default function AssignedROcaselog() {
                     text: "The 'To' date cannot be before the 'From' date.",
                     icon: "warning",
                     confirmButtonText: "OK",
+                    confirmButtonColor: "#f1c40f"
                 });
                 return;
             } else {
@@ -208,6 +208,7 @@ export default function AssignedROcaselog() {
                 text: "The selected dates have more than a 1-month gap.",
                 icon: "warning",
                 confirmButtonText: "OK",
+                confirmButtonColor: "#f1c40f",
             }).then((result) => {
                 if (result.isConfirmed) {
                     setToDate(null);
@@ -222,6 +223,7 @@ export default function AssignedROcaselog() {
 
     const handleFilter = async () => {
         try {
+            setCurrentPage(1); // Reset pagination to the first page
             setFilteredData([]); // Clear previous results
 
             // Format the date to 'YYYY-MM-DD' format
@@ -237,7 +239,9 @@ export default function AssignedROcaselog() {
                     text: "No filter data is selected. Please, select data.",
                     icon: "warning",
                     allowOutsideClick: false,
-                    allowEscapeKey: false
+                    allowEscapeKey: false,
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#f1c40f"
                 });
                 setToDate(null);
                 setFromDate(null);
@@ -250,7 +254,9 @@ export default function AssignedROcaselog() {
                     text: "Both From Date and To Date must be selected.",
                     icon: "warning",
                     allowOutsideClick: false,
-                    allowEscapeKey: false
+                    allowEscapeKey: false,
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#f1c40f"
                 });
                 setToDate(null);
                 setFromDate(null);
@@ -263,7 +269,9 @@ export default function AssignedROcaselog() {
                     text: "To date should be greater than or equal to From date",
                     icon: "warning",
                     allowOutsideClick: false,
-                    allowEscapeKey: false
+                    allowEscapeKey: false,
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#f1c40f"
                 });
                 setToDate(null);
                 setFromDate(null);
@@ -279,24 +287,35 @@ export default function AssignedROcaselog() {
             };
             console.log('Sending filter payload:', payload); // Log the payload before sending for debugging
             // Fetch filtered data from the API using the payload
+
+            setIsLoading(true);
             const AssignedRoCaseLogs = await listHandlingCasesByDRC(payload);
 
 
-            if (Array.isArray(AssignedRoCaseLogs)) {
-                setFilteredlogData(AssignedRoCaseLogs.data);
-            } else {
-                console.error("No valid cases data found in response.");
-            }
+            // if (Array.isArray(AssignedRoCaseLogs)) {
+            //     setFilteredlogData(AssignedRoCaseLogs.data);
+            // } else {
+            //     // console.error("No valid cases data found in response.");
+            //     Swal.fire({
+            //         title: "Error",
+            //         text: "No valid cases data found in response.",
+            //         icon: "error",
+            //         allowOutsideClick: false,
+            //         allowEscapeKey: false,
+            //         confirmButtonText: "Yes",
+            //         confirmButtonColor: "#d33",
+            //     })
+            // }
 
 
             // Log the response
             console.log('Response from API:', AssignedRoCaseLogs); //for debugging
 
             // Set the filtered data (assuming setFilteredData updates the state or UI)
-            setFilteredlogData(AssignedRoCaseLogs);
+            setFilteredData(AssignedRoCaseLogs);
 
 
-            console.log("Filtered data updated:", filteredlogData); //for debugging
+            console.log("Filtered data updated:", filteredData); //for debugging
 
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
@@ -306,10 +325,26 @@ export default function AssignedROcaselog() {
             Swal.fire({
                 title: "Error",
                 text: "Failed to fetch filtered data. Please try again.",
-                icon: "error"
+                icon: "error",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonText: "OK",
+                confirmButtonColor: "#d33",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const handleClear = () => {
+        setSelectedRTOM("");
+        setSelectedArrearsBand("");
+        setFromDate(null);
+        setToDate(null);
+        setSearchQuery("");
+        setFilteredData([]);
+        setCurrentPage(1); // Reset pagination to the first page
+    }
 
     // Handle pagination
     const handlePrevNext = (direction) => {
@@ -321,95 +356,165 @@ export default function AssignedROcaselog() {
     };
 
     // Filtering the data based on filter values
-    const filterData = () => {
-        let tempData = data;
-        if (filterType && filterValue) {
-            if (filterType === "Account No") {
-                tempData = tempData.filter((item) =>
-                    item.accountNo.includes(filterValue)
-                );
-            } else if (filterType === "Case ID") {
-                tempData = tempData.filter((item) => item.caseId.includes(filterValue));
-            }
-        }
+    // const filterData = () => {
+    //     let tempData = data;
+    //     if (filterType && filterValue) {
+    //         if (filterType === "Account No") {
+    //             tempData = tempData.filter((item) =>
+    //                 item.accountNo.includes(filterValue)
+    //             );
+    //         } else if (filterType === "Case ID") {
+    //             tempData = tempData.filter((item) => item.caseId.includes(filterValue));
+    //         }
+    //     }
 
-        if (fromDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate >= toDate;
-            });
-        }
+    //     if (fromDate) {
+    //         tempData = tempData.filter((item) => {
+    //             const itemDate = new Date(item.date);
+    //             return itemDate >= toDate;
+    //         });
+    //     }
 
-        if (toDate) {
-            tempData = tempData.filter((item) => {
-                const itemDate = new Date(item.date);
-                return itemDate <= toDate;
-            });
-        }
-        // Apply filters
-        if (filterAccountNo) {
-            tempData = tempData.filter((item) =>
-                item.accountNo.includes(filterAccountNo)
-            );
-        }
-        if (filterCaseId) {
-            tempData = tempData.filter((item) => item.caseId.includes(filterCaseId));
-        }
-        if (filterStatus) {
-            tempData = tempData.filter((item) => item.status.includes(filterStatus));
-        }
-        if (selectedArrearsBand) {
-            tempData = tempData.filter((item) => {
-                const amount = parseInt(item.amount.replace(/,/g, "")); // Remove commas and parse as integer
-                if (selectedArrearsBand === "5-10") {
-                    return amount >= 5000 && amount <= 10000;
-                } else if (selectedArrearsBand === "10-25") {
-                    return amount >= 10000 && amount <= 25000;
-                } else if (selectedArrearsBand === "25-50") {
-                    return amount >= 25000 && amount <= 50000;
-                } else if (selectedArrearsBand === "50-100") {
-                    return amount >= 50000 && amount <= 100000;
-                } else if (selectedArrearsBand === "100+") {
-                    return amount > 100000;
-                }
-                return true; // Return true if no filter is applied
-            });
-        }
-        setFilteredData(tempData);
-        setCurrentPage(1); // Reset pagination when filter changes
-    };
+    //     if (toDate) {
+    //         tempData = tempData.filter((item) => {
+    //             const itemDate = new Date(item.date);
+    //             return itemDate <= toDate;
+    //         });
+    //     }
+    //     // Apply filters
+    //     if (filterAccountNo) {
+    //         tempData = tempData.filter((item) =>
+    //             item.accountNo.includes(filterAccountNo)
+    //         );
+    //     }
+    //     if (filterCaseId) {
+    //         tempData = tempData.filter((item) => item.caseId.includes(filterCaseId));
+    //     }
+    //     if (filterStatus) {
+    //         tempData = tempData.filter((item) => item.status.includes(filterStatus));
+    //     }
+    //     if (selectedArrearsBand) {
+    //         tempData = tempData.filter((item) => {
+    //             const amount = parseInt(item.amount.replace(/,/g, "")); // Remove commas and parse as integer
+    //             if (selectedArrearsBand === "5-10") {
+    //                 return amount >= 5000 && amount <= 10000;
+    //             } else if (selectedArrearsBand === "10-25") {
+    //                 return amount >= 10000 && amount <= 25000;
+    //             } else if (selectedArrearsBand === "25-50") {
+    //                 return amount >= 25000 && amount <= 50000;
+    //             } else if (selectedArrearsBand === "50-100") {
+    //                 return amount >= 50000 && amount <= 100000;
+    //             } else if (selectedArrearsBand === "100+") {
+    //                 return amount > 100000;
+    //             }
+    //             return true; // Return true if no filter is applied
+    //         });
+    //     }
+    //     setFilteredData(tempData);
+    //     setCurrentPage(1); // Reset pagination when filter changes
+    // };
 
     // Search Section
-    const filteredDataBySearch = filteredlogData.filter((row) =>
+    const filteredDataBySearch = currentData.filter((row) =>
         Object.values(row)
             .join(" ") // Join all values in a row to form a single string
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) // Match with the search query
     );
 
+    // const getStatusIcon = (status) => {
+    //     switch (status.toLowerCase()) {
+    //         case "open no agent":
+    //             return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+    //         case "open with agent":
+    //             return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+    //         case "negotiation settle pending":
+    //             return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+    //         case "negotiation settle open pending":
+    //             return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+    //         case "negotiation settle active":
+    //             return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
+    //         case "fmb":
+    //             return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
+    //         case "fmb settle pending":
+    //             return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
+    //         case "fmb settle open pending":
+    //             return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
+    //         case "fmb settle active":
+    //             return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+    //         default:
+    //             return <span className="text-gray-500">N/A</span>;
+    //     }
+    // };
+
+    // display loading animation when data is loading
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
     const getStatusIcon = (status) => {
         switch (status.toLowerCase()) {
-            case "open no agent":
-                return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
+            // case "open no agent":
+            //   return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
             case "open with agent":
-                return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+                return Open_With_Agent;
+            case "ro negotiation":
+                return RO_Negotiation;
             case "negotiation settle pending":
-                return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+                return Negotiation_Settle_Pending;
             case "negotiation settle open pending":
-                return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+                return Negotiation_Settle_Open_Pending;
             case "negotiation settle active":
-                return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
-            case "fmb":
-                return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
-            case "fmb settle pending":
-                return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
-            case "fmb settle open pending":
-                return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
-            case "fmb settle active":
-                return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+                return Negotiation_Settle_Active;
+            case "ro negotiation extension pending":
+                return RO_Negotiation_Extension_Pending;
+            case "ro negotiation extended":
+                return RO_Negotiation_Extended;
+            case "ro negotiation fmb pending":
+                return RO_Negotiation_FMB_Pending;
+            case "mb negotiation":
+                return MB_Negotiation;
+            case "mb request customer-info":
+                return MB_Request_Customer_Info;
+            case "mb handover customer-info":
+                return MB_Handover_Customer_Info;
+            case "mb fail with pending non-settlement":
+                return MB_Fail_with_Pending_Non_Settlement;
+            case "forward to mediation board":
+                return FMB;
+            case "mb settle pending":
+                return MB_Settle_Pending;
+            case "mb settle open pending":
+                return MB_Settle_Open_Pending;
+            case "mb settle active":
+                return MB_Settle_Active;
             default:
                 return <span className="text-gray-500">N/A</span>;
         }
+    };
+
+    // render status icon with tooltip
+    const renderStatusIcon = (status) => {
+        const iconPath = getStatusIcon(status);
+
+        if (!iconPath) {
+            return <span>{status}</span>;
+        }
+
+        return (
+            <div className="flex items-center gap-2">
+                <img
+                    src={iconPath}
+                    alt={status}
+                    title={status}
+                    className="w-6 h-6"
+                />
+            </div>
+        );
     };
 
     return (
@@ -417,70 +522,80 @@ export default function AssignedROcaselog() {
             {/* Title */}
             <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
-            <div className="flex items-center justify-end gap-4 mt-20 mb-4">
+            <div className={`${GlobalStyle.cardContainer} w-full`}>
+                <div className="flex items-center justify-end w-full space-x-3">
 
-                {/* RTOM Select Dropdown */}
-                <select
-                    className={GlobalStyle.selectBox}
-                    value={selectedRTOM}
-                    onChange={(e) => setSelectedRTOM(e.target.value)}
-                >
-                    <option value="">RTOM</option>
-                    {rtoms.length > 0 ? (
-                        rtoms.map((rtom) => (
-                            <option key={rtom.rtom_id} value={rtom.area_name}>
-                                {rtom.area_name} {/* Ensure this is the correct name for the RTOM area */}
-                            </option>
-                        ))
-                    ) : (
-                        <option disabled>No RTOMs found</option>
-                    )}
-                </select>
-                <select
-                    className={GlobalStyle.selectBox}
-                    value={selectedArrearsBand}
-                    onChange={(e) => setSelectedArrearsBand(e.target.value)}
-                >
-                    <option value="" >
-                        Arrears band
-                    </option>
-                    {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
-                        arrearsAmounts.map(({ key, value }) => (
-                            <option key={key} value={key}>
-                                {value}
-                            </option>
-                        ))
-                    ) : (
-                        <option disabled>No arrears bands available</option>
-                    )}
+                    {/* RTOM Select Dropdown */}
+                    <select
+                        className={GlobalStyle.selectBox}
+                        value={selectedRTOM}
+                        onChange={(e) => setSelectedRTOM(e.target.value)}
+                        style={{ color: selectedRTOM === "" ? "gray" : "black" }}
+                    >
+                        <option value="" hidden>RTOM</option>
+                        {rtoms.length > 0 ? (
+                            rtoms.map((rtom) => (
+                                <option key={rtom.rtom_id} value={rtom.area_name}>
+                                    {rtom.area_name} {/* Ensure this is the correct name for the RTOM area */}
+                                </option>
+                            ))
+                        ) : (
+                            <option disabled>No RTOMs found</option>
+                        )}
+                    </select>
+                    <select
+                        className={GlobalStyle.selectBox}
+                        value={selectedArrearsBand}
+                        onChange={(e) => setSelectedArrearsBand(e.target.value)}
+                        style={{ color: selectedArrearsBand === "" ? "gray" : "black" }}
+                    >
+                        <option value="" hidden>
+                            Arrears band
+                        </option>
+                        {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
+                            arrearsAmounts.map(({ key, value }) => (
+                                <option key={key} value={key}>
+                                    {value}
+                                </option>
+                            ))
+                        ) : (
+                            <option disabled>No arrears bands available</option>
+                        )}
 
-                </select>
+                    </select>
 
-                <div className={GlobalStyle.datePickerContainer}>
-                    <label className={GlobalStyle.dataPickerDate}>Date</label>
-                    <DatePicker
-                        selected={fromDate}
-                        onChange={handlestartdatechange}
-                        dateFormat="dd/MM/yyyy"
-                        placeholderText="dd/MM/yyyy"
-                        className={GlobalStyle.inputText}
-                    />
-                    <DatePicker
-                        selected={toDate}
-                        onChange={handleenddatechange}
-                        dateFormat="dd/MM/yyyy"
-                        placeholderText="dd/MM/yyyy"
-                        className={GlobalStyle.inputText}
-                    />
+                    <div className={GlobalStyle.datePickerContainer}>
+                        <label className={GlobalStyle.dataPickerDate}>Date</label>
+                        <DatePicker
+                            selected={fromDate}
+                            onChange={handlestartdatechange}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="From Date"
+                            className={GlobalStyle.inputText}
+                        />
+                        <DatePicker
+                            selected={toDate}
+                            onChange={handleenddatechange}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="To Date"
+                            className={GlobalStyle.inputText}
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleFilter}
+                        className={`${GlobalStyle.buttonPrimary}`}
+                    >
+                        Filter
+                    </button>
+                    <button
+                        onClick={handleClear}
+                        className={`${GlobalStyle.buttonRemove}`}
+                    >
+                        Clear
+                    </button>
+
                 </div>
-
-                <button
-                    onClick={handleFilter}
-                    className={`${GlobalStyle.buttonPrimary}`}
-                >
-                    Filter
-                </button>
-
             </div>
 
             {/* Search Section */}
@@ -551,7 +666,7 @@ export default function AssignedROcaselog() {
                                             </a>
                                         </td>
                                         <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-                                            {getStatusIcon(item.status || "N/A")}
+                                            {renderStatusIcon(item.status || "N/A")}
                                         </td>
                                         <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
                                         <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
@@ -596,7 +711,7 @@ export default function AssignedROcaselog() {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="9" className={GlobalStyle.tableData}>
+                                <td colSpan="9" className={`${GlobalStyle.tableData} text-center`}>
                                     No data available
                                 </td>
                             </tr>
