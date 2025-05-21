@@ -21,6 +21,11 @@ import { getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import Swal from 'sweetalert2';
 
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
+import { Tooltip } from "react-tooltip";
+
+
 // Import status icons with correct file extensions
 import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
 import RO_Negotiation_Extneded from "../../assets/images/negotiation/RO_Negotiation_Extneded.png";
@@ -34,11 +39,11 @@ import RO_Negotiation from "../../assets/images/negotiation/RO_Negotiation.png";
 const STATUS_ICONS = {
   "RO Negotiation FMB Pending": {
     icon: RO_Negotiation_FMB_pending,
-    tooltip: "RO Negotiation FMB pending"
+    tooltip: "RO Negotiation FMB Pending"
   },
   "RO Negotiation Extended": {
     icon: RO_Negotiation_Extneded,
-    tooltip: "RO Negotiation Extneded"
+    tooltip: "RO Negotiation Extended"
   },
   "RO Negotiation Extension Pending": {
     icon: RO_Negotiation_Extension_Pending,
@@ -58,14 +63,15 @@ const STATUS_ICONS = {
   },
   "RO Negotiation": {
     icon: RO_Negotiation,
-    tooltip: "MB Settle open pending"
+    tooltip: " Ro Negotiation"
   },
 };
 
-// Status Icon component with tooltip
+// Status Icon component with tooltip 
 const StatusIcon = ({ status }) => {
   const statusInfo = STATUS_ICONS[status];
-
+  
+  const tooltipId = `tooltip-${status.replace(/\s+/g, '-')}`;
   if (!statusInfo) return <span>{status}</span>;
 
   return (
@@ -73,12 +79,17 @@ const StatusIcon = ({ status }) => {
       <img
         src={statusInfo.icon}
         alt={status}
-        className="w-6 h-6 cursor-help"
+        className="w-6 h-6 "
+        data-tooltip-id={tooltipId}
+        data-tooltip-content={statusInfo.tooltip}
+        data-tooltip-place="bottom"
+
       />
-      <div className="absolute invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 left-1/2 transform -translate-x-1/2 bottom-full mb-1 whitespace-nowrap z-10">
-        {statusInfo.tooltip}
-        <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-gray-800 rotate-45"></div>
-      </div>
+      {/* <Tooltip id={tooltipId} className="tooltip"  effect="solid" /> */}
+      {/* <div className="absolute invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 left-1/2 transform -translate-x-1/2 bottom-full mb-1 whitespace-nowrap z-10"> */}
+      
+        {/* <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-gray-800 rotate-45"></div> */}
+      {/* </div> */}
     </div>
   );
 };
@@ -96,11 +107,36 @@ export default function ROsAssignedcaselog() {
   const [rtoms, setRtoms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   const [filters, setFilters] = useState({
     rtom: "",
     action_type: "",
+    status: "",
   });
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
+
+   // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
 
   //   // API Call to fetch assigned cases
   //   useEffect(() => {
@@ -212,6 +248,7 @@ export default function ROsAssignedcaselog() {
           text: "The 'From' date cannot be later than the 'To' date.",
           icon: "warning",
           confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         return;
       } else {
@@ -240,6 +277,7 @@ export default function ROsAssignedcaselog() {
           text: "The 'To' date cannot be before the 'From' date.",
           icon: "warning",
           confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
         });
         return;
       } else {
@@ -265,6 +303,7 @@ export default function ROsAssignedcaselog() {
         text: "The selected dates have more than a 1-month gap.",
         icon: "warning",
         confirmButtonText: "OK",
+        confirmButtonColor: "#f1c40f",
       }).then((result) => {
         if (result.isConfirmed) {
           setToDate(null);
@@ -309,13 +348,14 @@ export default function ROsAssignedcaselog() {
          return offsetDate.toISOString().split('T')[0];
        }; */
 
-      if (!filters.rtom && !filters.action_type && !fromDate && !toDate) {
+      if (!filters.rtom && !filters.action_type && !fromDate && !toDate  && !filters.status) {
         Swal.fire({
           title: "Warning",
           text: "No filter data is selected. Please, select data.",
           icon: "warning",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonColor: "#f1c40f"
         });
         setToDate(null);
         setFromDate(null);
@@ -328,7 +368,8 @@ export default function ROsAssignedcaselog() {
           text: "Both From Date and To Date must be selected.",
           icon: "warning",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonColor: "#f1c40f"
         });
         setToDate(null);
         setFromDate(null);
@@ -343,8 +384,9 @@ export default function ROsAssignedcaselog() {
 
       const payload = {
         // Use Number() to ensure these are numbers and not strings
-        drc_id: Number(userData.drc_id),
-        ro_id: Number(userData.ro_id), // Fixed: was using drc_id instead of ro_id
+        drc_id: userData.drc_id,
+        ro_id: userData.ro_id, // Fixed: was using drc_id instead of ro_id
+        ...(filters.status && { status: filters.status }),
         ...(filters.rtom && { rtom: filters.rtom }),
         ...(filters.action_type && { action_type: filters.action_type }),
         ...(fromDate && { from_date: fromDate.toISOString() }),
@@ -362,7 +404,8 @@ export default function ROsAssignedcaselog() {
       Swal.fire({
         title: "Error",
         text: "Failed to fetch filtered data. Please try again.",
-        icon: "error"
+        icon: "error",
+        confirmButtonColor: "#d33"
       });
       setError(error.message || "Failed to fetch cases. Please try again.");
       setCases([]);
@@ -378,6 +421,22 @@ export default function ROsAssignedcaselog() {
     }
     fetchCases();
   };
+
+  const handleclearfilters = () => {
+    setFilters({
+      rtom: "",
+      action_type: "",
+      status: "",
+    });
+    setFromDate(null);
+    setToDate(null);
+    setSearchQuery("");
+    setError("");
+    setCases([]); // Clear the cases when filters are cleared
+    
+  }
+
+
 
   // Data filtering and pagination
   const filteredData = cases.filter((row) =>
@@ -402,9 +461,10 @@ export default function ROsAssignedcaselog() {
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
 
-  const handleonnegotiation = (case_id) => {
-    navigate("/drc/customer-negotiation", { state: { CaseID: case_id } });
+  const handleonnegotiation = (case_id , action_type) => {
+    navigate("/drc/customer-negotiation", { state: { CaseID: case_id , ActionType: action_type } });
     console.log("Case ID being passed: ", case_id);
+    console.log("Action Type being passed: ", action_type);
   }
 
   const handleonedit = (case_id) => {
@@ -417,59 +477,96 @@ export default function ROsAssignedcaselog() {
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
       {/* {error && <p className="text-red-500">{error}</p>} */}
 
-      <div className="flex gap-4 items-center justify-end flex-wrap mt-4 ">
-        {/* Dropdown for RTOM */}
-        <select
-          name="rtom"
-          value={filters.rtom}
-          onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-        >
-          <option value="">Rtom</option>
-          {rtoms.map((rtom) => (
-            <option key={rtom.area_name} value={rtom.area_name}>
-              {rtom.area_name}
-            </option>
-          ))}
-        </select>
-        {/* Dropdown for Action Type */}
-        <select
-          name="action_type"
-          value={filters.action_type}
-          onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-        >
-          <option value="">Action Type</option>
-          <option value="Arrears Collect">Arrears Collect</option>
-          <option value="Arrears and CPE Collect">
-            Arrears and CPE Collect
-          </option>
-          <option value="CPE Collect">CPE Collect</option>
-        </select>
+      <div  className={`${GlobalStyle.cardContainer} w-full gap-4` }>
+        <div  className="flex items-center justify-end w-full gap-1" >
+            {/* Dropdown for RTOM */}
+            <select
+              name="rtom"
+              value={filters.rtom}
+              onChange={handleFilterChange}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+              style={{ color: filters.rtom === "" ? "gray" : "black" }}
+            >
+              <option value="" hidden>Rtom</option>
+              {rtoms.map((rtom) => (
+                <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
+                  {rtom.area_name}
+                </option>
+              ))}
+            </select>
 
-        <div className={`${GlobalStyle.datePickerContainer} flex gap-2`}>
-          <label className={GlobalStyle.dataPickerDate}>Date</label>
-          <DatePicker
-            selected={fromDate}
-            onChange={handlefromdatechange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
-          <DatePicker
-            selected={toDate}
-            onChange={handletodatechange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
-        </div>
-        <button
-          onClick={handleFilterClick}
-          className={`${GlobalStyle.buttonPrimary}`}
-        >
-          Filter
-        </button>
+            {/* Dropdown for Status  */}
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+              style={{ color: filters.status === "" ? "gray" : "black" }}
+            >
+              
+              <option value="" hidden>Status</option>
+              <option value="RO Negotiation" style={{ color: "black" }}>RO Negotiation</option>
+              <option value="Negotiation Settle Pending" style={{ color: "black" }}>Negotiation Settle Pending</option>
+              <option value="Negotiation Settle Open-Pending" style={{ color: "black" }}>Negotiation Settle Open-Pending</option>
+              <option value="Negotiation Settle Active" style={{ color: "black" }}>Negotiation Settle Active</option>
+              <option value="RO Negotiation Extension Pending" style={{ color: "black" }}>RO Negotiation Extension Pending</option>
+              <option value="RO Negotiation Extended" style={{ color: "black" }}>RO Negotiation Extended</option>
+              <option value="RO Negotiation FMB Pending" style={{ color: "black" }}>RO Negotiation FMB Pending</option>
+            </select>
+              
+            {/* Dropdown for Action Type */}
+            <select
+              name="action_type"
+              value={filters.action_type}
+              onChange={handleFilterChange}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+              style={{ color: filters.action_type === "" ? "gray" : "black" }}
+            >
+              <option value="" hidden>Action Type</option>
+              <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
+              <option value="Arrears and CPE Collect" style={{ color: "black" }}>
+                Arrears and CPE Collect
+              </option>
+              <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
+            </select>
+
+            <div className={`${GlobalStyle.datePickerContainer} flex`}>
+              <label className={GlobalStyle.dataPickerDate}>Date:</label>
+              <DatePicker
+                selected={fromDate}
+                onChange={handlefromdatechange}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="From"
+                className={GlobalStyle.inputText}
+              />
+              <DatePicker
+                selected={toDate}
+                onChange={handletodatechange}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="To"
+                className={GlobalStyle.inputText}
+              />
+            </div>
+
+            <div>
+            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+              <button
+                onClick={handleFilterClick}
+                className={`${GlobalStyle.buttonPrimary}`}
+              >
+                Filter
+              </button>
+              )}
+            </div>
+
+              <div>
+                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button className={GlobalStyle.buttonRemove}  onClick={handleclearfilters}>
+                    Clear
+                      </button>
+                  )}
+                </div>
+          </div>
       </div>
 
       {/* Search Section */}
@@ -492,11 +589,12 @@ export default function ROsAssignedcaselog() {
             <tr>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
               <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
+              
               <th className={GlobalStyle.tableHeader}>Name</th>
               <th className={GlobalStyle.tableHeader}>Contact No</th>
               <th className={GlobalStyle.tableHeader}>RTOM</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
+              <th className={GlobalStyle.tableHeader}>Date</th>
               <th className={GlobalStyle.tableHeader}></th>
             </tr>
           </thead>
@@ -511,13 +609,10 @@ export default function ROsAssignedcaselog() {
               >
                 <td className={GlobalStyle.tableData}>{row.case_id}</td>
                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-                  <StatusIcon status={row.status} />
+                  <StatusIcon status={row.status}  />
+                  <Tooltip id={`tooltip-${row.status.replace(/\s+/g, '-')}`} className="tooltip" effect="solid" place="bottom" />
                 </td>
-                <td className={GlobalStyle.tableData}>
-                  {row.created_dtm
-                    ? new Date(row.created_dtm).toLocaleDateString("en-GB")
-                    : "N/A"}
-                </td>
+                
                 <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                 <td className={GlobalStyle.tableData}>
                   {row.contact_no}
@@ -525,28 +620,44 @@ export default function ROsAssignedcaselog() {
                 <td className={GlobalStyle.tableData}>{row.area}</td>
                 <td className={GlobalStyle.tableData}>{row.action_type}</td>
                 <td className={GlobalStyle.tableData}>
-                  <img
-                    src={edit}
-                    alt="Edit Case"
-                    title="Edit Case"
-                    className={`w-6 h-6 cursor-pointer display: inline-block`}
-                    onClick={() => handleonedit(row.case_id)}
-                  />
-                  <button
-                    className={`${GlobalStyle.buttonPrimary} mx-auto`}
-                    style={{ whiteSpace: "nowrap", cursor: "pointer", marginRight: "8px" }}
-                    onClick={() => handleonnegotiation(row.case_id)}
-                  >
-                    Negotiation
-                  </button>
+                  {row.created_dtm
+                    ? new Date(row.created_dtm).toLocaleDateString("en-GB")
+                    : "N/A"}
+                </td>
+                <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                  <div>
+                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button>
+                    <img
+                      src={edit}
+                      alt="Edit Case"
+                      data-tooltip-id="edit-tooltip"
+                      className={`w-6 h-6 cursor-pointer display: inline-block`}
+                      onClick={() => handleonedit(row.case_id)}
+                    />
+                    <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
+                    </button>
+                  )}
+                  </div>
+                  <div>
+                    {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button
+                      className={`${GlobalStyle.buttonPrimary}  `}
+                      style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
+                      onClick={() => handleonnegotiation(row.case_id , row.action_type)}
+                    >
+                      Negotiation
+                    </button>
+                  )}
+                  </div>
                 </td>
               </tr>
             ))}
             {paginatedData.length === 0 && (
               <tr>
-                <td colSpan="8" className="text-center py-4">
-                  {loading ? "Loading..." : "No results found"}
-                </td>
+                <td colSpan="8" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                    No cases found.
+                  </td>
               </tr>
             )}
           </tbody>
