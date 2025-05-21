@@ -24,7 +24,7 @@ export default function Re_AssignRo() {
   const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // State to manage case details
   const [caseDetails, setCaseDetails] = useState({
@@ -34,6 +34,8 @@ export default function Re_AssignRo() {
     arrearsAmount: "",
     lastPaymentDate: "",
   });
+
+  const [caseRTOM, setCaseRTOM] = useState("");
 
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
   const [settlementDetails, setSettlementDetails] = useState([]);
@@ -88,6 +90,9 @@ export default function Re_AssignRo() {
               lastPaymentDate: last_payment_date || "",
             });
 
+            console.log("Case RTOM: ", caseDetailsData.rtom);
+            setCaseRTOM(caseDetailsData.rtom || "");
+
             const negotiations = caseDetailsData.ro_negotiation || [];
 
             setLastNegotiationDetails(
@@ -138,8 +143,10 @@ export default function Re_AssignRo() {
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (userData?.drc_id) {
+        if (userData?.drc_id && caseRTOM) {
           const numericDrcId = Number(userData?.drc_id);
+
+          console.log("Case Rtom from recovery officer: ", caseRTOM);
 
           setIsLoading(true);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
@@ -150,7 +157,8 @@ export default function Re_AssignRo() {
               ro_id: officer.ro_id,
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
-            }));
+            }))
+              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name === caseRTOM));
 
             setRecoveryOfficers(formattedOfficers);
             // console.log("Recovery Officers:", formattedOfficers);
@@ -194,7 +202,7 @@ export default function Re_AssignRo() {
       fetchData();
       fetchRecoveryOfficers();
     }
-  }, [userData, case_id]);
+  }, [userData, case_id, caseRTOM]);
 
   const handleTextarea = async (remark) => {
     try {
@@ -330,15 +338,42 @@ export default function Re_AssignRo() {
       }
 
       if (response.status === 'success') {
-        Swal.fire("Success", "Cases assigned successfully!", "success");
+        // Swal.fire("Success", "Cases assigned successfully!", "success");
+        Swal.fire({
+          title: "Success",
+          text: "Cases assigned successfully!",
+          icon: "success",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#28a745",
+        })
         navigate(`/drc/assigned-ro-case-log`);
       } else {
-        Swal.fire("Error", response.message, "error");
+        // Swal.fire("Error", response.message, "error");
+        Swal.fire({
+          title: "Error",
+          text: "response.message",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
       }
 
     } catch (error) {
       // console.error("Error in handleSubmit:", error);
-      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+      // Swal.fire("Error", "An error occurred while assigning cases.", "error");
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while assigning cases.",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
+      })
     }
   };
 
@@ -420,7 +455,7 @@ export default function Re_AssignRo() {
           {/* remark box */}
           <div className="mb-6 items-center space-x-6">
             <label className={GlobalStyle.remarkTopic}>Last RO details</label>
-            <div classname = "w-full">
+            <div>
               <textarea
                 value={textareaValue}
                 onChange={(e) => setTextareaValue(e.target.value)}
@@ -649,7 +684,7 @@ export default function Re_AssignRo() {
         onClick={() => navigate("/drc/assigned-ro-case-log")}
         className={`${GlobalStyle.navButton} `}
       >
-        <FaArrowLeft />Go Back
+        <FaArrowLeft />Back
       </button>
     </div>
   );
