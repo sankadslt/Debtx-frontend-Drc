@@ -123,7 +123,7 @@ export default function RO_Monitoring_CPE() {
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         try {
-            return new Date(dateString).toLocaleDateString("en-CA");
+            return new Date(dateString).toLocaleDateString("en-GB");
         } catch (error) {
             return "Invalid Date";
         }
@@ -304,24 +304,22 @@ export default function RO_Monitoring_CPE() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {[...(cusNegotiationData?.additionalData?.ro_negotiation || [])].length > 0 ? (
-                                                    [...(cusNegotiationData?.additionalData?.ro_negotiation || [])]
-                                                        .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm))
-                                                        .map((item, idx) => (
+                                                {product?.negotiation.length > 0 ? (
+                                                    product?.negotiation.map((item, idx) => (
                                                             <tr
                                                                 key={item._id || idx}
                                                                 className={idx % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
                                                             >
                                                                 <td className={GlobalStyle.tableData}>
-                                                                    {formatDate(item.created_dtm)}
+                                                                    {formatDate(item.collected_date)}
                                                                 </td>
-                                                                <td className={GlobalStyle.tableData}>{item.field_reason || "N/A"}</td>
+                                                                <td className={GlobalStyle.tableData}></td>
                                                                 <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
                                                             </tr>
                                                         ))) : (
                                                     <tr>
                                                         <td colSpan="6" className="text-center py-4">
-                                                            No data matching the criteria.
+                                                            No negotiation details under This product.
                                                         </td>
                                                     </tr>
                                                 )}
@@ -337,7 +335,7 @@ export default function RO_Monitoring_CPE() {
                                 onClick={() => navigate(-1)}
                                 className={GlobalStyle.navButton}
                             >
-                                <FaArrowLeft />Go Back
+                                <FaArrowLeft />Back
                             </button>
                         </div>
                     </>
@@ -582,7 +580,7 @@ export default function RO_Monitoring_CPE() {
                                 onClick={() => navigate("/drc/assigned-ro-case-log")}
                                 className={GlobalStyle.navButton}
                             >
-                                <FaArrowLeft />Go Back
+                                <FaArrowLeft />Back
                             </button>
                         </div>
                     </>

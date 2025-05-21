@@ -69,7 +69,7 @@ const DistributeTORO = () => {
   const loadUser = async () => {
     const user = await getLoggedUserId();
     setUserData(user);
-    console.log("User data:", user);
+    // console.log("User data:", user);
   };
 
   useEffect(() => {
@@ -632,7 +632,7 @@ const DistributeTORO = () => {
       }
 
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
+      // console.error("Error in handleSubmit:", error);
       Swal.fire({
         title: "Error",
         text: "An error occurred while assigning cases.",
@@ -880,7 +880,7 @@ const DistributeTORO = () => {
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
                   <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
@@ -954,7 +954,7 @@ const DistributeTORO = () => {
         onClick={() => navigate(-1)}
         className={`${GlobalStyle.navButton} mt-4`}
       >
-        <FaArrowLeft className="mr-2" />Go Back
+        <FaArrowLeft className="mr-2" />Back
       </button>
     </div>
   );

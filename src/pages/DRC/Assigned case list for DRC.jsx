@@ -549,8 +549,15 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}>{item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : "N/A"}</td>
-                  <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+                  <td className={GlobalStyle.tableCurrency}>
+                    {item?.current_arrears_amount &&
+                      item.current_arrears_amount.toLocaleString("en-LK", {
+                        style: "currency",
+                        currency: "LKR",
+                      })
+                    }
+                  </td>
+                  <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm
