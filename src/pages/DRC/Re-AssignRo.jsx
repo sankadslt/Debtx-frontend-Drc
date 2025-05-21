@@ -415,15 +415,64 @@ export default function Re_AssignRo() {
         </div>
       </div>
 
-      {/* remark box */}
-      <div className="mb-6 flex items-center space-x-6">
-        <label className={GlobalStyle.remarkTopic}>Last RO details</label>
-        <textarea
-          value={textareaValue}
-          onChange={(e) => setTextareaValue(e.target.value)}
-          className={`${GlobalStyle.remark}`}
-          rows="5"
-        ></textarea>
+      <div className="flex items-center justify-center mb-4 w-full">
+        <div className={`${GlobalStyle.cardContainer}`}>
+          {/* remark box */}
+          <div className="mb-6 items-center space-x-6">
+            <label className={GlobalStyle.remarkTopic}>Last RO details</label>
+            <div classname = "w-full">
+              <textarea
+                value={textareaValue}
+                onChange={(e) => setTextareaValue(e.target.value)}
+                className={`${GlobalStyle.remark} w-full`}
+                rows="5"
+              ></textarea>
+            </div>
+          </div>
+
+          {/* dropdown */}
+          <div className="flex gap-10">
+            <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
+            <select
+              id="ro-select"
+              className={`${GlobalStyle.selectBox}`}
+              // style={{ width: "600px" }}
+              style={{ color: selectedRO === "" ? "gray" : "black" }}
+              value={selectedRO || ""}
+              onChange={(e) => {
+                const selectedName = e.target.value;
+                if (selectedName) {
+                  setSelectedRO(selectedName);
+                }
+              }}
+            >
+              <option value="" hidden>
+                Select RO
+              </option>
+              {recoveryOfficers && recoveryOfficers.length > 0 ? (
+                recoveryOfficers.map((officer, index) => {
+                  const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+                  const displayName = `${officer.ro_name} - ${rtomsNames}`;
+
+                  return (
+                    <option key={`ro-${index}`} value={officer.ro_name}>
+                      {displayName}
+                    </option>
+                  );
+                })
+              ) : (
+                <option value="" disabled>
+                  No officers available
+                </option>
+              )}
+            </select>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end items-center w-full mt-6">
+            <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
+          </div>
+        </div>
       </div>
 
       {/* Heading  */}
@@ -555,7 +604,7 @@ export default function Re_AssignRo() {
       </div>
 
       {/* dropdown */}
-      <div className="flex gap-10">
+      {/* <div className="flex gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
         <select
           id="ro-select"
@@ -590,12 +639,12 @@ export default function Re_AssignRo() {
             </option>
           )}
         </select>
-      </div>
+      </div> */}
 
       {/* Submit Button */}
-      <div className="flex justify-end items-center w-full mt-6">
+      {/* <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
-      </div>
+      </div> */}
       <button
         onClick={() => navigate("/drc/assigned-ro-case-log")}
         className={`${GlobalStyle.navButton} `}
