@@ -84,7 +84,7 @@ export default function AssignedROcaselog() {
     const loadUser = async () => {
         const user = await getLoggedUserId();
         setUserData(user);
-        console.log("User data:", user);
+        // console.log("User data:", user);
     };
 
     useEffect(() => {
@@ -104,7 +104,7 @@ export default function AssignedROcaselog() {
                     setArrearsAmounts(arrearsAmounts);
                     // Fetch RTOMs by DRC ID
                     const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
-                    console.log("RTOM list retrieved:", rtomsList);
+                    // console.log("RTOM list retrieved:", rtomsList);
                     setRtoms(rtomsList);
                 }
             } catch (error) {
@@ -128,12 +128,12 @@ export default function AssignedROcaselog() {
 
     const handleonvisiable = (case_id) => {
         navigate("/drc/ro-monitoring-arrears", { state: { CaseID: case_id } });
-        console.log("Case ID being passed: ", case_id);
+        // console.log("Case ID being passed: ", case_id);
     }
 
     const handleonreassign = (case_id) => {
         navigate("/pages/DRC/Re-AssignRo", { state: { CaseID: case_id } });
-        console.log("Case ID being passed: ", case_id);
+        // console.log("Case ID being passed: ", case_id);
     }
 
 
@@ -212,7 +212,7 @@ export default function AssignedROcaselog() {
             }).then((result) => {
                 if (result.isConfirmed) {
                     setToDate(null);
-                    console.log("Dates cleared");
+                    // console.log("Dates cleared");
                 }
             }
             );
@@ -285,7 +285,7 @@ export default function AssignedROcaselog() {
                 from_date: formatDate(fromDate),
                 to_date: formatDate(toDate),
             };
-            console.log('Sending filter payload:', payload); // Log the payload before sending for debugging
+            // console.log('Sending filter payload:', payload); // Log the payload before sending for debugging
             // Fetch filtered data from the API using the payload
 
             setIsLoading(true);
@@ -309,19 +309,19 @@ export default function AssignedROcaselog() {
 
 
             // Log the response
-            console.log('Response from API:', AssignedRoCaseLogs); //for debugging
+            // console.log('Response from API:', AssignedRoCaseLogs); //for debugging
 
             // Set the filtered data (assuming setFilteredData updates the state or UI)
             setFilteredData(AssignedRoCaseLogs);
 
 
-            console.log("Filtered data updated:", filteredData); //for debugging
+            // console.log("Filtered data updated:", filteredData); //for debugging
 
             const endDate = AssignedROcaselog.expire_dtm;
             const currentDate = new Date();
             const isPastDate = endDate < currentDate;
         } catch (error) {
-            console.error("Error filtering cases:", error);
+            // console.error("Error filtering cases:", error);
             Swal.fire({
                 title: "Error",
                 text: "Failed to fetch filtered data. Please try again.",
@@ -670,7 +670,7 @@ export default function AssignedROcaselog() {
                                         </td>
                                         <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
                                         <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
-                                        <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
+                                        <td className={GlobalStyle.tableData}>{item.action_type || "N/A"}</td>
                                         <td className={GlobalStyle.tableData}>{item.ro_name || "N/A"}</td>
                                         <td className={GlobalStyle.tableData}>{item.assigned_date
                                             ? new Date(item.assigned_date).toLocaleDateString("en-GB")
@@ -688,7 +688,9 @@ export default function AssignedROcaselog() {
                                                 {/* Show Edit button only if the expire date is in the future */}
                                                 <FaEdit
                                                     onClick={() => {
-                                                        if (!isPastDate) console.log("Edit clicked");
+                                                        if (!isPastDate) {
+                                                            navigate("/drc/customer-negotiation", { state: { CaseID: item.case_id , ActionType: item.action_type } });
+                                                        }
                                                     }}
                                                     style={{
                                                         cursor: isPastDate ? "not-allowed" : "pointer",
@@ -711,7 +713,7 @@ export default function AssignedROcaselog() {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="9" className={`${GlobalStyle.tableData} text-center`}>
+                                <td colSpan="9" className="text-center py-4">
                                     No data available
                                 </td>
                             </tr>
@@ -747,7 +749,7 @@ export default function AssignedROcaselog() {
                 onClick={() => navigate(-1)}
                 className={`${GlobalStyle.navButton} `}
             >
-                <FaArrowLeft />Go Back
+                <FaArrowLeft />Back
             </button>
         </div>
     );

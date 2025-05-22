@@ -777,6 +777,9 @@ import {
 import back from "../../assets/images/back.png";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { FaArrowLeft } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
 
 export default function EditCustomerProfile() {
   // State to manage case details
@@ -797,6 +800,7 @@ export default function EditCustomerProfile() {
   const navigate = useNavigate();
 
   const [contacts, setContacts] = useState([]);
+   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   const location = useLocation();
   const case_id = location.state?.CaseID;
 
@@ -857,11 +861,34 @@ export default function EditCustomerProfile() {
   //   loadUser();
   // }, [localStorage.getItem("accessToken")]);
 
+   // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const loadUser = async () => {
       const user = await getLoggedUserId();
       setUserData(user);
-      console.log("User data:", user);
+      //console.log("User data:", user);
     };
 
     loadUser();
@@ -871,18 +898,19 @@ export default function EditCustomerProfile() {
   const fetchCaseDetails = async () => {
     try {
       if (!userData?.drc_id) {
-        console.log("Missing DRC Id.", userData?.drc_id);
+        //console.log("Missing DRC Id.", userData?.drc_id);
         return;
       }
       const payload = {
         case_id: Number(case_id),
         drc_id: userData.drc_id,
+        ro_id: userData.ro_id,
       };
-      console.log("Payload:", payload);
+      //console.log("Payload:", payload);
       // FIXED: Corrected parameter order to match the function definition
       const caseDetails = await caseDetailsforDRC(payload);
 
-      console.log("Case details:", caseDetails);
+      //console.log("Case details:", caseDetails);
 
       setCaseDetails({
         caseId: caseDetails.case_id,
@@ -905,6 +933,7 @@ export default function EditCustomerProfile() {
         icon: 'error',
         title: 'Error',
         text: 'Failed to fetch case details. Please try again.',
+        confirmButtonColor: "#d33",
       });
     }
   };
@@ -942,6 +971,54 @@ export default function EditCustomerProfile() {
   
     let isValid = true;
   
+    if (!contact_no && !addressInputs[0] && !emailInputs[0] && !customer_identification && !customer_identification_type && !caseDetails.remark && !contact_type && !contactName && !address && !email ) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'Please fill in at least one field before submitting.',
+        confirmButtonColor: "#f1c40f",
+      });
+      return;
+    }
+
+    // Validate Contact Number section
+      const isContactSectionPartiallyFilled = 
+        contact_no || contact_type || contactName;
+
+      const isContactSectionIncomplete = 
+        (contact_no && (!contact_type || !contactName)) ||
+        (contact_type && (!contact_no || !contactName)) ||
+        (contactName && (!contact_no || !contact_type));
+
+      if (isContactSectionPartiallyFilled && isContactSectionIncomplete) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Warning',
+          text: 'Please fill in all fields in the Contact Number section.',
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+          const isIDSectionPartiallyFilled = 
+        customer_identification || customer_identification_type;
+
+      const isIDSectionIncomplete = 
+        (customer_identification && !customer_identification_type) ||
+        (customer_identification_type && !customer_identification);
+
+      if (isIDSectionPartiallyFilled && isIDSectionIncomplete) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Warning',
+          text: 'Please fill in all fields in the NIC/PP/Driving License section.',
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+
+
     // Validate address
     if (!addressInputs[0]) {
       setAddressError("Please enter a valid address.");
@@ -963,14 +1040,14 @@ export default function EditCustomerProfile() {
         text: "Are you sure you want to submit the form details?",
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#28a745",
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, submit!",
       }).then(async (result) => {
         if (result.isConfirmed) {
           // Prepare the data object for submission
           const caseData = {
-            ro_id: userData?.ro_id || 2, // Use actual ro_id from userData if available
+            ro_id: userData?.ro_id , // Use actual ro_id from userData if available
             contact_type: contact_type,
             contact_no: contact_no,
             email: emailInputs[0],
@@ -980,7 +1057,7 @@ export default function EditCustomerProfile() {
             customer_identification_type: customer_identification_type,
           };
   
-          console.log("caseData", caseData);
+         // console.log("caseData", caseData);
           try {
             // Submit the data and wait for the response
             const payload = {
@@ -997,7 +1074,8 @@ export default function EditCustomerProfile() {
               Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: 'Data submitted successfully!'
+                text: 'Data submitted successfully!',
+                confirmButtonColor: "#28a745",
               });
   
               // Clear user input fields here
@@ -1032,6 +1110,7 @@ export default function EditCustomerProfile() {
                 icon: 'error',
                 title: 'Error',
                 text: 'Failed to submit data. Please try again.',
+                confirmButtonColor: "#d33",
               });
             }
           } catch (error) {
@@ -1058,6 +1137,7 @@ export default function EditCustomerProfile() {
                   icon: 'error',
                   title: 'Error',
                   text: errorMessage || 'Failed to submit data. Please try again.',
+                  confirmButtonColor: "#d33",
                 });
               }
             } else {
@@ -1065,6 +1145,7 @@ export default function EditCustomerProfile() {
                 icon: 'error',
                 title: 'Error',
                 text: 'Failed to submit data. Please try again.',
+                confirmButtonColor: "#d33",
               });
             }
           }
@@ -1183,7 +1264,7 @@ export default function EditCustomerProfile() {
   };
 
   const handleBack = () => {
-    navigate(-1); // Go back to the previous page
+    navigate ("/drc/ro-s-assigned-case-log") ; // Go back to the previous page
   };
 
   return (
@@ -1300,7 +1381,7 @@ export default function EditCustomerProfile() {
                     onChange={handlePhoneTypeChange}
                     value={contact_type}
                   >
-                    <option value=""></option>
+                    <option value="" hidden></option>
                     <option value="Mobile">Mobile</option>
                     <option value="Landline">Landline</option>
                   </select>
@@ -1368,7 +1449,7 @@ export default function EditCustomerProfile() {
                     onChange={handleIdentityTypeChange}
                     value={customer_identification_type}
                   >
-                    <option value=""></option>
+                    <option value=""hidden></option>
                     <option value="NIC">NIC</option>
                     <option value="Passport">PastPort</option>
                     <option value="Driving License">Driving License</option>
@@ -1537,23 +1618,36 @@ export default function EditCustomerProfile() {
 
           {/* Submit Button */}
           <div className="flex justify-end items-center w-full mt-6">
-            <button
+            <div>
+            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+              <button
               className={`${GlobalStyle.buttonPrimary} ml-4`}
               onClick={handleSubmit}
             >
               Submit
             </button>
+              )}
+            </div>
+            {/* <button
+              className={`${GlobalStyle.buttonPrimary} ml-4`}
+              onClick={handleSubmit}
+            >
+              Submit
+            </button> */}
           </div>
         </div>
 
         {/* Back button */}
-        <div onClick={handleBack} style={{ cursor: 'pointer' }}>
-          <img
+        <div className="mt-4" style={{ cursor: 'pointer' }}>
+          {/* <img
             src={back}
             alt="Back"
             title="Back"
             style={{ width: "50px", height: "auto" }}
-          />
+          /> */}
+           <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
+         <FaArrowLeft className="mr-2" />
+        </button>
         </div>
       </div>
     </>
