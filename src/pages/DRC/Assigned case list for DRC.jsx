@@ -103,7 +103,7 @@ export default function AssignedCaseListforDRC() {
         // console.error("Error fetching data:", error);
         Swal.fire({
           title: "Error",
-          text: "Error fetching data",
+          text: "Error fetching recovery officer data",
           icon: "error",
           // allowOutsideClick: false,
           // allowEscapeKey: false,

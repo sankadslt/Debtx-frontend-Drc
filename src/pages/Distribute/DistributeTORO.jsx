@@ -952,9 +952,9 @@ const DistributeTORO = () => {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className={`${GlobalStyle.navButton} mt-4`}
+        className={`${GlobalStyle.buttonPrimary} mt-4`}
       >
-        <FaArrowLeft className="mr-2" />Back
+        <FaArrowLeft className="mr-2" />
       </button>
     </div>
   );

@@ -747,9 +747,9 @@ export default function AssignedROcaselog() {
 
             <button
                 onClick={() => navigate(-1)}
-                className={`${GlobalStyle.navButton} `}
+                className={`${GlobalStyle.buttonPrimary} `}
             >
-                <FaArrowLeft />Back
+                <FaArrowLeft className="mr-2" />
             </button>
         </div>
     );

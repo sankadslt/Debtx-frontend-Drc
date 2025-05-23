@@ -682,9 +682,9 @@ export default function Re_AssignRo() {
       </div> */}
       <button
         onClick={() => navigate("/drc/assigned-ro-case-log")}
-        className={`${GlobalStyle.navButton} `}
+        className={`${GlobalStyle.buttonPrimary} `}
       >
-        <FaArrowLeft />Back
+        <FaArrowLeft className="mr-2" />
       </button>
     </div>
   );
