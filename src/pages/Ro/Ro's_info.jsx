@@ -4,11 +4,11 @@ import edit from "../../assets/images/edit-info.svg";
 import google from "../../assets/images/google.png";
 import add from "../../assets/images/add.svg";
 import DatePicker from "react-datepicker";
-import { fetchROInfoByROId } from "../../services/Ro/Ro_services";
 import "react-datepicker/dist/react-datepicker.css";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
+import { fetchROInfoByROId } from "../../services/Ro/Ro_services";
 
 
 const RoInfo = () => {

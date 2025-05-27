@@ -84,12 +84,9 @@ const Routers = () => {
       <Route path="/pages/DRC/EditCustomerProfile" element={<ProtectedRoute element={<EditCustomerProfile />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']} />} />
       <Route path="/drc/customer-negotiation" element={<ProtectedRoute element={<CustomerNegotiation />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']} />} />
       {/* <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin']} />} /> */}
-
-
-
       <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
 
-      {/* Ro */}
+      {/* RO Routes */}
       <Route path="/pages/Ro/RoList" element={<ProtectedRoute element={<ROList />} allowedRoles={[ 'drc_user']} />} />
       <Route path="/pages/RO/Add_ro" element={<ProtectedRoute element={<AddRo />} allowedRoles={['superadmin','drc_user','drc_admin']} />} />
       <Route path="/pages/RO/Ro's_info" element={<ProtectedRoute element={<RoInfo />} allowedRoles={['superadmin','drc_user','drc_admin']} />} />  
