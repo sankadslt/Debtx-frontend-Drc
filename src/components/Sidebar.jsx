@@ -60,48 +60,32 @@ const Sidebar = ({ onHoverChange }) => {
     {
       icon: IoIosListBox,
       label: "Case",
-      roles: ["superadmin", "admin", "user", "drc_admin", "drc_user"],
+      roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
       subItems: [
         {
-          label: "Distribution",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/assigned-case-list-for-drc",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-            {
-              label: "Distribute To RO",
-              link: "/pages/Distribute/DistributeTORO",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-            {
-              label: "RO Assigned Case List",
-              link: "/drc/assigned-ro-case-log",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-          ],
+          label: "Case List",
+          link: "/drc/assigned-case-list-for-drc",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
         },
-        { label: "Negotiation",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/ro-s-assigned-case-log",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-            },
-          ]  
+        {
+          label: "Assign RO",
+          link: "/pages/Distribute/DistributeTORO",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
         },
-        { label: "Mediation Board",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/mediation-board-case-list",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-            },
-          ]
+        {
+          label: "RO Assigned Case List",
+          link: "/drc/assigned-ro-case-log",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
+        },
+        {
+          label: "Negotiation Case List",
+          link: "/drc/ro-s-assigned-case-log",
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+        },
+        {
+          label: "Mediation Board List",
+          link: "/drc/mediation-board-case-list",
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
         },
       ],
     },
