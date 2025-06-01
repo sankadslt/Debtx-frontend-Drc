@@ -153,4 +153,39 @@ export const getDebtCompanyDetailsByDRCID = async (drc_id) => {
   }
 };
 
+export const Update_RO_Details_With_RTOM = async (updateData) => {
+  try {
+    // Validate input
+    if (!updateData || !updateData.ro_id) {
+      throw new Error("Update data with RO_ID is required.");
+    }
+
+    // Transform the data to match backend expectations
+    const transformedData = {
+      ro_id: updateData.ro_id,
+      ro_login_email: updateData.ro_login_email,
+      ro_login_contact_no: updateData.ro_login_contact_no,
+      edited_by: updateData.edited_by,
+      remark: updateData.remark,
+      recovery_officer_name: updateData.recovery_officer_name,
+      // FIXED: Send all RTOM areas, not just one
+      rtom_areas: updateData.rtom_areas || []
+    };
+
+    console.log("Sending data to API:", transformedData);
+
+    // Make a POST request to update RO details with RTOM
+    const response = await axios.post(`${URL}/Update_RO_Details_With_RTOM`, transformedData);
+
+    console.log("API response:", response.data);
+
+    // Return the API response data
+    return response.data;
+
+  } catch (error) {
+    // Handle errors from the API call
+    console.error("Error updating RO details with RTOM:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
 

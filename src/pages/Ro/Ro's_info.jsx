@@ -8,7 +8,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
-import { fetchROInfoByROId } from "../../services/Ro/Ro_services";
+import { fetchROInfoByROId, Update_RO_Details_With_RTOM } from "../../services/Ro/Ro_services";
 import { getLoggedUserId } from "../../services/auth/authService";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import Swal from "sweetalert2";
@@ -27,6 +27,7 @@ const RoInfo = () => {
   const [selectedRtom, setSelectedRtom] = useState("");
   const [endDate, setEndDate] = useState(null);
   const [remark, setRemark] = useState("");
+  const [editRemark, setEditRemark] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -50,9 +51,13 @@ const RoInfo = () => {
 
   // get looged drc id
   const loadUser = async () => {
-    const user = await getLoggedUserId();
-    setUserData(user);
-    console.log("User data:", user);
+    try {
+      const user = await getLoggedUserId();
+      setUserData(user);
+      console.log("User data:", user);
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
   };
 
   const goBack = () => {
@@ -182,10 +187,201 @@ const RoInfo = () => {
     setAccountDetails("");
   };
 
-  // Handle save
-  const handleSave = () => {
-    toggleEdit();
+  // // Handle save
+  // const handleSave = () => {
+  //   toggleEdit();
+  // };
+
+  // const handleSave = async () => {
+  //   try {
+  //     if (!editRemark.trim()) {
+  //       alert("Please provide a remark for the changes made.");
+  //       return;
+  //     }
+  
+  //     console.log("Edit mode RTOM areas before save:", editModeRtomAreas);
+  
+  //     // FIXED: Ensure rtom_name is properly included in the request
+  //     const updateData = {
+  //       ro_id: ro_id,
+  //       ro_login_contact_no: formData.contactNo,
+  //       ro_login_email: formData.email,
+  //       rtom_areas: editModeRtomAreas.map(area => ({
+  //         rtom_id: area.rtom_id,
+  //         rtom_name: area.rtom_name, // FIXED: Ensure rtom_name is included
+  //         status: area.active,
+  //         name: area.rtom_name // Include both for compatibility
+  //       })),
+  //       remark: editRemark.trim(),
+  //       edited_by: userData?.name || userData?.username || "Unknown User",
+  //       edited_on: new Date().toISOString(),
+  //       recovery_officer_name: formData.officerName
+  //     };
+  
+  //     console.log("Sending update data:", updateData);
+  //     console.log("RTOM Areas being sent:", updateData.rtom_areas);
+  
+  //     const response = await Update_RO_Details_With_RTOM(updateData);
+  //     console.log("Update response:", response);
+      
+  //     // FIXED: Update form data immediately with the data we just sent
+  //     const updatedRtomAreas = editModeRtomAreas.map(area => ({
+  //       rtom_name: area.rtom_name, // FIXED: Preserve rtom_name
+  //       status: area.active,
+  //       rtom_id: area.rtom_id,
+  //       rtom_status: area.active ? 'Active' : 'Inactive'
+  //     }));
+      
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       rtomAreas: updatedRtomAreas
+  //     }));
+  
+  //     const newLogEntry = {
+  //       editedOn: new Date().toLocaleDateString('en-GB'),
+  //       action: editRemark.trim(),
+  //       editedBy: userData?.name || userData?.username || formData.officerName
+  //     };
+      
+  //     setLogHistoryData(prev => [newLogEntry, ...prev]);
+  
+  //     setIsEditing(false);
+  //     setEditRemark("");
+      
+  //     alert("Recovery Officer details updated successfully!");
+      
+  //     // FIXED: Refresh data after a longer delay and with better error handling
+  //     setTimeout(async () => {
+  //       try {
+  //         console.log("Refreshing data after save...");
+  //         const refreshedData = await fetchROInfoByROId(ro_id);
+  //         console.log("Refreshed data:", refreshedData);
+          
+  //         let refreshedRtomAreas = [];
+  //         if (refreshedData?.rtom && Array.isArray(refreshedData.rtom)) {
+  //           refreshedRtomAreas = refreshedData.rtom.map(area => {
+  //             console.log("Refreshed area:", area);
+  //             return {
+  //               rtom_name: area.rtom_name || area.area_name || area.name || `Area_${area.rtom_id}` || 'Unknown Area',
+  //               rtom_status: area.rtom_status || (area.status === true ? 'Active' : 'Inactive'),
+  //               status: area.rtom_status === 'Active' || area.status === true,
+  //               rtom_id: area.rtom_id || area.key || null
+  //             };
+  //           });
+  //         }
+          
+  //         console.log("Final refreshed RTOM areas:", refreshedRtomAreas);
+          
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           rtomAreas: refreshedRtomAreas
+  //         }));
+          
+  //       } catch (error) {
+  //         console.error("Error refreshing data after save:", error);
+  //         // If refresh fails, keep the data we already set
+  //         console.log("Using locally updated data due to refresh error");
+  //       }
+  //     }, 3000); // FIXED: Increased to 3 seconds for better DB consistency
+      
+  //   } catch (error) {
+  //     console.error("Error updating RO details:", error);
+  //     alert("Error updating Recovery Officer details. Please try again.");
+  //   }
+  // };
+
+  const handleSave = async () => {
+    // Basic validation
+    if (!ro_id || !formData.officerName || !formData.contactNo) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Information",
+        text: "Please fill in all required fields.",
+      });
+      return;
+    }
+
+    if (!editRemark) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Information",
+        text: "Remark is required.",
+      });
+      return;
+    }
+
+    // // Optional email validation
+    // if (formData.email && !isValidEmail(formData.email)) {
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "Invalid Email",
+    //     text: "Please enter a valid email address.",
+    //   });
+    //   return;
+    // }
+
+    // // Phone number validation
+    // if (!isValidPhoneNumber(formData.contact_no)) {
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "Invalid Contact Number",
+    //     text: "Please enter a valid contact number.",
+    //   });
+    //   return;
+    // }
+
+    // addedDate: data?.added_date || "",
+    // officerName: data?.recovery_officer_name || "",
+    // nic: data?.nic || "",
+    // contactNo: data?.contact_no || "",
+    // email: data?.email || "",
+    // rtomAreas: data?.rtom_areas || [],
+    // remark: data?.remark || "",
+    // remark_by: data?.remark_by || "",
+    // remark_date: data?.remark_date || "",
+
+    const updatePayload = {
+      ro_id: ro_id,
+      recovery_officer_name: formData.officerName,
+      ro_login_email: formData.email || null,
+      ro_login_contact_no: formData.contactNo,
+      edited_by: userData.user_id,
+      edited_on: new Date().toISOString(),
+      remark: editRemark.trim(),
+      rtom_areas: formData.rtomAreas || [], // Expecting array of { id, name, status }
+    };
+
+    try {
+      console.log("Sent Payload: ", updatePayload);
+      const response = await Update_RO_Details_With_RTOM(updatePayload);
+      
+      const newLogEntry = {
+        editedOn: new Date().toLocaleDateString('en-GB'),
+        action: editRemark.trim(),
+        editedBy: userData?.user_id
+      };
+
+      setLogHistoryData(prev => [newLogEntry, ...prev]);
+
+      setIsEditing(false);
+      setEditRemark("");
+
+      console.log("Update Success:", response);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Recovery Officer details updated successfully!",
+      });
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: err?.message || "Something went wrong. Please try again.",
+      });
+    }
   };
+
 
   // // Add selected RTOM to the table
   // const addRtomArea = () => {
@@ -195,15 +391,40 @@ const RoInfo = () => {
   //   }
   // };
 
+  // const addRtomArea = () => {
+  //   // Check if a selection was made and it's not already in the list
+  //   if (
+  //     selectedRtom &&
+  //     !formData.rtomAreas.some((item) => item.name === selectedRtom)
+  //   ) {
+  //     const updatedRTOMs = [
+  //       ...formData.rtomAreas,
+  //       { name: selectedRtom, status: true },
+  //     ];
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       rtomAreas: updatedRTOMs,
+  //     }));
+
+  //     setSelectedRtom(""); // Reset dropdown
+  //   }
+  // };
+
   const addRtomArea = () => {
-    // Check if a selection was made and it's not already in the list
+    const selected = activeRtoms.find((rtom) => rtom.rtom_id == selectedRtom); // use == in case types differ
+
     if (
-      selectedRtom &&
-      !formData.rtomAreas.some((item) => item.name === selectedRtom)
+      selected &&
+      !formData.rtomAreas.some((item) => item.id == selected.rtom_id)
     ) {
       const updatedRTOMs = [
         ...formData.rtomAreas,
-        { name: selectedRtom, status: true },
+        {
+          id: selected.rtom_id,
+          name: selected.area_name,
+          status: true,
+        },
       ];
 
       setFormData((prev) => ({
@@ -211,9 +432,10 @@ const RoInfo = () => {
         rtomAreas: updatedRTOMs,
       }));
 
-      setSelectedRtom(""); // Reset dropdown
+      setSelectedRtom("");
     }
   };
+
 
 
   // Paginate data
@@ -433,7 +655,7 @@ const RoInfo = () => {
                       >
                         <option value="">Select RTOM Area</option>
                         {activeRtoms.map((rtom, index) => (
-                          <option key={index} value={rtom.area_name}>
+                          <option key={index} value={rtom.rtom_id}>
                             {rtom.area_name}
                           </option>
                         ))}
@@ -448,6 +670,26 @@ const RoInfo = () => {
                       </button>
                     </td>
                   </tr>
+                  
+                  <tr className="h-4"></tr>
+                  <tr>
+                    <td>
+                      <label className={`${GlobalStyle.headingMedium}`}>
+                        Remark <span className="text-red-500">*</span>
+                      </label>
+                    </td>
+                    <td>:</td>
+                    <td>
+                      <textarea
+                        value={editRemark}
+                        onChange={(e) => setEditRemark(e.target.value)}
+                        placeholder="Enter remark describing the changes made "
+                        className={`${GlobalStyle.inputText} h-20 resize-none`}
+                        required
+                      />
+                    </td>
+                  </tr>
+
                 </tbody>
               </table>
 
