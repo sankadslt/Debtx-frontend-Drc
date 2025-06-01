@@ -153,11 +153,13 @@ export const getActiveRTOMsByDRCID = async (drc_id) => {
       drc_id: drc_id
     });
 
+    console.log("Response: " , response);
+    
     if (response.data?.status === "success" && response.data?.data) {
       // Transform the response to match the area field from the model
       const transformedRTOMs = response.data.data.map(rtom => ({
         rtom_id: rtom.rtom_id,
-        area_name: rtom.area_name, // This matches with the 'area' field in the case model
+        area_name: rtom.rtom_name, // This matches with the 'area' field in the case model
         rtom: rtom.area_name // Adding rtom field for consistency with the model
       }));
       

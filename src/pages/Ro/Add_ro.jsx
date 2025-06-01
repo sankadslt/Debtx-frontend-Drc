@@ -9,6 +9,7 @@ import { getDebtCompanyDetailsByDRCID } from "../../services/Ro/Ro_services";
 import { getLoggedUserId } from "../../services/auth/authService";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 
 const RecoveryOfficerForm = () => {
   const navigate = useNavigate();
@@ -21,8 +22,8 @@ const RecoveryOfficerForm = () => {
   const [drcDetails, setDrcDetails] = useState(null);
   const [activeRtoms, setActiveRtoms] = useState([]);
 
-  const [drc_id, setUserData] = useState(null);
-
+  const [userData, setUserData] = useState(null);
+  
   // get looged drc id
   const loadUser = async () => {
     const user = await getLoggedUserId();
@@ -38,19 +39,24 @@ const RecoveryOfficerForm = () => {
     loadUser();
   }, []);
 
-  // Fetch DRC details on component load
+  const drc_id = userData?.drc_id;
+
   useEffect(() => {
+    console.log(drc_id);
+    
     if (!drc_id) return;
+
+    //Fetch DRC details
     const fetchDrcDetails = async () => {
       try {
-        const data = await getDebtCompanyDetailsByDRCID(drc_id);
+        const data = await getDebtCompanyDetailsByDRCID(userData);
         setDrcDetails(data.data);
 
-        // Filter and set active RTOMs
-        const filteredRtoms = data.data.rtom.filter(
-          (rtom) => rtom.rtom_status === "Active"
-        );
-        setActiveRtoms(filteredRtoms);
+        // // Filter and set active RTOMs
+        // const filteredRtoms = data.data.rtom.filter(
+        //   (rtom) => rtom.rtom_status === "Active"
+        // );
+        // setActiveRtoms(filteredRtoms);
       } catch (error) {
         console.error("Error fetching DRC details:", error);
         Swal.fire({
@@ -60,7 +66,27 @@ const RecoveryOfficerForm = () => {
         });
       }
     };
+
+    const fetchRtoms =async () => {
+      try {
+        const data =await getActiveRTOMsByDRCID(drc_id);
+        console.log("Active RTOms: ", data);
+
+        setActiveRtoms(data);
+      } catch (error) {
+        console.error("Error fetching Active RTOMs:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to fetch Active RTOMs. Please try again later.",
+        });
+      }
+      
+    }
+
     fetchDrcDetails();
+    fetchRtoms();
+
   }, [drc_id]);
 
   // Add selected RTOM to the table
@@ -123,29 +149,25 @@ const RecoveryOfficerForm = () => {
     }
 
     const recoveryOfficerData = {
-      drc_id: drc_id.drc_id,
+      drc_id: userData?.drc_id,
       ro_name: recoveryOfficerName,
       ro_nic: roNic,
       ro_login_contact_no: contactNumber,
       ro_login_email: email || null,
       ro_create_by: drcDetails.drc_name,
-      rtoms_for_ro: tableData.map((item) => ({
-        rtom_id: activeRtoms.find(
-          (rtom) => rtom.rtom_billing_center_code === item.rtomArea
-        )?.rtom_id,
-        rtom_name: activeRtoms.find(
-          (rtom) => rtom.rtom_billing_center_code === item.rtomArea
-        )?.rtom_name,
-        rtom_status: activeRtoms.find(
-          (rtom) => rtom.rtom_billing_center_code === item.rtomArea
-        )?.rtom_status,
-        rtom_create_dtm: activeRtoms.find(
-          (rtom) => rtom.rtom_billing_center_code === item.rtomArea
-        )?.create_dtm,
-        rtom_create_by: activeRtoms.find(
-          (rtom) => rtom.rtom_billing_center_code === item.rtomArea
-        )?.create_by,
-      })),
+      rtoms_for_ro: tableData.map((item) => {
+        const rtom = activeRtoms.find(
+          (rtom) => rtom.area_name === item.rtomArea
+        );
+
+        return {
+          rtom_id: rtom?.rtom_id,
+          rtom_name: rtom?.area_name,
+          rtom_status: "Active",
+          rtom_create_dtm: new Date().toISOString(),
+          rtom_create_by: userData.user_id,
+        };
+      }),
     };
 
     console.log("Recovery Officer Data:", recoveryOfficerData);
@@ -279,12 +301,15 @@ const RecoveryOfficerForm = () => {
                   <select
                     className={`${GlobalStyle.selectBox}`}
                     value={selectedRtom}
-                    onChange={(e) => setSelectedRtom(e.target.value)}
+                    onChange={(e) => {
+                      console.log("Selected RTOM:", e.target.value);
+                      setSelectedRtom(e.target.value);
+                    }}
                   >
                     <option value="">Select RTOM Area</option>
                     {activeRtoms.map((rtom, index) => (
-                      <option key={index} value={rtom.rtom_billing_center_code}>
-                        {rtom.rtom_billing_center_code}
+                      <option key={index} value={rtom.area_name}>
+                        {rtom.area_name}
                       </option>
                     ))}
                   </select>

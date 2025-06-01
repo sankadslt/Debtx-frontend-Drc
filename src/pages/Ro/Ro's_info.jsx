@@ -9,14 +9,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import { fetchROInfoByROId } from "../../services/Ro/Ro_services";
+import { getLoggedUserId } from "../../services/auth/authService";
+import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
+import Swal from "sweetalert2";
 
 
 const RoInfo = () => {
-
   const navigate = useNavigate();
   const location = useLocation();
   const ro_id = location.state?.roId;
-
 
   const [currentPage, setCurrentPage] = useState(0);
   const rowsPerPage = 15;
@@ -40,19 +41,60 @@ const RoInfo = () => {
     email: "",
     rtomAreas: [],
   });
-
+  
   // CHANGED: Added state for log history data
   const [logHistoryData, setLogHistoryData] = useState([]);
 
+  const [userData, setUserData] = useState(null);
+  const [activeRtoms, setActiveRtoms] = useState([]);
+
+  // get looged drc id
+  const loadUser = async () => {
+    const user = await getLoggedUserId();
+    setUserData(user);
+    console.log("User data:", user);
+  };
 
   const goBack = () => {
     navigate(-1); 
   };
 
   useEffect(() => {
+    loadUser();
+  }, []);
+
+  const drc_id = userData?.drc_id;
+
+  useEffect(() => {
+    if (!drc_id) return;
+
+    const fetchRtoms =async () => {
+      try {
+        const data =await getActiveRTOMsByDRCID(drc_id);
+        console.log("Active RTOms: ", data);
+
+        setActiveRtoms(data);
+      } catch (error) {
+        console.error("Error fetching Active RTOMs:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to fetch Active RTOMs. Please try again later.",
+        });
+      }
+      
+    }
+
+    fetchRtoms();
+  }, [drc_id])
+  
+
+  useEffect(() => {
     const getROInfo = async () => {
       try {
         const data = await fetchROInfoByROId(ro_id);
+        console.log("recovery office info: ", data);
+        
         setFormData({
           addedDate: data?.added_date || "",
           officerName: data?.recovery_officer_name || "",
@@ -83,40 +125,40 @@ const RoInfo = () => {
     getROInfo();
   }, [ro_id]);
 
-  // Dummy data for View table
-  const [data, setData] = useState([
-    {
-      RTOMArea: "AD",
-      active: false,
-    },
-    {
-      RTOMArea: "GM",
-      active: false,
-    },
-    {
-      RTOMArea: "KU",
-      active: true,
-    },
-  ]);
+  // // Dummy data for View table
+  // const [data, setData] = useState([
+  //   {
+  //     RTOMArea: "AD",
+  //     active: false,
+  //   },
+  //   {
+  //     RTOMArea: "GM",
+  //     active: false,
+  //   },
+  //   {
+  //     RTOMArea: "KU",
+  //     active: true,
+  //   },
+  // ]);
 
-  // Dropdown data for RTOM areas
-  const RTOMData = [
-    { rtom_name: "AD" },
-    { rtom_name: "AG" },
-    { rtom_name: "AP" },
-    { rtom_name: "AW" },
-    { rtom_name: "BC" },
-    { rtom_name: "BD" },
-    { rtom_name: "CE" },
-    { rtom_name: "DB" },
-    { rtom_name: "EB" },
-    { rtom_name: "CW" },
-    { rtom_name: "GA" },
-    { rtom_name: "GL" },
-    { rtom_name: "GP" },
-    { rtom_name: "GQ" },
-    { rtom_name: "HB" },
-  ];
+  // // Dropdown data for RTOM areas
+  // const RTOMData = [
+  //   { rtom_name: "AD" },
+  //   { rtom_name: "AG" },
+  //   { rtom_name: "AP" },
+  //   { rtom_name: "AW" },
+  //   { rtom_name: "BC" },
+  //   { rtom_name: "BD" },
+  //   { rtom_name: "CE" },
+  //   { rtom_name: "DB" },
+  //   { rtom_name: "EB" },
+  //   { rtom_name: "CW" },
+  //   { rtom_name: "GA" },
+  //   { rtom_name: "GL" },
+  //   { rtom_name: "GP" },
+  //   { rtom_name: "GQ" },
+  //   { rtom_name: "HB" },
+  // ];
 
   // REMOVED: Hardcoded log history data - now using state from API
 
@@ -145,24 +187,51 @@ const RoInfo = () => {
     toggleEdit();
   };
 
-  // Add selected RTOM to the table
+  // // Add selected RTOM to the table
+  // const addRtomArea = () => {
+  //   if (selectedRtom && !activeRtoms.some((item) => item.RTOMArea === selectedRtom)) {
+  //     setActiveRtoms([...activeRtoms, { RTOMArea: selectedRtom, active: false }]);
+  //     setSelectedRtom(""); // Reset dropdown
+  //   }
+  // };
+
   const addRtomArea = () => {
-    if (selectedRtom && !data.some((item) => item.RTOMArea === selectedRtom)) {
-      setData([...data, { RTOMArea: selectedRtom, active: false }]);
+    // Check if a selection was made and it's not already in the list
+    if (
+      selectedRtom &&
+      !formData.rtomAreas.some((item) => item.name === selectedRtom)
+    ) {
+      const updatedRTOMs = [
+        ...formData.rtomAreas,
+        { name: selectedRtom, status: true },
+      ];
+
+      setFormData((prev) => ({
+        ...prev,
+        rtomAreas: updatedRTOMs,
+      }));
+
       setSelectedRtom(""); // Reset dropdown
     }
   };
 
+
   // Paginate data
   const startIndex = currentPage * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedData = data.slice(startIndex, endIndex);
+  const paginatedData = formData.rtomAreas.slice(startIndex, endIndex);
 
   // Toggle the active state for a specific row
   const toggleService = (index) => {
-    const updatedData = [...data];
-    updatedData[index].active = !updatedData[index].active;
-    setData(updatedData);
+    const updatedAreas = [...formData.rtomAreas];
+    updatedAreas[index].status = !updatedAreas[index].status;
+
+    setFormData((prev) => ({
+      ...prev,
+      rtomAreas: updatedAreas,
+    }));
+    console.log("Updated Form Data:", formData);
+    
   };
 
   return (
@@ -320,10 +389,10 @@ const RoInfo = () => {
                                   className={`${GlobalStyle.tableData} flex justify-center items-center`}
                                 >
                                   <a
-                                    href={`#${row.RTOMArea}`}
+                                    href={`#${row.name}`}
                                     className="hover:underline"
                                   >
-                                    {row.RTOMArea}
+                                    {row.name}
                                   </a>
                                 </td>
                                 <td className={GlobalStyle.tableData}>
@@ -332,7 +401,7 @@ const RoInfo = () => {
                                       <input
                                         type="checkbox"
                                         className="sr-only peer"
-                                        checked={row.active}
+                                        checked={row.status}
                                         onChange={() => toggleService(index)}
                                       />
                                       <div className="w-11 h-6 bg-gray-500 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 peer-checked:bg-green-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
@@ -363,9 +432,9 @@ const RoInfo = () => {
                         onChange={(e) => setSelectedRtom(e.target.value)}
                       >
                         <option value="">Select RTOM Area</option>
-                        {RTOMData.map((rtom, index) => (
-                          <option key={index} value={rtom.rtom_name}>
-                            {rtom.rtom_name}
+                        {activeRtoms.map((rtom, index) => (
+                          <option key={index} value={rtom.area_name}>
+                            {rtom.area_name}
                           </option>
                         ))}
                       </select>
