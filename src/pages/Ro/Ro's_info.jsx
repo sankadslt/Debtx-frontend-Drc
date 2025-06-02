@@ -130,42 +130,6 @@ const RoInfo = () => {
     getROInfo();
   }, [ro_id]);
 
-  // // Dummy data for View table
-  // const [data, setData] = useState([
-  //   {
-  //     RTOMArea: "AD",
-  //     active: false,
-  //   },
-  //   {
-  //     RTOMArea: "GM",
-  //     active: false,
-  //   },
-  //   {
-  //     RTOMArea: "KU",
-  //     active: true,
-  //   },
-  // ]);
-
-  // // Dropdown data for RTOM areas
-  // const RTOMData = [
-  //   { rtom_name: "AD" },
-  //   { rtom_name: "AG" },
-  //   { rtom_name: "AP" },
-  //   { rtom_name: "AW" },
-  //   { rtom_name: "BC" },
-  //   { rtom_name: "BD" },
-  //   { rtom_name: "CE" },
-  //   { rtom_name: "DB" },
-  //   { rtom_name: "EB" },
-  //   { rtom_name: "CW" },
-  //   { rtom_name: "GA" },
-  //   { rtom_name: "GL" },
-  //   { rtom_name: "GP" },
-  //   { rtom_name: "GQ" },
-  //   { rtom_name: "HB" },
-  // ];
-
-  // REMOVED: Hardcoded log history data - now using state from API
 
   // Toggle edit mode
   const toggleEdit = () => {
