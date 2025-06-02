@@ -5,7 +5,7 @@ import google from "../../assets/images/google.png";
 import add from "../../assets/images/add.svg";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, data } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import { fetchROInfoByROId, Update_RO_Details_With_RTOM } from "../../services/Ro/Ro_services";
@@ -99,7 +99,9 @@ const RoInfo = () => {
       try {
         const data = await fetchROInfoByROId(ro_id);
         console.log("recovery office info: ", data);
-        
+
+        setIsActive(data?.ro_status === "Active");
+                
         setFormData({
           addedDate: data?.added_date || "",
           officerName: data?.recovery_officer_name || "",
@@ -344,6 +346,7 @@ const RoInfo = () => {
       ro_id: ro_id,
       recovery_officer_name: formData.officerName,
       ro_login_email: formData.email || null,
+      ro_status: isActive,
       ro_login_contact_no: formData.contactNo,
       edited_by: userData.user_id,
       edited_on: new Date().toISOString(),

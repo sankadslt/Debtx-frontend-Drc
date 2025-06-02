@@ -102,6 +102,7 @@ export const fetchROInfoByROId = async (ro_id) => {
     const data = response.data;
     
     return {
+      ro_status:data.ro_status,
       added_date: data.added_date || "",
       recovery_officer_name: data.recovery_officer_name || "",
       nic: data.nic || "",
@@ -164,11 +165,11 @@ export const Update_RO_Details_With_RTOM = async (updateData) => {
     const transformedData = {
       ro_id: updateData.ro_id,
       ro_login_email: updateData.ro_login_email,
+      ro_status: updateData.ro_status,
       ro_login_contact_no: updateData.ro_login_contact_no,
       edited_by: updateData.edited_by,
       remark: updateData.remark,
       recovery_officer_name: updateData.recovery_officer_name,
-      // FIXED: Send all RTOM areas, not just one
       rtom_areas: updateData.rtom_areas || []
     };
 
