@@ -333,9 +333,9 @@ export default function RO_Monitoring_CPE() {
                         <div>
                             <button
                                 onClick={() => navigate(-1)}
-                                className={GlobalStyle.navButton}
+                                className={GlobalStyle.buttonPrimary}
                             >
-                                <FaArrowLeft />Back
+                                <FaArrowLeft />
                             </button>
                         </div>
                     </>
