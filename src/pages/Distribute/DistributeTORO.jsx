@@ -798,14 +798,14 @@ const DistributeTORO = () => {
                 selected={fromDate}
                 onChange={handlestartdatechange}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="From Date"
+                placeholderText="From"
                 className={GlobalStyle.inputText}
               />
               <DatePicker
                 selected={toDate}
                 onChange={handleenddatechange}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="To Date"
+                placeholderText="To"
                 className={GlobalStyle.inputText}
               />
             </div>
@@ -890,7 +890,7 @@ const DistributeTORO = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="9" className="text-center py-4">No cases available</td>
+                <td colSpan="9" className={GlobalStyle.tableData} style={{textAlign: "center"}}>No cases available</td>
               </tr>
             )}
           </tbody>

@@ -12,7 +12,7 @@ Notes: The following page conatins the code for the assigned case list for DRC  
 
 
 import { useState, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { FaAlignCenter, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
@@ -467,7 +467,7 @@ export default function AssignedCaseListforDRC() {
             onChange={(e) => setSelectedRo(e.target.value)}
             style={{ color: selectedRo === "" ? "gray" : "black" }}
           >
-            <option value="">Select RO</option>
+            <option value="" hidden>Select RO</option>
             {roList.map((ro) => (
               <option key={ro.ro_id} value={ro.ro_id}>{ro.ro_name}</option>
             ))}
@@ -479,14 +479,14 @@ export default function AssignedCaseListforDRC() {
               selected={fromDate}
               onChange={handlestartdatechange}
               dateFormat="dd/MM/yyyy"
-              placeholderText="dd/MM/yyyy"
+              placeholderText="From"
               className={GlobalStyle.inputText}
             />
             <DatePicker
               selected={toDate}
               onChange={handleenddatechange}
               dateFormat="dd/MM/yyyy"
-              placeholderText="dd/MM/yyyy"
+              placeholderText="To"
               className={GlobalStyle.inputText}
             />
           </div>
@@ -570,7 +570,7 @@ export default function AssignedCaseListforDRC() {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="text-center">No cases available</td>
+                <td colSpan={9} className={GlobalStyle.tableData} style={{ textAlign: "center" }}>No cases available</td>
               </tr>
             )}
           </tbody>

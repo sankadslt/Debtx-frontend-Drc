@@ -546,7 +546,7 @@ export default function Re_AssignRo() {
                   ))
               ) : (
                 <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData}>
+                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                     No negotiation details available
                   </td>
                 </tr>
@@ -616,7 +616,7 @@ export default function Re_AssignRo() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData}>
+                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                     No settlement details available
                   </td>
                 </tr>
