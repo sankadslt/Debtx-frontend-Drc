@@ -570,14 +570,14 @@ export default function AssignedROcaselog() {
                             selected={fromDate}
                             onChange={handlestartdatechange}
                             dateFormat="dd/MM/yyyy"
-                            placeholderText="From Date"
+                            placeholderText="From"
                             className={GlobalStyle.inputText}
                         />
                         <DatePicker
                             selected={toDate}
                             onChange={handleenddatechange}
                             dateFormat="dd/MM/yyyy"
-                            placeholderText="To Date"
+                            placeholderText="To"
                             className={GlobalStyle.inputText}
                         />
                     </div>
@@ -713,7 +713,7 @@ export default function AssignedROcaselog() {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="9" className="text-center py-4">
+                                <td colSpan="9" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                                     No data available
                                 </td>
                             </tr>
