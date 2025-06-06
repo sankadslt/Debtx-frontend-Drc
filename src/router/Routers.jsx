@@ -29,6 +29,9 @@ import CustomerNegotiation from "../pages/DRC/Cus_Nego_Customer_Negotiation";
 import DummyPage from "../pages/DummyPage";
 import EditCPECollect from "../pages/DRC/EditCPECollect";
 
+import RODRCUserList from "../pages/RO/RO_DRCUserList";
+import RODRCUserInfo from "../pages/RO/RO_DRCUserInfo";
+
 
 const Routers = () => {
   return (
@@ -83,6 +86,9 @@ const Routers = () => {
 
 
       <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
+
+      <Route path="/ro/ro-drc-user-list" element={<ProtectedRoute element={<RODRCUserList />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
+      <Route path="/ro/ro-drc-user-info" element={<ProtectedRoute element={<RODRCUserInfo />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
 
     </Routes>
   );
