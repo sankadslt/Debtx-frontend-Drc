@@ -29,7 +29,8 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     setSocialLoading("Google");
-    window.location.href = "http://localhost:5000/api/auth/google";
+    // window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/google`;
   };
 
   return (
