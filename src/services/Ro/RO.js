@@ -181,3 +181,18 @@ export const getActiveRODetailsByDrcID = async (drc_id) => {
     throw error;
   }
 };  
+
+export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/List_All_RO_and_DRCuser_Details_to_DRC`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    return response.data; // Return the full response data as-is
+  } catch (error) {
+    console.error("Error retrieving List_All_RO_and_DRCuser_Details_to_DRC:", error.response?.data || error.message);
+    throw error;
+  }
+};
