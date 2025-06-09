@@ -57,6 +57,9 @@ export default function RO_DRCUserList() {
 
     const navigate = useNavigate();
 
+
+
+
     const handleStatusChange = (e) => {
         const value = e.target.value;
         if (activeTab === "RO") {
@@ -249,6 +252,16 @@ export default function RO_DRCUserList() {
             setDrcUserStatus("");
         }
     };
+
+    useEffect(() => {
+        // Only fetch data if no filter is applied (first mount)
+        if (activeTab === "RO" && roData.length === 0 && !currentStatus) {
+            handleFilterButton();
+        }
+        if (activeTab === "drcUser" && drcData.length === 0 && !currentStatus) {
+            handleFilterButton();
+        }
+    }, [activeTab]);
 
     const handlePrevNext = (direction) => {
         if (activeTab === "RO") {
@@ -519,18 +532,18 @@ export default function RO_DRCUserList() {
                                                         {item.login_contact_no || "N/A"}
                                                     </td>
                                                     <td className={`${GlobalStyle.tableData} flex justify-center items-center `}>
-                                                    <img
-                                                        src={viewIcon}
-                                                        alt="view info"
-                                                        title="view info"
-                                                        className="w-6 h-6 cursor-pointer"
-                                                        onClick={() =>
-                                                            navigate("/ro/ro-drc-user-info", {
-                                                                state: { itemType: activeTab, itemData: item }, // send your data here
-                                                            })
-                                                        }
-                                                    />
-                                                </td>
+                                                        <img
+                                                            src={viewIcon}
+                                                            alt="view info"
+                                                            title="view info"
+                                                            className="w-6 h-6 cursor-pointer"
+                                                            onClick={() =>
+                                                                navigate("/ro/ro-drc-user-info", {
+                                                                    state: { itemType: activeTab, itemData: item }, // send your data here
+                                                                })
+                                                            }
+                                                        />
+                                                    </td>
 
 
                                                 </tr>

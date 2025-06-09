@@ -14,13 +14,18 @@ export default function RO_DRCUserInfo() {
   const [activeUserType, setActiveUserType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  //console.log("item Data:",itemData.drcUser_id)
-  //console.log("item type:", itemType)
+  /* FOR testing*/
+  console.log("item Data :", itemData);
+  if (itemType === "RO") {
 
-  const [roData, setRoData] = useState([]);
-  const [drcData, setDrcData] = useState([]);
+    console.log("item Data ro id:", itemData.ro_id)
+  } else if (itemType === "drcUser") {
+    console.log("item Data drcuser id:", itemData.drcUser_id)
+  }
 
+ 
 
+  const [userData, setUserData] = useState([]);
 
   useEffect(() => {
     if (itemType) {
@@ -29,76 +34,80 @@ export default function RO_DRCUserInfo() {
   }, [itemType]);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (itemData) {
-        try {
-          let payload = {}; // define here to avoid scope issues
 
-          if (activeUserType === "RO") {
-            payload = {
-              ro_id: itemData.ro_id,
-            };
-          } else if (activeUserType === "drcUserId") {
-            payload = {
-              drcUser_id: itemData.drcUser_id,
-            };
-          }
+  const fetchData = async () => {
+    if (itemData) {
+      try {
+        
 
-          console.log("Payload sent to API: ", payload);
-          setIsLoading(true);
-
-          const response = await List_RO_Info_Own_By_RO_Id(payload).catch((error) => {
-            if (error.response && error.response.status === 404) {
-              Swal.fire({
-                title: "No Results",
-                text: "No matching data found for the selected filters.",
-                icon: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-              });
-
-              if (activeTab === "RO") {
-                setRoData([]);
-              } else {
-                setDrcData([]);
-              }
-
-              return null;
-            } else {
-              throw error;
-            }
-          });
-
-          console.log("Response from API:", response);
-          setIsLoading(false);
-
-          if (response && response.data) {
-            const list = response.data;
-            console.log("Valid data received:", list);
-            // TODO: Set this list to state as needed
-          } else {
-            console.error("No valid data found in response:", response);
-          }
-
-        } catch (error) {
-          console.error("Error filtering cases:", error);
-          Swal.fire({
-            title: "Error",
-            text: "Failed to fetch filtered data. Please try again.",
-            icon: "error",
-          });
+        let payload = {};
+        if (activeUserType === "RO") {
+          payload = { ro_id: itemData.ro_id };
+        } else if (activeUserType === "drcUser") {
+          payload = { drcUser_id: itemData.drcUser_id };
         }
+        console.log("eddfefrg");
+        console.log("Payload sent to API: ", payload);
+        setIsLoading(true);
+
+        const response = await List_RO_Info_Own_By_RO_Id(payload).catch((error) => {
+          if (error.response && error.response.status === 404) {
+            Swal.fire({
+              title: "No Results",
+              text: "No matching data found for the selected filters.",
+              icon: "warning",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+
+   
+            setUserData([]);
+            return null;
+          } else {
+            throw error;
+          }
+        });
+
+        console.log("Response from API:", response);
+        setIsLoading(false);
+
+        if (response && response.data) {
+          const list = response.data;
+         
+          setUserData(list);
+        } else {
+          console.error("No valid data found in response:", response);
+        }
+      } catch (error) {
+        console.error("Error filtering cases:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch filtered data. Please try again.",
+          icon: "error",
+        });
       }
+    }
+  };
+
+  useEffect(() => {
+    if (activeUserType && itemData) {
+      fetchData();
+    }
+  }, [activeUserType, itemData]);
+
+
+ 
+  console.log("drc ||  RO user DATA:", userData);
+
+  useEffect(() => {
+    // Reset states on first mount
+    return () => {
+      setActiveUserType("");
+      setUserData(null);
+      
+      setIsLoading(false);
     };
-
-    fetchData();
-  }, [itemData]); // Ensure dependencies are correct
-
-
-
-
-
+  }, []);
 
 
 
@@ -119,17 +128,17 @@ export default function RO_DRCUserInfo() {
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">Added Date</div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
+              <div className="table-cell px-4 py-2">{userData?.added_date || 'null'}</div>
             </div>
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">{activeUserType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}</div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
+              <div className="table-cell px-4 py-2">{userData?.drcUser_name || userData?.recovery_officer_name || 'null'}</div>
             </div>
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">NIC</div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
+              <div className="table-cell px-4 py-2">{userData?.nic || 'null'}</div>
             </div>
             <div className="table-row">
               <div className="table-cell px-4 py-2 ">Login Method</div>
@@ -138,9 +147,7 @@ export default function RO_DRCUserInfo() {
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">Contact No</div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">
-
-              </div>
+              <div className="table-cell px-4 py-2">{userData?.contact_no || 'null'}</div>
             </div>
 
 
@@ -148,9 +155,7 @@ export default function RO_DRCUserInfo() {
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">Email</div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">
-
-              </div>
+              <div className="table-cell px-4 py-2">{userData?.email || 'null'}</div>
             </div>
 
 
@@ -159,82 +164,73 @@ export default function RO_DRCUserInfo() {
 
 
 
-          {activeUserType !== "drcUser" && (
-
+          {activeUserType !== "drcUser" && userData?.rtom_areas && (
             <div>
-
               <div className="table-row">
                 <div className="table-cell px-4 py-2 font-bold">RTOM Areas</div>
                 <div className="table-cell px-4 py-2 font-bold">:</div>
-                <div className="table-cell px-4 py-2">
-
-                </div>
+                <div className="table-cell px-4 py-2" />
               </div>
-
 
               <div className={GlobalStyle.tableContainer}>
                 <table className={GlobalStyle.table}>
                   <thead className={GlobalStyle.thead}>
-                    <tr >
+                    <tr>
                       <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-
-                      <th className={GlobalStyle.tableHeader}></th>
+                      <th className={GlobalStyle.tableHeader}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {/* {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
-                  drcFilteredDataBySearch.map((item, index) => ( */}
-                    <tr
-                    /*  key={item.drc_id || index}
-                     className={
-                       index % 2 === 0
-                         ? GlobalStyle.tableRowEven
-                         : GlobalStyle.tableRowOdd
-                     } */
-                    >
-                      <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                        AD
-                      </td>
-                      <td className={`${GlobalStyle.tableData} `}>
+                    {userData.rtom_areas.length > 0 ? (
+                      userData.rtom_areas.map((area, index) => (
+                        <tr
+                          key={index}
+                          className={
+                            index % 2 === 0
+                              ? GlobalStyle.tableRowEven
+                              : GlobalStyle.tableRowOdd
+                          }
+                        >
+                          <td className={`${GlobalStyle.tableData} text-center pt-6`}>
+                            {area.name}
+                          </td>
+                          <td className={`${GlobalStyle.tableData} text-center`}>
+                            <div className="flex items-center justify-center gap-2">
+                              {/* Toggle */}
+                              <div
+                                className={`inline-block w-11 h-6 rounded-full transition-colors ${area.status ? "bg-green-500" : "bg-gray-400"
+                                  } relative`}
+                              >
+                                <div
+                                  className={`w-5 h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? "left-[26px]" : "left-[2px]"
+                                    }`}
+                                />
+                              </div>
 
-                      </td>
-
-                    </tr>
-
-                    <tr>
-
-                      <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                        GM
-                      </td>
-                      <td className={`${GlobalStyle.tableData} `}>
-
-                      </td>
-
-                    </tr>
-
-                    <tr>
-
-                      <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                        KU
-                      </td>
-                      <td className={`${GlobalStyle.tableData} `}>
-
-                      </td>
-
-                    </tr>
-
-
-                    {/* ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="text-center">No cases available</td>
-                  </tr>
-                )} */}
+                              {/* Status Label */}
+                              <span
+                                className={`text-sm font-semibold ${area.status ? "text-green-600" : "text-gray-500"
+                                  }`}
+                              >
+                                {area.status ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={2} className="text-center py-4">
+                          No RTOM areas available
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
+
 
         </div>
       </div>
@@ -257,74 +253,47 @@ export default function RO_DRCUserInfo() {
 
       </div>
 
-      <div className='pt-10 pb-10'>
+      <div className="pt-10 pb-10">
         <div className={GlobalStyle.tableContainer}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
-              <tr >
+              <tr>
                 <th className={GlobalStyle.tableHeader}>Edited On</th>
                 <th className={GlobalStyle.tableHeader}>Action</th>
                 <th className={GlobalStyle.tableHeader}>Edited By</th>
               </tr>
             </thead>
             <tbody>
-              {/* {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
-                  drcFilteredDataBySearch.map((item, index) => ( */}
-              <tr
-              /*  key={item.drc_id || index}
-               className={
-                 index % 2 === 0
-                   ? GlobalStyle.tableRowEven
-                   : GlobalStyle.tableRowOdd
-               } */
-              >
-
-                <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-
-                </td>
-                <td className={`${GlobalStyle.tableData} `}>
-
-                </td>
-              </tr>
-
-              <tr>
-
-                <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-
-                </td>
-                <td className={`${GlobalStyle.tableData} `}>
-
-                </td>
-
-              </tr>
-
-              <tr>
-
-                <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-
-                </td>
-                <td className={`${GlobalStyle.tableData} `}>
-
-                </td>
-
-              </tr>
-
-
-              {/* ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="text-center">No cases available</td>
+              {userData?.log_history && userData.log_history.length > 0 ? (
+                userData.log_history.map((log, index) => (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? GlobalStyle.tableRowEven
+                        : GlobalStyle.tableRowOdd
+                    }
+                  >
+                    <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
+                      {log.edited_on}
+                    </td>
+                    <td className={GlobalStyle.tableData}>{log.action}</td>
+                    <td className={GlobalStyle.tableData}>{log.edited_by}</td>
                   </tr>
-                )} */}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="text-center py-4">
+                    No log history available.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
       <div>
-        <button
-          onClick={() => navigate(-1)}
-          className={`${GlobalStyle.buttonPrimary} `}
-        >
+        <button onClick={() => navigate(-1)} className={GlobalStyle.buttonPrimary}>
           <FaArrowLeft />
         </button>
       </div>
