@@ -196,3 +196,18 @@ export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
     throw error;
   }
 };
+
+export const List_RO_Info_Own_By_RO_Id = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/List_RO_Info_Own_By_RO_Id`, payload);
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    return response.data; // Return the full response data as-is
+  } catch (error) {
+    console.error("Error retrieving List_RO_Info_Own_By_RO_Id:", error.response?.data || error.message);
+    throw error;
+  }
+};

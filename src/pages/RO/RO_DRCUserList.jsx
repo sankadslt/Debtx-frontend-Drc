@@ -5,6 +5,10 @@ import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { List_All_RO_and_DRCuser_Details_to_DRC } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 
+//Status Icons
+
+import viewIcon from "../../assets/images/view.png";
+
 export default function RO_DRCUserList() {
     // State for RO Tab
     const [roData, setRoData] = useState([]);
@@ -51,6 +55,7 @@ export default function RO_DRCUserList() {
 
     const currentStatus = activeTab === "RO" ? roStatus : drcUserStatus;
 
+    const navigate = useNavigate();
 
     const handleStatusChange = (e) => {
         const value = e.target.value;
@@ -172,12 +177,7 @@ export default function RO_DRCUserList() {
             if (response && response.data) {
                 const list = response.data;
                 console.log("Valid data received:", list);
-                /*
-                const totalPages = Math.ceil(response.total_records / rowsPerPage);
-                setTotalPages(totalPages);
-                setTotalAPIPages(response.total_records);
 
-                setFilteredData((prevData) => [...prevData, ...list]); */
 
                 if (activeTab === "RO") {
                     setRoData((prev) => [...prev, ...list]);
@@ -197,10 +197,6 @@ export default function RO_DRCUserList() {
                 setFilteredData([]);
             }
 
-
-
-
-
         } catch (error) {
             console.error("Error filtering cases:", error);
             Swal.fire({
@@ -211,8 +207,6 @@ export default function RO_DRCUserList() {
         }
 
     };
-
-
 
     const handleFilterButton = () => {
         if (activeTab === "RO") {
@@ -237,7 +231,6 @@ export default function RO_DRCUserList() {
             setIsDrcFilterApplied(true);
         }
     }
-
 
     const handleClear = () => {
         if (activeTab === "RO") {
@@ -308,8 +301,6 @@ export default function RO_DRCUserList() {
             {activeTab === "drcUser" && (
                 <div>
                     <h2 className={GlobalStyle.headingLarge}>DRC User List</h2>
-
-
                     <div className="flex justify-end mt-6">
                         <button className={GlobalStyle.buttonPrimary} /* onClick={HandleAddDRC} */>
                             Add DRC User
@@ -318,11 +309,8 @@ export default function RO_DRCUserList() {
                 </div>
             )}
 
-
-
             <div className={`${GlobalStyle.cardContainer} w-full mb-8 mt-8`}>
                 <div className="flex gap-4 justify-end">
-
 
                     {/* Status Select Dropdown */}
                     <select
@@ -436,10 +424,19 @@ export default function RO_DRCUserList() {
                                                 <td className={`${GlobalStyle.tableData} `}>
                                                     {item.rtom_area_count || "N/A"}
                                                 </td>
-                                                <td className={`${GlobalStyle.tableData} `}>
-
+                                                <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
+                                                    <img
+                                                        src={viewIcon}
+                                                        alt="view info"
+                                                        title="view info"
+                                                        className="w-6 h-6 cursor-pointer"
+                                                        onClick={() =>
+                                                            navigate("/ro/ro-drc-user-info", {
+                                                                state: { itemType: activeTab, itemData: item }, // send your data here
+                                                            })
+                                                        }
+                                                    />
                                                 </td>
-
                                             </tr>
                                         ))
                                     ) : (
@@ -521,10 +518,20 @@ export default function RO_DRCUserList() {
                                                     <td className={`${GlobalStyle.tableData} `}>
                                                         {item.login_contact_no || "N/A"}
                                                     </td>
-                                                    <td className={`${GlobalStyle.tableData} `}>
-                                                       
-                                                    </td>
-                                                    
+                                                    <td className={`${GlobalStyle.tableData} flex justify-center items-center `}>
+                                                    <img
+                                                        src={viewIcon}
+                                                        alt="view info"
+                                                        title="view info"
+                                                        className="w-6 h-6 cursor-pointer"
+                                                        onClick={() =>
+                                                            navigate("/ro/ro-drc-user-info", {
+                                                                state: { itemType: activeTab, itemData: item }, // send your data here
+                                                            })
+                                                        }
+                                                    />
+                                                </td>
+
 
                                                 </tr>
                                             ))
