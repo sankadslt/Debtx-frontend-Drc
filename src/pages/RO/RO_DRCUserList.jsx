@@ -4,12 +4,24 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { List_All_RO_and_DRCuser_Details_to_DRC } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
+import { getLoggedUserId } from "/src/services/auth/authService.js";
+
 
 //Status Icons
 
-import viewIcon from "../../assets/images/view.png";
+/* import DRC_Active from "../../assets/images/status/RO_DRC_Status_Icons/DRC_Active.svg";
+import DRC_Inactive from "../../assets/images/status/RO_DRC_Status_Icons/DRC_Inactive.svg";
+import DRC_Terminate from "../../assets/images/status/RO_DRC_Status_Icons/DRC_Terminate.svg"; */
+import RO_Active from "../../assets/images/status/RO_DRC_Status_Icons/RO_Active.svg";
+import RO_Inactive from "../../assets/images/status/RO_DRC_Status_Icons/RO_Inactive.svg";
+import RO_Terminate from "../../assets/images/status/RO_DRC_Status_Icons/RO_Terminate.svg";
+
+//button Icons
+import moreInfoIcon from "../../assets/images/more-info.svg";
 
 export default function RO_DRCUserList() {
+    const [userData, setUserData] = useState(null);
+
     // State for RO Tab
     const [roData, setRoData] = useState([]);
     const [roStatus, setRoStatus] = useState("");
@@ -29,14 +41,8 @@ export default function RO_DRCUserList() {
     const [drcTotalAPIPages, setDrcTotalAPIPages] = useState(1);
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
-
-
-
-
     const [activeTab, setActiveTab] = useState("RO");
-
-
-
+    
 
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +63,15 @@ export default function RO_DRCUserList() {
 
     const navigate = useNavigate();
 
+    const loadUser = async () => {
+        const user = await getLoggedUserId();
+        setUserData(user);
+        console.log("User data:", user);
+    };
 
+    useEffect(() => {
+        loadUser();
+    }, []);
 
 
     const handleStatusChange = (e) => {
@@ -140,14 +154,14 @@ export default function RO_DRCUserList() {
     const handleFilter = async () => {
         try {
 
+            if (!userData) return; // Make sure user data is loaded
+
             const payload = {
-                drc_id: 1,
+                drc_id: userData.drc_id,
                 drcUser_type: activeTab,
                 drcUser_status: getUserStatus(),
                 pages: getCurrentPage(),
-
             };
-
             console.log("Payload sent to API: ", payload);
             setIsLoading(true);
 
@@ -254,14 +268,16 @@ export default function RO_DRCUserList() {
     };
 
     useEffect(() => {
-        // Only fetch data if no filter is applied (first mount)
-        if (activeTab === "RO" && roData.length === 0 && !currentStatus) {
-            handleFilterButton();
+        if (userData) {
+            if (activeTab === "RO" && roData.length === 0 && !currentStatus) {
+                handleFilterButton();
+            }
+            if (activeTab === "drcUser" && drcData.length === 0 && !currentStatus) {
+                handleFilterButton();
+            }
         }
-        if (activeTab === "drcUser" && drcData.length === 0 && !currentStatus) {
-            handleFilterButton();
-        }
-    }, [activeTab]);
+    }, [activeTab, userData]); // Now triggers only after userData is loaded
+
 
     const handlePrevNext = (direction) => {
         if (activeTab === "RO") {
@@ -279,6 +295,51 @@ export default function RO_DRCUserList() {
             }
         }
     };
+
+    const getStatusIcon = (status, item) => {
+
+
+        switch (status) {
+            case "Active":
+                return (
+                    <img
+                        src={RO_Active}
+                        alt="RO Active"
+                        title="RO Active"
+                        className="w-6 h-6 cursor-pointer"
+
+                    />
+                );
+            case "Inactive":
+                return (
+                    <img
+                        src={RO_Inactive}
+                        alt="RO Inactive"
+                        title="RO Inactive"
+                        className="w-6 h-6 cursor-pointer"
+
+                    />
+                );
+            case "Terminate":
+                return (
+                    <img
+                        src={RO_Terminate}
+                        alt="RO Terminate"
+                        title="RO Terminate"
+                        className="w-6 h-6 cursor-pointer"
+
+                    />
+                );
+            default:
+                return null;
+        }
+
+
+
+    };
+
+
+
 
     // display loading animation when data is loading
     if (isLoading) {
@@ -422,7 +483,8 @@ export default function RO_DRCUserList() {
                                                 </td>
 
                                                 <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                                                    {item.drcUser_status || "N/A"}
+                                                    {getStatusIcon(item.drcUser_status) || "N/A"}
+
                                                 </td>
 
                                                 <td className={`${GlobalStyle.tableData} `}>
@@ -439,13 +501,13 @@ export default function RO_DRCUserList() {
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
                                                     <img
-                                                        src={viewIcon}
-                                                        alt="view info"
-                                                        title="view info"
+                                                        src={moreInfoIcon}
+                                                        alt="more-info"
+                                                        title="more-info"
                                                         className="w-6 h-6 cursor-pointer"
                                                         onClick={() =>
                                                             navigate("/ro/ro-drc-user-info", {
-                                                                state: { itemType: activeTab, itemData: item }, // send your data here
+                                                                state: { itemType: activeTab, itemData: item },
                                                             })
                                                         }
                                                     />
@@ -519,7 +581,8 @@ export default function RO_DRCUserList() {
                                                     </td>
 
                                                     <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                                                        {item.drcUser_status || "N/A"}
+                                                        {getStatusIcon(item.drcUser_status) || "N/A"}
+
                                                     </td>
 
                                                     <td className={`${GlobalStyle.tableData} `}>
@@ -533,7 +596,7 @@ export default function RO_DRCUserList() {
                                                     </td>
                                                     <td className={`${GlobalStyle.tableData} flex justify-center items-center `}>
                                                         <img
-                                                            src={viewIcon}
+                                                            src={moreInfoIcon}
                                                             alt="view info"
                                                             title="view info"
                                                             className="w-6 h-6 cursor-pointer"
