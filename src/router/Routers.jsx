@@ -87,8 +87,8 @@ const Routers = () => {
 
       <Route path="/drc/customer-negotiation-editcpe" element={<ProtectedRoute element={<EditCPECollect />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
 
-      <Route path="/ro/ro-drc-user-list" element={<ProtectedRoute element={<RODRCUserList />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
-      <Route path="/ro/ro-drc-user-info" element={<ProtectedRoute element={<RODRCUserInfo />} allowedRoles={['superadmin', 'drc_user', 'RO', 'DRC-Coordinator']}  />} />
+      <Route path="/ro/ro-drc-user-list" element={<ProtectedRoute element={<RODRCUserList />} allowedRoles={[ 'drc_user','DRC-Coordinator']}  />} />
+      <Route path="/ro/ro-drc-user-info" element={<ProtectedRoute element={<RODRCUserInfo />} allowedRoles={['drc_user','DRC-Coordinator']}  />} />
 
     </Routes>
   );

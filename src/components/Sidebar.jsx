@@ -90,13 +90,9 @@ const Sidebar = ({ onHoverChange }) => {
         {
           label: "RO & DRC_User List",
           link: "/ro/ro-drc-user-list",
-          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+          roles: [ "DRC-Coordinator", "drc_user"],
         },
-        {
-          label: "RO & DRC_User Info",
-          link: "/ro/ro-drc-user-info",
-          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
-        },
+       
       ],
     },
   ];
