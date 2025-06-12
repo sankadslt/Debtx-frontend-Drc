@@ -477,8 +477,8 @@ export default function ROsAssignedcaselog() {
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
       {/* {error && <p className="text-red-500">{error}</p>} */}
 
-      <div  className={`${GlobalStyle.cardContainer} w-full gap-4` }>
-        <div  className="flex items-center justify-end w-full gap-1" >
+      <div  className={`${GlobalStyle.cardContainer} w-full  gap-4 mt-5` }>
+        <div  className="flex flex-wrap items-center justify-end w-full gap-1" >
             {/* Dropdown for RTOM */}
             <select
               name="rtom"
@@ -530,29 +530,29 @@ export default function ROsAssignedcaselog() {
               <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
             </select>
 
-            <div className={`${GlobalStyle.datePickerContainer} flex`}>
+            {/* <div className={`${GlobalStyle.datePickerContainer} flex`}> */}
               <label className={GlobalStyle.dataPickerDate}>Date:</label>
               <DatePicker
                 selected={fromDate}
                 onChange={handlefromdatechange}
                 dateFormat="dd/MM/yyyy"
                 placeholderText="From"
-                className={GlobalStyle.inputText}
+                className={`${GlobalStyle.inputText} w-full sm:w-auto`}
               />
               <DatePicker
                 selected={toDate}
                 onChange={handletodatechange}
                 dateFormat="dd/MM/yyyy"
                 placeholderText="To"
-                className={GlobalStyle.inputText}
+                className={`${GlobalStyle.inputText} w-full sm:w-auto`}
               />
-            </div>
+            {/* </div> */}
 
             <div>
             {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
               <button
                 onClick={handleFilterClick}
-                className={`${GlobalStyle.buttonPrimary}`}
+                className={`${GlobalStyle.buttonPrimary} w-full sm:w-auto`}
               >
                 Filter
               </button>
@@ -561,7 +561,7 @@ export default function ROsAssignedcaselog() {
 
               <div>
                   {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button className={GlobalStyle.buttonRemove}  onClick={handleclearfilters}>
+                    <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`}  onClick={handleclearfilters}>
                     Clear
                       </button>
                   )}
@@ -583,7 +583,7 @@ export default function ROsAssignedcaselog() {
       </div>
 
       {/* Table Section */}
-      <div className={GlobalStyle.tableContainer}>
+      <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
         <table className={GlobalStyle.table}>
           <thead className={GlobalStyle.thead}>
             <tr>
