@@ -168,18 +168,18 @@ const DistributeTORO = () => {
             // console.log("Recovery Officers:", formattedOfficers);
           } else {
             // console.error("Invalid response format:", officers);
-            Swal.fire({
-              title: "Error",
-              text: "Failed to fetch recovery officers. Invalid response format.",
-              icon: "error",
+            // Swal.fire({
+            //   title: "Error",
+            //   text: "Failed to fetch recovery officers. Invalid response format.",
+            //   icon: "error",
               // allowOutsideClick: false,
               // allowEscapeKey: false,
               // showCancelButton: true,
-              confirmButtonText: "Ok",
-              confirmButtonColor: "#d33",
+              // confirmButtonText: "Ok",
+              // confirmButtonColor: "#d33",
               // cancelButtonText: "No",
               // cancelButtonColor: "#d33",
-            })
+            // })
             setRecoveryOfficers([]);
             // setError("Failed to fetch recovery officers. Invalid response format.");
           }
@@ -189,18 +189,18 @@ const DistributeTORO = () => {
       } catch (error) {
         // console.error("Error fetching recovery officers:", error);
         // setError("Failed to fetch recovery officers.");
-        Swal.fire({
-          title: "Error",
-          text: "Failed to fetch recovery officers.",
-          icon: "error",
+        // Swal.fire({
+        //   title: "Error",
+        //   text: "Failed to fetch recovery officers.",
+        //   icon: "error",
           // allowOutsideClick: false,
           // allowEscapeKey: false,
           // showCancelButton: true,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
+          // confirmButtonText: "Ok",
+          // confirmButtonColor: "#d33",
           // cancelButtonText: "No",
           // cancelButtonColor: "#d33",
-        })
+        // })
         setRecoveryOfficers([]); // Set empty array to prevent further errors
       } finally {
         setLoading(false);
