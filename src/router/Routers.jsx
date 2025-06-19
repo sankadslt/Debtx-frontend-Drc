@@ -32,6 +32,9 @@ import EditCPECollect from "../pages/DRC/EditCPECollect";
 import RODRCUserList from "../pages/RO/RO_DRCUserList";
 import RODRCUserInfo from "../pages/RO/RO_DRCUserInfo";
 import RODRCUserInfoEnd from "../pages/RO/RO_DRCUserInfoEnd";
+import RODRCUserInfoEdit from "../pages/RO/RO_DRCUserInfoEdit";
+
+
 
 
 const Routers = () => {
@@ -90,8 +93,8 @@ const Routers = () => {
 
       <Route path="/ro/ro-drc-user-list" element={<ProtectedRoute element={<RODRCUserList />} allowedRoles={[ 'drc_user','DRC-Coordinator']}  />} />
       <Route path="/ro/ro-drc-user-info" element={<ProtectedRoute element={<RODRCUserInfo />} allowedRoles={['drc_user','DRC-Coordinator']}  />} />
-            <Route path="/ro/ro-drc-user-info-end" element={<ProtectedRoute element={<RODRCUserInfoEnd />} allowedRoles={['drc_user','DRC-Coordinator']}  />} />
-
+      <Route path="/ro/ro-drc-user-info-end" element={<ProtectedRoute element={<RODRCUserInfoEnd />} allowedRoles={['drc_user','DRC-Coordinator']}  />} />
+<Route path="/ro/ro-drc-user-info-edit" element={<ProtectedRoute element={<RODRCUserInfoEdit/>} allowedRoles={['drc_user','DRC-Coordinator']}  />} />
 
     </Routes>
   );

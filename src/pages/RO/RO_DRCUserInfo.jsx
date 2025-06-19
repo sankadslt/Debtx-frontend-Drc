@@ -125,6 +125,10 @@ export default function RO_DRCUserInfo() {
     navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
   };
 
+  const handleEdit = () => {
+    navigate('/ro/ro-drc-user-info-edit', { state: { itemType: activeUserType, itemData } });
+  };
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={GlobalStyle.headingLarge}>
@@ -142,7 +146,7 @@ export default function RO_DRCUserInfo() {
             alt="Edit"
             title="Edit"
             className="w-6 h-6 absolute top-2 right-2 cursor-pointer hover:scale-110 transition-transform"
-            onClick={() => console.log("Edit clicked")}
+            onClick={handleEdit}
           />
 
           <div className="table">
