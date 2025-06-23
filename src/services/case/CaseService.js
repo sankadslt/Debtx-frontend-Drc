@@ -26,6 +26,7 @@ export const listHandlingCasesByDRC = async (payload) => {
         assigned_date: caseData.assigned_date,
         current_arrears_amount: caseData.current_arreas_amount, 
         area: caseData.area,
+        action_type: caseData.action_type,
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
