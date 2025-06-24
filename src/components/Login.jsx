@@ -11,7 +11,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [socialLoading, setSocialLoading] = useState("");
+  const [socialLoading, setSocialLoading] = useState(""); // Track which social login is in progress
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -21,21 +21,29 @@ const Login = () => {
       const response = await loginUser({ email, password });
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("user", JSON.stringify(response.user));
+
+    //  console.log("Logged in successfully. Token:", response.accessToken);
+
       navigate("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
     }
   };
 
-  const handleGoogleLogin = () => {
-    setSocialLoading("Google");
-    // window.location.href = "http://localhost:5000/api/auth/google";
-    window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/google`;
+  const handleSocialLogin = (platform) => {
+    setSocialLoading(platform); // Set the platform that is being logged in
+    setTimeout(() => {
+      // Simulate a social login call, replace with actual social login logic
+      console.log(`Logging in with ${platform}`);
+      setSocialLoading(""); // Reset after simulating login
+    }, 2000); // Simulating a delay
   };
 
+  
+
   return (
-    <div className="flex justify-center items-center">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-2xl bg-opacity-70">
+    <div className="flex justify-center  items-center">
+      <div className="w-full max-w-md bg-white  p-8 rounded-lg shadow-2xl bg-opacity-70">
         <div className="flex justify-center mb-6">
           <img src={logo} alt="Logo" className="h-20" />
         </div>
@@ -86,34 +94,35 @@ const Login = () => {
 
           <div className="flex justify-center space-x-4">
             <button
-              type="button"
               className="p-2 rounded-full bg-white border hover:bg-gray-100"
-              onClick={handleGoogleLogin}
-              disabled={socialLoading !== ""}
+              onClick={() => handleSocialLogin("Google")}
+              disabled={socialLoading !== ""} // Disable all buttons while one is loading
             >
               {socialLoading === "Google" ? (
-                <span>Loading...</span>
+                <span>Pending...</span>
               ) : (
                 <FcGoogle className="text-2xl" />
               )}
             </button>
-
-            <button
-              type="button"
+            {/* <button
               className="p-2 rounded-full bg-white border hover:bg-gray-100"
-              disabled
-              title="Facebook login coming soon"
+              onClick={() => handleSocialLogin("Facebook")}
+              disabled={socialLoading !== ""} // Disable all buttons while one is loading
             >
-              <FaFacebookF className="text-2xl text-blue-600" />
-            </button>
+              {socialLoading === "Facebook" ? (
+                <span>Pending...</span>
+              ) : (
+                <FaFacebookF className="text-2xl text-blue-600" />
+              )}
+            </button> */}
           </div>
 
-          <p className="text-center text-gray-500">
+          {/* <p className="text-center text-gray-500">
             Don't have an account?{" "}
             <a href="/register" className="text-blue-500 hover:underline">
               Register
             </a>
-          </p>
+          </p> */}
         </form>
       </div>
     </div>
