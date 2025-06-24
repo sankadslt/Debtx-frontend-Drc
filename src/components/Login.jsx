@@ -3,7 +3,7 @@ import { loginUser } from "../services/auth/authService";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebookF } from "react-icons/fa";
+// import { FaFacebookF } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 
 const Login = () => {
@@ -98,22 +98,22 @@ const Login = () => {
               )}
             </button>
 
-            <button
+            {/* <button
               type="button"
               className="p-2 rounded-full bg-white border hover:bg-gray-100"
               disabled
               title="Facebook login coming soon"
             >
               <FaFacebookF className="text-2xl text-blue-600" />
-            </button>
+            </button> */}
           </div>
 
-          <p className="text-center text-gray-500">
+          {/* <p className="text-center text-gray-500">
             Don't have an account?{" "}
             <a href="/register" className="text-blue-500 hover:underline">
               Register
             </a>
-          </p>
+          </p> */}
         </form>
       </div>
     </div>
