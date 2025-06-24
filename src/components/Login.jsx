@@ -104,7 +104,7 @@ const Login = () => {
                 <FcGoogle className="text-2xl" />
               )}
             </button>
-            <button
+            {/* <button
               className="p-2 rounded-full bg-white border hover:bg-gray-100"
               onClick={() => handleSocialLogin("Facebook")}
               disabled={socialLoading !== ""} // Disable all buttons while one is loading
@@ -114,15 +114,15 @@ const Login = () => {
               ) : (
                 <FaFacebookF className="text-2xl text-blue-600" />
               )}
-            </button>
+            </button> */}
           </div>
 
-          <p className="text-center text-gray-500">
+          {/* <p className="text-center text-gray-500">
             Don't have an account?{" "}
             <a href="/register" className="text-blue-500 hover:underline">
               Register
             </a>
-          </p>
+          </p> */}
         </form>
       </div>
     </div>
