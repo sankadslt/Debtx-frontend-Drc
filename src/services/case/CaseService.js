@@ -26,6 +26,7 @@ export const listHandlingCasesByDRC = async (payload) => {
         assigned_date: caseData.assigned_date,
         current_arrears_amount: caseData.current_arreas_amount, 
         area: caseData.area,
+        action_type: caseData.action_type,
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
@@ -202,15 +203,17 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
 
 // get CaseDetails for MediationBoard
 
-export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
+export const getCaseDetailsbyMediationBoard = async (Case_id, Drc_id, Ro_id ) => {
   try {
-    if (!case_id || !drc_id) {
+    if (!Case_id || !Drc_id) {
       throw new Error("Case ID and DRC ID are required.");
     }
-    
-    const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
-      case_id: case_id,
-      drc_id: drc_id,
+    console.log("Sending request with Case ID:", Case_id, "and DRC ID:", Drc_id , "and RO ID:", Ro_id);
+    //console.log("Sending request with RO ID:", ro_id);
+       const response = await axios.post(`${URL}/Case_Details_for_DRC`, {
+      case_id:Case_id,
+      drc_id: Drc_id,
+      ro_id: Ro_id,
     });
     
     if (response.data.status === "error") {
@@ -218,47 +221,52 @@ export const getCaseDetailsbyMediationBoard = async (case_id, drc_id) => {
     }
     
     const data = response.data.data;
+    const callingRound = response.data.calling_round;
+    
+    console.log("This is the calling round paseed to the page:", callingRound);
+
+    console.log("This is the response paseed to the page:", data);
     
     // Process arrays to remove entries with empty or dash values
-    if (data.mediation_board && Array.isArray(data.mediation_board)) {
-      data.mediation_board = data.mediation_board.filter(item => {
-        // Check if any property has a meaningful value (not empty, not dash)
-        return Object.values(item).some(val => 
-          val !== "" && val !== "-" && val !== null && val !== undefined
-        );
-      });
+    // if (data.mediation_board && Array.isArray(data.mediation_board)) {
+    //   data.mediation_board = data.mediation_board.filter(item => {
+    //     // Check if any property has a meaningful value (not empty, not dash)
+    //     return Object.values(item).some(val => 
+    //       val !== "" && val !== "-" && val !== null && val !== undefined
+    //     );
+    //   });
       
-      // Remove empty array
-      if (data.mediation_board.length === 0) {
-        delete data.mediation_board;
-      }
-    }
+    //   // Remove empty array
+    //   if (data.mediation_board.length === 0) {
+    //     delete data.mediation_board;
+    //   }
+    // }
     
-    if (data.settlement && Array.isArray(data.settlement)) {
-      data.settlement = data.settlement.filter(item => {
-        return Object.values(item).some(val => 
-          val !== "" && val !== "-" && val !== null && val !== undefined
-        );
-      });
+    // if (data.settlement && Array.isArray(data.settlement)) {
+    //   data.settlement = data.settlement.filter(item => {
+    //     return Object.values(item).some(val => 
+    //       val !== "" && val !== "-" && val !== null && val !== undefined
+    //     );
+    //   });
       
-      if (data.settlement.length === 0) {
-        delete data.settlement;
-      }
-    }
+    //   if (data.settlement.length === 0) {
+    //     delete data.settlement;
+    //   }
+    // }
     
-    if (data.ro_requests && Array.isArray(data.ro_requests)) {
-      data.ro_requests = data.ro_requests.filter(item => {
-        return Object.values(item).some(val => 
-          val !== "" && val !== "-" && val !== null && val !== undefined
-        );
-      });
+    // if (data.ro_requests && Array.isArray(data.ro_requests)) {
+    //   data.ro_requests = data.ro_requests.filter(item => {
+    //     return Object.values(item).some(val => 
+    //       val !== "" && val !== "-" && val !== null && val !== undefined
+    //     );
+    //   });
       
-      if (data.ro_requests.length === 0) {
-        delete data.ro_requests;
-      }
-    }
+    //   if (data.ro_requests.length === 0) {
+    //     delete data.ro_requests;
+    //   }
+    // }
     
-    return data;
+    return { data, callingRound };
     
   } catch (error) {
     console.error(
@@ -398,30 +406,33 @@ export const drcCaseDetails = async (payload) => {
 
 
 // Add Negotiation Case
-export const addNegotiationCase = async (payload) => {
+export const addNegotiationCase = async (formData , DRC_ID) => {
   try {
-    if (!payload.caseId || !payload.reason || !payload.request) {
+    console.log("this is the service one", formData);
+    if (!formData.caseId || !formData.reason || !formData.request) {
       throw new Error("Case ID, reason, and request are required.");
     }
-
+console.log(" this is the service drc id ", DRC_ID);
     const response = await axios.post(`${URL}/Customer_Negotiations`, {
-      case_id: payload.caseId,
-      initial_amount: payload.ini_amount || null,
-      calender_month: payload.month || null,
-      duration_from: payload.from || null,
-      duration_to: payload.to || null,
-      settlement_remark:payload.settlement_remark || null,
-      drc_id: payload.drc_id || null ,
-      ro_id: payload.roId || null,
-      request_type: payload.request_description || null,
-      request_comment: payload.request_remark || null,
-      ro_name: payload.ro_name || null,
-      drc: payload.drc || null,
-      request_id: payload.reasonId || null,
-      intraction_id: payload.intractionId || null,
-      field_reason: payload.reason,
-      field_reason_remark: payload.nego_remark || null,
-      created_by: payload.created_by || "null",
+
+      case_id: formData.caseId,
+      initial_amount: formData.ini_amount || null,
+      calender_month: formData.month || null,
+      duration_from: formData.from || null,
+      duration_to: formData.to || null,
+      settlement_remark:formData.settle_remark || null,
+      drc_id: DRC_ID || null ,
+      ro_id: formData.roId || null,
+      request_type: formData.request_description || null,
+      request_comment: formData.request_remark || null,
+      ro_name: formData.ro_name || null,
+      drc: formData.drc || null,
+      request_id: formData.reasonId || null,
+      intraction_id: formData.intractionId || null,
+      field_reason: formData.reason,
+      field_reason_remark: formData.nego_remark || null,
+      created_by: formData.created_by || "null",
+
     });
 
     if (response.data.status === "error") {
@@ -507,8 +518,10 @@ export const caseDetailsforDRC = async (payload) => {
     // Send a POST request to fetch case details
     const caseData = await axios.post(`${URL}/Case_Details_for_DRC`, {
        case_id: payload.case_id,
-       drc_id: payload.drc_id
+       drc_id: payload.drc_id,
+       ro_id: payload.ro_id
     });
+
     const data = caseData.data.data;
     // Check if the response indicates an error
     if (caseData.data.status === "error") {
@@ -520,15 +533,17 @@ export const caseDetailsforDRC = async (payload) => {
     
     // Map the response data to a structured caseDetails object
     const caseDetails = {
-      case_id: caseData.data.data.case_id,
-      customer_ref: caseData.data.data.customer_ref,
-      account_no: caseData.data.data.account_no,
-      current_arrears_amount: caseData.data.data.current_arrears_amount,
-      last_payment_date: caseData.data.data.last_payment_date,
-      contactDetails: caseData.data.data.current_contact || [],
-      full_Address: caseData.data.data.full_Address,
-      nic: caseData.data.data.nic,
+      case_id: data[0].case_id,
+      customer_ref: data[0].customer_ref,
+      account_no: data[0].account_no,
+      current_arrears_amount: data[0].current_arrears_amount,
+      last_payment_date: data[0].last_payment_date,
+      contactDetails: data[0].current_contact || [],
+      full_Address: data[0].full_Address,
+      nic: data[0].nic,
     };
+    console.log("Data from backend:", caseData.data.data);
+    console.log("Case Details:", caseDetails);
     
     return caseDetails;
   } catch (error) {
@@ -615,6 +630,32 @@ export const Mediation_Board = async (payload) => {
     return response.data;
   } catch (error) {
     console.error("Error adding mediation board response:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const RO_CPE_Collection = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/RO_CPE_Collection`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding CP collect response:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const List_Settlement_Details_Owen_By_SettlementID_and_DRCID = async (Case_id, Drc_id, Ro_id ) => {
+  try {
+    const response = await axios.post(`${URL}/List_Settlement_Details_Owen_By_SettlementID_and_DRCID`, 
+      {
+        case_id: Case_id,
+        drc_id: Drc_id,
+        ro_id: Ro_id
+      });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error adding CP collect response:", error.response?.data || error.message);
     throw error;
   }
 };

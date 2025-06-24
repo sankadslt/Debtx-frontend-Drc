@@ -3,6 +3,7 @@ Created Date: 2025-01-07
 Created By: Chamithu (chamithujayathilaka2003@gmail.com)
 Last Modified Date: 2025-03-04
 Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu Srinayka (sasindusrinayaka@gmail.com)
+Modified by: Janani Kumarasiri (jkktg001@gmail.com)
 Version: node 20
 ui number : 2.1
 Dependencies: tailwind css
@@ -11,24 +12,33 @@ Notes: The following page conatins the code for the assigned case list for DRC  
 
 
 import { useState, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { FaAlignCenter, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
 import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
+// import { Tooltip } from "react-tooltip";
 
 //Status Icons
-import Open_With_Agent from "../../assets/images/status/Open_With_Agent.png";
-import Negotiation_Settle_Pending from "../../assets/images/status/Negotiation_Settle_Pending.png";
-import Negotiation_Settle_Open_Pending from "../../assets/images/status/Negotiation_Settle_Open_Pending.png";
-import Negotiation_Settle_Active from "../../assets/images/status/Negotiation_Settle_Active.png";
-import FMB from "../../assets/images/status/Forward_to_Mediation_Board.png";
-import FMB_Settle_Pending from "../../assets/images/status/MB_Settle_pending.png";
-import FMB_Settle_Open_Pending from "../../assets/images/status/MB_Settle_open_pending.png";
-import FMB_Settle_Active from "../../assets/images/status/MB_Settle_Active.png";
-import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
+import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
+import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
+import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
+import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Settle_Active.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/Negotiation_new/RO Negotiation extend pending.png";
+import RO_Negotiation_Extended from "../../assets/images/Negotiation_new/RO Negotiation extended.png";
+import RO_Negotiation_FMB_Pending from "../../assets/images/Negotiation_new/RO_Negotiation_FMB_Pending.png";
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
 
 
 export default function AssignedCaseListforDRC() {
@@ -47,14 +57,16 @@ export default function AssignedCaseListforDRC() {
   // State for search query and filtered data
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
+  const recordsPerPage = 10;
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+  const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true);
 
   // Handle Pagination
   const handlePrevNext = (direction) => {
@@ -65,42 +77,10 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-
-  // const loadUser = async () => {
-  //   let token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     setUserData(null);
-  //     return;
-  //   }
-
-  //   try {
-  //     let decoded = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     if (decoded.exp < currentTime) {
-  //       token = await refreshAccessToken();
-  //       if (!token) return;
-  //       decoded = jwtDecode(token);
-  //     }
-
-  //     setUserData({
-  //       id: decoded.user_id,
-  //       role: decoded.role,
-  //       drc_id: decoded.drc_id,
-  //       ro_id: decoded.ro_id,
-  //     });
-  //   } catch (error) {
-  //     console.error("Invalid token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadUser();
-  // }, [localStorage.getItem("accessToken")]);
-
   const loadUser = async () => {
     const user = await getLoggedUserId();
     setUserData(user);
-    console.log("User data:", user);
+    // console.log("User data:", user);
   };
 
   useEffect(() => {
@@ -110,6 +90,7 @@ export default function AssignedCaseListforDRC() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true); // Start loading animation
         // Step 3: Fetch arrears bands and ro list
         const arrearsAmounts = await fetchAllArrearsBands();
         setArrearsAmounts(arrearsAmounts);
@@ -119,7 +100,21 @@ export default function AssignedCaseListforDRC() {
           setRoList(roData);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // console.error("Error fetching data:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching recovery officer data",
+          icon: "error",
+          // allowOutsideClick: false,
+          // allowEscapeKey: false,
+          // showCancelButton: true,
+          // confirmButtonText: "Yes",
+          // confirmButtonColor: "#28a745",
+          // cancelButtonText: "No",
+          // cancelButtonColor: "#d33",
+        })
+      } finally {
+        setIsLoading(false); // Stop loading animation
       }
     }
     fetchData();
@@ -133,7 +128,7 @@ export default function AssignedCaseListforDRC() {
       to_date: toDate,
     };
 
-    console.log("Params sent to API: ", params);
+    // console.log("Params sent to API: ", params);
 
     if (!fromDate && !toDate) {
       Swal.fire({
@@ -226,42 +221,10 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-  /* const checkdatediffrence = (startDate, endDate) => {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const diffInMs = end - start;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    const diffInMonths = diffInDays / 30;
-
-    if (diffInMonths > 1) {
-      Swal.fire({
-        title: "Date Range Exceeded",
-        text: "The selected dates have more than a 1-month gap. Do you want to proceed?",
-        icon: "warning",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showCancelButton: true,
-        confirmButtonText: "Yes",
-        confirmButtonColor: "#28a745",
-        cancelButtonText: "No",
-        cancelButtonColor: "#d33",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          endDate = end;
-          handleApicall(startDate, endDate);
-        } else {
-          setToDate(null);
-          console.log("Dates cleared");
-        }
-      }
-      );
-
-    }
-  }; */
-
   const handleFilter = async () => {
     try {
       setFilteredData([]);
+      setCurrentPage(1);
 
       const formatDate = (date) => {
         if (!date) return null;
@@ -332,17 +295,44 @@ export default function AssignedCaseListforDRC() {
         ro_id: selectedRo ? Number(selectedRo) : "",
         from_date: formatDate(fromDate),
         to_date: formatDate(toDate),
+        pages: currentPage,
       };
 
       console.log("Payload sent to API: ", payload);
 
+      setIsLoading(true);
       const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
         console.log(response);
         setFilteredData(response);
+
+        // setFilteredData((prevData) => [...prevData, ...response]);
+
+        // if (response.length === 0) {
+        //   setIsMoreDataAvailable(false); // No more data available
+        //   if (currentPage === 1) {
+        //     Swal.fire({
+        //       title: "No Results",
+        //       text: "No matching data found for the selected filters.",
+        //       icon: "warning",
+        //       allowOutsideClick: false,
+        //       allowEscapeKey: false
+        //     });
+        //   }
+        // } else {
+        //   const maxData = currentPage === 1 ? 10 : 30;
+        //   if (response.data.length < maxData) {
+        //     setIsMoreDataAvailable(false); // More data available
+        //   }
+        // }
       } else {
-        console.error("No valid cases data found in response.");
+        // console.error("No valid cases data found in response.");
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch filtered data. Please try again.",
+          icon: "error"
+        });
       }
     } catch (error) {
       console.error("Error filtering cases:", error);
@@ -351,9 +341,20 @@ export default function AssignedCaseListforDRC() {
         text: "Failed to fetch filtered data. Please try again.",
         icon: "error"
       });
+    } finally {
+      setIsLoading(false); // Stop loading animation
     }
   };
 
+  const handleClear = () => {
+    setCurrentPage(1);
+    setSelectedArrearsAmount("");
+    setSelectedRo("");
+    setFromDate(null);
+    setToDate(null);
+    setFilteredData([]);
+    setSearchQuery("");
+  };
 
   // Search Section
   const filteredDataBySearch = currentData.filter((row) =>
@@ -363,29 +364,74 @@ export default function AssignedCaseListforDRC() {
       .includes(searchQuery.toLowerCase())
   );
 
+  // display loading animation when data is loading
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       // case "open no agent":
       //   return <img src={Open_No_Agent} alt="Open No Agent" title="Open No Agent" className="w-5 h-5" />;
       case "open with agent":
-        return <img src={Open_With_Agent} alt="Open With Agent" title="Open With Agent" className="w-5 h-5" />;
+        return Open_With_Agent;
+      case "ro negotiation":
+        return RO_Negotiation;
       case "negotiation settle pending":
-        return <img src={Negotiation_Settle_Pending} alt="Negotiation Settle Pending" title="Negotiation Settle Pending" className="w-5 h-5" />;
+        return Negotiation_Settle_Pending;
       case "negotiation settle open pending":
-        return <img src={Negotiation_Settle_Open_Pending} alt="Negotiation Settle Open Pending" title="Negotiation Settle Open Pending" className="w-5 h-5" />;
+        return Negotiation_Settle_Open_Pending;
       case "negotiation settle active":
-        return <img src={Negotiation_Settle_Active} alt="Negotiation Settle Active" title="Negotiation Settle Active" className="w-5 h-5" />;
-      case "fmb":
-        return <img src={FMB} alt="FMB" title="FMB" className="w-5 h-5" />;
-      case "fmb settle pending":
-        return <img src={FMB_Settle_Pending} alt="FMB Settle Pending" title="FMB Settle Pending" className="w-5 h-5" />;
-      case "fmb settle open pending":
-        return <img src={FMB_Settle_Open_Pending} alt="FMB Settle Open Pending" title="FMB Settle Open Pending" className="w-5 h-5" />;
-      case "fmb settle active":
-        return <img src={FMB_Settle_Active} alt="FMB Settle Active" title="FMB Settle Active" className="w-5 h-5" />;
+        return Negotiation_Settle_Active;
+      case "ro negotiation extension pending":
+        return RO_Negotiation_Extension_Pending;
+      case "ro negotiation extended":
+        return RO_Negotiation_Extended;
+      case "ro negotiation fmb pending":
+        return RO_Negotiation_FMB_Pending;
+      case "mb negotiation":
+        return MB_Negotiation;
+      case "mb request customer-info":
+        return MB_Request_Customer_Info;
+      case "mb handover customer-info":
+        return MB_Handover_Customer_Info;
+      case "mb fail with pending non-settlement":
+        return MB_Fail_with_Pending_Non_Settlement;
+      case "forward to mediation board":
+        return FMB;
+      case "mb settle pending":
+        return MB_Settle_Pending;
+      case "mb settle open pending":
+        return MB_Settle_Open_Pending;
+      case "mb settle active":
+        return MB_Settle_Active;
       default:
         return <span className="text-gray-500">N/A</span>;
     }
+  };
+
+  // render status icon with tooltip
+  const renderStatusIcon = (status) => {
+    const iconPath = getStatusIcon(status);
+
+    if (!iconPath) {
+      return <span>{status}</span>;
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <img
+          src={iconPath}
+          alt={status}
+          title={status}
+          className="w-6 h-6"
+        />
+      </div>
+    );
   };
 
   return (
@@ -393,60 +439,70 @@ export default function AssignedCaseListforDRC() {
       {/* Title */}
       <h1 className={GlobalStyle.headingLarge}>Case List</h1>
 
-      <div className="flex gap-4 items-center flex-wrap mt-4 ">
-        {/* Dropdown for Arrears Amount */}
-        <select
-          className={GlobalStyle.selectBox}
-          value={selectedArrearsAmount}
-          onChange={(e) => setSelectedArrearsAmount(e.target.value)}
-        >
-          <option value="">Arrears Band</option>
-          {arrearsAmounts.length > 0 ? (
-            arrearsAmounts.map((amount, index) => (
-              <option key={index} value={amount.key}>
-                {amount.value}
-              </option>
-            ))
-          ) : (
-            <option value="">Loading...</option>
-          )}
-        </select>
+      <div className={`${GlobalStyle.cardContainer} w-full`}>
+        <div className="flex items-center justify-end w-full space-x-3">
+          {/* Dropdown for Arrears Amount */}
+          <select
+            className={GlobalStyle.selectBox}
+            value={selectedArrearsAmount}
+            onChange={(e) => setSelectedArrearsAmount(e.target.value)}
+            style={{ color: selectedArrearsAmount === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>Arrears Band</option>
+            {arrearsAmounts.length > 0 ? (
+              arrearsAmounts.map((amount, index) => (
+                <option key={index} value={amount.key}>
+                  {amount.value}
+                </option>
+              ))
+            ) : (
+              <option value="">Loading...</option>
+            )}
+          </select>
 
-        {/* Dropdown for RO */}
-        <select
-          className={GlobalStyle.selectBox}
-          value={selectedRo}
-          onChange={(e) => setSelectedRo(e.target.value)}
-        >
-          <option value="">Select RO</option>
-          {roList.map((ro) => (
-            <option key={ro.ro_id} value={ro.ro_id}>{ro.ro_name}</option>
-          ))}
-        </select>
+          {/* Dropdown for RO */}
+          <select
+            className={GlobalStyle.selectBox}
+            value={selectedRo}
+            onChange={(e) => setSelectedRo(e.target.value)}
+            style={{ color: selectedRo === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>Select RO</option>
+            {roList.map((ro) => (
+              <option key={ro.ro_id} value={ro.ro_id}>{ro.ro_name}</option>
+            ))}
+          </select>
 
-        <div className={GlobalStyle.datePickerContainer}>
-          <label className={GlobalStyle.dataPickerDate}>Date</label>
-          <DatePicker
-            selected={fromDate}
-            onChange={handlestartdatechange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
-          <DatePicker
-            selected={toDate}
-            onChange={handleenddatechange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="dd/MM/yyyy"
-            className={GlobalStyle.inputText}
-          />
+          <div className={GlobalStyle.datePickerContainer}>
+            <label className={GlobalStyle.dataPickerDate}>Date</label>
+            <DatePicker
+              selected={fromDate}
+              onChange={handlestartdatechange}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="From"
+              className={GlobalStyle.inputText}
+            />
+            <DatePicker
+              selected={toDate}
+              onChange={handleenddatechange}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="To"
+              className={GlobalStyle.inputText}
+            />
+          </div>
+          <button
+            onClick={handleFilter}
+            className={`${GlobalStyle.buttonPrimary}`}
+          >
+            Filter
+          </button>
+          <button
+            onClick={handleClear}
+            className={`${GlobalStyle.buttonRemove}`}
+          >
+            Clear
+          </button>
         </div>
-        <button
-          onClick={handleFilter}
-          className={`${GlobalStyle.buttonPrimary}`}
-        >
-          Filter
-        </button>
       </div>
 
       {/* Search Section */}
@@ -489,12 +545,19 @@ export default function AssignedCaseListforDRC() {
                   }
                 >
                   <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{getStatusIcon(item.status)}</td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}>{item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : "N/A"}</td>
-                  <td className={GlobalStyle.tableData}>{item.current_arrears_amount || "N/A"}</td>
-                  <td className={GlobalStyle.tableData}> {item.remark || "N/A"} </td>
+                  <td className={GlobalStyle.tableCurrency}>
+                    {item?.current_arrears_amount &&
+                      item.current_arrears_amount.toLocaleString("en-LK", {
+                        style: "currency",
+                        currency: "LKR",
+                      })
+                    }
+                  </td>
+                  <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
                   <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm
@@ -507,7 +570,7 @@ export default function AssignedCaseListforDRC() {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="text-center">No cases available</td>
+                <td colSpan={9} className={GlobalStyle.tableData} style={{ textAlign: "center" }}>No cases available</td>
               </tr>
             )}
           </tbody>
