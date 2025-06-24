@@ -10,9 +10,9 @@ useEffect(() => {
   const token = params.get("accessToken");
   if (token) {
     localStorage.setItem("accessToken", token);
-      navigate("/");
+      navigate("/drc");
     } else {
-      navigate("/dashboard");
+      navigate("/drc/dashboard");
     }
   }, [location, navigate]);
 
