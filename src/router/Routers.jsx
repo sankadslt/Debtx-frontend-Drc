@@ -4,6 +4,7 @@ import Login from "../components/Login";
 import Register from "../components/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Unauthorized from "../components/Unauthorized";
+import GoogleRedirect from "../components/GoogleRedirect";
 import UserProfile from "../pages/userProfile";
 import CreateTask from "../pages/createTasks";
 import Dashboard from "../pages/Dashboard";
@@ -46,6 +47,7 @@ const Routers = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/user-profile" element={<UserProfile />} />
       <Route path="/create-task" element={<CreateTask />} />
+      <Route path="/google-login" element={<GoogleRedirect />} />
 
       <Route
         path="/dummy-page"
