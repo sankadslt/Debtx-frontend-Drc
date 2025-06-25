@@ -42,7 +42,7 @@ export default function RO_DRCUserList() {
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
     const [activeTab, setActiveTab] = useState("RO");
-    
+
 
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -142,6 +142,8 @@ export default function RO_DRCUserList() {
             return tabState[activeTab]?.status || "";
         }
     };
+    
+//for testing commit
 
     const getCurrentPage = () => {
         if (activeTab === "RO") {
@@ -167,13 +169,7 @@ export default function RO_DRCUserList() {
 
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
                 if (error.response && error.response.status === 404) {
-                    Swal.fire({
-                        title: "No Results",
-                        text: "No matching data found for the selected filters.",
-                        icon: "warning",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false
-                    });
+
                     if (activeTab === "RO") {
                         setRoData([]);
 
@@ -257,6 +253,7 @@ export default function RO_DRCUserList() {
             setRoTotalPages(1);
             setRoTotalAPIPages(1);
             setRoStatus("");
+
         } else {
             setDrcData([]);
             setDrcCurrentPage(1);
@@ -269,14 +266,23 @@ export default function RO_DRCUserList() {
 
     useEffect(() => {
         if (userData) {
-            if (activeTab === "RO" && roData.length === 0 && !currentStatus) {
+            if (
+                activeTab === "RO" &&
+                roData.length === 0 &&
+                (roStatus === "" || isRoFilterApplied)
+            ) {
                 handleFilterButton();
             }
-            if (activeTab === "drcUser" && drcData.length === 0 && !currentStatus) {
+
+            if (
+                activeTab === "drcUser" &&
+                drcData.length === 0 &&
+                (drcUserStatus === "" || isDrcFilterApplied)
+            ) {
                 handleFilterButton();
             }
         }
-    }, [activeTab, userData]); // Now triggers only after userData is loaded
+    }, [activeTab, userData, roStatus, drcUserStatus]);
 
 
     const handlePrevNext = (direction) => {
@@ -339,8 +345,6 @@ export default function RO_DRCUserList() {
     };
 
 
-
-
     // display loading animation when data is loading
     if (isLoading) {
         return (
@@ -363,7 +367,8 @@ export default function RO_DRCUserList() {
                     <h2 className={GlobalStyle.headingLarge}>RO List</h2>
 
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} /* onClick={HandleAddDRC} */>
+                        <button className={GlobalStyle.buttonPrimary} onClick={() =>
+                            navigate("/ro/ro-drc-user-info")}>
                             Add RO
                         </button>
                     </div>
@@ -383,51 +388,58 @@ export default function RO_DRCUserList() {
                 </div>
             )}
 
-            <div className={`${GlobalStyle.cardContainer} w-full mb-8 mt-8`}>
-                <div className="flex gap-4 justify-end">
+            {/* Filters Section */}
+            <div className="w-full mb-2 mt-4">
+                <div className="flex justify-between items-center w-full mb-2">
 
-                    {/* Status Select Dropdown */}
-                    <select
-                        name="status"
-                        value={currentStatus}
-                        onChange={handleStatusChange}
-                        className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-                    >
-                        <option value="" disabled>Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="Terminate">Terminate</option>
-                    </select>
+                    {/* Search Bar */}
+                    <div className="flex justify-start mt-10 mb-4">
+                        <div className={GlobalStyle.searchBarContainer}>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={GlobalStyle.inputSearch}
 
-                    <button
-                        onClick={handleFilterButton}
-                        className={`${GlobalStyle.buttonPrimary}`}
-                    >
-                        Filter
-                    </button>
-                    <button onClick={handleClear} className={GlobalStyle.buttonRemove} >
-                        Clear
-                    </button>
+                            />
+                            <FaSearch className={GlobalStyle.searchBarIcon} />
+                        </div>
+                    </div>
 
+                    {/* Status Filter & Buttons */}
+                    <div className={`${GlobalStyle.cardContainer} w-auto`}>
+                        <div className="flex justify-end items-center space-x-4">
+                            <select
+                                name="status"
+                                value={currentStatus}
+                                onChange={handleStatusChange}
+                                className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+                            >
+                                <option value="" disabled>Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Terminate">Terminate</option>
+                            </select>
 
+                            <button
+                                onClick={handleFilterButton}
+                                className={GlobalStyle.buttonPrimary}
+                            >
+                                Filter
+                            </button>
+
+                            <button
+                                onClick={handleClear}
+                                className={`${GlobalStyle.buttonRemove} ${!currentStatus }`}
+                                disabled={!currentStatus}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-
-
-
             </div>
-            {/* Search Section */}
-            <div className="flex justify-start mt-10 mb-4">
-                <div className={GlobalStyle.searchBarContainer}>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={GlobalStyle.inputSearch}
-                    />
-                    <FaSearch className={GlobalStyle.searchBarIcon} />
-                </div>
-            </div>
+
 
             {/* Tabs */}
             <div className="flex border-b mb-4">
@@ -477,7 +489,7 @@ export default function RO_DRCUserList() {
                                                 }
                                             >
                                                 <td
-                                                    className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+                                                    className={`${GlobalStyle.tableData} text-black`}
                                                 >
                                                     {item.ro_id || "N/A"}
                                                 </td>
@@ -575,7 +587,7 @@ export default function RO_DRCUserList() {
                                                     }
                                                 >
                                                     <td
-                                                        className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+                                                        className={`${GlobalStyle.tableData} text-black`}
                                                     >
                                                         {item.drcUser_id || "N/A"}
                                                     </td>
