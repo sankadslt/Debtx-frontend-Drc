@@ -178,3 +178,19 @@ export const terminateRO = async (terminationDetails) => {
         throw new Error(error.response?.data?.message || 'Error terminating Recovery Officer.');
     }
 };
+// Update RO or DRC user details
+export const updateROorDRCUserDetails = async (data) => {
+    try {
+        const response = await axios.patch(`${URL}/Update_RO_or_DRCuser_Details`, data);
+
+        if (response.data.success) {
+            return response.data;
+        } else {
+            console.error(response.data.message);
+            throw new Error(response.data.message);
+        }
+    } catch (error) {
+        console.error("Error updating RO or DRC user:", error.response?.data?.message || error.message);
+        throw new Error(error.response?.data?.message || 'Error updating RO or DRC user.');
+    }
+};
