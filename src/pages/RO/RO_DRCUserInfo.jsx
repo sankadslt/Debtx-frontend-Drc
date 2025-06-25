@@ -14,7 +14,7 @@ export default function RO_DRCUserInfo() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   const navigate = useNavigate();
 
@@ -25,48 +25,49 @@ export default function RO_DRCUserInfo() {
   }, [itemType]);
 
   const fetchData = async () => {
-    if (itemData) {
-      try {
-        let payload = {};
-        if (activeUserType === "RO") {
-          payload = { ro_id: itemData.ro_id };
-        } else if (activeUserType === "drcUser") {
-          payload = { drcUser_id: itemData.drcUser_id };
-        }
+    if (!itemData || !activeUserType) {
+      Swal.fire({
+        title: "Error",
+        text: "Missing user data or type. Please try again.",
+        icon: "error",
+      });
+      return;
+    }
 
-        setIsLoading(true);
-
-        const response = await List_RO_Info_Own_By_RO_Id(payload).catch((error) => {
-          if (error.response && error.response.status === 404) {
-            Swal.fire({
-              title: "No Results",
-              text: "No matching data found for the selected filters.",
-              icon: "warning",
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-            });
-            setUserData([]);
-            return null;
-          } else {
-            throw error;
-          }
-        });
-
-        setIsLoading(false);
-
-        if (response && response.data) {
-          setUserData(response.data);
-        } else {
-          console.error("No valid data found in response:", response);
-        }
-      } catch (error) {
-        console.error("Error filtering cases:", error);
-        Swal.fire({
-          title: "Error",
-          text: "Failed to fetch filtered data. Please try again.",
-          icon: "error",
-        });
+    try {
+      let payload = {};
+      if (activeUserType === "RO") {
+        if (!itemData.ro_id) throw new Error("Missing ro_id");
+        payload = { ro_id: itemData.ro_id };
+      } else if (activeUserType === "drcUser") {
+        if (!itemData.drcUser_id) throw new Error("Missing drcUser_id");
+        payload = { drcUser_id: itemData.drcUser_id };
       }
+
+      setIsLoading(true);
+      const response = await List_RO_Info_Own_By_RO_Id(payload);
+
+      setIsLoading(false);
+
+      if (response && response.data) {
+        setUserData(response.data);
+      } else {
+        Swal.fire({
+          title: "No Results",
+          text: "No matching data found.",
+          icon: "warning",
+        });
+        setUserData(null);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error fetching data:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "Failed to fetch data. Please try again.",
+        icon: 'error',
+      });
+      setUserData(null);
     }
   };
 
@@ -78,67 +79,70 @@ export default function RO_DRCUserInfo() {
 
   useEffect(() => {
     return () => {
-      setActiveUserType("");
+      setActiveUserType('');
       setUserData(null);
       setIsLoading(false);
     };
   }, []);
 
-  const handleEnd = async () => {
-    let userDataToPass = { ...userData };
+  const handleEnd = () => {
+    if (!userData || !activeUserType) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'No user data available to proceed.',
+        icon: 'error',
+      });
+    } else {
+      const userDataToPass = {
+        ...userData,
+        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id }),
+      };
 
-    // Ensure drcUser_id is present for drcUser type
-    if (activeUserType === "drcUser" && !itemData?.drcUser_id) {
-      try {
-        // Attempt to fetch drcUser_id using drcUser_name or another identifier
-        const payload = { drcUser_name: itemData?.drcUser_name }; // Adjust based on available data
-        const response = await List_RO_Info_Own_By_RO_Id(payload); // Adjust API if needed
-        if (response.status === 'success' && response.data?.drcUser_id) {
-          userDataToPass.drcUser_id = response.data.drcUser_id;
-        } else {
-          Swal.fire({
-            title: "Error",
-            text: "Could not fetch drcUser_id. Please ensure correct user data is passed.",
-            icon: "error",
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-          });
-          return;
-        }
-      } catch (error) {
-        console.error("Error fetching drcUser_id:", error.message);
-        Swal.fire({
-          title: "Error",
-          text: "Failed to fetch drcUser_id. Please try again or check the data.",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-        });
-        return;
-      }
-    } else if (activeUserType === "drcUser") {
-      userDataToPass.drcUser_id = itemData.drcUser_id; // Use existing drcUser_id
-    } else if (activeUserType === "RO") {
-      userDataToPass.ro_id = itemData.ro_id; // Ensure ro_id is passed
+      navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
     }
-
-    navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
   };
 
   const handleEdit = () => {
-    navigate('/ro/ro-drc-user-info-edit', { state: { itemType: activeUserType, itemData } });
+    if (!userData || !activeUserType || !itemData) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No user data or type available to edit.',
+        icon: 'error',
+      });
+      return;
+    }
+
+    // Pass only the relevant ID and context to trigger API call on edit page
+    const dataToPass = {
+      itemType: activeUserType, // 'RO' or 'drcUser'
+      itemData: {
+        ro_id: activeUserType === 'RO' ? itemData.ro_id : undefined,
+        drcUser_id: activeUserType === 'drcUser' ? itemData.drcUser_id : undefined,
+      },
+    };
+
+    console.log('handleEdit - Edit - Sending data:', dataToPass);
+
+    navigate('/ro/ro-drc-user-info-edit', { state: { dataToPass } });
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userData) {
+    return <div>No user data available.</div>;
+  }
+
   return (
-    <div className={GlobalStyle.fontPoppins}>
+   <div className={GlobalStyle.fontPoppins}>
       <h2 className={GlobalStyle.headingLarge}>
         {activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"}
       </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-10`}>
-        DRC Name : {userData?.drc_name || 'null'}
+        DRC Name : {userData?.drc_name || 'N/A'}
       </h2>
 
-      {/* Case Details */}
       <div className="flex gap-4 mt-4 justify-center">
         <div className={`${GlobalStyle.cardContainer} relative`}>
           <img
@@ -153,7 +157,7 @@ export default function RO_DRCUserInfo() {
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-semibold">Added Date</div>
               <div className="table-cell px-4 py-2 font-semibold">:</div>
-              <div className="table-cell px-4 py-2">{userData?.added_date || 'null'}</div>
+              <div className="table-cell px-4 py-2">{userData?.added_date || 'N/A'}</div>
             </div>
 
             <div className="table-row">
@@ -162,14 +166,14 @@ export default function RO_DRCUserInfo() {
               </div>
               <div className="table-cell px-4 py-2 font-semibold">:</div>
               <div className="table-cell px-4 py-2">
-                {userData?.drcUser_name || userData?.recovery_officer_name || 'null'}
+                {userData?.drcUser_name || userData?.recovery_officer_name || 'N/A'}
               </div>
             </div>
 
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-semibold">NIC</div>
               <div className="table-cell px-4 py-2 font-semibold">:</div>
-              <div className="table-cell px-4 py-2">{userData?.nic || 'null'}</div>
+              <div className="table-cell px-4 py-2">{userData?.nic || 'N/A'}</div>
             </div>
 
             <div className="table-row">
@@ -177,11 +181,9 @@ export default function RO_DRCUserInfo() {
             </div>
 
             <div className="table-row">
-              <div className="table-cell px-4 py-2 pl-8 font-semibold">
-                <div className="table-cell px-4 py-2 font-semibold">Contact No</div>
-              </div>
+              <div className="table-cell px-4 py-2 pl-8 font-semibold">Contact No</div>
               <div className="table-cell px-4 py-2 font-semibold">:</div>
-              <div className="table-cell px-4 py-2">{userData?.contact_no || 'null'}</div>
+              <div className="table-cell px-4 py-2">{userData?.contact_no || 'N/A'}</div>
             </div>
 
             <div className="table-row">
@@ -194,12 +196,11 @@ export default function RO_DRCUserInfo() {
                 />
               </div>
               <div className="table-cell px-4 py-2 font-semibold">:</div>
-              <div className="table-cell px-4 py-2">{userData?.email || 'null'}</div>
+              <div className="table-cell px-4 py-2">{userData?.email || 'N/A'}</div>
             </div>
           </div>
 
-          {/* RTOM Section */}
-          {activeUserType !== "drcUser" && userData?.rtom_areas && (
+          {activeUserType === "RO" && userData?.rtom_areas && (
             <>
               <div className="table-row">
                 <div className="table-cell px-4 py-2 font-semibold">RTOM Areas</div>
@@ -256,21 +257,18 @@ export default function RO_DRCUserInfo() {
         </div>
       </div>
 
-      {/* End Button */}
       <div className="flex justify-end mt-6">
         <button className={GlobalStyle.buttonPrimary} onClick={handleEnd}>
           End
         </button>
       </div>
 
-      {/* Log History Button */}
       <div className="flex justify-start mt-6 mb-6">
         <button className={GlobalStyle.buttonPrimary} onClick={() => setShowPopup(true)}>
           Log History
         </button>
       </div>
 
-      {/* Log History Popup */}
       {showPopup && (
         <div className={GlobalStyle.popupBoxContainer}>
           <div className={GlobalStyle.popupBoxBody}>
@@ -279,7 +277,6 @@ export default function RO_DRCUserInfo() {
               <button className={GlobalStyle.popupBoxCloseButton} onClick={() => setShowPopup(false)}>×</button>
             </div>
 
-            {/* Search Section */}
             <div className="flex justify-start mb-4">
               <div className={GlobalStyle.searchBarContainer}>
                 <input
@@ -292,11 +289,13 @@ export default function RO_DRCUserInfo() {
               </div>
             </div>
 
-            {/* Table Section */}
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} max-h-[300px] overflow-y-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
-                  <tr>
+                <tr>
+
+
+
                     <th className={GlobalStyle.tableHeader}>Edited On</th>
                     <th className={GlobalStyle.tableHeader}>Action</th>
                     <th className={GlobalStyle.tableHeader}>Edited By</th>
@@ -317,10 +316,10 @@ export default function RO_DRCUserInfo() {
                           className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
                         >
                           <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
-                            {log.edited_on}
+                            {log.edited_on || 'N/A'}
                           </td>
-                          <td className={GlobalStyle.tableData}>{log.action}</td>
-                          <td className={GlobalStyle.tableData}>{log.edited_by}</td>
+                          <td className={GlobalStyle.tableData}>{log.action || 'N/A'}</td>
+                          <td className={GlobalStyle.tableData}>{log.edited_by || 'N/A'}</td>
                         </tr>
                       ))
                   ) : (
@@ -337,7 +336,6 @@ export default function RO_DRCUserInfo() {
         </div>
       )}
 
-      {/* Back Button */}
       <div>
         <button onClick={() => navigate(-1)} className={GlobalStyle.buttonPrimary}>
           <FaArrowLeft />
