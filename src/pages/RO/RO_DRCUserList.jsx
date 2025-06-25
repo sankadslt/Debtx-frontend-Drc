@@ -83,19 +83,19 @@ export default function RO_DRCUserList() {
         }
     };
 
-    
+
     const handlePageChange = () => {
         // console.log("Page changed to:", currentPage);
 
         if (activeTab === "RO") {
             if (roCurrentPage > roMaxPage && roCurrentPage <= roTotalAPIPages) {
                 setRoMaxPage(roCurrentPage);
-                handleFilter(); 
+                handleFilter();
             }
         } else {
             if (drcCurrentPage > drcMaxPage && drcCurrentPage <= drcTotalAPIPages) {
                 setDrcMaxPage(drcCurrentPage);
-                handleFilter(); 
+                handleFilter();
             }
         }
     };
@@ -103,14 +103,14 @@ export default function RO_DRCUserList() {
     useEffect(() => {
 
         if (isRoFilterApplied) {
-            handlePageChange(); 
+            handlePageChange();
         }
     }, [roCurrentPage]);
 
     useEffect(() => {
 
         if (isDrcFilterApplied) {
-            handlePageChange(); 
+            handlePageChange();
         }
     }, [drcCurrentPage]);
 
@@ -155,7 +155,7 @@ export default function RO_DRCUserList() {
 
     const handleFilter = async () => {
         try {
-            if (!userData) return; 
+            if (!userData) return;
 
             const payload = {
                 drc_id: userData.drc_id,
@@ -169,7 +169,7 @@ export default function RO_DRCUserList() {
 
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
                 if (error.response && error.response.status === 404) {
-                    
+
                     if (activeTab === "RO") {
                         setRoData([]);
                     } else {
@@ -364,8 +364,10 @@ export default function RO_DRCUserList() {
                     <h2 className={GlobalStyle.headingLarge}>RO List</h2>
 
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} onClick={() =>
-                            navigate("/ro/ro-drc-user-info")}>
+                        <button className={GlobalStyle.buttonPrimary} 
+                        onClick={() =>
+                            navigate("/ro/ro-add-ro")
+                        }>
                             Add RO
                         </button>
                     </div>
@@ -378,7 +380,9 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={GlobalStyle.headingLarge}>DRC User List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} /* onClick={HandleAddDRC} */>
+                        <button className={GlobalStyle.buttonPrimary}  onClick={() =>
+                            navigate("/ro/ro-add-ro")
+                        }>
                             Add DRC User
                         </button>
                     </div>
