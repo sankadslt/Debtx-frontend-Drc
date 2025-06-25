@@ -83,19 +83,19 @@ export default function RO_DRCUserList() {
         }
     };
 
-    // Handle api calling only when the currentPage incriment more that before
+    
     const handlePageChange = () => {
         // console.log("Page changed to:", currentPage);
 
         if (activeTab === "RO") {
             if (roCurrentPage > roMaxPage && roCurrentPage <= roTotalAPIPages) {
                 setRoMaxPage(roCurrentPage);
-                handleFilter(); // Call the filter function only after the page incrimet 
+                handleFilter(); 
             }
         } else {
             if (drcCurrentPage > drcMaxPage && drcCurrentPage <= drcTotalAPIPages) {
                 setDrcMaxPage(drcCurrentPage);
-                handleFilter(); // Call the filter function only after the page incrimet 
+                handleFilter(); 
             }
         }
     };
@@ -103,14 +103,14 @@ export default function RO_DRCUserList() {
     useEffect(() => {
 
         if (isRoFilterApplied) {
-            handlePageChange(); // Call the function whenever currentPage changes
+            handlePageChange(); 
         }
     }, [roCurrentPage]);
 
     useEffect(() => {
 
         if (isDrcFilterApplied) {
-            handlePageChange(); // Call the function whenever currentPage changes
+            handlePageChange(); 
         }
     }, [drcCurrentPage]);
 
@@ -142,8 +142,8 @@ export default function RO_DRCUserList() {
             return tabState[activeTab]?.status || "";
         }
     };
-    
-//for testing commit
+
+    //for testing commit
 
     const getCurrentPage = () => {
         if (activeTab === "RO") {
@@ -155,8 +155,7 @@ export default function RO_DRCUserList() {
 
     const handleFilter = async () => {
         try {
-
-            if (!userData) return; // Make sure user data is loaded
+            if (!userData) return; 
 
             const payload = {
                 drc_id: userData.drc_id,
@@ -164,52 +163,50 @@ export default function RO_DRCUserList() {
                 drcUser_status: getUserStatus(),
                 pages: getCurrentPage(),
             };
+
             console.log("Payload sent to API: ", payload);
             setIsLoading(true);
 
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
                 if (error.response && error.response.status === 404) {
-
+                    
                     if (activeTab === "RO") {
                         setRoData([]);
-
                     } else {
                         setDrcData([]);
-
                     }
+
+                    Swal.fire({
+                        title: "No Results",
+                        text: "No matching data found for the selected filter.",
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#f1c40f"
+                    });
 
                     return null;
                 } else {
                     throw error;
                 }
             });
-            console.log("Response from API:", response);
-            setIsLoading(false); // Set loading state to false
 
-            // Updated response handling
+            console.log("Response from API:", response);
+            setIsLoading(false);
+
             if (response && response.data) {
                 const list = response.data;
                 console.log("Valid data received:", list);
-
 
                 if (activeTab === "RO") {
                     setRoData((prev) => [...prev, ...list]);
                     setRoTotalPages(Math.ceil(response.total_records / rowsPerPage));
                     setRoTotalAPIPages(response.total_records);
-                    //setRoMaxPage(currentPage);
                 } else {
                     setDrcData((prev) => [...prev, ...list]);
                     setDrcTotalPages(Math.ceil(response.total_records / rowsPerPage));
                     setDrcTotalAPIPages(response.total_records);
-                    //setDrcMaxPage(currentPage);
                 }
-
-
-            } else {
-                console.error("No valid List of All_RO_and_DRCuser_Details_to_DRC found in response:", response);
-                setFilteredData([]);
             }
-
         } catch (error) {
             console.error("Error filtering cases:", error);
             Swal.fire({
@@ -218,8 +215,8 @@ export default function RO_DRCUserList() {
                 icon: "error"
             });
         }
-
     };
+
 
     const handleFilterButton = () => {
         if (activeTab === "RO") {
@@ -430,7 +427,7 @@ export default function RO_DRCUserList() {
 
                             <button
                                 onClick={handleClear}
-                                className={`${GlobalStyle.buttonRemove} ${!currentStatus }`}
+                                className={`${GlobalStyle.buttonRemove} ${!currentStatus}`}
                                 disabled={!currentStatus}
                             >
                                 Clear
@@ -546,7 +543,7 @@ export default function RO_DRCUserList() {
                                 <FaArrowLeft />
                             </button>
                             <span>
-                                Page {roCurrentPage} of {roTotalPages}
+                                Page {roCurrentPage}
                             </span>
                             <button
                                 onClick={() => handlePrevNext("next")}
@@ -643,7 +640,7 @@ export default function RO_DRCUserList() {
                                 <FaArrowLeft />
                             </button>
                             <span>
-                                Page {drcCurrentPage} of {drcTotalPages}
+                                Page {drcCurrentPage}
                             </span>
                             <button
                                 onClick={() => handlePrevNext("next")}
