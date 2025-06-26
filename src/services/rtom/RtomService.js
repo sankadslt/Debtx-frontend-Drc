@@ -171,3 +171,29 @@ export const getActiveRTOMsByDRCID = async (drc_id) => {
     return [];
   }
 };
+
+export const getAllActiveRTOMs = async () => {
+  try {
+    const response = await axios.get(`${URL}/List_All_Active_RTOMs`);
+    if (response.data?.status === "success" && response.data?.data) {
+      const transformedRTOMs = response.data.data.map((rtom) => ({
+        rtom_id: rtom.rtom_id,
+        area_name: rtom.rtom_name,
+        rtom: rtom.rtom_name, // Optional alias if you need it in UI
+        billing_center_code: rtom.billing_center_code,
+        rtom_email: rtom.rtom_email,
+        rtom_status: rtom.rtom_status,
+        rtom_mobile_no: rtom.rtom_mobile_no?.map((mob) => mob.mobile_number) || [],
+        rtom_telephone_no: rtom.rtom_telephone_no?.map((tel) => tel.telephone_number) || [],
+        remarks: rtom.rtom_remarks || [],
+      }));
+      return transformedRTOMs;
+    } else {
+      console.error("API Error:", response.data?.message || "Unexpected response structure");
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching all active RTOMs:", error.response?.data || error.message);
+    return [];
+  }
+};

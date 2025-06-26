@@ -335,7 +335,8 @@ export default function RecoveryOfficerEndPage() {
                             </div>
                         </div>
 
-                        <div className={GlobalStyle.tableContainer}>
+                                    <div className={`${GlobalStyle.tableContainer} max-h-[300px] overflow-y-auto`}>
+
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
