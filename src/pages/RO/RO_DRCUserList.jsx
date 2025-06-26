@@ -659,14 +659,7 @@ export default function RO_DRCUserList() {
                 )}
             </div>
 
-            <button
-                onClick={() => navigate(-1)}
-
-                className={`${GlobalStyle.buttonPrimary} `}
-            >
-                <FaArrowLeft />
-            </button>
-
+            
         </div>
     );
 }

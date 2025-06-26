@@ -119,7 +119,7 @@ const handleAddRO = async () => {
     const payload = {
       drcUser_type: userType,
       drc_id: drcId,
-      ro_name: userType || 'N/A',
+      ro_name: name ,
       nic: nic || '',
       login_email: email,
       login_contact_no: contactNo,
