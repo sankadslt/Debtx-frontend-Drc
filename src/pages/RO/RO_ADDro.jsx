@@ -4,7 +4,7 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import gmailIcon from "../../assets/images/google.png";
 import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import Swal from 'sweetalert2';
-import { getLoggedUserId } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "/src/services/auth/authService.js";
 
 export default function RO_ADDro() {
   const navigate = useNavigate();
@@ -26,8 +26,8 @@ export default function RO_ADDro() {
 
 
     const loadUser = async () => {
-          const user = await getLoggedUserId();
-          setUserDetail(user);
+          const userDetail = await getLoggedUserId();
+          setUserDetail(userDetail);
           console.log("User detail:", userDetail);
       };
   
@@ -114,16 +114,16 @@ const handleAddRO = async () => {
   try {
     if (!validateInputs()) return;
 
-    const drcId = 1;
+    
 
     const payload = {
       drcUser_type: userType,
-      drc_id: drcId,
+      drc_id: userDetail?.drc_id,
       ro_name: name ,
       nic: nic || '',
       login_email: email,
       login_contact_no: contactNo,
-      create_by: "admin_user",
+      create_by: userDetail?.user_id,
       rtoms: rtomAreas.map((area, index) => {
         const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
         return {
