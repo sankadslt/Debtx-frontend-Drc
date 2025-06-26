@@ -6,6 +6,8 @@ import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "/src/services/auth/authService.js";
 
+import {List_DRC_Details_By_DRC_ID } from "../../services/Drc/Drc.js";
+
 export default function RO_ADDro() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,18 +25,18 @@ export default function RO_ADDro() {
   const [name, setName] = useState('');
   const [nic, setNic] = useState('');
   const [userDetail, setUserDetail] = useState(null);
+  const [drcName, setDrcName] = useState("");
 
+  const loadUser = async () => {
+    const userDetail = await getLoggedUserId();
+    setUserDetail(userDetail);
+    console.log("User detail:", userDetail);
+  };
 
-    const loadUser = async () => {
-          const userDetail = await getLoggedUserId();
-          setUserDetail(userDetail);
-          console.log("User detail:", userDetail);
-      };
-  
-      useEffect(() => {
-          loadUser();
-      }, []);
-  
+  useEffect(() => {
+    loadUser();
+  }, []);
+
 
   useEffect(() => {
     if (initialItemType && itemData) {
@@ -71,103 +73,131 @@ export default function RO_ADDro() {
     fetchRTOMs();
   }, []);
 
+
+  const getDrcNameById = async () => {
+    try {
+      if (!userDetail?.drc_id) return;
+
+      const payload = { drc_id: userDetail.drc_id };
+
+      const response = await List_DRC_Details_By_DRC_ID(payload);
+
+      if (response.status === 'success') {
+        const drcNameFromApi = response.data.drc_name;
+        setDrcName(drcNameFromApi); 
+        console.log("DRC Name:", drcNameFromApi);
+      } else {
+        console.error("Failed to fetch DRC name:", response.message);
+      }
+    } catch (error) {
+      console.error("Error calling DRC API:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (userDetail?.drc_id) {
+      getDrcNameById();
+    }
+  }, [userDetail]);
+
+
   const validateInputs = () => {
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        Swal.fire({
-          title: 'Invalid Input',
-          text: 'Please enter a valid email address.',
-          icon: 'error',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-        });
-        return false;
-      }
-      if (!contactNo || !/^\+?\d{9,12}$/.test(contactNo)) {
-        Swal.fire({
-          title: 'Invalid Input',
-          text: 'Please enter a valid contact number (e.g., +94771234567).',
-          icon: 'error',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-        });
-        return false;
-      }
-      
-      if (rtomAreas.length > 0) {
-        const invalidRtom = rtomAreas.find(area => !rtomAreaOptions.some(opt => opt.area_name === area.name));
-        if (invalidRtom) {
-          Swal.fire({
-            title: 'Invalid RTOM',
-            text: `RTOM area "${invalidRtom.name}" is not valid.`,
-            icon: 'error',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-          });
-          return false;
-        }
-      }
-      return true;
-    };
-
-
-const handleAddRO = async () => {
-  try {
-    if (!validateInputs()) return;
-
-    
-
-    const payload = {
-      drcUser_type: userType,
-      drc_id: userDetail?.drc_id,
-      ro_name: name ,
-      nic: nic || '',
-      login_email: email,
-      login_contact_no: contactNo,
-      create_by: userDetail?.user_id,
-      rtoms: rtomAreas.map((area, index) => {
-        const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
-        return {
-          rtom_id: option?.rtom_id || area.rtom_id,
-          rtom_name: area.rtom_name || area.name,
-          billing_center_code: area.billing_center_code || option?.billing_center_code || 'N/A',
-          rtom_status: area.status ? "Active" : "Inactive",
-          handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
-        };
-      })
-    };
-
-    console.log("Sending payload:", payload);
-
-    const response = await fetch("http://localhost:5000/api/recovery_officer/Create_New_DRCUser_or_RO", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-
-    if (response.ok && result.success) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       Swal.fire({
-        title: "Success",
-        text: "Recovery Officer added successfully!",
-        icon: "success"
+        title: 'Invalid Input',
+        text: 'Please enter a valid email address.',
+        icon: 'error',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
-      navigate(-1);
-    } else {
-      throw new Error(result.message || "Failed to add Recovery Officer.");
+      return false;
+    }
+    if (!contactNo || !/^\+?\d{9,12}$/.test(contactNo)) {
+      Swal.fire({
+        title: 'Invalid Input',
+        text: 'Please enter a valid contact number (e.g., +94771234567).',
+        icon: 'error',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      return false;
     }
 
-  } catch (error) {
-    console.error("Error adding RO:", error);
-    Swal.fire({
-      title: "Error",
-      text: error.message || "Something went wrong. Please try again.",
-      icon: "error"
-    });
-  }
-};
+    if (rtomAreas.length > 0) {
+      const invalidRtom = rtomAreas.find(area => !rtomAreaOptions.some(opt => opt.area_name === area.name));
+      if (invalidRtom) {
+        Swal.fire({
+          title: 'Invalid RTOM',
+          text: `RTOM area "${invalidRtom.name}" is not valid.`,
+          icon: 'error',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+
+  const handleAddRO = async () => {
+    try {
+      if (!validateInputs()) return;
+
+
+
+      const payload = {
+        drcUser_type: userType,
+        drc_id: userDetail?.drc_id,
+        ro_name: name,
+        nic: nic || '',
+        login_email: email,
+        login_contact_no: contactNo,
+        create_by: userDetail?.user_id,
+        rtoms: rtomAreas.map((area, index) => {
+          const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
+          return {
+            rtom_id: option?.rtom_id || area.rtom_id,
+            rtom_name: area.rtom_name || area.name,
+            billing_center_code: area.billing_center_code || option?.billing_center_code || 'N/A',
+            rtom_status: area.status ? "Active" : "Inactive",
+            handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
+          };
+        })
+      };
+
+      console.log("Sending payload:", payload);
+
+      const response = await fetch("http://localhost:5000/api/recovery_officer/Create_New_DRCUser_or_RO", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        Swal.fire({
+          title: "Success",
+          text: "Recovery Officer added successfully!",
+          icon: "success"
+        });
+        navigate(-1);
+      } else {
+        throw new Error(result.message || "Failed to add Recovery Officer.");
+      }
+
+    } catch (error) {
+      console.error("Error adding RO:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "Something went wrong. Please try again.",
+        icon: "error"
+      });
+    }
+  };
 
 
   /*  const handleSave = () => {
@@ -241,7 +271,7 @@ const handleAddRO = async () => {
         {userType === "RO" ? "Register Recovery Officer" : "Register DRC User"}
       </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-10`}>
-        DRC Name : {itemData?.drc_name || "ABC company"}
+        DRC Name : {drcName || 'N/A'}
       </h2>
 
       <div className="flex gap-4 mt-4 justify-center">
@@ -429,7 +459,7 @@ const handleAddRO = async () => {
           <div className="flex justify-end p-4">
             <button className={GlobalStyle.buttonPrimary} onClick={handleAddRO} >
               {userType === "RO" ? "Add RO" : "Add "}
-              
+
             </button>
           </div>
         </div>
