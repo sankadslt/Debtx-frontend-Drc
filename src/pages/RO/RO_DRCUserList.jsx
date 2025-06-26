@@ -364,10 +364,10 @@ export default function RO_DRCUserList() {
                     <h2 className={GlobalStyle.headingLarge}>RO List</h2>
 
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} 
-                        onClick={() =>
-                            navigate("/ro/ro-add-ro")
-                        }>
+                        <button className={GlobalStyle.buttonPrimary}
+                            onClick={() =>
+                                navigate("/ro/ro-add-ro")
+                            }>
                             Add RO
                         </button>
                     </div>
@@ -380,7 +380,7 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={GlobalStyle.headingLarge}>DRC User List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary}  onClick={() =>
+                        <button className={GlobalStyle.buttonPrimary} onClick={() =>
                             navigate("/ro/ro-add-ro")
                         }>
                             Add DRC User
@@ -537,27 +537,27 @@ export default function RO_DRCUserList() {
                             </table>
                         </div>
                         {/* Pagination Section */}
-                        <div className={GlobalStyle.navButtonContainer}>
-                            <button
-                                onClick={() => handlePrevNext("prev")}
-                                disabled={roCurrentPage === 1}
-                                className={`${GlobalStyle.navButton} ${roCurrentPage === 1 ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowLeft />
-                            </button>
-                            <span>
-                                Page {roCurrentPage}
-                            </span>
-                            <button
-                                onClick={() => handlePrevNext("next")}
-                                disabled={roCurrentPage === roTotalPages}
-                                className={`${GlobalStyle.navButton} ${roCurrentPage === roTotalPages ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowRight />
-                            </button>
-                        </div>
+                        {roTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={roCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${roCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {roCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={roCurrentPage === roTotalPages}
+                                    className={`${GlobalStyle.navButton} ${roCurrentPage === roTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -634,32 +634,36 @@ export default function RO_DRCUserList() {
                             </div>
                         </div>
                         {/* Pagination Section */}
-                        <div className={GlobalStyle.navButtonContainer}>
-                            <button
-                                onClick={() => handlePrevNext("prev")}
-                                disabled={drcCurrentPage === 1}
-                                className={`${GlobalStyle.navButton} ${drcCurrentPage === 1 ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowLeft />
-                            </button>
-                            <span>
-                                Page {drcCurrentPage}
-                            </span>
-                            <button
-                                onClick={() => handlePrevNext("next")}
-                                disabled={drcCurrentPage === drcTotalPages}
-                                className={`${GlobalStyle.navButton} ${drcCurrentPage === drcTotalPages ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowRight />
-                            </button>
-                        </div>
+                        
+
+
+                        {drcTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={drcCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {drcCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={drcCurrentPage === drcTotalPages}
+                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 )}
             </div>
 
-            
+
         </div>
     );
 }
