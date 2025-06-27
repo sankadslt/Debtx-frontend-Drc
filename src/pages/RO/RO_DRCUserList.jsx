@@ -42,7 +42,7 @@ export default function RO_DRCUserList() {
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
     const [activeTab, setActiveTab] = useState("RO");
-    
+
 
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -83,19 +83,19 @@ export default function RO_DRCUserList() {
         }
     };
 
-    // Handle api calling only when the currentPage incriment more that before
+
     const handlePageChange = () => {
         // console.log("Page changed to:", currentPage);
 
         if (activeTab === "RO") {
             if (roCurrentPage > roMaxPage && roCurrentPage <= roTotalAPIPages) {
                 setRoMaxPage(roCurrentPage);
-                handleFilter(); // Call the filter function only after the page incrimet 
+                handleFilter();
             }
         } else {
             if (drcCurrentPage > drcMaxPage && drcCurrentPage <= drcTotalAPIPages) {
                 setDrcMaxPage(drcCurrentPage);
-                handleFilter(); // Call the filter function only after the page incrimet 
+                handleFilter();
             }
         }
     };
@@ -103,14 +103,14 @@ export default function RO_DRCUserList() {
     useEffect(() => {
 
         if (isRoFilterApplied) {
-            handlePageChange(); // Call the function whenever currentPage changes
+            handlePageChange();
         }
     }, [roCurrentPage]);
 
     useEffect(() => {
 
         if (isDrcFilterApplied) {
-            handlePageChange(); // Call the function whenever currentPage changes
+            handlePageChange();
         }
     }, [drcCurrentPage]);
 
@@ -143,6 +143,8 @@ export default function RO_DRCUserList() {
         }
     };
 
+    //for testing commit
+
     const getCurrentPage = () => {
         if (activeTab === "RO") {
             return roCurrentPage;
@@ -153,8 +155,7 @@ export default function RO_DRCUserList() {
 
     const handleFilter = async () => {
         try {
-
-            if (!userData) return; // Make sure user data is loaded
+            if (!userData) return;
 
             const payload = {
                 drc_id: userData.drc_id,
@@ -162,58 +163,50 @@ export default function RO_DRCUserList() {
                 drcUser_status: getUserStatus(),
                 pages: getCurrentPage(),
             };
+
             console.log("Payload sent to API: ", payload);
             setIsLoading(true);
 
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
                 if (error.response && error.response.status === 404) {
-                    Swal.fire({
-                        title: "No Results",
-                        text: "No matching data found for the selected filters.",
-                        icon: "warning",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false
-                    });
+
                     if (activeTab === "RO") {
                         setRoData([]);
-
                     } else {
                         setDrcData([]);
-
                     }
+
+                    Swal.fire({
+                        title: "No Results",
+                        text: "No matching data found for the selected filter.",
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#f1c40f"
+                    });
 
                     return null;
                 } else {
                     throw error;
                 }
             });
-            console.log("Response from API:", response);
-            setIsLoading(false); // Set loading state to false
 
-            // Updated response handling
+            console.log("Response from API:", response);
+            setIsLoading(false);
+
             if (response && response.data) {
                 const list = response.data;
                 console.log("Valid data received:", list);
-
 
                 if (activeTab === "RO") {
                     setRoData((prev) => [...prev, ...list]);
                     setRoTotalPages(Math.ceil(response.total_records / rowsPerPage));
                     setRoTotalAPIPages(response.total_records);
-                    //setRoMaxPage(currentPage);
                 } else {
                     setDrcData((prev) => [...prev, ...list]);
                     setDrcTotalPages(Math.ceil(response.total_records / rowsPerPage));
                     setDrcTotalAPIPages(response.total_records);
-                    //setDrcMaxPage(currentPage);
                 }
-
-
-            } else {
-                console.error("No valid List of All_RO_and_DRCuser_Details_to_DRC found in response:", response);
-                setFilteredData([]);
             }
-
         } catch (error) {
             console.error("Error filtering cases:", error);
             Swal.fire({
@@ -222,8 +215,8 @@ export default function RO_DRCUserList() {
                 icon: "error"
             });
         }
-
     };
+
 
     const handleFilterButton = () => {
         if (activeTab === "RO") {
@@ -257,6 +250,7 @@ export default function RO_DRCUserList() {
             setRoTotalPages(1);
             setRoTotalAPIPages(1);
             setRoStatus("");
+
         } else {
             setDrcData([]);
             setDrcCurrentPage(1);
@@ -269,14 +263,23 @@ export default function RO_DRCUserList() {
 
     useEffect(() => {
         if (userData) {
-            if (activeTab === "RO" && roData.length === 0 && !currentStatus) {
+            if (
+                activeTab === "RO" &&
+                roData.length === 0 &&
+                (roStatus === "" || isRoFilterApplied)
+            ) {
                 handleFilterButton();
             }
-            if (activeTab === "drcUser" && drcData.length === 0 && !currentStatus) {
+
+            if (
+                activeTab === "drcUser" &&
+                drcData.length === 0 &&
+                (drcUserStatus === "" || isDrcFilterApplied)
+            ) {
                 handleFilterButton();
             }
         }
-    }, [activeTab, userData]); // Now triggers only after userData is loaded
+    }, [activeTab, userData, roStatus, drcUserStatus]);
 
 
     const handlePrevNext = (direction) => {
@@ -339,8 +342,6 @@ export default function RO_DRCUserList() {
     };
 
 
-
-
     // display loading animation when data is loading
     if (isLoading) {
         return (
@@ -363,7 +364,10 @@ export default function RO_DRCUserList() {
                     <h2 className={GlobalStyle.headingLarge}>RO List</h2>
 
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} /* onClick={HandleAddDRC} */>
+                        <button className={GlobalStyle.buttonPrimary}
+                            onClick={() =>
+                                navigate("/ro/ro-add-ro")
+                            }>
                             Add RO
                         </button>
                     </div>
@@ -376,58 +380,67 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={GlobalStyle.headingLarge}>DRC User List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} /* onClick={HandleAddDRC} */>
+                        <button className={GlobalStyle.buttonPrimary} onClick={() =>
+                            navigate("/ro/ro-add-ro")
+                        }>
                             Add DRC User
                         </button>
                     </div>
                 </div>
             )}
 
-            <div className={`${GlobalStyle.cardContainer} w-full mb-8 mt-8`}>
-                <div className="flex gap-4 justify-end">
+            {/* Filters Section */}
+            <div className="w-full mb-2 mt-4">
+                <div className="flex justify-between items-center w-full mb-2">
 
-                    {/* Status Select Dropdown */}
-                    <select
-                        name="status"
-                        value={currentStatus}
-                        onChange={handleStatusChange}
-                        className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-                    >
-                        <option value="" disabled>Select Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="Terminate">Terminate</option>
-                    </select>
+                    {/* Search Bar */}
+                    <div className="flex justify-start mt-10 mb-4">
+                        <div className={GlobalStyle.searchBarContainer}>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={GlobalStyle.inputSearch}
 
-                    <button
-                        onClick={handleFilterButton}
-                        className={`${GlobalStyle.buttonPrimary}`}
-                    >
-                        Filter
-                    </button>
-                    <button onClick={handleClear} className={GlobalStyle.buttonRemove} >
-                        Clear
-                    </button>
+                            />
+                            <FaSearch className={GlobalStyle.searchBarIcon} />
+                        </div>
+                    </div>
 
+                    {/* Status Filter & Buttons */}
+                    <div className={`${GlobalStyle.cardContainer} w-auto`}>
+                        <div className="flex justify-end items-center space-x-4">
+                            <select
+                                name="status"
+                                value={currentStatus}
+                                onChange={handleStatusChange}
+                                className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+                            >
+                                <option value="" disabled>Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Terminate">Terminate</option>
+                            </select>
 
+                            <button
+                                onClick={handleFilterButton}
+                                className={GlobalStyle.buttonPrimary}
+                            >
+                                Filter
+                            </button>
+
+                            <button
+                                onClick={handleClear}
+                                className={`${GlobalStyle.buttonRemove} ${!currentStatus}`}
+                                disabled={!currentStatus}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-
-
-
             </div>
-            {/* Search Section */}
-            <div className="flex justify-start mt-10 mb-4">
-                <div className={GlobalStyle.searchBarContainer}>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={GlobalStyle.inputSearch}
-                    />
-                    <FaSearch className={GlobalStyle.searchBarIcon} />
-                </div>
-            </div>
+
 
             {/* Tabs */}
             <div className="flex border-b mb-4">
@@ -477,7 +490,7 @@ export default function RO_DRCUserList() {
                                                 }
                                             >
                                                 <td
-                                                    className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+                                                    className={`${GlobalStyle.tableData} text-black`}
                                                 >
                                                     {item.ro_id || "N/A"}
                                                 </td>
@@ -524,27 +537,27 @@ export default function RO_DRCUserList() {
                             </table>
                         </div>
                         {/* Pagination Section */}
-                        <div className={GlobalStyle.navButtonContainer}>
-                            <button
-                                onClick={() => handlePrevNext("prev")}
-                                disabled={roCurrentPage === 1}
-                                className={`${GlobalStyle.navButton} ${roCurrentPage === 1 ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowLeft />
-                            </button>
-                            <span>
-                                Page {roCurrentPage} of {roTotalPages}
-                            </span>
-                            <button
-                                onClick={() => handlePrevNext("next")}
-                                disabled={roCurrentPage === roTotalPages}
-                                className={`${GlobalStyle.navButton} ${roCurrentPage === roTotalPages ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowRight />
-                            </button>
-                        </div>
+                        {roTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={roCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${roCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {roCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={roCurrentPage === roTotalPages}
+                                    className={`${GlobalStyle.navButton} ${roCurrentPage === roTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -575,7 +588,7 @@ export default function RO_DRCUserList() {
                                                     }
                                                 >
                                                     <td
-                                                        className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+                                                        className={`${GlobalStyle.tableData} text-black`}
                                                     >
                                                         {item.drcUser_id || "N/A"}
                                                     </td>
@@ -621,38 +634,35 @@ export default function RO_DRCUserList() {
                             </div>
                         </div>
                         {/* Pagination Section */}
-                        <div className={GlobalStyle.navButtonContainer}>
-                            <button
-                                onClick={() => handlePrevNext("prev")}
-                                disabled={drcCurrentPage === 1}
-                                className={`${GlobalStyle.navButton} ${drcCurrentPage === 1 ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowLeft />
-                            </button>
-                            <span>
-                                Page {drcCurrentPage} of {drcTotalPages}
-                            </span>
-                            <button
-                                onClick={() => handlePrevNext("next")}
-                                disabled={drcCurrentPage === drcTotalPages}
-                                className={`${GlobalStyle.navButton} ${drcCurrentPage === drcTotalPages ? "cursor-not-allowed" : ""
-                                    }`}
-                            >
-                                <FaArrowRight />
-                            </button>
-                        </div>
+                        
+
+
+                        {drcTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={drcCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {drcCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={drcCurrentPage === drcTotalPages}
+                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                        }`}
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 )}
             </div>
 
-            <button
-                onClick={() => navigate(-1)}
-
-                className={`${GlobalStyle.buttonPrimary} `}
-            >
-                <FaArrowLeft />
-            </button>
 
         </div>
     );
