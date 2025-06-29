@@ -194,3 +194,19 @@ export const updateROorDRCUserDetails = async (data) => {
         throw new Error(error.response?.data?.message || 'Error updating RO or DRC user.');
     }
 };
+
+export const createNewDRCUserOrRO = async (data) => {
+    try {
+        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data);
+
+        if (response.data.success) {
+            return response.data;
+        } else {
+            console.error(response.data.message);
+            throw new Error(response.data.message);
+        }
+    } catch (error) {
+        console.error("Error creating DRC User or RO:", error.response?.data?.message || error.message);
+        throw new Error(error.response?.data?.message || 'Error creating DRC User or Recovery Officer.');
+    }
+};
