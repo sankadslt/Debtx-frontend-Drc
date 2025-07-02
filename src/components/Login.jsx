@@ -130,7 +130,7 @@ const Login = () => {
             <form className="space-y-5">
               <button
                 type="button"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition-all duration-200 disabled:opacity-50"
+                className="w-full py-2 bg-[#00256a] hover:bg-[#1f4289] text-white font-semibold rounded-lg shadow transition-all duration-200 disabled:opacity-50"
                 onClick={handleGoogleLogin}
                 disabled={socialLoading !== ""}
               >
