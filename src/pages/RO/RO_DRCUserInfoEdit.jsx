@@ -609,12 +609,13 @@
 
 // After Responsive
 
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaSearch } from "react-icons/fa";
 import Swal from 'sweetalert2';
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
-import gmailIcon from "../../assets/images/google.png";
 import { List_RO_Info_Own_By_RO_Id, updateROorDRCUserDetails } from "../../services/Ro/RO.js";
 import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
@@ -627,11 +628,19 @@ export default function RO_DRCUserDetailsEdit() {
   // State for fetched data
   const [fetchedData, setFetchedData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Initial values for comparison
+  const [initialContactNo, setInitialContactNo] = useState('');
+  const [initialEmail, setInitialEmail] = useState('');
+  const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
+  const [initialRtomAreas, setInitialRtomAreas] = useState([]);
   // Editable fields
   const [contactNo, setContactNo] = useState('');
+  const [contactNoError, setContactNoError] = useState('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
-  const [drcUserStatus, setDrcUserStatus] = useState('Inactive'); // Default to 'Inactive'
+  const [remarkError, setRemarkError] = useState('');
+  const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -659,20 +668,14 @@ export default function RO_DRCUserDetailsEdit() {
         const response = await List_RO_Info_Own_By_RO_Id(payload);
         setIsLoading(false);
 
-        console.log('API Response:', {
-          itemType,
-          ro_id: itemData.ro_id,
-          drcUser_id: itemData.drcUser_id,
-          drcUser_status: response.data?.drcUser_status,
-          data: response.data,
-        });
-
         if (response && response.data) {
           setFetchedData(response.data);
           setContactNo(response.data.contact_no || '');
+          setInitialContactNo(response.data.contact_no || '');
           setEmail(response.data.email || '');
+          setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
-          // Normalize drcUser_status (boolean or string)
+          // Normalize drcUser_status
           let normalizedStatus;
           if (typeof response.data.drcUser_status === 'boolean') {
             normalizedStatus = response.data.drcUser_status ? 'Active' : 'Inactive';
@@ -683,7 +686,7 @@ export default function RO_DRCUserDetailsEdit() {
               apiStatus === 'inactive' ? 'Inactive' :
               apiStatus && ['active', 'inactive'].includes(apiStatus) ?
                 apiStatus.charAt(0).toUpperCase() + apiStatus.slice(1).toLowerCase() :
-                'Inactive'; // Default to 'Inactive' for safety
+                'Inactive';
           }
 
           if (response.data.drcUser_status == null) {
@@ -695,16 +698,16 @@ export default function RO_DRCUserDetailsEdit() {
             });
           }
 
-          console.log('Normalized Status:', normalizedStatus);
           setDrcUserStatus(normalizedStatus);
+          setInitialDrcUserStatus(normalizedStatus);
 
           if (itemType === 'RO') {
-            setRtomAreas(
-              (response.data.rtom_areas || []).map(area => ({
-                ...area,
-                isNew: false,
-              }))
-            );
+            const areas = (response.data.rtom_areas || []).map(area => ({
+              ...area,
+              isNew: false,
+            }));
+            setRtomAreas(areas);
+            setInitialRtomAreas(areas);
           }
         } else {
           Swal.fire({
@@ -754,38 +757,69 @@ export default function RO_DRCUserDetailsEdit() {
     fetchRTOMs();
   }, []);
 
+  const handleContactNoChange = (value) => {
+    const cleaned = value.replace(/[^+\d]/g, '');
+    const digitsOnly = cleaned.replace(/\D/g, '');
+
+    setContactNo(cleaned);
+    if (!cleaned) {
+      setContactNoError('Please enter a contact number.');
+    } else if (digitsOnly.length < 9 || digitsOnly.length > 10) {
+      setContactNoError('Contact number must be 9-10 digits.');
+    } else {
+      setContactNoError('');
+    }
+  };
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError('Please enter a valid email address.');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleRemarkChange = (value) => {
+    setRemark(value);
+    if (!value.trim()) {
+      setRemarkError('Please enter a remark.');
+    } else {
+      setRemarkError('');
+    }
+  };
+
   const validateInputs = () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a valid email address.',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+    let isValid = true;
+
+    // Validate contact number
+    if (!contactNo || !/^\+?\d{9,10}$/.test(contactNo)) {
+      setContactNoError('Please enter a valid contact number (e.g., +94771234567).');
+      isValid = false;
     }
-    if (!contactNo || !/^\+?\d{9,12}$/.test(contactNo)) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a valid contact number (e.g., +94771234567).',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+
+    // Validate email (optional but must be valid if provided)
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      isValid = false;
     }
+
+    // Validate remark (mandatory)
     if (!remark.trim()) {
-    Swal.fire({
-      title: 'Missing Remark',
-      text: 'Please enter a remark before saving.',
-      icon: 'warning',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-    });
-    return false;
-  }
-    if (itemType === 'RO' && rtomAreas.length > 0) {
+      setRemarkError('Please enter a remark.');
+      Swal.fire({
+        title: 'Missing Remark',
+        text: 'Please enter a remark before saving.',
+        icon: 'warning',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      isValid = false;
+    }
+
+    // Validate RTOM areas for RO
+    if (itemType === 'RO') {
+      // Check for invalid RTOM areas
       const invalidRtom = rtomAreas.find(area => !rtomAreaOptions.some(opt => opt.area_name === area.name));
       if (invalidRtom) {
         Swal.fire({
@@ -795,10 +829,50 @@ export default function RO_DRCUserDetailsEdit() {
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
-        return false;
+        isValid = false;
+      }
+
+      // Check if at least one RTOM is active when RO is active
+      if (drcUserStatus === 'Active' && rtomAreas.length > 0 && !rtomAreas.some(area => area.status)) {
+        Swal.fire({
+          title: 'Invalid RTOM Status',
+          text: 'At least one RTOM area must be active when the Recovery Officer is active.',
+          icon: 'error',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+        isValid = false;
       }
     }
-    return true;
+
+    // Check if at least one field has changed
+    const hasStatusChanged = drcUserStatus !== initialDrcUserStatus;
+    const hasContactNoChanged = contactNo !== initialContactNo;
+    const hasEmailChanged = email !== initialEmail;
+    const hasRtomAreasChanged = JSON.stringify(rtomAreas) !== JSON.stringify(initialRtomAreas);
+
+    if (!hasStatusChanged && !hasContactNoChanged && !hasEmailChanged && !hasRtomAreasChanged) {
+      Swal.fire({
+        title: 'No Changes',
+        text: 'At least one of the following must be changed: Status, Contact Number, Email, or RTOM Areas.',
+        icon: 'warning',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      isValid = false;
+    }
+
+    if (!isValid) {
+      Swal.fire({
+        title: 'Invalid Input',
+        text: 'Please correct the errors in the form or make at least one change before saving.',
+        icon: 'error',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+    }
+
+    return isValid;
   };
 
   const handleSave = async () => {
@@ -817,18 +891,17 @@ export default function RO_DRCUserDetailsEdit() {
       }
 
       const userPayload = await getLoggedUserId();
-      const create_by = userPayload?.user_id; // Use user_id or email as string
+      const create_by = userPayload?.user_id;
 
       const basePayload = {
         ...(itemType === 'RO' ? { ro_id: roId } : { drcUser_id: drcUserId }),
         drc_id: drcId,
         ro_name: fetchedData?.drcUser_name || fetchedData?.recovery_officer_name || 'N/A',
-        login_email: email,
+        login_email: email || null,
         login_contact_no: contactNo,
         drcUser_status: drcUserStatus,
-        // create_by: fetchedData?.create_by || 'admin_user',
         create_by: create_by,
-        remark: remark || 'Updated user details',
+        remark: remark.trim(),
       };
 
       const payload = itemType === 'RO' ? {
@@ -843,7 +916,7 @@ export default function RO_DRCUserDetailsEdit() {
             rtom_status: area.status ? 'Active' : 'Inactive',
             rtom_name: area.name,
             billing_center_code: area.billing_center_code || rtomOption.billing_center_code || 'N/A',
-            handling_type: area.handling_type || 'Primary',
+            handling_type: area.handling_type || (rtomAreas.length === 1 ? 'Primary' : 'Secondary'),
           };
         }),
       } : basePayload;
@@ -860,7 +933,7 @@ export default function RO_DRCUserDetailsEdit() {
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
-        navigate(-1); 
+        navigate(-1);
       } else {
         throw new Error(response.message || 'Failed to update user details.');
       }
@@ -888,6 +961,7 @@ export default function RO_DRCUserDetailsEdit() {
         status: true,
         isNew: true,
         billing_center_code: selectedOption?.billing_center_code || 'N/A',
+        handling_type: rtomAreas.length === 0 ? 'Primary' : 'Secondary',
       }]);
       setSelectedRtomArea('');
     }
@@ -944,7 +1018,7 @@ export default function RO_DRCUserDetailsEdit() {
         {itemType === "drcUser" ? "Edit DRC User" : "Edit Recovery Officer"}
       </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
-        DRC Name : {fetchedData.drc_name || 'N/A'}
+        DRC Name: {fetchedData.drc_name || 'N/A'}
       </h2>
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
@@ -958,9 +1032,6 @@ export default function RO_DRCUserDetailsEdit() {
                 className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${drcUserStatus === 'Active' ? 'left-[18px] sm:left-[26px]' : 'left-[2px]'}`}
               />
             </div>
-            <span className={`text-xs sm:text-sm font-semibold ml-2 ${drcUserStatus === 'Active' ? 'text-green-600' : 'text-gray-500'}`}>
-              {drcUserStatus}
-            </span>
           </div>
 
           <div className="overflow-x-auto">
@@ -972,9 +1043,7 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {itemType === "drcUser"
-                    ? "DRC User Name"
-                    : "Recovery Officer Name"}
+                  {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
@@ -992,38 +1061,38 @@ export default function RO_DRCUserDetailsEdit() {
                 <div className="table-cell px-2 sm:px-4 py-2"></div>
               </div>
               <div className="table-row">
-                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number
+               <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number 
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
                     value={contactNo}
-                    onChange={(e) => setContactNo(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
-                    placeholder="+94771234567"
+                    onChange={(e) => handleContactNoChange(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactNoError ? 'border-red-500' : ''}`}
                   />
+                  {contactNoError && (
+                    <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
+                  )}
                 </div>
               </div>
               <div className="table-row">
-                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  <img
-                    src={gmailIcon}
-                    alt="Email"
-                    className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2 align-middle"
-                    title="Email"
-                  />
+              <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Email
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px]`}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
                     placeholder="example@domain.com"
                   />
+                  {emailError && (
+                    <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1066,13 +1135,10 @@ export default function RO_DRCUserDetailsEdit() {
                                   className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? 'left-[18px] sm:left-[26px]' : 'left-[2px]'}`}
                                 />
                               </div>
-                              <span className={`text-xs sm:text-sm font-semibold ${area.status ? 'text-green-600' : 'text-gray-500'}`}>
-                                {area.status ? 'Active' : 'Inactive'}
-                              </span>
                               {area.isNew && (
                                 <button
                                   onClick={() => handleRemoveRtomArea(index)}
-                                  className={`${GlobalStyle.buttonPrimary} w-8 h-6 sm:w-10 sm:h-8 flex items-center justify-center text-xs sm:text-sm`}
+                                  className={`${GlobalStyle.buttonPrimary} bg-red-500 hover:bg-red-600 w-8 h-6 sm:w-10 sm:h-8 flex items-center justify-center text-xs sm:text-sm`}
                                   title="Remove RTOM Area"
                                 >
                                   -
@@ -1129,14 +1195,17 @@ export default function RO_DRCUserDetailsEdit() {
           <div className="flex flex-col gap-4 p-2 sm:p-4">
             <div className="flex flex-col">
               <div className="flex items-center mb-2">
-                <label className="font-semibold mr-2 text-sm sm:text-base">Remark</label>
+                <label className="font-semibold mr-2 text-sm sm:text-base">Remark <span className="text-red-500">*</span></label>
               </div>
               <div className="ml-0 sm:ml-4">
                 <textarea
                   value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
-                  className={`${GlobalStyle.inputText} w-full h-20 sm:h-24`}
+                  onChange={(e) => handleRemarkChange(e.target.value)}
+                  className={`${GlobalStyle.inputText} w-full h-20 sm:h-24 ${remarkError ? 'border-red-500' : ''}`}
                 />
+                {remarkError && (
+                  <p className="text-red-500 text-xs mt-1">{remarkError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -1195,9 +1264,9 @@ export default function RO_DRCUserDetailsEdit() {
                     fetchedData.log_history
                       .filter(
                         (log) =>
-                          log.edited_on?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
-                          log.action?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
-                          log.edited_by?.toLowerCase()?.includes(searchQuery.toLowerCase())
+                          (log.edited_on?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                          (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                          (log.edited_by?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                       )
                       .map((log, index) => (
                         <tr

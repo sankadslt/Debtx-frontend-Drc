@@ -545,13 +545,8 @@ export default function RO_DRCUserInfo() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  <img
-                    src={gmailIcon}
-                    alt="Email"
-                    className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2 align-middle"
-                    title="Email"
-                  />
+                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Email
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base break-all">{userData?.email || 'N/A'}</div>
@@ -563,7 +558,7 @@ export default function RO_DRCUserInfo() {
             <>
               <div className="table w-full mt-4">
                 <div className="table-row">
-                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">RTOM Areas</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">RTOM Areas :</div>
                   {/* <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div> */}
                   <div className="table-cell px-2 sm:px-4 py-2" />
                 </div>
@@ -599,7 +594,7 @@ export default function RO_DRCUserInfo() {
                                 />
                               </div>
                               <span className={`text-xs sm:text-sm font-semibold ${area.status ? "text-green-600" : "text-gray-500"}`}>
-                                {area.status ? "Active" : "Inactive"}
+                    
                               </span>
                             </div>
                           </td>

@@ -393,10 +393,9 @@
 
 // After Responsive
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import gmailIcon from "../../assets/images/google.png";
-import editIcon from "../../assets/images/edit-info.svg";
 import { FaSearch, FaArrowLeft } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import Swal from 'sweetalert2';
@@ -409,7 +408,9 @@ export default function RecoveryOfficerEndPage() {
     const { userData, activeUserType } = location.state || {};
 
     const [endDate, setEndDate] = useState('');
+    const [endDateError, setEndDateError] = useState('');
     const [remark, setRemark] = useState('');
+    const [remarkError, setRemarkError] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [userId, setUserId] = useState(null); // Stores ro_id or drcUser_id
@@ -461,42 +462,29 @@ export default function RecoveryOfficerEndPage() {
         fetchId();
     }, [userData, activeUserType]);
 
-    const handleSave = async () => {
-        // Validate inputs
+    const validateInputs = () => {
+        let isValid = true;
+
         if (!endDate) {
-            Swal.fire({
-                title: "Invalid Input",
-                text: "End Date is required.",
-                icon: "error",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            });
-            return;
-        }
-        if (!remark) {
-            Swal.fire({
-                title: "Invalid Input",
-                text: "Remark is required.",
-                icon: "error",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            });
-            return;
+            setEndDateError('Please select an end date.');
+            isValid = false;
+        } else {
+            const selectedDate = new Date(endDate);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0);
+            if (selectedDate < currentDate) {
+                setEndDateError('End date cannot be in the past. Please select today or a future date.');
+                isValid = false;
+            } else {
+                setEndDateError('');
+            }
         }
 
-        const selectedDate = new Date(endDate);
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-
-        if (selectedDate < currentDate) {
-            Swal.fire({
-                title: "Invalid Date",
-                text: "End Date cannot be in the past. Please select today or a future date.",
-                icon: "error",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            });
-            return;
+        if (!remark.trim()) {
+            setRemarkError('Please enter a remark.');
+            isValid = false;
+        } else {
+            setRemarkError('');
         }
 
         if (!userId) {
@@ -507,19 +495,58 @@ export default function RecoveryOfficerEndPage() {
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             });
-            return;
+            isValid = false;
         }
 
+        if (!isValid) {
+            Swal.fire({
+                title: "Invalid Input",
+                text: "Please correct the errors in the form before saving.",
+                icon: "error",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+            });
+        }
+
+        return isValid;
+    };
+
+    const handleEndDateChange = (e) => {
+        const value = e.target.value;
+        setEndDate(value);
+        if (!value) {
+            setEndDateError('Please select an end date.');
+        } else {
+            const selectedDate = new Date(value);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0);
+            if (selectedDate < currentDate) {
+                setEndDateError('End date cannot be in the past. Please select today or a future date.');
+            } else {
+                setEndDateError('');
+            }
+        }
+    };
+
+    const handleRemarkChange = (e) => {
+        const value = e.target.value;
+        setRemark(value);
+        setRemarkError(value.trim() ? '' : 'Please enter a remark.');
+    };
+
+    const handleSave = async () => {
+        if (!validateInputs()) return;
+
         try {
-            // Fetch the logged-in user's data and extract user_id or email
+            // Fetch the logged-in user's data and extract user_id
             const userPayload = await getLoggedUserId();
-            const end_by = userPayload?.user_id; // Use user_id or email as string
+            const end_by = userPayload?.user_id;
 
             const terminationDetails = {
                 [activeUserType === "drcUser" ? "drcUser_id" : "ro_id"]: Number(userId),
                 end_by: end_by,
                 end_dtm: new Date(endDate).toISOString(),
-                remark: remark.trim() // Ensure remark is a string
+                remark: remark.trim()
             };
 
             console.log("Sending termination request:", terminationDetails);
@@ -554,26 +581,18 @@ export default function RecoveryOfficerEndPage() {
                 End {activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"}
             </h2>
             <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
-                DRC Name: {userData?.drc_name || 'null'}
+                DRC Name: {userData?.drc_name || 'N/A'}
             </h2>
 
             {/* Details Card */}
             <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
                 <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
-                    {/* <img
-                        src={editIcon}
-                        alt="Edit"
-                        title="Edit"
-                        className="w-5 h-5 sm:w-6 sm:h-6 absolute top-2 right-2 cursor-pointer hover:scale-110 transition-transform"
-                    /> */}
-
                     <div className="overflow-x-auto">
                         <div className="table w-full min-w-[300px]">
-                            {/* Table Rows */}
                             <div className="table-row">
                                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Added Date</div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.added_date || 'null'}</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.added_date || 'N/A'}</div>
                             </div>
 
                             <div className="table-row">
@@ -582,14 +601,14 @@ export default function RecoveryOfficerEndPage() {
                                 </div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
-                                    {userData?.drcUser_name || userData?.recovery_officer_name || 'null'}
+                                    {userData?.drcUser_name || userData?.recovery_officer_name || 'N/A'}
                                 </div>
                             </div>
 
                             <div className="table-row">
                                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">NIC</div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.nic || 'null'}</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.nic || 'N/A'}</div>
                             </div>
 
                             <div className="table-row">
@@ -599,21 +618,15 @@ export default function RecoveryOfficerEndPage() {
                             </div>
 
                             <div className="table-row">
-                                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Contact No</div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no || 'null'}</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no || 'N/A'}</div>
                             </div>
 
                             <div className="table-row">
-                                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                                    <img
-                                        src={gmailIcon}
-                                        alt="Email"
-                                        className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2 align-middle"
-                                    />
-                                </div>
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Email</div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base break-all">{userData?.email || 'null'}</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base break-all">{userData?.email || 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -639,7 +652,7 @@ export default function RecoveryOfficerEndPage() {
                                                     } border-b`}
                                                 >
                                                     <td className={`${GlobalStyle.tableData} text-center`}>
-                                                        {area.name}
+                                                        {area.name || 'N/A'}
                                                     </td>
                                                     <td className={`${GlobalStyle.tableData} text-center`}>
                                                         <div className="flex items-center justify-center gap-2">
@@ -650,9 +663,7 @@ export default function RecoveryOfficerEndPage() {
                                                                     className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? "left-[18px] sm:left-[26px]" : "left-[2px]"}`}
                                                                 />
                                                             </div>
-                                                            <span className={`text-xs sm:text-sm font-semibold ${area.status ? "text-green-600" : "text-gray-500"}`}>
-                                                                {area.status ? "Active" : "Inactive"}
-                                                            </span>
+                                                            
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -676,22 +687,32 @@ export default function RecoveryOfficerEndPage() {
             <div className="flex justify-center mt-8 px-4">
                 <div className="flex flex-col w-full max-w-[600px]">
                     <div className="flex flex-col sm:flex-row sm:items-center mb-4 gap-2 sm:gap-4">
-                        <label className="font-semibold text-sm sm:text-base min-w-[90px]">End date:</label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className={`${GlobalStyle.inputText} w-full sm:w-[250px] h-10`}
-                            min={today}
-                        />
+                        <label className="font-semibold text-sm sm:text-base min-w-[90px]">
+                            End date <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex flex-col w-full sm:w-[250px]">
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={handleEndDateChange}
+                                className={`${GlobalStyle.inputText} w-full h-10 ${endDateError ? 'border-red-500' : ''}`}
+                                min={today}
+                            />
+                            {endDateError && <p className="text-red-500 text-xs mt-1">{endDateError}</p>}
+                        </div>
                     </div>
 
-                    <label className="font-semibold mb-2 text-sm sm:text-base">Remark:</label>
-                    <textarea
-                        value={remark}
-                        onChange={(e) => setRemark(e.target.value)}
-                        className={`${GlobalStyle.inputText} w-full h-32`}
-                    />
+                    <div className="flex flex-col">
+                        <label className="font-semibold mb-2 text-sm sm:text-base">
+                            Remark <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            value={remark}
+                            onChange={handleRemarkChange}
+                            className={`${GlobalStyle.inputText} w-full h-32 ${remarkError ? 'border-red-500' : ''}`}
+                        />
+                        {remarkError && <p className="text-red-500 text-xs mt-1">{remarkError}</p>}
+                    </div>
 
                     <div className="flex justify-end mt-6">
                         <button className={GlobalStyle.buttonPrimary} onClick={handleSave}>
@@ -748,9 +769,9 @@ export default function RecoveryOfficerEndPage() {
                                         userData.log_history
                                             .filter(
                                                 (log) =>
-                                                    log.edited_on?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                    log.action?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                    log.edited_by?.toLowerCase().includes(searchQuery.toLowerCase())
+                                                    (log.edited_on?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                                                    (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                                                    (log.edited_by?.toLowerCase() || '').includes(searchQuery.toLowerCase())
                                             )
                                             .map((log, index) => (
                                                 <tr
@@ -760,10 +781,10 @@ export default function RecoveryOfficerEndPage() {
                                                     } border-b`}
                                                 >
                                                     <td className={`${GlobalStyle.tableData} text-center`}>
-                                                        {log.edited_on}
+                                                        {log.edited_on || 'N/A'}
                                                     </td>
-                                                    <td className={GlobalStyle.tableData}>{log.action}</td>
-                                                    <td className={GlobalStyle.tableData}>{log.edited_by}</td>
+                                                    <td className={GlobalStyle.tableData}>{log.action || 'N/A'}</td>
+                                                    <td className={GlobalStyle.tableData}>{log.edited_by || 'N/A'}</td>
                                                 </tr>
                                             ))
                                     ) : (
