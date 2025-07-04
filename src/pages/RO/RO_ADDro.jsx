@@ -479,6 +479,8 @@ import { createNewDRCUserOrRO } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "/src/services/auth/authService.js";
 import { List_DRC_Details_By_DRC_ID } from "../../services/Drc/Drc.js";
+import addIcon from "../../assets/images/add.svg";
+import iconImg from "../../assets/images/minorc.png";
 
 export default function RO_ADDro() {
   const navigate = useNavigate();
@@ -678,12 +680,13 @@ export default function RO_ADDro() {
 
     try {
       await createNewDRCUserOrRO(payload);
-      Swal.fire({
+      await Swal.fire({
         title: "Success",
         text: `${userType === "RO" ? "Recovery Officer" : "DRC User"} added successfully and sent for approval!`,
         icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
+        confirmButtonText: "OK",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
       navigate(-1);
     } catch (error) {
@@ -691,11 +694,13 @@ export default function RO_ADDro() {
         title: "Error",
         text: error.message || "Something went wrong. Please try again.",
         icon: "error",
+        confirmButtonText: "OK",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
     }
   };
 
-  // RTOM handlers
   const handleAddRtomArea = () => {
     if (selectedRtomArea && !rtomAreas.some(area => area.name === selectedRtomArea)) {
       const selectedOption = rtomAreaOptions.find(opt => opt.area_name === selectedRtomArea);
@@ -727,12 +732,13 @@ export default function RO_ADDro() {
           title: 'Removed',
           text: 'RTOM area has been removed successfully.',
           icon: 'success',
+          confirmButtonText: 'OK',
           timer: 1500,
-          showConfirmButton: false,
         });
       }
     });
   };
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
@@ -765,7 +771,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                 {userType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}   <span className="text-red-500">*</span>
+                  {userType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -781,7 +787,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                 {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"}   <span className="text-red-500">*</span>
+                  {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -804,7 +810,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-              Contact Number     <span className="text-red-500">*</span>
+                  Contact Number <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -813,7 +819,6 @@ export default function RO_ADDro() {
                     className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError ? 'border-red-500' : ''}`}
                     value={contactNo}
                     onChange={handleContactChange}
-                   
                   />
                   {contactError && <p className="text-red-500 text-xs mt-1">{contactError}</p>}
                 </div>
@@ -821,7 +826,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                   Email
+                  Email
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -830,7 +835,6 @@ export default function RO_ADDro() {
                     className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
                     value={email}
                     onChange={handleEmailChange}
-                   
                   />
                   {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
                 </div>
@@ -862,12 +866,20 @@ export default function RO_ADDro() {
                             </option>
                           ))}
                       </select>
-                      <button
+                     
+
+
+                       <button
+                        type="button"
                         onClick={handleAddRtomArea}
-                        className={`${GlobalStyle.buttonPrimary} w-full sm:w-auto`}
+                        className={`${GlobalStyle.buttonCircle} md:ml-2 self-end md:self-auto`}
                         disabled={!selectedRtomArea}
                       >
-                        +
+                        <img
+                          src={addIcon}
+                          alt="Add"
+                          style={{ width: 20, height: 20 }}
+                        />
                       </button>
                     </div>
                   </div>
@@ -893,15 +905,19 @@ export default function RO_ADDro() {
                           <td className={`${GlobalStyle.tableData} text-center`}>
                             <div className="flex items-center justify-center gap-2 flex-wrap">
                              
-                              {area.isNew && (
-                                <button
-                                  onClick={() => handleRemoveRtomArea(index)}
-                                  className={`${GlobalStyle.buttonPrimary} bg-red-500 hover:bg-red-600 w-8 h-6 sm:w-10 sm:h-8 flex items-center justify-center text-xs sm:text-sm`}
-                                  title="Remove RTOM Area"
-                                >
-                                  -
-                                </button>
-                              )}
+
+                               <button
+                              type="button"
+                              onClick={() => handleRemoveRtomArea(index)}
+                              className={`${GlobalStyle.buttonCircle} ml-2`}
+                                title="Remove RTOM Area"
+                            >
+                              <img
+                                src={iconImg}
+                                alt="Remove"
+                                style={{ width: 20, height: 20 }}
+                              />
+                            </button>
                             </div>
                           </td>
                         </tr>

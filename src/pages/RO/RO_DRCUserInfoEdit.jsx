@@ -610,15 +610,18 @@
 // After Responsive
 
 
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaSearch } from "react-icons/fa";
 import Swal from 'sweetalert2';
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
+import gmailIcon from "../../assets/images/google.png";
 import { List_RO_Info_Own_By_RO_Id, updateROorDRCUserDetails } from "../../services/Ro/RO.js";
 import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
+import addIcon from "../../assets/images/add.svg";
+import iconImg from "../../assets/images/minorc.png";
+
 
 export default function RO_DRCUserDetailsEdit() {
   const navigate = useNavigate();
@@ -628,24 +631,23 @@ export default function RO_DRCUserDetailsEdit() {
   // State for fetched data
   const [fetchedData, setFetchedData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  // Initial values for comparison
-  const [initialContactNo, setInitialContactNo] = useState('');
-  const [initialEmail, setInitialEmail] = useState('');
-  const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
-  const [initialRtomAreas, setInitialRtomAreas] = useState([]);
   // Editable fields
   const [contactNo, setContactNo] = useState('');
   const [contactNoError, setContactNoError] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
-  const [remarkError, setRemarkError] = useState('');
   const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [rtomAreaOptions, setRtomAreaOptions] = useState([]);
+  // Track initial values for change detection
+  const [initialContactNo, setInitialContactNo] = useState('');
+  const [initialEmail, setInitialEmail] = useState('');
+  const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
+  const [initialRtomAreas, setInitialRtomAreas] = useState([]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -667,6 +669,14 @@ export default function RO_DRCUserDetailsEdit() {
         setIsLoading(true);
         const response = await List_RO_Info_Own_By_RO_Id(payload);
         setIsLoading(false);
+
+        console.log('API Response:', {
+          itemType,
+          ro_id: itemData.ro_id,
+          drcUser_id: itemData.drcUser_id,
+          drcUser_status: response.data?.drcUser_status,
+          data: response.data,
+        });
 
         if (response && response.data) {
           setFetchedData(response.data);
@@ -698,6 +708,7 @@ export default function RO_DRCUserDetailsEdit() {
             });
           }
 
+          console.log('Normalized Status:', normalizedStatus);
           setDrcUserStatus(normalizedStatus);
           setInitialDrcUserStatus(normalizedStatus);
 
@@ -707,7 +718,7 @@ export default function RO_DRCUserDetailsEdit() {
               isNew: false,
             }));
             setRtomAreas(areas);
-            setInitialRtomAreas(areas);
+            setInitialRtomAreas(JSON.parse(JSON.stringify(areas))); // Deep copy
           }
         } else {
           Swal.fire({
@@ -761,36 +772,36 @@ export default function RO_DRCUserDetailsEdit() {
     const cleaned = value.replace(/[^+\d]/g, '');
     const digitsOnly = cleaned.replace(/\D/g, '');
 
-    setContactNo(cleaned);
-    if (!cleaned) {
-      setContactNoError('Please enter a contact number.');
-    } else if (digitsOnly.length < 9 || digitsOnly.length > 10) {
-      setContactNoError('Contact number must be 9-10 digits.');
+    if (digitsOnly.length > 10) {
+      setContactNoError('Contact number cannot exceed 10 digits.');
     } else {
-      setContactNoError('');
+      setContactNoError(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
+      setContactNo(cleaned);
     }
   };
 
   const handleEmailChange = (value) => {
     setEmail(value);
-    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (!value) {
+      setEmailError('Please enter an email address.');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       setEmailError('Please enter a valid email address.');
     } else {
       setEmailError('');
     }
   };
 
-  const handleRemarkChange = (value) => {
-    setRemark(value);
-    if (!value.trim()) {
-      setRemarkError('Please enter a remark.');
-    } else {
-      setRemarkError('');
-    }
-  };
-
   const validateInputs = () => {
     let isValid = true;
+
+    // Validate email
+    if (!email) {
+      setEmailError('Please enter an email address.');
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      isValid = false;
+    }
 
     // Validate contact number
     if (!contactNo || !/^\+?\d{9,10}$/.test(contactNo)) {
@@ -798,15 +809,8 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
-    // Validate email (optional but must be valid if provided)
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError('Please enter a valid email address.');
-      isValid = false;
-    }
-
-    // Validate remark (mandatory)
+    // Validate remark
     if (!remark.trim()) {
-      setRemarkError('Please enter a remark.');
       Swal.fire({
         title: 'Missing Remark',
         text: 'Please enter a remark before saving.',
@@ -817,9 +821,32 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
+    // Check for changes
+    const hasChanges =
+      contactNo !== initialContactNo ||
+      email !== initialEmail ||
+      drcUserStatus !== initialDrcUserStatus ||
+      (itemType === 'RO' &&
+        (rtomAreas.length !== initialRtomAreas.length ||
+         rtomAreas.some((area, index) => 
+           index >= initialRtomAreas.length || // New area added
+           area.name !== initialRtomAreas[index]?.name || 
+           area.status !== initialRtomAreas[index]?.status
+         )));
+
+    if (!hasChanges && remark.trim()) {
+      Swal.fire({
+        title: 'No Changes Detected',
+        text: 'You must make at least one change to the form before adding a remark.',
+        icon: 'warning',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+      isValid = false;
+    }
+
     // Validate RTOM areas for RO
-    if (itemType === 'RO') {
-      // Check for invalid RTOM areas
+    if (itemType === 'RO' && rtomAreas.length > 0) {
       const invalidRtom = rtomAreas.find(area => !rtomAreaOptions.some(opt => opt.area_name === area.name));
       if (invalidRtom) {
         Swal.fire({
@@ -832,11 +859,11 @@ export default function RO_DRCUserDetailsEdit() {
         isValid = false;
       }
 
-      // Check if at least one RTOM is active when RO is active
-      if (drcUserStatus === 'Active' && rtomAreas.length > 0 && !rtomAreas.some(area => area.status)) {
+      // Ensure at least one RTOM is active if user status is Active
+      if (drcUserStatus === 'Active' && !rtomAreas.some(area => area.status)) {
         Swal.fire({
           title: 'Invalid RTOM Status',
-          text: 'At least one RTOM area must be active when the Recovery Officer is active.',
+          text: 'At least one RTOM area must be active when the user status is Active.',
           icon: 'error',
           allowOutsideClick: false,
           allowEscapeKey: false,
@@ -845,27 +872,10 @@ export default function RO_DRCUserDetailsEdit() {
       }
     }
 
-    // Check if at least one field has changed
-    const hasStatusChanged = drcUserStatus !== initialDrcUserStatus;
-    const hasContactNoChanged = contactNo !== initialContactNo;
-    const hasEmailChanged = email !== initialEmail;
-    const hasRtomAreasChanged = JSON.stringify(rtomAreas) !== JSON.stringify(initialRtomAreas);
-
-    if (!hasStatusChanged && !hasContactNoChanged && !hasEmailChanged && !hasRtomAreasChanged) {
-      Swal.fire({
-        title: 'No Changes',
-        text: 'At least one of the following must be changed: Status, Contact Number, Email, or RTOM Areas.',
-        icon: 'warning',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      isValid = false;
-    }
-
     if (!isValid) {
       Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please correct the errors in the form or make at least one change before saving.',
+        title: 'Cannot submit only remark',
+        text: 'You must make at least one change to the form before adding a remark.',
         icon: 'error',
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -897,11 +907,11 @@ export default function RO_DRCUserDetailsEdit() {
         ...(itemType === 'RO' ? { ro_id: roId } : { drcUser_id: drcUserId }),
         drc_id: drcId,
         ro_name: fetchedData?.drcUser_name || fetchedData?.recovery_officer_name || 'N/A',
-        login_email: email || null,
+        login_email: email,
         login_contact_no: contactNo,
         drcUser_status: drcUserStatus,
         create_by: create_by,
-        remark: remark.trim(),
+        remark: remark || 'Updated user details',
       };
 
       const payload = itemType === 'RO' ? {
@@ -916,7 +926,7 @@ export default function RO_DRCUserDetailsEdit() {
             rtom_status: area.status ? 'Active' : 'Inactive',
             rtom_name: area.name,
             billing_center_code: area.billing_center_code || rtomOption.billing_center_code || 'N/A',
-            handling_type: area.handling_type || (rtomAreas.length === 1 ? 'Primary' : 'Secondary'),
+            handling_type: area.handling_type || 'Primary',
           };
         }),
       } : basePayload;
@@ -940,7 +950,7 @@ export default function RO_DRCUserDetailsEdit() {
     } catch (error) {
       console.error('Error updating user details:', error);
       Swal.fire({
-        title: 'Error',
+        title: ' For any assistance, please contact support at support@x.ai.',
         text: error.message || 'Internal server error. Please try again later.',
         icon: 'error',
         allowOutsideClick: false,
@@ -961,7 +971,6 @@ export default function RO_DRCUserDetailsEdit() {
         status: true,
         isNew: true,
         billing_center_code: selectedOption?.billing_center_code || 'N/A',
-        handling_type: rtomAreas.length === 0 ? 'Primary' : 'Secondary',
       }]);
       setSelectedRtomArea('');
     }
@@ -978,6 +987,16 @@ export default function RO_DRCUserDetailsEdit() {
     }).then((result) => {
       if (result.isConfirmed) {
         const newRtomAreas = rtomAreas.filter((_, i) => i !== index);
+        if (drcUserStatus === 'Active' && newRtomAreas.length > 0 && !newRtomAreas.some(area => area.status)) {
+          Swal.fire({
+            title: 'Cannot Remove RTOM',
+            text: 'At least one RTOM area must remain active when the user status is Active.',
+            icon: 'error',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+          return;
+        }
         setRtomAreas(newRtomAreas);
         Swal.fire({
           title: 'Removed',
@@ -991,6 +1010,20 @@ export default function RO_DRCUserDetailsEdit() {
   };
 
   const toggleRtomAreaStatus = (index) => {
+    if (drcUserStatus === 'Active' && rtomAreas[index].status) {
+      const activeRtomCount = rtomAreas.filter(area => area.status).length;
+      if (activeRtomCount <= 1) {
+        Swal.fire({
+          title: 'Cannot Deactivate RTOM',
+          text: 'At least one RTOM area must remain active when the user status is Active.',
+          icon: 'error',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+        return;
+      }
+    }
+
     const newRtomAreas = [...rtomAreas];
     newRtomAreas[index].status = !newRtomAreas[index].status;
     setRtomAreas(newRtomAreas);
@@ -1061,7 +1094,7 @@ export default function RO_DRCUserDetailsEdit() {
                 <div className="table-cell px-2 sm:px-4 py-2"></div>
               </div>
               <div className="table-row">
-               <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
                   Contact Number 
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
@@ -1078,8 +1111,8 @@ export default function RO_DRCUserDetailsEdit() {
                 </div>
               </div>
               <div className="table-row">
-              <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Email
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Email 
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -1088,7 +1121,6 @@ export default function RO_DRCUserDetailsEdit() {
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
-                    placeholder="example@domain.com"
                   />
                   {emailError && (
                     <p className="text-red-500 text-xs mt-1">{emailError}</p>
@@ -1136,13 +1168,20 @@ export default function RO_DRCUserDetailsEdit() {
                                 />
                               </div>
                               {area.isNew && (
-                                <button
-                                  onClick={() => handleRemoveRtomArea(index)}
-                                  className={`${GlobalStyle.buttonPrimary} bg-red-500 hover:bg-red-600 w-8 h-6 sm:w-10 sm:h-8 flex items-center justify-center text-xs sm:text-sm`}
-                                  title="Remove RTOM Area"
-                                >
-                                  -
-                                </button>
+                               
+
+                                 <button
+                              type="button"
+                              onClick={() => handleRemoveRtomArea(index)}
+                              className={`${GlobalStyle.buttonCircle} ml-2`}
+                                title="Remove RTOM Area"
+                            >
+                              <img
+                                src={iconImg}
+                                alt="Remove"
+                                style={{ width: 20, height: 20 }}
+                              />
+                            </button>
                               )}
                             </div>
                           </td>
@@ -1178,13 +1217,21 @@ export default function RO_DRCUserDetailsEdit() {
                             </option>
                           ))}
                       </select>
-                      <button
+                    
+
+                    <button
+                        type="button"
                         onClick={handleAddRtomArea}
-                        className={`${GlobalStyle.buttonPrimary} w-full sm:w-auto`}
+                        className={`${GlobalStyle.buttonCircle} md:ml-2 self-end md:self-auto`}
                         disabled={!selectedRtomArea}
                       >
-                        +
+                        <img
+                          src={addIcon}
+                          alt="Add"
+                          style={{ width: 20, height: 20 }}
+                        />
                       </button>
+
                     </div>
                   </div>
                 </div>
@@ -1200,12 +1247,9 @@ export default function RO_DRCUserDetailsEdit() {
               <div className="ml-0 sm:ml-4">
                 <textarea
                   value={remark}
-                  onChange={(e) => handleRemarkChange(e.target.value)}
-                  className={`${GlobalStyle.inputText} w-full h-20 sm:h-24 ${remarkError ? 'border-red-500' : ''}`}
+                  onChange={(e) => setRemark(e.target.value)}
+                  className={`${GlobalStyle.inputText} w-full h-20 sm:h-24`}
                 />
-                {remarkError && (
-                  <p className="text-red-500 text-xs mt-1">{remarkError}</p>
-                )}
               </div>
             </div>
           </div>
@@ -1264,9 +1308,9 @@ export default function RO_DRCUserDetailsEdit() {
                     fetchedData.log_history
                       .filter(
                         (log) =>
-                          (log.edited_on?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                          (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                          (log.edited_by?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+                          log.edited_on?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+                          log.action?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+                          log.edited_by?.toLowerCase()?.includes(searchQuery.toLowerCase())
                       )
                       .map((log, index) => (
                         <tr
