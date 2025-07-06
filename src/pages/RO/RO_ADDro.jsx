@@ -470,26 +470,34 @@
 // }
 
 // After Responsive
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
-import { FaArrowLeft} from "react-icons/fa";
-import gmailIcon from "../../assets/images/google.png";
+import { FaArrowLeft } from "react-icons/fa";
 import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import { createNewDRCUserOrRO } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "/src/services/auth/authService.js";
 import { List_DRC_Details_By_DRC_ID } from "../../services/Drc/Drc.js";
+import addIcon from "../../assets/images/add.svg";
+import iconImg from "../../assets/images/minorc.png";
 
 export default function RO_ADDro() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { itemType: initialItemType, itemData } = location.state || {};
+  const { itemType: initialItemType, itemData, from } = location.state || {};
 
-  const [userType, setUserType] = useState(initialItemType || "RO");
+  const [userType, setUserType] = useState(() => {
+    if (initialItemType) return initialItemType;
+    if (from === "drcUser") return "drcUser";
+    if (from === "RO") return "RO";
+    return "drcUser";
+  });
+
   const [contactNo, setContactNo] = useState(itemData?.contact_no || "");
+  const [contactError, setContactError] = useState("");
   const [email, setEmail] = useState(itemData?.email || "");
+  const [emailError, setEmailError] = useState("");
   const [remark, setRemark] = useState(itemData?.remark || "");
   const [status, setStatus] = useState(itemData?.status ?? true);
   const [rtomAreas, setRtomAreas] = useState(itemData?.rtom_areas || []);
@@ -497,27 +505,26 @@ export default function RO_ADDro() {
   const [userDetail, setUserDetail] = useState(null);
   const [rtomAreaOptions, setRtomAreaOptions] = useState([]);
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState('');
   const [nic, setNic] = useState('');
+  const [nicError, setNicError] = useState('');
   const [drcName, setDrcName] = useState("");
 
-  const loadUser = async () => {
-    try {
-      const userDetail = await getLoggedUserId();
-      setUserDetail(userDetail);
-      console.log("User detail:", userDetail);
-    } catch (error) {
-      console.error("Error loading user:", error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load user details. Please try again.',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-    }
-  };
-
   useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userDetail = await getLoggedUserId();
+        setUserDetail(userDetail);
+      } catch (error) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to load user details. Please try again.',
+          icon: 'error',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+      }
+    };
     loadUser();
   }, []);
 
@@ -540,7 +547,6 @@ export default function RO_ADDro() {
         const fetchedRTOMs = await getAllActiveRTOMs();
         setRtomAreaOptions(fetchedRTOMs);
       } catch (error) {
-        console.error('Error fetching RTOMs:', error);
         Swal.fire({
           title: 'Error',
           text: 'Failed to fetch RTOM areas. Please try again later.',
@@ -550,144 +556,145 @@ export default function RO_ADDro() {
         });
       }
     };
-
     fetchRTOMs();
   }, []);
 
-  const getDrcNameById = async () => {
-    try {
-      if (!userDetail?.drc_id) return;
-
-      const payload = { drc_id: userDetail.drc_id };
-      const response = await List_DRC_Details_By_DRC_ID(payload);
-
-      if (response.status === 'success') {
-        const drcNameFromApi = response.data.drc_name;
-        setDrcName(drcNameFromApi);
-        console.log("DRC Name:", drcNameFromApi);
-      } else {
-        console.error("Failed to fetch DRC name:", response.message);
-      }
-    } catch (error) {
-      console.error("Error calling DRC API:", error.message);
-    }
-  };
-
   useEffect(() => {
-    if (userDetail?.drc_id) {
-      getDrcNameById();
-    }
+    const getDrcNameById = async () => {
+      try {
+        if (!userDetail?.drc_id) return;
+        const response = await List_DRC_Details_By_DRC_ID({ drc_id: userDetail.drc_id });
+        if (response.status === 'success') {
+          setDrcName(response.data.drc_name);
+        }
+      } catch (error) {
+        console.error("Error getting DRC name:", error);
+      }
+    };
+    if (userDetail?.drc_id) getDrcNameById();
   }, [userDetail]);
 
   const validateInputs = () => {
+    let isValid = true;
+
     if (!name) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a name.',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+      setNameError('Please enter a name.');
+      isValid = false;
+    } else {
+      setNameError('');
     }
+
     if (!nic) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a NIC.',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+      setNicError('Please enter a NIC.');
+      isValid = false;
+    } else if (nic.length !== 12) {
+      setNicError('NIC must be exactly 12 characters.');
+      isValid = false;
+    } else {
+      setNicError('');
     }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a valid email address.',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      isValid = false;
+    } else {
+      setEmailError('');
     }
-    if (!contactNo || !/^\+?\d{9,12}$/.test(contactNo)) {
-      Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please enter a valid contact number (e.g., +94771234567).',
-        icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      return false;
+
+    if (!contactNo) {
+      setContactError('Please enter a contact number.');
+      isValid = false;
+    } else if (contactNo.length !== 10) {
+      setContactError('Contact number must be 10 digits.');
+      isValid = false;
+    } else {
+      setContactError('');
     }
+
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
         title: 'Invalid Input',
         text: 'Please add at least one RTOM area for Recovery Officer.',
         icon: 'error',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
       });
-      return false;
+      isValid = false;
     }
-    if (rtomAreas.length > 0) {
-      const invalidRtom = rtomAreas.find(area => !rtomAreaOptions.some(opt => opt.area_name === area.name));
-      if (invalidRtom) {
-        Swal.fire({
-          title: 'Invalid RTOM',
-          text: `RTOM area "${invalidRtom.name}" is not valid.`,
-          icon: 'error',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-        });
-        return false;
-      }
+
+    return isValid;
+  };
+
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setName(value);
+    setNameError(value ? '' : 'Please enter a name.');
+  };
+
+  const handleNicChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 12) {
+      setNic(value);
+      setNicError(value ? (value.length !== 12 ? 'NIC must be exactly 12 characters.' : '') : 'Please enter a NIC.');
+    } else {
+      setNicError('NIC cannot exceed 12 characters.');
     }
-    return true;
+  };
+
+  const handleContactChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 10) {
+      setContactNo(value);
+      setContactError(value ? (value.length !== 10 ? 'Contact number must be 10 digits.' : '') : 'Please enter a contact number.');
+    } else {
+      setContactError('Contact number cannot exceed 10 digits.');
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailError(value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Please enter a valid email address.');
   };
 
   const handleAddRO = async () => {
+    if (!validateInputs()) return;
+
+    const payload = {
+      drcUser_type: userType,
+      drc_id: userDetail?.drc_id,
+      ro_name: name,
+      nic: nic,
+      login_email: email,
+      login_contact_no: contactNo,
+      create_by: userDetail?.user_id,
+      rtoms: userType === "RO" ? rtomAreas.map((area, index) => {
+        const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
+        return {
+          rtom_id: option?.rtom_id || area.rtom_id,
+          rtom_name: area.rtom_name || area.name,
+          billing_center_code: area.billing_center_code || option?.billing_center_code || 'N/A',
+          rtom_status: area.status ? "Active" : "Inactive",
+          handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
+        };
+      }) : []
+    };
+
     try {
-      if (!validateInputs()) return;
-
-      const payload = {
-        drcUser_type: userType,
-        drc_id: userDetail?.drc_id,
-        ro_name: name,
-        nic: nic,
-        login_email: email,
-        login_contact_no: contactNo,
-        create_by: userDetail?.user_id,
-        rtoms: userType === "RO" ? rtomAreas.map((area, index) => {
-          const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
-          return {
-            rtom_id: option?.rtom_id || area.rtom_id,
-            rtom_name: area.rtom_name || area.name,
-            billing_center_code: area.billing_center_code || option?.billing_center_code || 'N/A',
-            rtom_status: area.status ? "Active" : "Inactive",
-            handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
-          };
-        }) : []
-      };
-
-      console.log("Sending payload:", payload);
-
-      const result = await createNewDRCUserOrRO(payload);
-
-      Swal.fire({
+      await createNewDRCUserOrRO(payload);
+      await Swal.fire({
         title: "Success",
-        text: `${userType} added successfully and sent for approval!`,
+        text: `${userType === "RO" ? "Recovery Officer" : "DRC User"} added successfully and sent for approval!`,
         icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
+        confirmButtonText: "OK",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       });
       navigate(-1);
     } catch (error) {
-      console.error("Error adding RO:", error);
       Swal.fire({
         title: "Error",
         text: error.message || "Something went wrong. Please try again.",
         icon: "error",
+        confirmButtonText: "OK",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -725,20 +732,12 @@ export default function RO_ADDro() {
           title: 'Removed',
           text: 'RTOM area has been removed successfully.',
           icon: 'success',
+          confirmButtonText: 'OK',
           timer: 1500,
-          showConfirmButton: false,
         });
       }
     });
   };
-
-  const toggleRtomAreaStatus = (index) => {
-    const newRtomAreas = [...rtomAreas];
-    newRtomAreas[index].status = !newRtomAreas[index].status;
-    setRtomAreas(newRtomAreas);
-  };
-
-  console.log("selected rtoms are: ", rtomAreas);
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -764,41 +763,42 @@ export default function RO_ADDro() {
                     value={userType}
                     onChange={(e) => setUserType(e.target.value)}
                   >
-                    <option value="RO">RO</option>
                     <option value="drcUser">DRC User</option>
+                    <option value="RO">RO</option>
                   </select>
                 </div>
               </div>
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {userType === "drcUser"
-                    ? "DRC User Name"
-                    : "Recovery Officer Name"}
+                  {userType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${nameError ? 'border-red-500' : ''}`}
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={handleNameChange}
                   />
+                  {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                 </div>
               </div>
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"}
+                  {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${nicError ? 'border-red-500' : ''}`}
                     value={nic}
-                    onChange={(e) => setNic(e.target.value)}
+                    onChange={handleNicChange}
+                    maxLength={12}
                   />
+                  {nicError && <p className="text-red-500 text-xs mt-1">{nicError}</p>}
                 </div>
               </div>
 
@@ -809,39 +809,34 @@ export default function RO_ADDro() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number
+                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError ? 'border-red-500' : ''}`}
                     value={contactNo}
-                    onChange={(e) => setContactNo(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
-                    placeholder="+94771234567"
+                    onChange={handleContactChange}
                   />
+                  {contactError && <p className="text-red-500 text-xs mt-1">{contactError}</p>}
                 </div>
               </div>
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  <img
-                    src={gmailIcon}
-                    alt="Email"
-                    className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2 align-middle"
-                    title="Email"
-                  />
+                  Email
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="email"
+                    className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px]`}
-                    placeholder="example@domain.com"
+                    onChange={handleEmailChange}
                   />
+                  {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
                 </div>
               </div>
             </div>
@@ -871,12 +866,20 @@ export default function RO_ADDro() {
                             </option>
                           ))}
                       </select>
-                      <button
+                     
+
+
+                       <button
+                        type="button"
                         onClick={handleAddRtomArea}
-                        className={`${GlobalStyle.buttonPrimary} w-full sm:w-auto`}
+                        className={`${GlobalStyle.buttonCircle} md:ml-2 self-end md:self-auto`}
                         disabled={!selectedRtomArea}
                       >
-                        +
+                        <img
+                          src={addIcon}
+                          alt="Add"
+                          style={{ width: 20, height: 20 }}
+                        />
                       </button>
                     </div>
                   </div>
@@ -896,33 +899,25 @@ export default function RO_ADDro() {
                       rtomAreas.map((area, index) => (
                         <tr
                           key={index}
-                          className={`${
-                            index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
-                          } border-b`}
+                          className={`${index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"} border-b`}
                         >
                           <td className={`${GlobalStyle.tableData} text-center`}>{area.name}</td>
                           <td className={`${GlobalStyle.tableData} text-center`}>
                             <div className="flex items-center justify-center gap-2 flex-wrap">
-                              <div
-                                className={`inline-block w-8 h-4 sm:w-11 sm:h-6 rounded-full transition-colors ${area.status ? 'bg-green-500' : 'bg-gray-400'} relative cursor-pointer`}
-                                onClick={() => toggleRtomAreaStatus(index)}
-                              >
-                                <div
-                                  className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? 'left-[18px] sm:left-[26px]' : 'left-[2px]'}`}
-                                />
-                              </div>
-                              <span className={`text-xs sm:text-sm font-semibold ${area.status ? 'text-green-600' : 'text-gray-500'}`}>
-                                {area.status ? 'Active' : 'Inactive'}
-                              </span>
-                              {area.isNew && (
-                                <button
-                                  onClick={() => handleRemoveRtomArea(index)}
-                                  className={`${GlobalStyle.buttonPrimary} w-8 h-6 sm:w-10 sm:h-8 flex items-center justify-center text-xs sm:text-sm`}
-                                  title="Remove RTOM Area"
-                                >
-                                  -
-                                </button>
-                              )}
+                             
+
+                               <button
+                              type="button"
+                              onClick={() => handleRemoveRtomArea(index)}
+                              className={`${GlobalStyle.buttonCircle} ml-2`}
+                                title="Remove RTOM Area"
+                            >
+                              <img
+                                src={iconImg}
+                                alt="Remove"
+                                style={{ width: 20, height: 20 }}
+                              />
+                            </button>
                             </div>
                           </td>
                         </tr>

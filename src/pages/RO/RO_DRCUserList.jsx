@@ -789,14 +789,14 @@ export default function RO_DRCUserList() {
         } else if (activeTab === "drcUser") {
             return drcUserStatus;
         } else {
-            return tabState[activeTab]?.status || "";
+            return "";
         }
     };
 
     const getCurrentPage = () => {
         if (activeTab === "RO") {
             return roCurrentPage;
-        } else (activeTab === "DRSUser"); {
+        } else {
             return drcCurrentPage;
         }
     };
@@ -996,7 +996,7 @@ export default function RO_DRCUserList() {
                     <div className="flex justify-end mt-6">
                         <button className={GlobalStyle.buttonPrimary}
                             onClick={() =>
-                                navigate("/ro/ro-add-ro")
+                                navigate("/ro/ro-add-ro", { state: { from: "RO" } })
                             }>
                             Add RO
                         </button>
@@ -1008,9 +1008,10 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC User List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary} onClick={() =>
-                            navigate("/ro/ro-add-ro")
-                        }>
+                        <button className={GlobalStyle.buttonPrimary}
+                            onClick={() =>
+                                navigate("/ro/ro-add-ro", { state: { from: "drcUser" } })
+                            }>
                             Add DRC User
                         </button>
                     </div>
@@ -1119,7 +1120,7 @@ export default function RO_DRCUserList() {
                                                     {item.login_contact_no || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.rtom_area_count || "N/A"}
+                                                    {item.rtom_area_count || "0"}
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center`}>
                                                     <img
@@ -1186,7 +1187,7 @@ export default function RO_DRCUserList() {
                                     {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
                                         drcFilteredDataBySearch.map((item, index) => (
                                             <tr
-                                                key={item.drc_id || index}
+                                                key={item.drcUser_id || index}
                                                 className={`${
                                                     index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
                                                 } border-b`}
@@ -1256,4 +1257,3 @@ export default function RO_DRCUserList() {
         </div>
     );
 }
-
