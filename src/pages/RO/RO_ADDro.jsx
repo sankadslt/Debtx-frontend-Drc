@@ -613,8 +613,8 @@ export default function RO_ADDro() {
 
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
-        title: 'Invalid Input',
-        text: 'Please add at least one RTOM area for Recovery Officer.',
+        title: 'Validation Error',
+        text: 'Please fill in all required fields and ensure valid inputs.',
         icon: 'error',
       });
       isValid = false;

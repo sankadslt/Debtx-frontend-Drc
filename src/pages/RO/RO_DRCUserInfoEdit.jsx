@@ -874,8 +874,8 @@ export default function RO_DRCUserDetailsEdit() {
 
     if (!isValid) {
       Swal.fire({
-        title: 'Cannot submit only remark',
-        text: 'You must make at least one change to the form before adding a remark.',
+        title: 'Required Field',
+        text: 'Please enter a remark.',
         icon: 'error',
         allowOutsideClick: false,
         allowEscapeKey: false,
