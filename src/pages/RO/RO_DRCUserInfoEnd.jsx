@@ -500,8 +500,8 @@ export default function RecoveryOfficerEndPage() {
 
         if (!isValid) {
             Swal.fire({
-                title: "Invalid Input",
-                text: "Please correct the errors in the form before saving.",
+                title: "Required Field",
+                text: "Please enter a End Date and Remark.",
                 icon: "error",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
