@@ -1176,7 +1176,7 @@ export default function RO_DRCUserList() {
                             <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>DRC ID</th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>DRC User ID</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>Status</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>NIC</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[150px]`}>DRC User Name</th>
