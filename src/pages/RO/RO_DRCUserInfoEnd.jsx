@@ -432,6 +432,7 @@ export default function RecoveryOfficerEndPage() {
                                 text: "Could not fetch Recovery Officer ID.",
                                 icon: "error",
                                 allowOutsideClick: false,
+                                 confirmButtonColor: "#d33",
                                 allowEscapeKey: false,
                             });
                         }
@@ -441,6 +442,7 @@ export default function RecoveryOfficerEndPage() {
                             title: "Error",
                             text: "Failed to fetch Recovery Officer ID.",
                             icon: "error",
+                              confirmButtonColor: "#d33",
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                         });
@@ -451,6 +453,7 @@ export default function RecoveryOfficerEndPage() {
                         title: "Warning",
                         text: "drcUser_id fetching not implemented. Please pass drcUser_id.",
                         icon: "warning",
+                        confirmButtonColor: "#f1c40f",
                         allowOutsideClick: false,
                         allowEscapeKey: false,
                     });
@@ -492,6 +495,7 @@ export default function RecoveryOfficerEndPage() {
                 title: "Invalid Data",
                 text: "No user ID found. Please ensure the correct user data is passed.",
                 icon: "error",
+                 confirmButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             });
@@ -503,6 +507,7 @@ export default function RecoveryOfficerEndPage() {
                 title: "Required Field",
                 text: "Please enter a End Date and Remark.",
                 icon: "error",
+                 confirmButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             });
@@ -557,6 +562,7 @@ export default function RecoveryOfficerEndPage() {
                 text: response.message || `${activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"} terminated successfully`,
                 icon: "success",
                 confirmButtonText: "OK",
+                confirmButtonColor: "#28a745",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             }).then(() => {
@@ -568,6 +574,7 @@ export default function RecoveryOfficerEndPage() {
                 title: "Error",
                 text: error.message || "Failed to terminate user. Please check the input data.",
                 icon: "error",
+                    confirmButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
             });

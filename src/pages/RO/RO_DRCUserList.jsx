@@ -1040,8 +1040,9 @@ export default function RO_DRCUserList() {
                         value={currentStatus}
                         onChange={handleStatusChange}
                         className={`${GlobalStyle.selectBox} w-full sm:w-32 md:w-40`}
+                         style={{ color: currentStatus === "" ? "gray" : "black" }}
                     >
-                        <option value="" disabled>Select Status</option>
+                        <option value="" hidden>All Status</option>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
                         <option value="Terminate">Terminate</option>
