@@ -657,6 +657,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: 'Missing user type or ID. Please try again.',
           icon: 'error',
+           confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -725,6 +726,7 @@ export default function RO_DRCUserDetailsEdit() {
             title: 'No Results',
             text: 'No matching data found.',
             icon: 'warning',
+              confirmButtonColor: "#f1c40f",
             allowOutsideClick: false,
             allowEscapeKey: false,
           });
@@ -737,6 +739,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: error.message || 'Failed to fetch data. Please try again.',
           icon: 'error',
+           confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -759,6 +762,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: 'Failed to fetch RTOM areas. Please try again later.',
           icon: 'error',
+           confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -815,6 +819,7 @@ export default function RO_DRCUserDetailsEdit() {
         title: 'Missing Remark',
         text: 'Please enter a remark before saving.',
         icon: 'warning',
+        confirmButtonColor: "#f1c40f",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -839,6 +844,7 @@ export default function RO_DRCUserDetailsEdit() {
         title: 'No Changes Detected',
         text: 'You must make at least one change to the form before adding a remark.',
         icon: 'warning',
+        confirmButtonColor: "#f1c40f",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -853,6 +859,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Invalid RTOM',
           text: `RTOM area "${invalidRtom.name}" is not valid.`,
           icon: 'error',
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -865,6 +872,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Invalid RTOM Status',
           text: 'At least one RTOM area must be active when the user status is Active.',
           icon: 'error',
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -875,8 +883,9 @@ export default function RO_DRCUserDetailsEdit() {
     if (!isValid) {
       Swal.fire({
         title: 'Required Field',
-        text: 'Please enter a remark.',
+        text: 'You must make at least one change to the form and enter a remark.',
         icon: 'error',
+        confirmButtonColor: "#d33",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -940,6 +949,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Success',
           text: 'User details updated successfully!',
           icon: 'success',
+          confirmButtonColor: "#28a745",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -953,6 +963,7 @@ export default function RO_DRCUserDetailsEdit() {
         title: ' For any assistance, please contact support at support@x.ai.',
         text: error.message || 'Internal server error. Please try again later.',
         icon: 'error',
+        confirmButtonColor: "#d33",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
@@ -992,6 +1003,7 @@ export default function RO_DRCUserDetailsEdit() {
             title: 'Cannot Remove RTOM',
             text: 'At least one RTOM area must remain active when the user status is Active.',
             icon: 'error',
+            confirmButtonColor: "#d33",
             allowOutsideClick: false,
             allowEscapeKey: false,
           });
@@ -1002,6 +1014,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Removed',
           text: 'RTOM area has been removed successfully.',
           icon: 'success',
+          confirmButtonColor: "#28a745",
           timer: 1500,
           showConfirmButton: false,
         });
@@ -1017,6 +1030,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Cannot Deactivate RTOM',
           text: 'At least one RTOM area must remain active when the user status is Active.',
           icon: 'error',
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });

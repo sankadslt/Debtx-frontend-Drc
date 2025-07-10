@@ -520,6 +520,7 @@ export default function RO_ADDro() {
           title: 'Error',
           text: 'Failed to load user details. Please try again.',
           icon: 'error',
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -551,6 +552,7 @@ export default function RO_ADDro() {
           title: 'Error',
           text: 'Failed to fetch RTOM areas. Please try again later.',
           icon: 'error',
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -587,13 +589,13 @@ export default function RO_ADDro() {
     if (!nic) {
       setNicError('Please enter a NIC.');
       isValid = false;
-    } else if (nic.length !== 12) {
-      setNicError('NIC must be exactly 12 characters.');
+    } else if (nic.length !== 10 && nic.length !== 12) {
+      setNicError('NIC must be 10 or 12 characters.');
       isValid = false;
     } else {
       setNicError('');
     }
-
+    
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError('Please enter a valid email address.');
       isValid = false;
@@ -616,6 +618,7 @@ export default function RO_ADDro() {
         title: 'Validation Error',
         text: 'Please fill in all required fields and ensure valid inputs.',
         icon: 'error',
+        confirmButtonColor: "#d33",
       });
       isValid = false;
     }
@@ -633,7 +636,7 @@ export default function RO_ADDro() {
     const value = e.target.value;
     if (value.length <= 12) {
       setNic(value);
-      setNicError(value ? (value.length !== 12 ? 'NIC must be exactly 12 characters.' : '') : 'Please enter a NIC.');
+      setNicError(value ? (value.length !== 10 && value.length !== 12 ? 'NIC must be 10 or 12 characters.' : '') : 'Please enter a NIC.');
     } else {
       setNicError('NIC cannot exceed 12 characters.');
     }
@@ -684,6 +687,7 @@ export default function RO_ADDro() {
         title: "Success",
         text: `${userType === "RO" ? "Recovery Officer" : "DRC User"} added successfully and sent for approval!`,
         icon: "success",
+        confirmButtonColor: "#28a745",
         confirmButtonText: "OK",
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -694,6 +698,7 @@ export default function RO_ADDro() {
         title: "Error",
         text: error.message || "Something went wrong. Please try again.",
         icon: "error",
+        confirmButtonColor: "#d33",
         confirmButtonText: "OK",
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -722,6 +727,7 @@ export default function RO_ADDro() {
       text: `Are you sure you want to remove the RTOM area "${rtomAreas[index].name}"?`,
       icon: 'warning',
       showCancelButton: true,
+      confirmButtonColor: "#f1c40f",
       confirmButtonText: 'Yes, remove it',
       cancelButtonText: 'Cancel',
     }).then((result) => {
@@ -732,6 +738,7 @@ export default function RO_ADDro() {
           title: 'Removed',
           text: 'RTOM area has been removed successfully.',
           icon: 'success',
+          confirmButtonColor: "#28a745",
           confirmButtonText: 'OK',
           timer: 1500,
         });
@@ -786,7 +793,7 @@ export default function RO_ADDro() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                <div className="table-cell px-2 sm(px-4 py-2 font-semibold text-sm sm:text-base">
                   {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
@@ -866,10 +873,7 @@ export default function RO_ADDro() {
                             </option>
                           ))}
                       </select>
-                     
-
-
-                       <button
+                      <button
                         type="button"
                         onClick={handleAddRtomArea}
                         className={`${GlobalStyle.buttonCircle} md:ml-2 self-end md:self-auto`}
@@ -904,20 +908,18 @@ export default function RO_ADDro() {
                           <td className={`${GlobalStyle.tableData} text-center`}>{area.name}</td>
                           <td className={`${GlobalStyle.tableData} text-center`}>
                             <div className="flex items-center justify-center gap-2 flex-wrap">
-                             
-
-                               <button
-                              type="button"
-                              onClick={() => handleRemoveRtomArea(index)}
-                              className={`${GlobalStyle.buttonCircle} ml-2`}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveRtomArea(index)}
+                                className={`${GlobalStyle.buttonCircle} ml-2`}
                                 title="Remove RTOM Area"
-                            >
-                              <img
-                                src={iconImg}
-                                alt="Remove"
-                                style={{ width: 20, height: 20 }}
-                              />
-                            </button>
+                              >
+                                <img
+                                  src={iconImg}
+                                  alt="Remove"
+                                  style={{ width: 20, height: 20 }}
+                                />
+                              </button>
                             </div>
                           </td>
                         </tr>
