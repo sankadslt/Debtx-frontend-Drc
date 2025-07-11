@@ -433,9 +433,11 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
-  const handleonvisiable = (case_id) => {
-    navigate("/drc/Pre_Negotiation", { state: { CaseID: case_id } });
-    console.log("Case ID being passed: ", case_id);
+  const handleonvisiable = (case_id, account_no) => {
+    navigate("/drc/Pre_Negotiation", {
+      state: { CaseID: case_id, Account_no: account_no },
+    });
+    console.log("Case ID being passed: ", case_id, account_no);
   };
 
   // render status icon with tooltip
@@ -608,7 +610,9 @@ export default function AssignedCaseListforDRC() {
                   <td className={GlobalStyle.tableData}>
                     <div className="px-8 flex items-center gap-2">
                       <FaPhone
-                        onClick={() => handleonvisiable(item.case_id)}
+                        onClick={() =>
+                          handleonvisiable(item.case_id, item.account_no)
+                        }
                         style={{ cursor: "pointer", marginRight: "8px" }}
                       />
                     </div>

@@ -23,7 +23,10 @@ export const Pre_Negotiation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const case_id = location.state?.CaseID || "";
-  console.log("Caseid :", case_id);
+  const account_no = location.state?.Account_no || "10";
+  const [selectedRowData, setSelectedRowData] = useState(null); // New state for selected row
+  // console.log("Caseid :", case_id);
+  // console.log("account_no :", account_no);
   const [activeWithdrawPopupLODID, setActiveWithdrawPopupLODID] =
     useState(null);
 
@@ -56,7 +59,7 @@ export const Pre_Negotiation = () => {
   const paginatedData = filteredData.slice(startIndex, endIndex);
   const hasMounted = useRef(false);
   const [committedFilters, setCommittedFilters] = useState({
-    case_id: case_id,
+    // case_id: case_id,
     fromDate: null,
     toDate: null,
   });
@@ -123,7 +126,7 @@ export const Pre_Negotiation = () => {
       //   return offsetDate.toISOString().split("T")[0];
       // };
 
-      // console.log(currentPage);
+      console.log(currentPage);
 
       // Fetch user ID
       const userId = await getLoggedUserId();
@@ -149,7 +152,15 @@ export const Pre_Negotiation = () => {
       if (response && response.data) {
         console.log("Valid data received:", response.data);
 
-        setFilteredData((prevData) => [...prevData, ...response.data]);
+        if (currentPage === 1) {
+          setFilteredData(response.data); // Set initial data for page 1
+        } else {
+          // setFilteredData(response.data);
+
+          setFilteredData((prevData) => [...prevData, ...response.data]);
+        }
+
+        // setFilteredData((prevData) => [...prevData, ...response.data]);
 
         if (response.data.length === 0) {
           setIsMoreDataAvailable(false); // No more data available
@@ -194,10 +205,10 @@ export const Pre_Negotiation = () => {
   };
 
   useEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true;
-      return;
-    }
+    // if (!hasMounted.current) {
+    //   hasMounted.current = true;
+    //   return;
+    // }
 
     if (isMoreDataAvailable && currentPage > maxCurrentPage) {
       setMaxCurrentPage(currentPage); // Update max current page
@@ -206,6 +217,10 @@ export const Pre_Negotiation = () => {
         ...committedFilters,
         currentPage: currentPage,
       });
+      // callAPI({
+      //   case_id,
+      //   currentPage,
+      // });
     }
   }, [currentPage]);
 
@@ -243,47 +258,76 @@ export const Pre_Negotiation = () => {
   // }, []);
 
   const handleSubmit = async () => {
-    if (!selectedSubmission || !remark) {
-      Swal.fire(
-        "Error",
-        "Please enter both Customer Response and Remark",
-        "error"
-      );
-      return;
-    }
-    const userData = await getLoggedUserId();
-
-    const payload = {
-      case_id: case_id,
-      call_inquiry_remark: remark,
-      call_topic: selectedSubmission,
-      case_phase: "Pre Negotiaition",
-      created_by: userData?.user_id,
-      drc_id: userData?.drc_id,
-    };
-    console.log("Payload sent by submit: ", { payload });
-
     try {
+      if (!selectedSubmission || !remark) {
+        Swal.fire(
+          "Error",
+          "Please enter both Customer Response and Remark",
+          "error"
+        );
+        return;
+      }
+      const userData = await getLoggedUserId();
+      if (!userData) {
+        Swal.fire("Error", "User not authenticated. Please log in.", "error");
+        return;
+      }
+
+      const payload = {
+        case_id: case_id,
+        call_inquiry_remark: remark,
+        call_topic: selectedSubmission,
+        case_phase: "Negotiaition",
+        created_by: userData?.user_id,
+        drc_id: userData?.drc_id,
+      };
+      console.log("Payload sent by submit: ", { payload });
+
+      setIsLoading(true);
       const response = await Create_Pre_Negotiation(payload);
+      setIsLoading(false);
       // console.log(response)
       if (response === "success") {
-        Swal.fire(
-          response,
-          `Customer Response created successfully!`,
-          "success"
-        );
+        Swal.fire({
+          title: "Success",
+          text: "Case withdrawal request added successfully!", // Change to "withdrawal" if intended
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // setFilteredData([]); // Clear previous data when LODType changes
+            setMaxCurrentPage(0); // Reset the current page
+            console.log(currentPage);
+
+            console.log("data: ", filteredDataBySearch);
+            if (currentPage === 1) {
+              callAPI({
+                case_id,
+                currentPage: 1,
+              });
+            } else {
+              // callAPI({
+              //   case_id,
+              //   currentPage,
+              // });
+              setCurrentPage(1); // Reset to the first page if LODType changes
+            }
+          }
+        });
         setSelectedSubmission("");
         setRemark("");
         // isLoading(true);
-        callAPI({
-          ...committedFilters,
-          currentPage: currentPage,
-        });
+      } else {
+        Swal.fire(
+          "Error",
+          `Failed to submit withdrawal request: ${response.message}`,
+          "error"
+        );
       }
-      //   await updateDRCSubmission(payload);
-      // navigate("/pages/DRC/DRC_Case_Details", { state: { case_id: case_id } });
     } catch (err) {
       console.error("Error submitting DRC response:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -297,13 +341,16 @@ export const Pre_Negotiation = () => {
     setCurrentPage(currentPage + 1);
   };
 
-  const handleWithdrawPopup = (LODID) => {
-    setActiveWithdrawPopupLODID(LODID);
+  const handleWithdrawPopup = (seq) => {
+    const rowData = filteredDataBySearch.find((item) => item.seq === seq);
+    setSelectedRowData(rowData);
+    setActiveWithdrawPopupLODID(seq);
     // setWithdrawRemark("");
   };
 
   const closeWithdrawPopup = () => {
     setActiveWithdrawPopupLODID(null);
+    setSelectedRowData(null);
   };
 
   const handleBackButton = () => {
@@ -362,7 +409,7 @@ export const Pre_Negotiation = () => {
                 Account Number
               </div>
               <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
+              <div className="table-cell px-4 py-2">{account_no}</div>
             </div>
             <div className="table-row">
               <div className="table-cell px-4 py-2 font-bold">
@@ -531,7 +578,7 @@ export const Pre_Negotiation = () => {
                           />
                         </div> */}
                         <button
-                          onClick={() => handleWithdrawPopup(item.case_id)}
+                          onClick={() => handleWithdrawPopup(item.seq)}
                           className="p-2 hover:bg-gray-100 rounded flex items-center justify-center"
                           //title="More Info"
                         >
@@ -563,32 +610,27 @@ export const Pre_Negotiation = () => {
               </tbody>
             </table>
           </div>
+          {/* Pagination Section */}
           {filteredDataBySearch.length > 0 && (
             <div className={GlobalStyle.navButtonContainer}>
               <button
+                onClick={() => handlePrevNext("prev")}
+                disabled={currentPage <= 1}
                 className={`${GlobalStyle.navButton} ${
-                  currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                  currentPage <= 1 ? "cursor-not-allowed" : ""
                 }`}
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
               >
                 <FaArrowLeft />
               </button>
-
-              <span>Page {currentPage}</span>
-
+              <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+                Page {currentPage}
+              </span>
               <button
+                onClick={() => handlePrevNext("next")}
+                disabled={currentPage === totalPages}
                 className={`${GlobalStyle.navButton} ${
-                  !hasMoreData &&
-                  currentPage >= Math.ceil(filteredData.length / rowsPerPage)
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                  currentPage === totalPages ? "cursor-not-allowed" : ""
                 }`}
-                onClick={handleNextPage}
-                disabled={
-                  !hasMoreData &&
-                  currentPage >= Math.ceil(filteredData.length / rowsPerPage)
-                }
               >
                 <FaArrowRight />
               </button>
@@ -597,13 +639,11 @@ export const Pre_Negotiation = () => {
         </div>
       </div>
 
-      {activeWithdrawPopupLODID && (
+      {activeWithdrawPopupLODID && selectedRowData && (
         <div className={GlobalStyle.popupBoxContainer}>
           <div className={GlobalStyle.popupBoxBody}>
             <div className={GlobalStyle.popupBox}>
-              <h2 className={GlobalStyle.popupBoxTitle}>
-                Pre Negotiation Details
-              </h2>
+              <h2 className={GlobalStyle.popupBoxTitle}>More Information</h2>
               <button
                 className={GlobalStyle.popupBoxCloseButton}
                 onClick={() => closeWithdrawPopup()}
@@ -616,51 +656,57 @@ export const Pre_Negotiation = () => {
               <h2
                 className={`${GlobalStyle.headingMedium} mb-4 sm:mb-6 mt-6 sm:mt-8 underline text-left font-semibold`}
               >
-                Company Details
+                Pre Negotiation Details
               </h2>
               <table className={`${GlobalStyle.table} w-full text-left`}>
                 <tbody className="space-y-2 sm:space-y-0">
                   {[
                     {
+                      label: "Call Topic",
+                      value: selectedRowData.call_topic || "Not specified",
+                    },
+                    {
+                      label: "Case Phase",
+                      value: selectedRowData.phase || "Not specified",
+                    },
+                    {
+                      label: "Created By",
+                      value: selectedRowData.created_by || "Not specified",
+                    },
+                    {
+                      label: "DRC ID",
+                      value: selectedRowData.drc_id || "Not specified",
+                    },
+                    {
+                      label: "Remark",
+                      value:
+                        selectedRowData.call_inquiry_remark || "Not specified",
+                    },
+                    {
                       label: "Created Date",
-                      value: filteredDataBySearch.drc_create_dtm
+                      value: selectedRowData.created_date
                         ? new Date(
-                            filteredDataBySearch.drc_create_dtm
+                            selectedRowData.created_date
                           ).toLocaleDateString()
-                        : filteredDataBySearch.createdAt
+                        : selectedRowData.created_date
                         ? new Date(
-                            filteredDataBySearch.createdAt
-                          ).toLocaleDateString()
-                        : "Not specified",
-                    },
-                    {
-                      label: "Business Reg No",
-                      value:
-                        filteredDataBySearch.drc_business_registration_number ||
-                        "Not specified",
-                    },
-                    {
-                      label: "Contact Number",
-                      value:
-                        filteredDataBySearch.drc_contact_no || "Not specified",
-                    },
-                    {
-                      label: "Address",
-                      value:
-                        filteredDataBySearch.drc_address || "Not specified",
-                    },
-                    {
-                      label: "Email",
-                      value: filteredDataBySearch.drc_email || "Not specified",
-                    },
-                    filteredDataBySearch.status === "Terminate" && {
-                      label: "Terminate Date",
-                      value: filteredDataBySearch.drc_terminate_dtm
-                        ? new Date(
-                            filteredDataBySearch.drc_terminate_dtm
+                            selectedRowData.created_date
                           ).toLocaleDateString()
                         : "Not specified",
                     },
+                    {
+                      label: "Sequence No",
+                      value: selectedRowData.seq || "Not specified",
+                    },
+
+                    // filteredDataBySearch.status === "Terminate" && {
+                    //   label: "Terminate Date",
+                    //   value: filteredDataBySearch.drc_terminate_dtm
+                    //     ? new Date(
+                    //         filteredDataBySearch.drc_terminate_dtm
+                    //       ).toLocaleDateString()
+                    //     : "Not specified",
+                    // },
                   ]
                     .filter(Boolean) // Ensure `false` values like from conditional item don’t appear
                     .map((item, index) => (
