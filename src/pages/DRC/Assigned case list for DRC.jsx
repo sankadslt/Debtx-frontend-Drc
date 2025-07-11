@@ -10,15 +10,25 @@ Dependencies: tailwind css
 Related Files: (routes)
 Notes: The following page conatins the code for the assigned case list for DRC  */
 
-
 import { useState, useEffect } from "react";
-import { FaAlignCenter, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+
+import { AiFillEye } from "react-icons/ai";
+import { FaPhone } from "react-icons/fa";
+import {
+  FaAlignCenter,
+  FaArrowLeft,
+  FaArrowRight,
+  FaSearch,
+} from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO.js";
-import { fetchAllArrearsBands, listHandlingCasesByDRC } from "../../services/case/CaseService.js";
+import {
+  fetchAllArrearsBands,
+  listHandlingCasesByDRC,
+} from "../../services/case/CaseService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
 // import { Tooltip } from "react-tooltip";
 
@@ -39,9 +49,11 @@ import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pe
 import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
 import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
 import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
-
+import { useNavigate } from "react-router-dom";
 
 export default function AssignedCaseListforDRC() {
+  const navigate = useNavigate(); // Initialize the navigate function
+
   const [error, setError] = useState("");
 
   const [fromDate, setFromDate] = useState(null);
@@ -112,15 +124,20 @@ export default function AssignedCaseListforDRC() {
           // confirmButtonColor: "#28a745",
           // cancelButtonText: "No",
           // cancelButtonColor: "#d33",
-        })
+        });
       } finally {
         setIsLoading(false); // Stop loading animation
       }
-    }
+    };
     fetchData();
   }, [userData?.drc_id]);
 
-  const handleCreateTaskForDownload = async ({ arrears_band, ro_id, fromDate, toDate }) => {
+  const handleCreateTaskForDownload = async ({
+    arrears_band,
+    ro_id,
+    fromDate,
+    toDate,
+  }) => {
     const params = {
       arrears_band: arrears_band || "",
       ro_id: ro_id ? Number(ro_id) : "",
@@ -163,8 +180,7 @@ export default function AssignedCaseListforDRC() {
 
     try {
       const filteredParams = {
-
-        params
+        params,
       };
 
       const response = await Create_Task_Assigned_Case_for_DRC(filteredParams);
@@ -182,15 +198,13 @@ export default function AssignedCaseListforDRC() {
       Swal.fire({
         title: "Error",
         text: "Error creating task",
-        icon: "error"
+        icon: "error",
       });
     }
   };
 
-
   const handlestartdatechange = (date) => {
     if (toDate && date > toDate) {
-
       Swal.fire({
         title: "Warning",
         text: "The 'From' date cannot be later than the 'To' date.",
@@ -198,8 +212,7 @@ export default function AssignedCaseListforDRC() {
         confirmButtonText: "OK",
       });
       setFromDate(null);
-    }
-    else {
+    } else {
       setError("");
       setFromDate(date);
     }
@@ -207,7 +220,6 @@ export default function AssignedCaseListforDRC() {
 
   const handleenddatechange = (date) => {
     if (fromDate && date < fromDate) {
-
       Swal.fire({
         title: "Warning",
         text: "The 'To' date cannot be earlier than the 'From' date.",
@@ -228,7 +240,9 @@ export default function AssignedCaseListforDRC() {
 
       const formatDate = (date) => {
         if (!date) return null;
-        const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        const offsetDate = new Date(
+          date.getTime() - date.getTimezoneOffset() * 60000
+        );
         return offsetDate.toISOString().split("T")[0];
       };
 
@@ -266,8 +280,13 @@ export default function AssignedCaseListforDRC() {
       }
 
       if (from && to) {
-        const monthDiff = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
-        if (monthDiff > 1 || (monthDiff === 1 && to.getDate() > from.getDate())) {
+        const monthDiff =
+          (to.getFullYear() - from.getFullYear()) * 12 +
+          (to.getMonth() - from.getMonth());
+        if (
+          monthDiff > 1 ||
+          (monthDiff === 1 && to.getDate() > from.getDate())
+        ) {
           Swal.fire({
             title: "Long Date Range",
             text: "The selected date range exceeds one month. Consider creating a task instead.",
@@ -331,7 +350,7 @@ export default function AssignedCaseListforDRC() {
         Swal.fire({
           title: "Error",
           text: "Failed to fetch filtered data. Please try again.",
-          icon: "error"
+          icon: "error",
         });
       }
     } catch (error) {
@@ -339,7 +358,7 @@ export default function AssignedCaseListforDRC() {
       Swal.fire({
         title: "Error",
         text: "Failed to fetch filtered data. Please try again.",
-        icon: "error"
+        icon: "error",
       });
     } finally {
       setIsLoading(false); // Stop loading animation
@@ -414,6 +433,11 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
+  const handleonvisiable = (case_id) => {
+    navigate("/drc/Pre_Negotiation", { state: { CaseID: case_id } });
+    console.log("Case ID being passed: ", case_id);
+  };
+
   // render status icon with tooltip
   const renderStatusIcon = (status) => {
     const iconPath = getStatusIcon(status);
@@ -424,12 +448,7 @@ export default function AssignedCaseListforDRC() {
 
     return (
       <div className="flex items-center gap-2">
-        <img
-          src={iconPath}
-          alt={status}
-          title={status}
-          className="w-6 h-6"
-        />
+        <img src={iconPath} alt={status} title={status} className="w-6 h-6" />
       </div>
     );
   };
@@ -448,7 +467,9 @@ export default function AssignedCaseListforDRC() {
             onChange={(e) => setSelectedArrearsAmount(e.target.value)}
             style={{ color: selectedArrearsAmount === "" ? "gray" : "black" }}
           >
-            <option value="" hidden>Arrears Band</option>
+            <option value="" hidden>
+              Arrears Band
+            </option>
             {arrearsAmounts.length > 0 ? (
               arrearsAmounts.map((amount, index) => (
                 <option key={index} value={amount.key}>
@@ -467,9 +488,13 @@ export default function AssignedCaseListforDRC() {
             onChange={(e) => setSelectedRo(e.target.value)}
             style={{ color: selectedRo === "" ? "gray" : "black" }}
           >
-            <option value="" hidden>Select RO</option>
+            <option value="" hidden>
+              Select RO
+            </option>
             {roList.map((ro) => (
-              <option key={ro.ro_id} value={ro.ro_id}>{ro.ro_name}</option>
+              <option key={ro.ro_id} value={ro.ro_id}>
+                {ro.ro_name}
+              </option>
             ))}
           </select>
 
@@ -531,6 +556,7 @@ export default function AssignedCaseListforDRC() {
               <th className={GlobalStyle.tableHeader}>RTOM Area</th>
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
               <th className={GlobalStyle.tableHeader}>RO</th>
+              <th scope="col" className={GlobalStyle.tableHeader}></th>
             </tr>
           </thead>
           <tbody>
@@ -544,33 +570,60 @@ export default function AssignedCaseListforDRC() {
                       : GlobalStyle.tableRowOdd
                   }
                 >
-                  <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || "N/A"}</td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
-                  <td className={GlobalStyle.tableData}>{item.created_dtm
-                    ? new Date(item.created_dtm).toLocaleDateString("en-GB")
-                    : "N/A"}</td>
+                  <td
+                    className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}
+                  >
+                    {item.case_id || "N/A"}
+                  </td>
+                  <td
+                    className={`${GlobalStyle.tableData} flex justify-center items-center`}
+                  >
+                    {renderStatusIcon(item.status)}
+                  </td>
+                  <td className={GlobalStyle.tableData}>
+                    {item.created_dtm
+                      ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </td>
                   <td className={GlobalStyle.tableCurrency}>
                     {item?.current_arrears_amount &&
                       item.current_arrears_amount.toLocaleString("en-LK", {
                         style: "currency",
                         currency: "LKR",
-                      })
-                    }
+                      })}
                   </td>
-                  <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}>{item.area || "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>
+                    {" "}
+                    {item.action_type || "N/A"}{" "}
+                  </td>
+                  <td className={GlobalStyle.tableData}>
+                    {item.area || "N/A"}
+                  </td>
                   <td className={GlobalStyle.tableData}>
                     {item.expire_dtm
                       ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
                       : "N/A"}
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-
+                  <td className={GlobalStyle.tableData}>
+                    <div className="px-8 flex items-center gap-2">
+                      <FaPhone
+                        onClick={() => handleonvisiable(item.case_id)}
+                        style={{ cursor: "pointer", marginRight: "8px" }}
+                      />
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9} className={GlobalStyle.tableData} style={{ textAlign: "center" }}>No cases available</td>
+                <td
+                  colSpan={9}
+                  className={GlobalStyle.tableData}
+                  style={{ textAlign: "center" }}
+                >
+                  No cases available
+                </td>
               </tr>
             )}
           </tbody>
@@ -582,8 +635,9 @@ export default function AssignedCaseListforDRC() {
         <button
           onClick={() => handlePrevNext("prev")}
           disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
-            }`}
+          className={`${GlobalStyle.navButton} ${
+            currentPage === 1 ? "cursor-not-allowed" : ""
+          }`}
         >
           <FaArrowLeft />
         </button>
@@ -593,8 +647,9 @@ export default function AssignedCaseListforDRC() {
         <button
           onClick={() => handlePrevNext("next")}
           disabled={currentPage === totalPages}
-          className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
-            }`}
+          className={`${GlobalStyle.navButton} ${
+            currentPage === totalPages ? "cursor-not-allowed" : ""
+          }`}
         >
           <FaArrowRight />
         </button>
@@ -602,5 +657,3 @@ export default function AssignedCaseListforDRC() {
     </div>
   );
 }
-
-
