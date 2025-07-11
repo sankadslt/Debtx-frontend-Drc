@@ -609,7 +609,6 @@
 
 // After Responsive
 
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaSearch } from "react-icons/fa";
@@ -621,7 +620,6 @@ import { getAllActiveRTOMs } from "../../services/rtom/RtomService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import addIcon from "../../assets/images/add.svg";
 import iconImg from "../../assets/images/minorc.png";
-
 
 export default function RO_DRCUserDetailsEdit() {
   const navigate = useNavigate();
@@ -657,7 +655,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: 'Missing user type or ID. Please try again.',
           icon: 'error',
-           confirmButtonColor: "#d33",
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -726,7 +724,7 @@ export default function RO_DRCUserDetailsEdit() {
             title: 'No Results',
             text: 'No matching data found.',
             icon: 'warning',
-              confirmButtonColor: "#f1c40f",
+            confirmButtonColor: "#f1c40f",
             allowOutsideClick: false,
             allowEscapeKey: false,
           });
@@ -739,7 +737,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: error.message || 'Failed to fetch data. Please try again.',
           icon: 'error',
-           confirmButtonColor: "#d33",
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -762,7 +760,7 @@ export default function RO_DRCUserDetailsEdit() {
           title: 'Error',
           text: 'Failed to fetch RTOM areas. Please try again later.',
           icon: 'error',
-           confirmButtonColor: "#d33",
+          confirmButtonColor: "#d33",
           allowOutsideClick: false,
           allowEscapeKey: false,
         });
@@ -960,7 +958,7 @@ export default function RO_DRCUserDetailsEdit() {
     } catch (error) {
       console.error('Error updating user details:', error);
       Swal.fire({
-        title: ' For any assistance, please contact support at support@x.ai.',
+        title: 'For any assistance, please contact support at support@x.ai.',
         text: error.message || 'Internal server error. Please try again later.',
         icon: 'error',
         confirmButtonColor: "#d33",
@@ -1113,12 +1111,21 @@ export default function RO_DRCUserDetailsEdit() {
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-                  <input
-                    type="text"
-                    value={contactNo}
-                    onChange={(e) => handleContactNoChange(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactNoError ? 'border-red-500' : ''}`}
-                  />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      value={initialContactNo}
+ Parked
+                      readOnly
+                      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] bg-gray-100 cursor-not-allowed`}
+                    />
+                    <input
+                      type="text"
+                      value={contactNo}
+                      onChange={(e) => handleContactNoChange(e.target.value)}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactNoError ? 'border-red-500' : ''}`}
+                    />
+                  </div>
                   {contactNoError && (
                     <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
                   )}
@@ -1130,12 +1137,20 @@ export default function RO_DRCUserDetailsEdit() {
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => handleEmailChange(e.target.value)}
-                    className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
-                  />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="email"
+                      value={initialEmail}
+                      readOnly
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] bg-gray-100 cursor-not-allowed`}
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
+                    />
+                  </div>
                   {emailError && (
                     <p className="text-red-500 text-xs mt-1">{emailError}</p>
                   )}
@@ -1182,20 +1197,20 @@ export default function RO_DRCUserDetailsEdit() {
                                 />
                               </div>
                               {area.isNew && (
-                               
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveRtomArea(index)}
+                                  className={`${GlobalStyle.buttonCircle} ml-2`}
+                                  title="
 
-                                 <button
-                              type="button"
-                              onClick={() => handleRemoveRtomArea(index)}
-                              className={`${GlobalStyle.buttonCircle} ml-2`}
-                                title="Remove RTOM Area"
-                            >
-                              <img
-                                src={iconImg}
-                                alt="Remove"
-                                style={{ width: 20, height: 20 }}
-                              />
-                            </button>
+Remove RTOM Area"
+                                >
+                                  <img
+                                    src={iconImg}
+                                    alt="Remove"
+                                    style={{ width: 20, height: 20 }}
+                                  />
+                                </button>
                               )}
                             </div>
                           </td>
@@ -1231,9 +1246,7 @@ export default function RO_DRCUserDetailsEdit() {
                             </option>
                           ))}
                       </select>
-                    
-
-                    <button
+                      <button
                         type="button"
                         onClick={handleAddRtomArea}
                         className={`${GlobalStyle.buttonCircle} md:ml-2 self-end md:self-auto`}
@@ -1245,7 +1258,6 @@ export default function RO_DRCUserDetailsEdit() {
                           style={{ width: 20, height: 20 }}
                         />
                       </button>
-
                     </div>
                   </div>
                 </div>

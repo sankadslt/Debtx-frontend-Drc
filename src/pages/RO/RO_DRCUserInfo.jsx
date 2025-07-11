@@ -6,6 +6,8 @@ import { List_RO_Info_Own_By_RO_Id } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 import gmailIcon from "../../assets/images/google.png";
 import editIcon from "../../assets/images/edit-info.svg";
+import tickIcon from "../../assets/images/Tick.jpeg";
+import crossIcon from "../../assets/images/Cross.png";
 
 export default function RO_DRCUserInfo() {
   const location = useLocation();
@@ -241,17 +243,11 @@ export default function RO_DRCUserInfo() {
                             {area.name}
                           </td>
                           <td className={`${GlobalStyle.tableData} text-center`}>
-                            <div className="flex items-center justify-center gap-2">
-                              <div
-                                className={`inline-block w-8 h-4 sm:w-11 sm:h-6 rounded-full transition-colors ${area.status ? "bg-green-500" : "bg-gray-400"} relative`}
-                              >
-                                <div
-                                  className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? "left-[18px] sm:left-[26px]" : "left-[2px]"}`}
-                                />
-                              </div>
-                              <span className={`text-xs sm:text-sm font-semibold ${area.status ? "text-green-600" : "text-gray-500"}`}>
-                              </span>
-                            </div>
+                            <img
+                              src={area.status ? tickIcon : crossIcon}
+                              alt={area.status ? "Active" : "Inactive"}
+                              className="w-6 h-6 mx-auto"
+                            />
                           </td>
                         </tr>
                       ))
