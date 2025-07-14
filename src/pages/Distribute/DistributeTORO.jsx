@@ -397,6 +397,7 @@ const DistributeTORO = () => {
 
   const handleClear = () => {
     setSelectedRTOM("");
+    setSelectedArrearsBand("");
     setSelectedRO("");
     setFromDate(null);
     setToDate(null);
@@ -761,7 +762,7 @@ const DistributeTORO = () => {
             <option value="" hidden>RTOM</option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
-                <option key={rtom.rtom_id} value={rtom.area_name}>
+                <option key={rtom.rtom_id} value={rtom.area_name} style={{ color: "black" }}>
                   {rtom.area_name}
                 </option>
               ))
@@ -781,7 +782,7 @@ const DistributeTORO = () => {
             <option value="" hidden>Arrears Band</option>
             {arrearsAmounts.length > 0 ? (
               arrearsAmounts.map((band, index) => (
-                <option key={index} value={band.key}>
+                <option key={index} value={band.key} style={{ color: "black" }}> 
                   {band.value}
                 </option>
               ))
@@ -826,7 +827,7 @@ const DistributeTORO = () => {
         <div className={GlobalStyle.searchBarContainer}>
           <input
             type="text"
-            placeholder="Search"
+            placeholder=""
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={GlobalStyle.inputSearch}
@@ -933,7 +934,7 @@ const DistributeTORO = () => {
         >
           <option value="" hidden>Select RO</option>
           {filteredOfficers.map((officer) => (
-            <option key={officer.ro_id} value={officer.ro_id}>
+            <option key={officer.ro_id} value={officer.ro_id}s style={{ color: "black" }}>
               {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
             </option>
           ))}
