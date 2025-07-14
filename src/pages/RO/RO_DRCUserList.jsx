@@ -1087,7 +1087,7 @@ export default function RO_DRCUserList() {
                             <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>RO ID</th>
+                                        
                                         <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>Status</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>NIC</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[150px]`}>RO Name</th>
@@ -1105,9 +1105,7 @@ export default function RO_DRCUserList() {
                                                     index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
                                                 } border-b`}
                                             >
-                                                <td className={`${GlobalStyle.tableData} text-black`}>
-                                                    {item.ro_id || "N/A"}
-                                                </td>
+                                              
                                                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                                                     {getStatusIcon(item.drcUser_status) || "N/A"}
                                                 </td>
@@ -1176,7 +1174,7 @@ export default function RO_DRCUserList() {
                             <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>DRC User ID</th>
+                                        
                                         <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>Status</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>NIC</th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[150px]`}>DRC User Name</th>
@@ -1193,9 +1191,7 @@ export default function RO_DRCUserList() {
                                                     index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
                                                 } border-b`}
                                             >
-                                                <td className={`${GlobalStyle.tableData} text-black`}>
-                                                    {item.drcUser_id || "N/A"}
-                                                </td>
+                                               
                                                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                                                     {getStatusIcon(item.drcUser_status) || "N/A"}
                                                 </td>
