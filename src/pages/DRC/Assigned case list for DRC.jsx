@@ -137,74 +137,74 @@ export default function AssignedCaseListforDRC() {
     fetchData();
   }, [userData?.drc_id]);
 
-  const handleCreateTaskForDownload = async ({ arrears_band, ro_id, fromDate, toDate }) => {
-    const params = {
-      arrears_band: arrears_band || "",
-      ro_id: ro_id ? Number(ro_id) : "",
-      from_date: fromDate,
-      to_date: toDate,
-    };
+  // const handleCreateTaskForDownload = async ({ arrears_band, ro_id, fromDate, toDate }) => {
+  //   const params = {
+  //     arrears_band: arrears_band || "",
+  //     ro_id: ro_id ? Number(ro_id) : "",
+  //     from_date: fromDate,
+  //     to_date: toDate,
+  //   };
 
-    // console.log("Params sent to API: ", params);
+  //   // console.log("Params sent to API: ", params);
 
-    if (!fromDate && !toDate) {
-      Swal.fire({
-        title: "Warning",
-        text: "Please provide a date range before creating a task.",
-        icon: "warning",
-        confirmButtonText: "OK",
-      });
-      return; // Stop function execution
-    }
+  //   if (!fromDate && !toDate) {
+  //     Swal.fire({
+  //       title: "Warning",
+  //       text: "Please provide a date range before creating a task.",
+  //       icon: "warning",
+  //       confirmButtonText: "OK",
+  //     });
+  //     return; // Stop function execution
+  //   }
 
-    if ((fromDate && !toDate) || (!fromDate && toDate)) {
-      Swal.fire({
-        title: "Incomplete Date Range",
-        text: "Both From Date and To Date must be selected together.",
-        icon: "warning",
-        confirmButtonText: "OK",
-      });
-      return;
-    }
+  //   if ((fromDate && !toDate) || (!fromDate && toDate)) {
+  //     Swal.fire({
+  //       title: "Incomplete Date Range",
+  //       text: "Both From Date and To Date must be selected together.",
+  //       icon: "warning",
+  //       confirmButtonText: "OK",
+  //     });
+  //     return;
+  //   }
 
-    const confirmation = await Swal.fire({
-      title: "Confirm Task Creation",
-      text: "Are you sure you want to create this task?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, create it!",
-      cancelButtonText: "Cancel",
-    });
+  //   const confirmation = await Swal.fire({
+  //     title: "Confirm Task Creation",
+  //     text: "Are you sure you want to create this task?",
+  //     icon: "question",
+  //     showCancelButton: true,
+  //     confirmButtonText: "Yes, create it!",
+  //     cancelButtonText: "Cancel",
+  //   });
 
-    if (!confirmation.isConfirmed) return;
+  //   if (!confirmation.isConfirmed) return;
 
-    try {
-      const filteredParams = {
+  //   try {
+  //     const filteredParams = {
 
-        params
-      };
+  //       params
+  //     };
 
-      const response = await Create_Task_Assigned_Case_for_DRC(filteredParams);
+  //     const response = await Create_Task_Assigned_Case_for_DRC(filteredParams);
 
-      if (response.status === 201) {
-        Swal.fire({
-          title: "Success",
-          text: "Task successfully created",
-          icon: "success",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#28a745"
-        });
-      }
-    } catch (error) {
-      console.error("Error filtering cases:", error);
-      Swal.fire({
-        title: "Error",
-        text: "Error creating task",
-        icon: "error",
-        confirmButtonColor: "#d33"
-      });
-    }
-  };
+  //     if (response.status === 201) {
+  //       Swal.fire({
+  //         title: "Success",
+  //         text: "Task successfully created",
+  //         icon: "success",
+  //         confirmButtonText: "OK",
+  //         confirmButtonColor: "#28a745"
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error filtering cases:", error);
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: "Error creating task",
+  //       icon: "error",
+  //       confirmButtonColor: "#d33"
+  //     });
+  //   }
+  // };
 
 
   const handlestartdatechange = (date) => {
@@ -590,7 +590,7 @@ export default function AssignedCaseListforDRC() {
             <tr>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
               <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
+              <th className={GlobalStyle.tableHeader}>DRC Assigned Date</th>
               <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
               <th className={GlobalStyle.tableHeader}>RTOM Area</th>
@@ -640,7 +640,7 @@ export default function AssignedCaseListforDRC() {
         <button
           onClick={() => handlePrevNext("prev")}
           disabled={currentPage === 1}
-          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+          className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
             }`}
         >
           <FaArrowLeft />
@@ -658,7 +658,7 @@ export default function AssignedCaseListforDRC() {
           className={`${GlobalStyle.navButton} ${(searchQuery
             ? currentPage >= Math.ceil(filteredDataBySearch.length / recordsPerPage)
             : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / recordsPerPage))
-            ? "cursor-not-allowed"
+            ? "cursor-not-allowed opacity-50"
             : ""
             }`}
         >
