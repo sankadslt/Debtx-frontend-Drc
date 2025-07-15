@@ -396,77 +396,40 @@ export const Pre_Negotiation = () => {
       {/* Title */}
       <h2 className={GlobalStyle.headingLarge}>Pre Negotiation</h2>
 
-      <div className="flex justify-center mb-4">
-        <div className={`${GlobalStyle.cardContainer}`}>
-          <div className="table w-full">
-            <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">Case ID</div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">{case_id}</div>
+      {/* </div> */}
+      <div className="flex flex-col md:flex-row gap-4 w-full items-start">
+        {/* Account Details Card */}
+        <div className="flex-1 mb-4 w-full">
+          <div
+            className={`${GlobalStyle.cardContainer} flex-1 min-h-[330px] w-full`}
+          >
+            <div className="flex flex-col w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center px-4 py-2">
+                <div className="font-bold w-full sm:w-40">Case ID</div>
+                <div className="px-4 py-2 sm:w-10">:</div>
+                <div className="px-4 py-2 flex-1">{case_id}</div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center px-4 py-2">
+                <div className="font-bold w-full sm:w-40">Account Number</div>
+                <div className="px-4 py-2 sm:w-10">:</div>
+                <div className="px-4 py-2 flex-1">{account_no}</div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center px-4 py-2">
+                <div className="font-bold w-full sm:w-40">Contact Number</div>
+                <div className="px-4 py-2 sm:w-10">:</div>
+                <div className="px-4 py-2 flex-1"></div>
+              </div>
             </div>
-            <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">
-                Account Number
-              </div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">{account_no}</div>
-            </div>
-            <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">
-                Contact Number
-              </div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
-            </div>
-            {/* <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">
-                Contact Number no
-              </div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2"></div>
-            </div> */}
-            {/* <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">
-                Arrears Amount
-              </div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">
-                {LODdata?.arrears_amount &&
-                  LODdata.arrears_amount.toLocaleString("en-LK", {
-                    style: "currency",
-                    currency: "LKR",
-                  })}
-              </div>
-            </div> */}
-            {/* <div className="table-row">
-              <div className="table-cell px-4 py-2 font-bold">
-                Last Payment Date
-              </div>
-              <div className="table-cell px-4 py-2 font-bold">:</div>
-              <div className="table-cell px-4 py-2">
-                {LODdata?.last_payment_date &&
-                  new Date(LODdata.last_payment_date).toLocaleString("en-GB", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: true,
-                  })}
-              </div>
-            </div> */}
           </div>
         </div>
-      </div>
-      {/* </div> */}
-      <div className="flex gap-4 w-full items-start">
-        {/* Drop down */}
-        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
-          <div className="flex gap-4 items-center justify-start mb-4 w-full">
-            <label className="w-56">Call Negotiation</label>
+        {/* Form Card */}
+        <div
+          className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
+        >
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-start mb-4 w-full">
+            <label className="w-full sm:w-56">Call Negotiation</label>
             <select
-              className={`${GlobalStyle.selectBox}`}
+              className={`${GlobalStyle.selectBox} w-full sm:w-auto`}
               value={selectedSubmission}
               onChange={(e) => setSelectedSubmission(e.target.value)}
             >
@@ -475,17 +438,15 @@ export const Pre_Negotiation = () => {
               <option value="Legal Rejected">Legal Rejected</option>
             </select>
           </div>
-
           {/* Remark */}
-          <div className="flex flex-col gap-2 justify-start mb-4">
-            <label>Remark : </label>
+          <div className="flex flex-col gap-2 justify-start mb-4 w-full">
+            <label>Remark:</label>
             <textarea
-              className={`${GlobalStyle.inputText} h-40`}
+              className={`${GlobalStyle.inputText} h-40 w-full`}
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
             />
           </div>
-
           {/* Submit */}
           <div className="flex w-full justify-end">
             <button
@@ -502,141 +463,141 @@ export const Pre_Negotiation = () => {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Table */}
-        <div className="flex-1">
-          <div
-            className={`${GlobalStyle.tableContainer} mt-0 overflow-x-auto flex-1`}
-          >
-            <table className={GlobalStyle.table}>
-              <thead className={GlobalStyle.thead}>
-                <tr>
-                  <th className={GlobalStyle.tableHeader}>
-                    Call Inquiry Sequence
-                  </th>
-                  <th className={GlobalStyle.tableHeader}>Remark</th>
-                  <th className={GlobalStyle.tableHeader}>Call Topic</th>
+      {/* Table */}
+      <div className="flex-1">
+        <div
+          className={`${GlobalStyle.tableContainer} mt-0 overflow-x-auto flex-1`}
+        >
+          <table className={GlobalStyle.table}>
+            <thead className={GlobalStyle.thead}>
+              <tr>
+                <th className={GlobalStyle.tableHeader}>
+                  Call Inquiry Sequence
+                </th>
+                <th className={GlobalStyle.tableHeader}>Remark</th>
+                <th className={GlobalStyle.tableHeader}>Call Topic</th>
 
-                  <th className={GlobalStyle.tableHeader}>Created Date</th>
-                  <th className={GlobalStyle.tableHeader}></th>
-                </tr>
-              </thead>
+                <th className={GlobalStyle.tableHeader}>Created Date</th>
+                <th className={GlobalStyle.tableHeader}></th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {filteredDataBySearch && filteredDataBySearch.length > 0 ? (
-                  filteredDataBySearch.map((item, index) => (
-                    <tr
-                      key={item.settlement_id || index}
-                      className={
-                        index % 2 === 0
-                          ? GlobalStyle.tableRowEven
-                          : GlobalStyle.tableRowOdd
-                      }
-                    >
-                      {/* <td
+            <tbody>
+              {filteredDataBySearch && filteredDataBySearch.length > 0 ? (
+                filteredDataBySearch.map((item, index) => (
+                  <tr
+                    key={item.settlement_id || index}
+                    className={
+                      index % 2 === 0
+                        ? GlobalStyle.tableRowEven
+                        : GlobalStyle.tableRowOdd
+                    }
+                  >
+                    {/* <td
                     className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}
                     onClick={() => naviCaseID(item.case_id)}
                   >
                     {item.task_id || "N/A"}
                   </td> */}
 
-                      <td className={GlobalStyle.tableData}>
-                        {" "}
-                        {item.seq || "N/A"}{" "}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {" "}
-                        {item.call_inquiry_remark || "N/A"}{" "}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {" "}
-                        {item.call_topic || "N/A"}{" "}
-                      </td>
-                      {/* <td className={GlobalStyle.tableData}>
+                    <td className={GlobalStyle.tableData}>
+                      {" "}
+                      {item.seq || "N/A"}{" "}
+                    </td>
+                    <td className={GlobalStyle.tableData}>
+                      {" "}
+                      {item.call_inquiry_remark || "N/A"}{" "}
+                    </td>
+                    <td className={GlobalStyle.tableData}>
+                      {" "}
+                      {item.call_topic || "N/A"}{" "}
+                    </td>
+                    {/* <td className={GlobalStyle.tableData}>
                     {" "}
                     {item.Created_By || "N/A"}{" "}
                   </td> */}
-                      <td className={GlobalStyle.tableData}>
-                        {new Date(item.created_date).toLocaleDateString(
-                          "en-GB"
-                        ) || "N/A"}
-                        ,{" "}
-                        {new Date(item.created_date)
-                          .toLocaleTimeString("en-GB", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                            hour12: true,
-                          })
-                          .toUpperCase()}
-                      </td>
-                      <td className={GlobalStyle.tableData}>
-                        {/* <div className="px-8 flex items-center gap-2">
+                    <td className={GlobalStyle.tableData}>
+                      {new Date(item.created_date).toLocaleDateString(
+                        "en-GB"
+                      ) || "N/A"}
+                      ,{" "}
+                      {new Date(item.created_date)
+                        .toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: true,
+                        })
+                        .toUpperCase()}
+                    </td>
+                    <td className={GlobalStyle.tableData}>
+                      {/* <div className="px-8 flex items-center gap-2">
                           <FaPhone
                             onClick={() => handleWithdrawPopup(item.case_id)}
                             style={{ cursor: "pointer", marginRight: "8px" }}
                           />
                         </div> */}
-                        <button
-                          onClick={() => handleWithdrawPopup(item.seq)}
-                          className="p-2 hover:bg-gray-100 rounded flex items-center justify-center"
-                          //title="More Info"
-                        >
-                          <img
-                            src={moreImg}
-                            alt="More Info"
-                            className="h-auto w-5 max-w-[24px]"
-                            data-tooltip-id="more-info-tooltip"
-                          />
-                          <Tooltip
-                            id="more-info-tooltip"
-                            place="bottom"
-                            content="More Info"
-                          />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={9}
-                      className={`${GlobalStyle.tableData} text-center`}
-                    >
-                      No cases available
+                      <button
+                        onClick={() => handleWithdrawPopup(item.seq)}
+                        className="p-2 hover:bg-gray-100 rounded flex items-center justify-center"
+                        //title="More Info"
+                      >
+                        <img
+                          src={moreImg}
+                          alt="More Info"
+                          className="h-auto w-5 max-w-[24px]"
+                          data-tooltip-id="more-info-tooltip"
+                        />
+                        <Tooltip
+                          id="more-info-tooltip"
+                          place="bottom"
+                          content="More Info"
+                        />
+                      </button>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Pagination Section */}
-          {filteredDataBySearch.length > 0 && (
-            <div className={GlobalStyle.navButtonContainer}>
-              <button
-                onClick={() => handlePrevNext("prev")}
-                disabled={currentPage <= 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage <= 1 ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowLeft />
-              </button>
-              <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-                Page {currentPage}
-              </span>
-              <button
-                onClick={() => handlePrevNext("next")}
-                disabled={currentPage === totalPages}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage === totalPages ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowRight />
-              </button>
-            </div>
-          )}
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className={`${GlobalStyle.tableData} text-center`}
+                  >
+                    No cases available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+        {/* Pagination Section */}
+        {filteredDataBySearch.length > 0 && (
+          <div className={GlobalStyle.navButtonContainer}>
+            <button
+              onClick={() => handlePrevNext("prev")}
+              disabled={currentPage <= 1}
+              className={`${GlobalStyle.navButton} ${
+                currentPage <= 1 ? "cursor-not-allowed" : ""
+              }`}
+            >
+              <FaArrowLeft />
+            </button>
+            <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+              Page {currentPage}
+            </span>
+            <button
+              onClick={() => handlePrevNext("next")}
+              disabled={currentPage === totalPages}
+              className={`${GlobalStyle.navButton} ${
+                currentPage === totalPages ? "cursor-not-allowed" : ""
+              }`}
+            >
+              <FaArrowRight />
+            </button>
+          </div>
+        )}
       </div>
 
       {activeWithdrawPopupLODID && selectedRowData && (
