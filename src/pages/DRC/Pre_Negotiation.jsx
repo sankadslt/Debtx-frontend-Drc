@@ -10,12 +10,6 @@ import { Tooltip } from "react-tooltip";
 import { FaPhone } from "react-icons/fa";
 import { Create_Pre_Negotiation } from "../../services/Drc/Drc";
 
-// List_Pre_Negotiation_By_Case_Id;
-
-// import {
-//   listDRCPhaseCaseDetails,
-//   updateDRCSubmission,
-// } from "../../services/drc/drcService";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { List_Pre_Negotiation_By_Case_Id } from "../../services/Drc/Drc";
 
@@ -59,7 +53,7 @@ export const Pre_Negotiation = () => {
   const paginatedData = filteredData.slice(startIndex, endIndex);
   const hasMounted = useRef(false);
   const [committedFilters, setCommittedFilters] = useState({
-    // case_id: case_id,
+    case_id: case_id,
     fromDate: null,
     toDate: null,
   });
@@ -185,7 +179,7 @@ export const Pre_Negotiation = () => {
       } else {
         Swal.fire({
           title: "Error",
-          text: "No valid taskslist data found in response.",
+          text: "No valid negotation data found in response.",
           icon: "error",
           confirmButtonColor: "#d33",
         });
@@ -222,7 +216,7 @@ export const Pre_Negotiation = () => {
       //   currentPage,
       // });
     }
-  }, [currentPage]);
+  }, [currentPage, case_id]);
 
   // Handle Pagination
   const handlePrevNext = (direction) => {
@@ -262,7 +256,7 @@ export const Pre_Negotiation = () => {
       if (!selectedSubmission || !remark) {
         Swal.fire(
           "Error",
-          "Please enter both Customer Response and Remark",
+          "Please enter both Call Negotiation Topic and Remark",
           "error"
         );
         return;
@@ -277,7 +271,7 @@ export const Pre_Negotiation = () => {
         case_id: case_id,
         call_inquiry_remark: remark,
         call_topic: selectedSubmission,
-        case_phase: "Negotiaition",
+        // case_phase: "Negotiaition",
         created_by: userData?.user_id,
         drc_id: userData?.drc_id,
       };
@@ -290,7 +284,7 @@ export const Pre_Negotiation = () => {
       if (response === "success") {
         Swal.fire({
           title: "Success",
-          text: "Case withdrawal request added successfully!", // Change to "withdrawal" if intended
+          text: "Pre Negotation entry added successfully!", // Change to "withdrawal" if intended
           icon: "success",
           confirmButtonText: "OK",
         }).then((result) => {
@@ -320,12 +314,12 @@ export const Pre_Negotiation = () => {
       } else {
         Swal.fire(
           "Error",
-          `Failed to submit withdrawal request: ${response.message}`,
+          `Failed to submit pre negotiation request: ${response.message}`,
           "error"
         );
       }
     } catch (err) {
-      console.error("Error submitting DRC response:", err);
+      console.error("Error pre negotiation request response:", err);
     } finally {
       setIsLoading(false);
     }
@@ -397,11 +391,12 @@ export const Pre_Negotiation = () => {
       <h2 className={GlobalStyle.headingLarge}>Pre Negotiation</h2>
 
       {/* </div> */}
-      <div className="flex flex-col md:flex-row gap-4 w-full items-start">
+
+      <div className="flex flex-row gap-4 w-full items-start">
         {/* Account Details Card */}
         <div className="flex-1 mb-4 w-full">
           <div
-            className={`${GlobalStyle.cardContainer} flex-1 min-h-[330px] w-full`}
+            className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
           >
             <div className="flex flex-col w-full">
               <div className="flex flex-col sm:flex-row sm:items-center px-4 py-2">
@@ -416,7 +411,7 @@ export const Pre_Negotiation = () => {
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center px-4 py-2">
                 <div className="font-bold w-full sm:w-40">Contact Number</div>
-                <div className="px-4 py-2 sm:w-10">:</div>
+                <div className="px-4 py-2 sm:w-10"></div>
                 <div className="px-4 py-2 flex-1"></div>
               </div>
             </div>
@@ -427,16 +422,18 @@ export const Pre_Negotiation = () => {
           className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
         >
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-start mb-4 w-full">
-            <label className="w-full sm:w-56">Call Negotiation</label>
-            <select
-              className={`${GlobalStyle.selectBox} w-full sm:w-auto`}
-              value={selectedSubmission}
-              onChange={(e) => setSelectedSubmission(e.target.value)}
-            >
-              <option value="">Select</option>
-              <option value="Legal Accepted">Legal Accepted</option>
-              <option value="Legal Rejected">Legal Rejected</option>
-            </select>
+            <div className="flex gap-4 items-center justify-start mb-4 w-full">
+              <label className="w-56">Call Negotiation</label>
+              <select
+                className={`${GlobalStyle.selectBox}`}
+                value={selectedSubmission}
+                onChange={(e) => setSelectedSubmission(e.target.value)}
+              >
+                <option value="">Select</option>
+                <option value="Legal Accepted">Legal Accepted</option>
+                <option value="Legal Rejected">Legal Rejected</option>
+              </select>
+            </div>
           </div>
           {/* Remark */}
           <div className="flex flex-col gap-2 justify-start mb-4 w-full">
@@ -602,7 +599,10 @@ export const Pre_Negotiation = () => {
 
       {activeWithdrawPopupLODID && selectedRowData && (
         <div className={GlobalStyle.popupBoxContainer}>
-          <div className={GlobalStyle.popupBoxBody}>
+          <div
+            className={GlobalStyle.popupBoxBody}
+            style={{ maxWidth: "800px" }}
+          >
             <div className={GlobalStyle.popupBox}>
               <h2 className={GlobalStyle.popupBoxTitle}>More Information</h2>
               <button
