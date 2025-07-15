@@ -53,7 +53,7 @@ export const Pre_Negotiation = () => {
   const paginatedData = filteredData.slice(startIndex, endIndex);
   const hasMounted = useRef(false);
   const [committedFilters, setCommittedFilters] = useState({
-    // case_id: case_id,
+    case_id: case_id,
     fromDate: null,
     toDate: null,
   });
@@ -216,7 +216,7 @@ export const Pre_Negotiation = () => {
       //   currentPage,
       // });
     }
-  }, [currentPage]);
+  }, [currentPage, case_id]);
 
   // Handle Pagination
   const handlePrevNext = (direction) => {
@@ -271,7 +271,7 @@ export const Pre_Negotiation = () => {
         case_id: case_id,
         call_inquiry_remark: remark,
         call_topic: selectedSubmission,
-        case_phase: "Negotiaition",
+        // case_phase: "Negotiaition",
         created_by: userData?.user_id,
         drc_id: userData?.drc_id,
       };
