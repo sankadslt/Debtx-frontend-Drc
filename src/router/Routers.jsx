@@ -38,6 +38,7 @@ import RODRCUserInfo from "../pages/RO/RO_DRCUserInfo";
 import RODRCUserInfoEnd from "../pages/RO/RO_DRCUserInfoEnd";
 import RODRCUserInfoEdit from "../pages/RO/RO_DRCUserInfoEdit";
 import RO_ADDro from "../pages/RO/RO_ADDro";
+import Pre_Negotiation from "../pages/DRC/Pre_Negotiation";
 
 const Routers = () => {
   return (
@@ -264,6 +265,16 @@ const Routers = () => {
           <ProtectedRoute
             element={<RO_ADDro />}
             allowedRoles={["drc_user", "DRC-Coordinator"]}
+          />
+        }
+      />
+
+      <Route
+        path="/drc/Pre_Negotiation"
+        element={
+          <ProtectedRoute
+            element={<Pre_Negotiation />}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
           />
         }
       />
