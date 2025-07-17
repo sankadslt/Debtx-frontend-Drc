@@ -65,6 +65,15 @@ const DistributeTORO = () => {
   const [selectedArrearsBand, setSelectedArrearsBand] = useState("");
   const [userData, setUserData] = useState(null);
   const [filteredOfficers, setFilteredOfficers] = useState([]);
+  const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true);
+  const [maxCurrentPage, setMaxCurrentPage] = useState(0);
+  const [committedFilters, setCommittedFilters] = useState({
+    selectedRTOM: "",
+    selectedArrearsBand: "",
+    selectedRO: "",
+    fromDate: null,
+    toDate: null,
+  });
 
   const loadUser = async () => {
     const user = await getLoggedUserId();
@@ -89,19 +98,19 @@ const DistributeTORO = () => {
         setArrearsAmounts(arrearsAmounts);
 
       } catch (error) {
-        // console.error("Error fetching data:", error);
-        Swal.fire({
-          title: "Error",
-          text: "Error fetching data",
-          icon: "error",
-          // allowOutsideClick: false,
-          // allowEscapeKey: false,
-          // showCancelButton: true,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-          // cancelButtonText: "No",
-          // cancelButtonColor: "#d33",
-        })
+        console.error("Error fetching data:", error);
+        // Swal.fire({
+        //   title: "Error",
+        //   text: "Error fetching data",
+        //   icon: "error",
+        // allowOutsideClick: false,
+        // allowEscapeKey: false,
+        // showCancelButton: true,
+        // confirmButtonText: "Ok",
+        // confirmButtonColor: "#d33",
+        // cancelButtonText: "No",
+        // cancelButtonColor: "#d33",
+        // })
       } finally {
         setLoading(false);
       }
@@ -129,20 +138,20 @@ const DistributeTORO = () => {
           // setError("DRC ID not found in URL. (try http://localhost:5173/pages/Distribute/DistributeTORO/userData?.drc_id)");
         }
       } catch (error) {
-        // console.error("Error fetching data:", error);
+        console.error("Error fetching data:", error);
         // setError("Failed to fetch data. Please try again later.");
-        Swal.fire({
-          title: "Error",
-          text: "Failed to fetch data. Please try again later.",
-          icon: "error",
-          // allowOutsideClick: false,
-          // allowEscapeKey: false,
-          // showCancelButton: true,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-          // cancelButtonText: "No",
-          // cancelButtonColor: "#d33",
-        })
+        // Swal.fire({
+        //   title: "Error",
+        //   text: "Failed to fetch data. Please try again later.",
+        //   icon: "error",
+        // allowOutsideClick: false,
+        // allowEscapeKey: false,
+        // showCancelButton: true,
+        // confirmButtonText: "Ok",
+        // confirmButtonColor: "#d33",
+        // cancelButtonText: "No",
+        // cancelButtonColor: "#d33",
+        // })
       } finally {
         setLoading(false);
       }
@@ -167,19 +176,19 @@ const DistributeTORO = () => {
             setRecoveryOfficers(formattedOfficers);
             // console.log("Recovery Officers:", formattedOfficers);
           } else {
-            // console.error("Invalid response format:", officers);
-            Swal.fire({
-              title: "Error",
-              text: "Failed to fetch recovery officers. Invalid response format.",
-              icon: "error",
-              // allowOutsideClick: false,
-              // allowEscapeKey: false,
-              // showCancelButton: true,
-              confirmButtonText: "Ok",
-              confirmButtonColor: "#d33",
-              // cancelButtonText: "No",
-              // cancelButtonColor: "#d33",
-            })
+            console.error("Invalid response format:", officers);
+            // Swal.fire({
+            //   title: "Error",
+            //   text: "Failed to fetch recovery officers. Invalid response format.",
+            //   icon: "error",
+            // allowOutsideClick: false,
+            // allowEscapeKey: false,
+            // showCancelButton: true,
+            // confirmButtonText: "Ok",
+            // confirmButtonColor: "#d33",
+            // cancelButtonText: "No",
+            // cancelButtonColor: "#d33",
+            // })
             setRecoveryOfficers([]);
             // setError("Failed to fetch recovery officers. Invalid response format.");
           }
@@ -187,20 +196,20 @@ const DistributeTORO = () => {
           // setError("DRC ID not found in URL.");
         }
       } catch (error) {
-        // console.error("Error fetching recovery officers:", error);
+        console.error("Error fetching recovery officers:", error);
         // setError("Failed to fetch recovery officers.");
-        Swal.fire({
-          title: "Error",
-          text: "Failed to fetch recovery officers.",
-          icon: "error",
-          // allowOutsideClick: false,
-          // allowEscapeKey: false,
-          // showCancelButton: true,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-          // cancelButtonText: "No",
-          // cancelButtonColor: "#d33",
-        })
+        // Swal.fire({
+        //   title: "Error",
+        //   text: "Failed to fetch recovery officers.",
+        //   icon: "error",
+        // allowOutsideClick: false,
+        // allowEscapeKey: false,
+        // showCancelButton: true,
+        // confirmButtonText: "Ok",
+        // confirmButtonColor: "#d33",
+        // cancelButtonText: "No",
+        // cancelButtonColor: "#d33",
+        // })
         setRecoveryOfficers([]); // Set empty array to prevent further errors
       } finally {
         setLoading(false);
@@ -232,7 +241,7 @@ const DistributeTORO = () => {
         });
         return;
       } else {
-        checkdatediffrence(date, toDate);
+        // checkdatediffrence(date, toDate);
         setFromDate(date);
       }
 
@@ -261,7 +270,7 @@ const DistributeTORO = () => {
         });
         return;
       } else {
-        checkdatediffrence(fromDate, date);
+        // checkdatediffrence(fromDate, date);
         setToDate(date);
       }
     } else {
@@ -270,102 +279,127 @@ const DistributeTORO = () => {
   };
 
 
-  const checkdatediffrence = (startDate, endDate) => {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const diffInMs = end - start;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    const diffInMonths = diffInDays / 30;
+  // const checkdatediffrence = (startDate, endDate) => {
+  //   const start = new Date(startDate).getTime();
+  //   const end = new Date(endDate).getTime();
+  //   const diffInMs = end - start;
+  //   const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  //   const diffInMonths = diffInDays / 30;
 
-    if (diffInMonths > 1) {
+  //   if (diffInMonths > 1) {
+  //     Swal.fire({
+  //       title: "Date Range Exceeded",
+  //       text: "The selected dates have more than a 1-month gap.",
+  //       icon: "warning",
+  //       confirmButtonText: "OK",
+  //       confirmButtonColor: "#f1c40f"
+  //     }).then((result) => {
+  //       if (result.isConfirmed) {
+  //         setToDate(null);
+  //         // console.log("Dates cleared");
+  //       }
+  //     }
+  //     );
+  //   };
+  // };
+
+  const filterValidations = () => {
+    if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
       Swal.fire({
-        title: "Date Range Exceeded",
-        text: "The selected dates have more than a 1-month gap.",
+        title: "Missing Filters",
+        text: "Please select at least one filter.",
         icon: "warning",
         confirmButtonText: "OK",
         confirmButtonColor: "#f1c40f"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setToDate(null);
-          // console.log("Dates cleared");
-        }
-      }
-      );
+      });
+      return false;
     };
-  };
 
 
-  const handleFilter = async () => {
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      Swal.fire({
+        title: "Warning",
+        text: "Both From Date and To Date must be selected.",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "OK",
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    }
+
+
+    if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
+      Swal.fire({
+        title: "Warning",
+        text: "To date should be greater than or equal to From date",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "OK",
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    };
+
+    return true;
+  }
+
+  const callAPI = async (filters) => {
     try {
-      setFilteredData([]); // Clear previous results
-      setSelectedRows(new Set()); // Clear row selections
-      setSelectAll(false); // Reset select all
-      setCurrentPage(1); // Reset to first page after filtering
-
       const formatDate = (date) => {
         if (!date) return null;
         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
         return offsetDate.toISOString().split('T')[0];
       };
 
-      if (!selectedArrearsBand && !selectedRTOM && !fromDate && !toDate) {
-        Swal.fire({
-          title: "Missing Filters",
-          text: "Please select at least one filter.",
-          icon: "warning",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#f1c40f"
-        });
-        return;
-      };
-
-
-      if ((fromDate && !toDate) || (!fromDate && toDate)) {
-        Swal.fire({
-          title: "Warning",
-          text: "Both From Date and To Date must be selected.",
-          icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "OK",
-          confirmButtonColor: "#f1c40f"
-        });
-        setToDate(null);
-        setFromDate(null);
-        return;
-      }
-
-
-      if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
-        Swal.fire({
-          title: "Warning",
-          text: "To date should be greater than or equal to From date",
-          icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "OK",
-          confirmButtonColor: "#f1c40f"
-        });
-        setToDate(null);
-        setFromDate(null);
-        return;
-      };
-
       const payload = {
         drc_id: Number(userData?.drc_id),
-        rtom: selectedRTOM,
-        arrears_band: selectedArrearsBand,
-        ro_id: selectedRO ? Number(selectedRO) : "", // Ensure it's properly assigned
-        from_date: formatDate(fromDate),
-        to_date: formatDate(toDate),
+        rtom: filters.selectedRTOM,
+        arrears_band: filters.selectedArrearsBand,
+        ro_id: filters.selectedRO, // Ensure it's properly assigned
+        from_date: formatDate(filters.fromDate),
+        to_date: formatDate(filters.toDate),
+        pages: filters.currentPage,
       };
 
       setLoading(true);
       const response = await listHandlingCasesByDRC(payload);
 
       if (Array.isArray(response)) {
-        setFilteredData(response);
-        setCurrentPage(1); // Reset to first page after filtering
+        // setFilteredData(response);
+        // setCurrentPage(1); // Reset to first page after filtering
+        if (currentPage === 1) {
+          setFilteredData(response)
+        } else {
+          setFilteredData((prevData) => [...prevData, ...response]);
+        }
+
+        if (response.length === 0) {
+          setIsMoreDataAvailable(false); // No more data available
+          if (currentPage === 1) {
+            Swal.fire({
+              title: "No Results",
+              text: "No matching data found.",
+              icon: "error",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonColor: "#d33"
+            });
+          } else if (currentPage === 2) {
+            setCurrentPage(1); // Reset to page 1 if no data found on page 2
+          }
+        } else {
+          const maxData = currentPage === 1 ? 10 : 30;
+          if (response.length < maxData) {
+            setIsMoreDataAvailable(false); // More data available
+          }
+        }
       } else {
         // console.error("No valid cases data found in response.");
         Swal.fire({
@@ -380,23 +414,63 @@ const DistributeTORO = () => {
         setFilteredData([]);
       }
     } catch (error) {
-      // console.error("Error filtering cases:", error);
+      console.error("Error filtering cases:", error);
       Swal.fire({
         title: "Error",
         text: "Failed to fetch filtered data. Please try again.",
         icon: "error",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        confirmButtonText: "Ok",
-        confirmButtonColor: "#d33",
+        confirmButtonColor: "#d33"
       });
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (userData?.drc_id && isMoreDataAvailable && currentPage > maxCurrentPage) {
+      setMaxCurrentPage(currentPage); // Update max current page
+      // callAPI(); // Call the function whenever currentPage changes
+      callAPI({
+        ...committedFilters,
+        currentPage: currentPage
+      });
+    }
+  }, [currentPage, userData?.drc_id]);
+
+  const handleFilter = () => {
+    setSearchQuery(""); // Clear search query on filter
+    setIsMoreDataAvailable(true); // Reset to allow fetching more data
+    setMaxCurrentPage(0); // Reset max current page
+    const IsValid = filterValidations();
+    if (!IsValid) {
+      return; // Stop if validation fails
+    } else {
+      setCommittedFilters({
+        selectedRTOM: selectedRTOM,
+        selectedArrearsBand: selectedArrearsBand,
+        selectedRO: selectedRO,
+        fromDate: fromDate,
+        toDate: toDate,
+      });
+      setFilteredData([]); // Clear previous data
+      if (currentPage === 1) {
+        callAPI({
+          selectedRTOM: selectedRTOM,
+          selectedArrearsBand: selectedArrearsBand,
+          selectedRO: selectedRO,
+          fromDate: fromDate,
+          toDate: toDate,
+          currentPage: 1, // Start from page 1
+        });
+      } else {
+        setCurrentPage(1); // Reset to page 1 if filters are applied
+      }
+    }
+  };
+
   const handleClear = () => {
     setSelectedRTOM("");
+    setSelectedArrearsBand("");
     setSelectedRO("");
     setFromDate(null);
     setToDate(null);
@@ -405,6 +479,21 @@ const DistributeTORO = () => {
     setSelectAll(false);
     setSelectedRows(new Set());
     setFilteredOfficers(recoveryOfficers); // Reset filtered officers to all officers
+    setIsMoreDataAvailable(true); // Reset to allow fetching more data
+    setMaxCurrentPage(0); // Reset max current page
+    setCommittedFilters({
+      selectedRTOM: "",
+      selectedArrearsBand: "",
+      selectedRO: "",
+      fromDate: null,
+      toDate: null,
+    });
+    if (currentPage != 1) {
+      setCurrentPage(1); // Reset to page 1
+    } else {
+      setCurrentPage(0); // Temp set to 0
+      setTimeout(() => setCurrentPage(1), 0); // Reset to 1 after
+    }
   };
 
   //Search Logic
@@ -436,8 +525,14 @@ const DistributeTORO = () => {
   const handlePrevNext = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
-    } else if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    } else if (direction === "next") {
+      if (isMoreDataAvailable) {
+        setCurrentPage(currentPage + 1);
+      } else {
+        if (currentPage < Math.ceil(filteredData.length / recordsPerPage)) {
+          setCurrentPage(currentPage + 1);
+        }
+      }
     }
   };
 
@@ -448,7 +543,7 @@ const DistributeTORO = () => {
 
     if (isSelectedAll) {
       // Add all rows to the selected set
-      const allSelected = new Set(currentData.map((_, index) => index));
+      const allSelected = new Set(currentData.map(item => item.case_id));
       setSelectedRows(allSelected);
     } else {
       // Deselect all rows
@@ -456,42 +551,55 @@ const DistributeTORO = () => {
     }
 
     // Update filtered officers based on selection
-    updateFilteredOfficers(isSelectedAll ? currentData.map((_, index) => index) : []);
+    updateFilteredOfficers(isSelectedAll ? currentData : []);
   };
 
   //Rows with boxes are checked
-  const handleRowSelect = (index) => {
+  const handleRowSelect = (case_id) => {
     const newSelectedRows = new Set(selectedRows);
 
-    if (newSelectedRows.has(index)) {
-      newSelectedRows.delete(index);
+    if (newSelectedRows.has(case_id)) {
+      newSelectedRows.delete(case_id);
     } else {
-      newSelectedRows.add(index);
+      if (newSelectedRows.size >= 5) {
+        Swal.fire({
+          title: "Limit Reached",
+          text: "You can select a maximum of 5 rows at a time.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#f1c40f"
+        });
+        return;
+      }
+      newSelectedRows.add(case_id);
     }
 
     setSelectedRows(newSelectedRows);
 
     // Update filtered officers based on selected rows
-    updateFilteredOfficers(Array.from(newSelectedRows));
+    const selectedItems = currentData.filter(item => newSelectedRows.has(item.case_id));
+    updateFilteredOfficers(selectedItems);
 
     // Update select all checkbox state
     setSelectAll(newSelectedRows.size === currentData.length);
   };
 
   // Filter Recovery Officers based on selected RTOM Areas
-  const updateFilteredOfficers = (selectedIndices) => {
-    if (selectedIndices.length === 0) {
+  const updateFilteredOfficers = (selectedItems) => {
+    if (selectedItems.length === 0) {
       setFilteredOfficers(recoveryOfficers);
       return;
     }
 
     // Get RTOM areas of the selected rows
-    const selectedAreas = selectedIndices.map((index) => currentData[index].area);
+    const selectedAreas = selectedItems.map((item) => item.area);
 
     // Filter officers who have matching RTOM areas
     const officers = recoveryOfficers.filter((officer) => {
       return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
-        officer.rtoms_for_ro.some(rtom => selectedAreas.includes(rtom.name));
+        officer.rtoms_for_ro.some(rtom => selectedAreas.some(area => area.toLowerCase() === rtom.name.toLowerCase()));
     });
 
     setFilteredOfficers(officers);
@@ -504,7 +612,8 @@ const DistributeTORO = () => {
 
   // Update filtered officers when selected rows change
   useEffect(() => {
-    updateFilteredOfficers(Array.from(selectedRows));
+    const selectedItems = filteredData.filter(item => selectedRows.has(item.case_id));
+    updateFilteredOfficers(selectedItems);
   }, [selectedRows]);
 
   // Initialize filtered officers with all officers
@@ -564,12 +673,13 @@ const DistributeTORO = () => {
           text: "Recovery Officer ID is missing.",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonColor: "#d33",
         });
         return;
       }
 
-      const selectedCaseIds = Array.from(selectedRows).map((index) => currentData[index]?.case_id);
+      const selectedCaseIds = Array.from(selectedRows);
 
       if (selectedCaseIds.length === 0) {
         Swal.fire({
@@ -577,7 +687,8 @@ const DistributeTORO = () => {
           text: "No cases selected!",
           icon: "error",
           allowOutsideClick: false,
-          allowEscapeKey: false
+          allowEscapeKey: false,
+          confirmButtonColor: "#d33",
         });
         return;
       }
@@ -746,7 +857,7 @@ const DistributeTORO = () => {
       <h1 className={GlobalStyle.headingLarge}>Distribution</h1>
 
       <div className={`${GlobalStyle.cardContainer} w-full`}>
-        <div className="flex items-center justify-end w-full space-x-3">
+        <div className="flex flex-wrap  xl:flex-nowrap items-center justify-end w-full space-x-3 gap-3">
 
           {/* RTOM Select Dropdown */}
           <select
@@ -761,7 +872,7 @@ const DistributeTORO = () => {
             <option value="" hidden>RTOM</option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
-                <option key={rtom.rtom_id} value={rtom.area_name}>
+                <option key={rtom.rtom_id} value={rtom.area_name} style={{ color: "black" }}>
                   {rtom.area_name}
                 </option>
               ))
@@ -781,7 +892,7 @@ const DistributeTORO = () => {
             <option value="" hidden>Arrears Band</option>
             {arrearsAmounts.length > 0 ? (
               arrearsAmounts.map((band, index) => (
-                <option key={index} value={band.key}>
+                <option key={index} value={band.key} style={{ color: "black" }}>
                   {band.value}
                 </option>
               ))
@@ -791,25 +902,21 @@ const DistributeTORO = () => {
           </select>
 
           {/* Date Picker */}
-          <div className="flex flex-col ">
-            <div className={GlobalStyle.datePickerContainer}>
-              <label className={GlobalStyle.dataPickerDate}>Date</label>
-              <DatePicker
-                selected={fromDate}
-                onChange={handlestartdatechange}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="From"
-                className={GlobalStyle.inputText}
-              />
-              <DatePicker
-                selected={toDate}
-                onChange={handleenddatechange}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="To"
-                className={GlobalStyle.inputText}
-              />
-            </div>
-          </div>
+          <label className={GlobalStyle.dataPickerDate}>Date</label>
+          <DatePicker
+            selected={fromDate}
+            onChange={handlestartdatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="From"
+            className={GlobalStyle.inputText}
+          />
+          <DatePicker
+            selected={toDate}
+            onChange={handleenddatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="To"
+            className={GlobalStyle.inputText}
+          />
 
           {/* Filter Button */}
           <button onClick={handleFilter} className={`${GlobalStyle.buttonPrimary}`}>
@@ -826,9 +933,12 @@ const DistributeTORO = () => {
         <div className={GlobalStyle.searchBarContainer}>
           <input
             type="text"
-            placeholder="Search"
+            placeholder=""
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1); // Reset to page 1 on search
+              setSearchQuery(e.target.value);
+            }}
             className={GlobalStyle.inputSearch}
           />
           <FaSearch className={GlobalStyle.searchBarIcon} />
@@ -836,23 +946,23 @@ const DistributeTORO = () => {
       </div>
 
       {/* Table Section */}
-      <div className={GlobalStyle.tableContainer}>
+      <div className={`${GlobalStyle.tableContainer} mt-6 overflow-x-auto`}>
         <table className={GlobalStyle.table}>
           <thead className={GlobalStyle.thead}>
             <tr>
               <th className={GlobalStyle.tableHeader}>
-                <input
+                {/* <input
                   type="checkbox"
                   checked={selectAll}
                   onChange={handleSelectAll}
                   className="mx-auto"
                   disabled={currentData.length === 0}
-                />
+                /> */}
               </th>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
               <th className={GlobalStyle.tableHeader}>Status</th>
-              <th className={GlobalStyle.tableHeader}>Date</th>
-              <th className={GlobalStyle.tableHeader}>Amount</th>
+              <th className={GlobalStyle.tableHeader}>DRC Assigned Date</th>
+              <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
               <th className={GlobalStyle.tableHeader}>RTOM Area</th>
               <th className={GlobalStyle.tableHeader}>RO</th>
@@ -869,28 +979,28 @@ const DistributeTORO = () => {
                   <td className="text-center">
                     <input
                       type="checkbox"
-                      checked={selectedRows.has(index)}
-                      onChange={() => handleRowSelect(index)}
+                      checked={selectedRows.has(item.case_id)}
+                      onChange={() => handleRowSelect(item.case_id)}
                       className="mx-auto"
                     />
                   </td>
-                  <td className={GlobalStyle.tableData}> {item.case_id || "N/A"} </td>
+                  <td className={GlobalStyle.tableData}> {item.case_id || ""} </td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
                   <td className={GlobalStyle.tableData}> {item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
-                    : "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.current_arrears_amount || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.action_type || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.area || "N/A"} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || "N/A"} </td>
+                    : ""} </td>
+                  <td className={GlobalStyle.tableCurrency}> {item.current_arrears_amount || ""} </td>
+                  <td className={GlobalStyle.tableData}> {item.action_type || ""} </td>
+                  <td className={GlobalStyle.tableData}> {item.area || ""} </td>
+                  <td className={GlobalStyle.tableData}> {item.ro_name || ""} </td>
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
                     ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
-                    : "N/A"}  </td>
+                    : ""}  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="9" className={GlobalStyle.tableData} style={{textAlign: "center"}}>No cases available</td>
+                <td colSpan="9" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>No cases available</td>
               </tr>
             )}
           </tbody>
@@ -908,12 +1018,21 @@ const DistributeTORO = () => {
             <FaArrowLeft />
           </button>
           <span className={`${GlobalStyle.pageIndicator} mx-4`}>
-            Page {currentPage} of {totalPages || 1}
+            Page {currentPage}
           </span>
           <button
             onClick={() => handlePrevNext("next")}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`${GlobalStyle.navButton} ${(currentPage === totalPages || totalPages === 0) ? "cursor-not-allowed opacity-50" : ""}`}
+            disabled={
+              searchQuery
+                ? currentPage >= Math.ceil(filteredDataBySearch.length / recordsPerPage)
+                : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / recordsPerPage
+                )}
+            className={`${GlobalStyle.navButton} ${(searchQuery
+              ? currentPage >= Math.ceil(filteredDataBySearch.length / recordsPerPage)
+              : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / recordsPerPage))
+              ? "cursor-not-allowed opacity-50"
+              : ""
+              }`}
           >
             <FaArrowRight />
           </button>
@@ -932,11 +1051,13 @@ const DistributeTORO = () => {
           style={{ color: selectedRO === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Select RO</option>
-          {filteredOfficers.map((officer) => (
-            <option key={officer.ro_id} value={officer.ro_id}>
+          {filteredOfficers.length > 0 ? filteredOfficers.map((officer) => (
+            <option key={officer.ro_id} value={officer.ro_id} style={{ color: "black" }}>
               {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
             </option>
-          ))}
+          )) : (
+            <option value="" disabled>No Recovery Officers available</option>
+          )}
         </select>
 
         {/* Submit Button */}
