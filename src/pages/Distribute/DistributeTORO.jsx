@@ -385,11 +385,11 @@ const DistributeTORO = () => {
           if (currentPage === 1) {
             Swal.fire({
               title: "No Results",
-              text: "No matching data found for the selected filters.",
-              icon: "warning",
+              text: "No matching data found.",
+              icon: "error",
               allowOutsideClick: false,
               allowEscapeKey: false,
-              confirmButtonColor: "#f1c40f"
+              confirmButtonColor: "#d33"
             });
           } else if (currentPage === 2) {
             setCurrentPage(1); // Reset to page 1 if no data found on page 2
@@ -599,7 +599,7 @@ const DistributeTORO = () => {
     // Filter officers who have matching RTOM areas
     const officers = recoveryOfficers.filter((officer) => {
       return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
-        officer.rtoms_for_ro.some(rtom => selectedAreas.includes(rtom.name));
+        officer.rtoms_for_ro.some(rtom => selectedAreas.some(area => area.toLowerCase() === rtom.name.toLowerCase()));
     });
 
     setFilteredOfficers(officers);
@@ -1051,11 +1051,13 @@ const DistributeTORO = () => {
           style={{ color: selectedRO === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Select RO</option>
-          {filteredOfficers.map((officer) => (
+          {filteredOfficers.length > 0 ? filteredOfficers.map((officer) => (
             <option key={officer.ro_id} value={officer.ro_id} style={{ color: "black" }}>
               {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
             </option>
-          ))}
+          )) : (
+            <option value="" disabled>No Recovery Officers available</option>
+          )}
         </select>
 
         {/* Submit Button */}
