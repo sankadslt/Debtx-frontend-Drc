@@ -730,7 +730,7 @@ export default function AssignedROcaselog() {
             </option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
-                <option key={rtom.rtom_id} value={rtom.area_name}>
+                <option key={rtom.rtom_id} value={rtom.area_name} style={{ color: "black" }}>
                   {rtom.area_name}{" "}
                   {/* Ensure this is the correct name for the RTOM area */}
                 </option>
@@ -750,7 +750,7 @@ export default function AssignedROcaselog() {
             </option>
             {Array.isArray(arrearsAmounts) && arrearsAmounts.length > 0 ? (
               arrearsAmounts.map(({ key, value }) => (
-                <option key={key} value={key}>
+                <option key={key} value={key} style={{ color: "black" }}>
                   {value}
                 </option>
               ))
