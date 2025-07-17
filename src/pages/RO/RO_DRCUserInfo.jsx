@@ -217,7 +217,7 @@ export default function RO_DRCUserInfo() {
             <>
               <div className="table w-full mt-4">
                 <div className="table-row">
-                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">RTOM Areas :</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Billing Center Areas :</div>
                   <div className="table-cell px-2 sm:px-4 py-2" />
                 </div>
               </div>
@@ -226,7 +226,7 @@ export default function RO_DRCUserInfo() {
                 <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                   <thead className={GlobalStyle.thead}>
                     <tr>
-                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area</th>
+                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Billing Center Area</th>
                       <th className={`${GlobalStyle.tableHeader} min-w-[100px]`}>Status</th>
                     </tr>
                   </thead>
