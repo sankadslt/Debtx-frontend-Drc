@@ -24,6 +24,7 @@ import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from "sweetalert2";
+import { Tooltip } from "react-tooltip";
 
 //Status Icons
 // import Open_No_Agent from "../../assets/images/status/Open_No_Agent.png";
@@ -697,16 +698,21 @@ export default function AssignedROcaselog() {
   };
 
   // render status icon with tooltip
-  const renderStatusIcon = (status) => {
+  const renderStatusIcon = (status, index) => {
     const iconPath = getStatusIcon(status);
+
+    const tooltipId = `status-tooltip-${index}`;
 
     if (!iconPath) {
       return <span>{status}</span>;
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <img src={iconPath} alt={status} title={status} className="w-6 h-6" />
+      <div>
+        <div className="flex items-center gap-2">
+          <img src={iconPath} alt={status} className="w-6 h-6" data-tooltip-id={tooltipId} />
+        </div>
+        <Tooltip id={tooltipId} className="tooltip" effect="solid" place="bottom" content={status} />
       </div>
     );
   };
@@ -854,8 +860,8 @@ export default function AssignedROcaselog() {
                     <tr
                       key={index}
                       className={`${index % 2 === 0
-                          ? "bg-white bg-opacity-75"
-                          : "bg-gray-50 bg-opacity-50"
+                        ? "bg-white bg-opacity-75"
+                        : "bg-gray-50 bg-opacity-50"
                         } border-b`}
                     >
                       <td className={GlobalStyle.tableData}>
@@ -869,7 +875,7 @@ export default function AssignedROcaselog() {
                       <td
                         className={`${GlobalStyle.tableData} flex justify-center items-center`}
                       >
-                        {renderStatusIcon(item.status || "")}
+                        {renderStatusIcon(item.status || "", index)}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {item.current_arrears_amount || ""}
@@ -903,7 +909,9 @@ export default function AssignedROcaselog() {
                           <AiFillEye
                             onClick={() => handleonvisiable(item.case_id)}
                             style={{ cursor: "pointer", marginRight: "8px" }}
+                            data-tooltip-id="view-tooltip"
                           />
+                          <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View" />
 
                           {/* Show Edit button only if the expire date is in the future */}
                           <FaEdit
@@ -922,7 +930,9 @@ export default function AssignedROcaselog() {
                               color: isPastDate ? "#d3d3d3" : "#000",
                               opacity: isPastDate ? 0.6 : 1,
                             }}
+                            data-tooltip-id="edit-tooltip"
                           />
+                          <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
 
                           <button
                             className={`${GlobalStyle.buttonPrimary} mx-auto`}
@@ -999,14 +1009,14 @@ export default function AssignedROcaselog() {
                 currentPage >= Math.ceil(filteredData.length / rowsPerPage)
             }
             className={`${GlobalStyle.navButton} ${(
-                searchQuery
-                  ? currentPage >=
-                  Math.ceil(filteredDataBySearch.length / rowsPerPage)
-                  : !isMoreDataAvailable &&
-                  currentPage >= Math.ceil(filteredData.length / rowsPerPage)
-              )
-                ? "cursor-not-allowed opacity-50"
-                : ""
+              searchQuery
+                ? currentPage >=
+                Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                : !isMoreDataAvailable &&
+                currentPage >= Math.ceil(filteredData.length / rowsPerPage)
+            )
+              ? "cursor-not-allowed opacity-50"
+              : ""
               }`}
           >
             <FaArrowRight />

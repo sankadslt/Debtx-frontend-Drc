@@ -517,7 +517,7 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
@@ -539,7 +539,11 @@ export default function Re_AssignRo() {
                           : GlobalStyle.tableRowOdd
                       }
                     >
-                      <td className={GlobalStyle.tableData}>{item.date}</td>
+                      <td className={GlobalStyle.tableData}>
+                        {
+                          new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")
+                        }
+                      </td>
                       <td className={GlobalStyle.tableData}>{item.negotiation}</td>
                       {/* <td className={GlobalStyle.tableData}>{item.remark}</td> */}
                     </tr>
@@ -575,7 +579,7 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
@@ -586,7 +590,9 @@ export default function Re_AssignRo() {
             </thead>
             <tbody>
               {Array.isArray(dataInPageSettlementDetails) && dataInPageSettlementDetails.length > 0 ? (
-                dataInPageSettlementDetails.map((item, index) => (
+                dataInPageSettlementDetails
+                .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                .map((item, index) => (
                   <tr
                     key={index}
                     className={

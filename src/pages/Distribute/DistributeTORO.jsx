@@ -25,6 +25,7 @@ import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { Tooltip } from "react-tooltip";
 
 //Status Icons
 import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
@@ -825,21 +826,25 @@ const DistributeTORO = () => {
   };
 
   // render status icon with tooltip
-  const renderStatusIcon = (status) => {
+  const renderStatusIcon = (status, index) => {
     const iconPath = getStatusIcon(status);
+    const tooltipId = `status-tooltip-${index}`;
 
     if (!iconPath) {
       return <span>{status}</span>;
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <img
-          src={iconPath}
-          alt={status}
-          title={status}
-          className="w-6 h-6"
-        />
+      <div>
+        <div className="flex items-center gap-2">
+          <img
+            src={iconPath}
+            alt={status}
+            className="w-6 h-6"
+            data-tooltip-id={tooltipId}
+          />
+        </div>
+        <Tooltip id={tooltipId} className="tooltip" effect="solid" place="bottom" content={status} />
       </div>
     );
   };
@@ -985,7 +990,7 @@ const DistributeTORO = () => {
                     />
                   </td>
                   <td className={GlobalStyle.tableData}> {item.case_id || ""} </td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status, index)}</td>
                   <td className={GlobalStyle.tableData}> {item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : ""} </td>
