@@ -53,6 +53,7 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [currentPage2, setCurrentPage2] = useState(1);
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
+  const [userid, setUserid] = useState(null);
   const [roId, setRoId] = useState(null);
    const [userRole, setUserRole] = useState(null); // Role-Based Buttons
 
@@ -141,8 +142,10 @@ const Cus_Nego_Customer_Negotiation = () => {
   const loadUser = async () => {
   const user = await getLoggedUserId();
   setUserData(user);
+  
   setDrcId(user.drc_id);
   setRoId(user.ro_id);
+  setUserid(user.user_id);
   };
 
   useEffect(() => {
@@ -150,8 +153,8 @@ const Cus_Nego_Customer_Negotiation = () => {
   }, []);
 
   const payload = {
-    case_id : caseid || 250 ,
-    drc_id: drcId || 200 ,
+    case_id : caseid  ,
+    drc_id: drcId  ,
     ro_id: roId || null,
   };
 
@@ -167,13 +170,14 @@ const Cus_Nego_Customer_Negotiation = () => {
     field_reason: null, // Use field_reason instead of reason
     remark: null,
     ini_amount: null,
-    month: 3,
+    month: null,
     from: null,
     to: null,
     settlement_remark: null,
     drcId: drcId,
     roId: roId || null,
     requestId: null,
+    intractionId: null, // Use intractionId instead of intraction_id
 
     request: null,
     request_remark: null,
@@ -197,6 +201,7 @@ const Cus_Nego_Customer_Negotiation = () => {
 
           const caseDetails = await drcCaseDetails(payload);
           console.log("Payload for case details:", payload);
+          console.log("Case Details:", caseDetails.data[0]);
           setCaseDetails(caseDetails.data[0]);
           //console.log("Case Details Passed to the setCaseDetails:", caseDetails);
         }
@@ -244,68 +249,186 @@ const Cus_Nego_Customer_Negotiation = () => {
     }
 
     const toDate = new Date(fromDate);
-    toDate.setMonth(toDate.getMonth() + month + 1);
+    toDate.setMonth(toDate.getMonth() + month );
     toDate.setDate(0);
+
+  const fromDateFormatted = fromDate.toLocaleDateString("en-GB");
+  const toDateFormatted = toDate.toLocaleDateString("en-GB");
+
 
     setFormData((prevFormData) => ({
       ...prevFormData,
-      from: fromDate.toISOString().split("T")[0],
-      to: toDate.toISOString().split("T")[0],
+      from: fromDateFormatted,
+      to: toDateFormatted,
     }));
   }
   const handleNegotiationSubmit = async (e) => {
-    e.preventDefault();
+    // e.preventDefault();
   
-    const newErrors = {};
-    if (!formData.case_id) newErrors.case_id = "Case ID is required.";
-    if (!formData.field_reason) newErrors.field_reason = "Field reason is required.";
-    if (!formData.remark) newErrors.remark = "Remark is required.";
-    if (!formData.request) newErrors.request = "Request is required.";
-    if (!formData.request_remark) newErrors.request_remark = "Request remark is required.";
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors); 
-      return; 
-    };
+    // const newErrors = {};
+    // if (!formData.caseId) newErrors.case_id = "Case ID is required.";
+    // if (!formData.field_reason) newErrors.field_reason = "Field reason is required.";
+    // if (!formData.remark) newErrors.remark = "Remark is required.";
+    // if (!formData.request) newErrors.request = "Request is required.";
+    // if (!formData.request_remark) newErrors.request_remark = "Request remark is required.";
+    // if (Object.keys(newErrors).length > 0) {
+    //   setErrors(newErrors); 
+    //   return; 
+    // };
     
-    try {
-      // Find the selected request details
-      const selectedRequest = activeRORequests.find(
-        (request) => request.ro_request_id === parseInt(formData.request_id)
-      );
-      formData.request_description = selectedRequest.request_description;
-      formData.intraction_id = selectedRequest.intraction_id;
+    // try {
+    //   // Find the selected request details
+    //   const selectedRequest = activeRORequests.find(
+    //     (request) => request.ro_request_id === parseInt(formData.request_id)
+    //   );
+    //   formData.request_description = selectedRequest.request_description;
+    //   formData.intraction_id = selectedRequest.intraction_id;
   
-      if (!selectedRequest) {
-        alert("Invalid request selected.");
+    //   if (!selectedRequest) {
+    //     alert("Invalid request selected.");
+    //     return;
+    //   }
+
+    //   console.log("Form Data:", formData);
+    //   const DRC_ID = initialFormData.drcId;
+    //   console.log("Form data drc id :",  DRC_ID);
+    //   await addNegotiationCase(formData , DRC_ID);
+    //   alert("Submitted successfully!");
+    //   Swal.fire({
+    //       icon: "success",
+    //       title: "Success",
+    //       text: "Data sent successfully.",
+    //       confirmButtonColor: "#28a745",
+    //     });
+    //   setFormData(initialFormData);
+    //   setIsSubmitted(true);
+    //   setErrors({});
+    // } catch (error) {
+    //   console.error("Error submitting form data:", error.message);
+    //   const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
+
+    //     Swal.fire({
+    //       icon: "error",
+    //       title: "Error",
+    //       text: errorMessage,
+    //       confirmButtonColor: "#d33",
+    //     });
+    // }
+
+    e.preventDefault();
+
+    if (!formData.reason && !formData.request) {
+       Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Please select a reason or request before submitting.",
+        confirmButtonColor: "#ffc107",
+
+      });
+      return;
+    }
+
+    if (formData.request){
+      if (!formData.request_remark) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Request remark is required.",
+          confirmButtonColor: "#ffc107",
+        });
         return;
       }
-
-      console.log("Form Data:", formData);
-      const DRC_ID = initialFormData.drcId;
-      console.log("Form data drc id :",  DRC_ID);
-      await addNegotiationCase(formData , DRC_ID);
-      alert("Submitted successfully!");
-      Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Data sent successfully.",
-          confirmButtonColor: "#28a745",
-        });
-      setFormData(initialFormData);
-      setIsSubmitted(true);
-      setErrors({});
-    } catch (error) {
-      console.error("Error submitting form data:", error.message);
-      const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
-
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: errorMessage,
-          confirmButtonColor: "#d33",
-        });
     }
-  };
+
+   if (formData.reason) {
+    if (!formData.nego_remark) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Reason remark is required.",
+        confirmButtonColor: "#ffc107",
+      });
+      return;
+    }
+  }
+
+  if (formData.reason === "Agreed To Settle") {
+    if (!formData.settlement_remark) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Settlement remark is required.",
+        confirmButtonColor: "#ffc107",
+      });
+      return;
+    }
+
+  };  
+  
+  console.log("Form Data:", formData);
+   const DRC_ID = initialFormData.drcId;
+   //console.log("Form data drc id :",  DRC_ID);
+   const roId = initialFormData.roId;
+   //console.log("Form data ro id :",  roId);
+   const arrearsAmount = caseDetails.current_arrears_amount;
+
+  const createddate = caseDetails.drc[0].created_dtm;
+  const expiredate = caseDetails.drc[0].expire_dtm;
+   const drcname = caseDetails.drc[0].drc_name;
+   const status = caseDetails.case_current_status;
+   const createdby =  userid; // Get the user ID from userData
+ // console.log("Form data user id :",  createdby , "ro id :", roId, "drc id :", 
+ // DRC_ID, "arrears amount :", arrearsAmount, "status :", status ,
+ //  "created date :", createddate, "expire date :", expiredate);
+
+    try {
+
+      const payload = {
+         case_id : formData.caseId,
+         request_id : formData.requestId,
+         request_type: formData.request,
+         request_comment : formData.request_remark,
+         current_arrears_amount : arrearsAmount,
+         case_current_status : status,
+         drc_id : DRC_ID,
+         ro_id : roId,
+         // ro_name : cant pass 
+         drc: drcname,
+         expire_dtm: expiredate,
+         created_dtm: createddate,
+         field_reason: formData.reason,
+         field_reason_remark: formData.nego_remark,
+         intraction_id: formData.intractionId,
+         initial_amount: formData.ini_amount,
+         calender_month: formData.month,
+         settlement_remark: formData.settlement_remark,
+         //region
+         created_by: createdby,
+      }
+
+      console.log("Payload for negotiation submission:", payload);
+
+      // Call the API to submit the negotiation case
+      await addNegotiationCase(payload);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Negotiation submitted successfully.",
+        confirmButtonColor: "#28a745",
+      });
+      setFormData(initialFormData);
+    } catch (error) {
+         Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error?.response?.data?.message || error?.message || "An error occurred. Please try again.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+  }
+
 
   useEffect(() => {
     if (drcId && roId) {
@@ -444,7 +567,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       <div className=" p-6 rounded-lg ">
         {/* Case Details Card */}
         <div className="flex justify-center items-center">
-        <div className={`${GlobalStyle.cardContainer}`}>
+        <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
           <table className={`${GlobalStyle.table} `}>
             <tbody>
               <tr>
@@ -484,7 +607,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         </div>
         </div>
         <div
-          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto`}
+          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto w-full max-w-3xl`}
         > 
             <div >
             <div className="flex flex-col space-y-4 items-center justify-center">
@@ -499,12 +622,14 @@ const Cus_Nego_Customer_Negotiation = () => {
                   value={formData.reason || ""}
                   onChange={handleInputChange}
                   className={`${GlobalStyle.selectBox} ml-2 `}
+                  style={{ color: formData.reason === "" ? "gray" : "black" }}
                 >
-                  <option value="" hidden>Select Reason</option>
+                  <option value="" hidden></option>
                   {activeNegotiations.map((negotiation) => (
                     <option
                       key={negotiation.negotiation_id}
                       value={negotiation.negotiation_description}
+                       style={{ color: "black" }}
                     >
                       {negotiation.negotiation_description}
                     </option>
@@ -550,12 +675,14 @@ const Cus_Nego_Customer_Negotiation = () => {
                   value={formData.request || ""}
                   onChange={handleInputChange}
                   className={`${GlobalStyle.selectBox} ml-3`}
+                  style={{ color: formData.request === "" ? "gray" : "black" }}
                 >
-                  <option value="" hidden>Select Request</option>
+                  <option value="" hidden ></option>
                   {activeRORequests.map((RO_Requests) => (
                     <option
                       key={RO_Requests.ro_request_id}
                       value={RO_Requests.request_description}
+                       style={{ color: "black" }}
                     >
                       {RO_Requests.request_description}
                     </option>
@@ -594,14 +721,14 @@ const Cus_Nego_Customer_Negotiation = () => {
             {/* settlement plan */}
             {formData.reason === "Agreed To Settle" && (
               <div className="flex justify-center items-center">
-              <div className="space-y-4 mb-6 mt-4 ">
+              <div className="space-y-4 mb-6 mt-4  w-full max-w-3xl">
                 <div>
                    <h1 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
                     <strong>Settlement Plan Creation</strong>
                   </h1>
                 </div>
                 <div className="flex-col space-y-4 items-center justify-center">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-4">
                     <label className={`${GlobalStyle.remarkTopic} `}>
                       Initial Amount
                     </label>
@@ -611,11 +738,11 @@ const Cus_Nego_Customer_Negotiation = () => {
                       name="ini_amount"
                       value={formData.ini_amount}
                       onChange={handleInputChange}
-                      className={`${GlobalStyle.inputText} ml-1 `}
+                      className={`${GlobalStyle.inputText} ml-1 min-w-[200px] `}
                     />
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-4">
                     <label className={`${GlobalStyle.remarkTopic} `}>
                       Calendar Month
                     </label>
@@ -624,50 +751,51 @@ const Cus_Nego_Customer_Negotiation = () => {
                       type="number"
                       name="month"
                       value={formData.month}
+                      min="1"
                       onChange={handleInputChange}
-                      className={`${GlobalStyle.inputText} ml-1`}
+                      className={`${GlobalStyle.inputText} ml-1 min-w-[200px]`}
                     />
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center items-center gap-4">
                     <label className={`${GlobalStyle.remarkTopic}`}>
                       Duration
                     </label>
                     <label className={`${GlobalStyle.remarkTopic} `}>:</label>
-                    <div className="flex items-center gap-4 ">
+                    <div className="flex flex-wrap items-center gap-4 ">
                       <label className={GlobalStyle.remarkTopic}>From:</label>
                       <input
-                        type="date"
+                        type="text"
                         name="from"
                         id="fromDate"
                         value={formData.from}
                         onChange={handleInputChange}
-                        className={`${GlobalStyle.inputText} `}
-                        disabled
+                        className={`${GlobalStyle.inputText} min-w-[200px] `}
+                        readOnly
                       />
                       <label className={GlobalStyle.remarkTopic}>To:</label>
                       <input
-                        type="date"
+                        type="text"
                         name="to"
                         id="toDate"
                         value={formData.to}
                         onChange={handleInputChange}
-                        className={`${GlobalStyle.inputText} `}
-                        disabled
+                        className={`${GlobalStyle.inputText} min-w-[200px] `}
+                        readOnly
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4">
+                  <div className="flex  flex-col sm:flex-row items-start gap-4">
                     <label className={`${GlobalStyle.remarkTopic} mr-7 `}>
                       Remark
                     </label>
                     <label className={`${GlobalStyle.remarkTopic} ml-8`}>:</label>
                     <textarea
-                      name="settle_remark"
-                      value={formData.settle_remark || ""}
+                      name="settlement_remark"
+                      value={formData.settlement_remark || ""}
                       onChange={handleInputChange}
-                      className={`${GlobalStyle.remark} `}
+                      className={`${GlobalStyle.remark} min-w-[200px] `}
                       rows={4}
                     />
                   </div>
@@ -721,7 +849,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             <h3 className={`${GlobalStyle.headingMedium} mb-4`}>
               Last Negotiation Details
             </h3>
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
                   <tr>
@@ -792,7 +920,7 @@ const Cus_Nego_Customer_Negotiation = () => {
           <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
             Payment Details
           </h3>
-          <div className={GlobalStyle.tableContainer}>
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
                   <tr>
@@ -865,7 +993,7 @@ const Cus_Nego_Customer_Negotiation = () => {
               Requested Additional Details
             </h3>
 
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
                   <tr>
@@ -961,7 +1089,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         </div>
   
         {/* Table Section */}
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
@@ -1028,8 +1156,8 @@ const Cus_Nego_Customer_Negotiation = () => {
   };
   {/*Deatils View */}
   const renderDetailedView = () => (
-    <div className="p-6 rounded-lg ml-32">
-      <div className={`${GlobalStyle.cardContainer}`}>
+    <div className="p-6 min-h-screen flex flex-col ml-32 items-center justify-center">
+      <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
         <table>
           <tbody>
           <tr>
@@ -1075,7 +1203,7 @@ const Cus_Nego_Customer_Negotiation = () => {
           </tbody>
         </table>
       </div>
-      <div className={`${GlobalStyle.cardContainer}`}>
+      <div className={`${GlobalStyle.cardContainer} w-full max-w-lg mt-6`}>
         <h1 className={`${style.thStyle} underline mt-4 mb-4`}>RCMP Details</h1>
         <table>
           <tbody>
@@ -1116,13 +1244,15 @@ const Cus_Nego_Customer_Negotiation = () => {
           setShowDetailedView(false); // Hide detailed view
         }}
       > */}
-        <button className={GlobalStyle.buttonPrimary}  
-        onClick={() => {
-          setActiveTab("cpe"); // Switch back to CPE view
-          setShowDetailedView(false); // Hide detailed view
-        }}>
-         <FaArrowLeft className="mr-2" />
-        </button>
+       <div className="w-full max-w-lg flex justify-start">
+         <button className={GlobalStyle.buttonPrimary}  
+         onClick={() => {
+           setActiveTab("cpe"); // Switch back to CPE view
+           setShowDetailedView(false); // Hide detailed view
+         }}>
+          <FaArrowLeft className="mr-2" />
+         </button>
+       </div>
 
       {/* </button>    */}
     </div>
