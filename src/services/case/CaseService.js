@@ -47,6 +47,90 @@ export const listHandlingCasesByDRC = async (payload) => {
   }
 };
 
+export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
+  try {
+    if (!payload.drc_id) {
+      throw new Error("DRC ID is required.");
+    }
+
+    const response = await axios.post(
+      `${URL}/List_Handling_Cases_By_DRC_Without_RO`,
+      payload
+    );
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        account_no: caseData.account_no,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        assigned_date: caseData.assigned_date,
+        current_arrears_amount: caseData.current_arreas_amount,
+        area: caseData.area,
+        action_type: caseData.action_type,
+        remark: caseData.remark || null,
+        expire_dtm: caseData.expire_dtm,
+        ro_name: caseData.ro_name || null,
+      };
+    });
+
+    return formattedCases;
+  } catch (error) {
+    console.error(
+      "Error retrieving handling cases by DRC:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export const List_Handling_Cases_By_DRC_With_RO = async (payload) => {
+  try {
+    if (!payload.drc_id) {
+      throw new Error("DRC ID is required.");
+    }
+
+    const response = await axios.post(
+      `${URL}/List_Handling_Cases_By_DRC_With_RO`,
+      payload
+    );
+
+    if (response.data.status === "error") {
+      throw new Error(response.data.message);
+    }
+
+    // Format the response data including status
+    const formattedCases = response.data.data.map((caseData) => {
+      return {
+        case_id: caseData.case_id,
+        account_no: caseData.account_no,
+        status: caseData.status, // Added status field
+        created_dtm: caseData.created_dtm,
+        assigned_date: caseData.assigned_date,
+        current_arrears_amount: caseData.current_arreas_amount,
+        area: caseData.area,
+        action_type: caseData.action_type,
+        remark: caseData.remark || null,
+        expire_dtm: caseData.expire_dtm,
+        ro_name: caseData.ro_name || null,
+      };
+    });
+
+    return formattedCases;
+  } catch (error) {
+    console.error(
+      "Error retrieving handling cases by DRC:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 // Assign Recovery Officer to Case
 export const assignROToCase = async (payload) => {
   try {
