@@ -121,7 +121,7 @@ export default function RO_Monitoring_CPE() {
     }, [userData?.drc_id, case_id]);
 
     const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
+        if (!dateString) return "";
         try {
             return new Date(dateString).toLocaleDateString("en-GB");
         } catch (error) {
@@ -549,8 +549,8 @@ export default function RO_Monitoring_CPE() {
                                                     } border-b`}
                                             >
                                                 <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableData}>{item.ro_request || "N/A"}</td>
-                                                <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
+                                                <td className={GlobalStyle.tableData}>{item.ro_request || ""}</td>
+                                                <td className={GlobalStyle.tableData}>{item.request_remark || ""}</td>
                                             </tr>
                                         ))
                                     ) : (
