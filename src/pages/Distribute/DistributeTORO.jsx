@@ -869,7 +869,7 @@ const DistributeTORO = () => {
             }}
             style={{ color: selectedRTOM === "" ? "gray" : "black" }}
           >
-            <option value="" hidden>RTOM</option>
+            <option value="" hidden>Billing Center</option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
                 <option key={rtom.rtom_id} value={rtom.area_name} style={{ color: "black" }}>
@@ -877,7 +877,7 @@ const DistributeTORO = () => {
                 </option>
               ))
             ) : (
-              <option disabled>No RTOMs found</option>
+              <option disabled>No Billing Centers found</option>
             )}
           </select>
 
@@ -964,7 +964,7 @@ const DistributeTORO = () => {
               <th className={GlobalStyle.tableHeader}>DRC Assigned Date</th>
               <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+              <th className={GlobalStyle.tableHeader}>Billing Center</th>
               {/* <th className={GlobalStyle.tableHeader}>RO</th> */}
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
             </tr>

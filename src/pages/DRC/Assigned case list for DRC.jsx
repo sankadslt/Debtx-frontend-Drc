@@ -619,7 +619,7 @@ export default function AssignedCaseListforDRC() {
               <th className={GlobalStyle.tableHeader}>DRC Assigned Date</th>
               <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
+              <th className={GlobalStyle.tableHeader}>Billing Center</th>
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
               <th className={GlobalStyle.tableHeader}>RO</th>
               <th scope="col" className={GlobalStyle.tableHeader}></th>

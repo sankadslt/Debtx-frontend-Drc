@@ -717,7 +717,7 @@ export default function AssignedROcaselog() {
       <h1 className={GlobalStyle.headingLarge}>Assigned RO case List</h1>
 
       <div className={`${GlobalStyle.cardContainer} w-full mt-6`}>
-        <div className="flex flex-wrap  xl:flex-nowrap items-center justify-end w-full space-x-3">
+        <div className="flex flex-wrap  xl:flex-nowrap items-center justify-end w-full space-x-3 gap-3">
           {/* RTOM Select Dropdown */}
           <select
             className={GlobalStyle.selectBox}
@@ -726,7 +726,7 @@ export default function AssignedROcaselog() {
             style={{ color: selectedRTOM === "" ? "gray" : "black" }}
           >
             <option value="" hidden>
-              RTOM
+              Billing Center
             </option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
@@ -736,7 +736,7 @@ export default function AssignedROcaselog() {
                 </option>
               ))
             ) : (
-              <option disabled>No RTOMs found</option>
+              <option disabled>No Billing Center found</option>
             )}
           </select>
           <select
@@ -759,23 +759,21 @@ export default function AssignedROcaselog() {
             )}
           </select>
 
-          <div className={GlobalStyle.datePickerContainer}>
-            <label className={GlobalStyle.dataPickerDate}>Date</label>
-            <DatePicker
-              selected={fromDate}
-              onChange={handlestartdatechange}
-              dateFormat="dd/MM/yyyy"
-              placeholderText="From"
-              className={`${GlobalStyle.inputText} w-full sm:w-auto`}
-            />
-            <DatePicker
-              selected={toDate}
-              onChange={handleenddatechange}
-              dateFormat="dd/MM/yyyy"
-              placeholderText="To"
-              className={`${GlobalStyle.inputText} w-full sm:w-auto`}
-            />
-          </div>
+          <label className={GlobalStyle.dataPickerDate}>Date</label>
+          <DatePicker
+            selected={fromDate}
+            onChange={handlestartdatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="From"
+            className={`${GlobalStyle.inputText} w-full sm:w-auto`}
+          />
+          <DatePicker
+            selected={toDate}
+            onChange={handleenddatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="To"
+            className={`${GlobalStyle.inputText} w-full sm:w-auto`}
+          />
 
           <button
             onClick={handleFilterButton}
@@ -809,7 +807,7 @@ export default function AssignedROcaselog() {
       </div>
 
       {/* Table Section */}
-      <div className={GlobalStyle.tableContainer}>
+      <div className={`${GlobalStyle.tableContainer} mt-8 overflow-x-auto`}>
         <table className={GlobalStyle.table}>
           <thead className={GlobalStyle.thead}>
             <tr>
@@ -823,7 +821,7 @@ export default function AssignedROcaselog() {
                 Amount
               </th>
               <th scope="col" className={GlobalStyle.tableHeader}>
-                RTOM Area
+                Billing Center
               </th>
               <th scope="col" className={GlobalStyle.tableHeader}>
                 Action
@@ -855,11 +853,10 @@ export default function AssignedROcaselog() {
                   return (
                     <tr
                       key={index}
-                      className={`${
-                        index % 2 === 0
+                      className={`${index % 2 === 0
                           ? "bg-white bg-opacity-75"
                           : "bg-gray-50 bg-opacity-50"
-                      } border-b`}
+                        } border-b`}
                     >
                       <td className={GlobalStyle.tableData}>
                         <a
@@ -872,34 +869,34 @@ export default function AssignedROcaselog() {
                       <td
                         className={`${GlobalStyle.tableData} flex justify-center items-center`}
                       >
-                        {renderStatusIcon(item.status || "N/A")}
+                        {renderStatusIcon(item.status || "")}
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {item.current_arrears_amount || "N/A"}
+                        {item.current_arrears_amount || ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {item.area || "N/A"}
+                        {item.area || ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {item.action_type || "N/A"}
+                        {item.action_type || ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {item.ro_name || "N/A"}
+                        {item.ro_name || ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {item.assigned_date
                           ? new Date(item.assigned_date).toLocaleDateString(
-                              "en-GB"
-                            )
-                          : "N/A"}
+                            "en-GB"
+                          )
+                          : ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {" "}
                         {item.expire_dtm
                           ? new Date(item.expire_dtm).toLocaleDateString(
-                              "en-GB"
-                            )
-                          : "N/A"}{" "}
+                            "en-GB"
+                          )
+                          : ""}{" "}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         <div className="px-8 flex items-center gap-2">
@@ -984,9 +981,8 @@ export default function AssignedROcaselog() {
           <button
             onClick={() => handlePrevNext("prev")}
             disabled={currentPage <= 1}
-            className={`${GlobalStyle.navButton} ${
-              currentPage <= 1 ? "cursor-not-allowed" : ""
-            }`}
+            className={`${GlobalStyle.navButton} ${currentPage <= 1 ? "cursor-not-allowed opacity-50" : ""
+              }`}
           >
             <FaArrowLeft />
           </button>
@@ -998,21 +994,20 @@ export default function AssignedROcaselog() {
             disabled={
               searchQuery
                 ? currentPage >=
-                  Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                Math.ceil(filteredDataBySearch.length / rowsPerPage)
                 : !isMoreDataAvailable &&
-                  currentPage >= Math.ceil(filteredData.length / rowsPerPage)
+                currentPage >= Math.ceil(filteredData.length / rowsPerPage)
             }
-            className={`${GlobalStyle.navButton} ${
-              (
+            className={`${GlobalStyle.navButton} ${(
                 searchQuery
                   ? currentPage >=
-                    Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                  Math.ceil(filteredDataBySearch.length / rowsPerPage)
                   : !isMoreDataAvailable &&
-                    currentPage >= Math.ceil(filteredData.length / rowsPerPage)
+                  currentPage >= Math.ceil(filteredData.length / rowsPerPage)
               )
-                ? "cursor-not-allowed"
+                ? "cursor-not-allowed opacity-50"
                 : ""
-            }`}
+              }`}
           >
             <FaArrowRight />
           </button>
