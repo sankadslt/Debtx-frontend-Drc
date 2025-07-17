@@ -538,6 +538,7 @@ export const drcCaseDetails = async (payload) => {
 };
 
 // Add Negotiation Case
+
 export const addNegotiationCase = async (formData, DRC_ID) => {
   try {
     console.log("this is the service one", formData);
@@ -564,6 +565,8 @@ export const addNegotiationCase = async (formData, DRC_ID) => {
       field_reason_remark: formData.nego_remark || null,
       created_by: formData.created_by || "null",
     });
+
+
 
     if (response.data.status === "error") {
       console.log(response.data.message);

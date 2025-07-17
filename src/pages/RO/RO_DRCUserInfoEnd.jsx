@@ -640,12 +640,12 @@ export default function RecoveryOfficerEndPage() {
 
                     {activeUserType !== "drcUser" && userData?.rtom_areas && (
                         <div className="mt-6">
-                            <h3 className="font-semibold mb-2 px-2 sm:px-4 text-sm sm:text-base">RTOM Areas</h3>
+                            <h3 className="font-semibold mb-2 px-2 sm:px-4 text-sm sm:text-base">Billing Center Areas :</h3>
                             <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                                 <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                                     <thead className={GlobalStyle.thead}>
                                         <tr>
-                                            <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area</th>
+                                            <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Billing Center Area</th>
                                             <th className={`${GlobalStyle.tableHeader} min-w-[100px]`}>Status</th>
                                         </tr>
                                     </thead>

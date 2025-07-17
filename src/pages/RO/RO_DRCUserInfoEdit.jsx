@@ -608,7 +608,6 @@
 
 
 // After Responsive
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaSearch } from "react-icons/fa";
@@ -831,9 +830,9 @@ export default function RO_DRCUserDetailsEdit() {
       drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
         (rtomAreas.length !== initialRtomAreas.length ||
-         rtomAreas.some((area, index) => 
+         rtomAreas.some((area, index) =>
            index >= initialRtomAreas.length || // New area added
-           area.name !== initialRtomAreas[index]?.name || 
+           area.name !== initialRtomAreas[index]?.name ||
            area.status !== initialRtomAreas[index]?.status
          )));
 
@@ -958,7 +957,7 @@ export default function RO_DRCUserDetailsEdit() {
     } catch (error) {
       console.error('Error updating user details:', error);
       Swal.fire({
-        title: 'For any assistance, please contact support at support@x.ai.',
+        title: 'Unable to Edit Details',
         text: error.message || 'Internal server error. Please try again later.',
         icon: 'error',
         confirmButtonColor: "#d33",
@@ -1107,48 +1106,37 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number 
+                  Contact Number
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      value={initialContactNo}
- Parked
-                      readOnly
-                      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] bg-gray-100 cursor-not-allowed`}
-                    />
-                    <input
-                      type="text"
-                      value={contactNo}
-                      onChange={(e) => handleContactNoChange(e.target.value)}
-                      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactNoError ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {contactNoError && (
-                    <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
-                  )}
-                </div>
+  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+    <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
+    <input
+      type="text"
+      value={contactNo}
+      onChange={(e) => handleContactNoChange(e.target.value)}
+      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
+    />
+  </div>
+  {contactNoError && (
+    <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
+  )}
+</div>
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Email 
+                  Email
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="email"
-                      value={initialEmail}
-                      readOnly
-                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] bg-gray-100 cursor-not-allowed`}
-                    />
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                    <span className="text-sm sm:text-base">{initialEmail || 'N/A'}</span>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
-                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] ${emailError ? 'border-red-500' : ''}`}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-4px] sm:mt- ${emailError ? 'border-red-500' : ''}`}
                     />
                   </div>
                   {emailError && (
@@ -1163,7 +1151,7 @@ export default function RO_DRCUserDetailsEdit() {
             <>
               <div className="table w-full mt-4">
                 <div className="table-row">
-                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">RTOM Areas</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Billing Center Areas</div>
                   <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                   <div className="table-cell px-2 sm:px-4 py-2" />
                 </div>
@@ -1172,7 +1160,7 @@ export default function RO_DRCUserDetailsEdit() {
                 <table className={`${GlobalStyle.table} table-auto w-full min-w-[300px]`} style={{ fontSize: '0.875rem' }}>
                   <thead className={GlobalStyle.thead}>
                     <tr>
-                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area</th>
+                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Billing Center Area</th>
                       <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Status</th>
                     </tr>
                   </thead>
@@ -1201,9 +1189,7 @@ export default function RO_DRCUserDetailsEdit() {
                                   type="button"
                                   onClick={() => handleRemoveRtomArea(index)}
                                   className={`${GlobalStyle.buttonCircle} ml-2`}
-                                  title="
-
-Remove RTOM Area"
+                                  title="Remove RTOM Area"
                                 >
                                   <img
                                     src={iconImg}
@@ -1228,7 +1214,7 @@ Remove RTOM Area"
               </div>
               <div className="table w-full mt-4">
                 <div className="table-row">
-                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Add RTOM Area</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Add Billing Center Area</div>
                   <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                   <div className="table-cell px-2 sm:px-4 py-2">
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
