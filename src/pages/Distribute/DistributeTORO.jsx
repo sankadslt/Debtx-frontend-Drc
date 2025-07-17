@@ -18,7 +18,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
-import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+import { listHandlingCasesByDRC, List_Handling_Cases_By_DRC_Without_RO } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
@@ -369,7 +369,7 @@ const DistributeTORO = () => {
       };
 
       setLoading(true);
-      const response = await listHandlingCasesByDRC(payload);
+      const response = await List_Handling_Cases_By_DRC_Without_RO(payload);
 
       if (Array.isArray(response)) {
         // setFilteredData(response);
@@ -965,7 +965,7 @@ const DistributeTORO = () => {
               <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
               <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-              <th className={GlobalStyle.tableHeader}>RO</th>
+              {/* <th className={GlobalStyle.tableHeader}>RO</th> */}
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
             </tr>
           </thead>
@@ -992,7 +992,7 @@ const DistributeTORO = () => {
                   <td className={GlobalStyle.tableCurrency}> {item.current_arrears_amount || ""} </td>
                   <td className={GlobalStyle.tableData}> {item.action_type || ""} </td>
                   <td className={GlobalStyle.tableData}> {item.area || ""} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || ""} </td>
+                  {/* <td className={GlobalStyle.tableData}> {item.ro_name || ""} </td> */}
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
                     ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
                     : ""}  </td>

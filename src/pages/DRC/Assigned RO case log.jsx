@@ -18,6 +18,7 @@ import DatePicker from "react-datepicker";
 import {
   fetchAllArrearsBands,
   listHandlingCasesByDRC,
+  List_Handling_Cases_By_DRC_With_RO
 } from "../../services/case/CaseService";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { useNavigate } from "react-router-dom";
@@ -346,7 +347,7 @@ export default function AssignedROcaselog() {
       // Fetch filtered data from the API using the payload
 
       setIsLoading(true);
-      const AssignedRoCaseLogs = await listHandlingCasesByDRC(payload);
+      const AssignedRoCaseLogs = await List_Handling_Cases_By_DRC_With_RO(payload);
       setIsLoading(false);
 
       // Log the response
