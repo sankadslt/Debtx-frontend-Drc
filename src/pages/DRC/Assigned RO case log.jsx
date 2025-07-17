@@ -85,6 +85,7 @@ export default function AssignedROcaselog() {
   const endIndex = startIndex + rowsPerPage;
   const [committedFilters, setCommittedFilters] = useState({
     // drcId: "",
+    drcId,
     selectedRTOM: "",
     selectedArrearsBand: "",
     fromDate: null,
@@ -264,6 +265,7 @@ export default function AssignedROcaselog() {
 
   const callAPI = async (filters) => {
     try {
+      console.log(" filters:", filters.drcId);
       if (!filters.drcId || isNaN(filters.drcId)) {
         console.error("Invalid drcId in filters:", filters.drcId);
         Swal.fire({
@@ -488,6 +490,7 @@ export default function AssignedROcaselog() {
     setIsMoreDataAvailable(true); // Reset more data available state
     // Clear committed filters
     setCommittedFilters({
+      drcId,
       selectedRTOM: "",
       selectedArrearsBand: "",
       fromDate: null,
