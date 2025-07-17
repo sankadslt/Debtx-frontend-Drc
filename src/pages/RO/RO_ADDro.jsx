@@ -793,7 +793,7 @@ export default function RO_ADDro() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-2 sm(px-4 py-2 font-semibold text-sm sm:text-base">
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
@@ -854,7 +854,7 @@ export default function RO_ADDro() {
               <div className="table w-full mt-4">
                 <div className="table-row">
                   <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                    RTOM Area
+                    Billing Center Area
                   </div>
                   <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                   <div className="table-cell px-2 sm:px-4 py-2">
@@ -864,7 +864,7 @@ export default function RO_ADDro() {
                         onChange={(e) => setSelectedRtomArea(e.target.value)}
                         className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
                       >
-                        <option value="">Select RTOM</option>
+                        <option value="">Select Billing Center</option>
                         {rtomAreaOptions
                           .filter(option => !rtomAreas.some(area => area.name === option.area_name))
                           .map(option => (
@@ -894,7 +894,7 @@ export default function RO_ADDro() {
                 <table className={`${GlobalStyle.table} table-auto w-full min-w-[300px]`} style={{ fontSize: '0.875rem' }}>
                   <thead className={GlobalStyle.thead}>
                     <tr>
-                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area</th>
+                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Billing Center Area</th>
                       <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Status</th>
                     </tr>
                   </thead>

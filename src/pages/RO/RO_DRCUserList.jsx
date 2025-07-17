@@ -679,12 +679,13 @@ import { List_All_RO_and_DRCuser_Details_to_DRC } from "../../services/Ro/RO.js"
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "/src/services/auth/authService.js";
 
-//Status Icons
+// Status Icons
 import RO_Active from "../../assets/images/status/RO_DRC_Status_Icons/RO_Active.svg";
 import RO_Inactive from "../../assets/images/status/RO_DRC_Status_Icons/RO_Inactive.svg";
 import RO_Terminate from "../../assets/images/status/RO_DRC_Status_Icons/RO_Terminate.svg";
+import RO_Pending_Approval from "../../assets/images/status/RO_DRC_Status_Icons/RO_Pending_Approval.png";
 
-//button Icons
+// Button Icons
 import moreInfoIcon from "../../assets/images/more-info.svg";
 
 export default function RO_DRCUserList() {
@@ -825,7 +826,7 @@ export default function RO_DRCUserList() {
 
                     Swal.fire({
                         title: "No Results",
-                        text: "No matching data found.",
+                        text: `No ${getUserStatus() ? getUserStatus().replace('_', ' ') + ' ' : ''}${activeTab} found.`,
                         icon: "warning",
                         confirmButtonText: "OK",
                         confirmButtonColor: "#f1c40f"
@@ -886,7 +887,7 @@ export default function RO_DRCUserList() {
             }
             setIsDrcFilterApplied(true);
         }
-    }
+    };
 
     const handleClear = () => {
         if (activeTab === "RO") {
@@ -933,8 +934,7 @@ export default function RO_DRCUserList() {
             } else if (direction === "next" && roCurrentPage < roTotalPages) {
                 setRoCurrentPage(roCurrentPage + 1);
             }
-        }
-        else {
+        } else {
             if (direction === "prev" && drcCurrentPage > 1) {
                 setDrcCurrentPage(drcCurrentPage - 1);
             } else if (direction === "next" && drcCurrentPage < drcTotalPages) {
@@ -943,7 +943,7 @@ export default function RO_DRCUserList() {
         }
     };
 
-    const getStatusIcon = (status, item) => {
+    const getStatusIcon = (status) => {
         switch (status) {
             case "Active":
                 return (
@@ -972,8 +972,24 @@ export default function RO_DRCUserList() {
                         className="w-6 h-6 cursor-pointer"
                     />
                 );
+            case "Pending_approval":
+                return (
+                    <img
+                        src={RO_Pending_Approval}
+                        alt="RO Pending Approval"
+                        title="RO Pending Approval"
+                        className="w-6 h-6 cursor-pointer"
+                    />
+                );
             default:
-                return null;
+                return (
+                    <img
+                        src={RO_Pending_Approval}
+                        alt="RO Pending Approval"
+                        title="RO Pending Approval"
+                        className="w-6 h-6 cursor-pointer"
+                    />
+                );
         }
     };
 
@@ -994,10 +1010,12 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>RO List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary}
+                        <button
+                            className={GlobalStyle.buttonPrimary}
                             onClick={() =>
                                 navigate("/ro/ro-add-ro", { state: { from: "RO" } })
-                            }>
+                            }
+                        >
                             Add RO
                         </button>
                     </div>
@@ -1008,10 +1026,12 @@ export default function RO_DRCUserList() {
                 <div>
                     <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC User List</h2>
                     <div className="flex justify-end mt-6">
-                        <button className={GlobalStyle.buttonPrimary}
+                        <button
+                            className={GlobalStyle.buttonPrimary}
                             onClick={() =>
                                 navigate("/ro/ro-add-ro", { state: { from: "drcUser" } })
-                            }>
+                            }
+                        >
                             Add DRC User
                         </button>
                     </div>
@@ -1027,6 +1047,8 @@ export default function RO_DRCUserList() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={GlobalStyle.inputSearch}
+                            
+                            aria-label="Search RO or DRC User details"
                         />
                         <FaSearch className={GlobalStyle.searchBarIcon} />
                     </div>
@@ -1040,12 +1062,14 @@ export default function RO_DRCUserList() {
                         value={currentStatus}
                         onChange={handleStatusChange}
                         className={`${GlobalStyle.selectBox} w-full sm:w-32 md:w-40`}
-                         style={{ color: currentStatus === "" ? "gray" : "black" }}
+                        style={{ color: currentStatus === "" ? "gray" : "black" }}
+                        aria-label="Select status filter"
                     >
                         <option value="" hidden>All Status</option>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
                         <option value="Terminate">Terminate</option>
+                        <option value="Pending_approval">Pending Approval</option>
                     </select>
 
                     <button
@@ -1069,12 +1093,13 @@ export default function RO_DRCUserList() {
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 whitespace-nowrap ${activeTab === tab
-                            ? "border-b-2 border-blue-500 font-bold"
-                            : "text-gray-500"
-                            }`}
+                        className={`px-4 py-2 whitespace-nowrap ${
+                            activeTab === tab
+                                ? "border-b-2 border-blue-500 font-bold"
+                                : "text-gray-500"
+                        }`}
                     >
-                        {tab} List
+                        {tab === "RO" ? "RO" : "DRC User"} List
                     </button>
                 ))}
             </div>
@@ -1084,16 +1109,29 @@ export default function RO_DRCUserList() {
                 {activeTab === "RO" && (
                     <div>
                         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
-                            <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
+                            <table
+                                className={`${GlobalStyle.table} table-auto w-full`}
+                                style={{ fontSize: "0.875rem" }}
+                                aria-label="RO List Table"
+                            >
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
-                                        
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>Status</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>NIC</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`}>RO Name</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Contact No.</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area count</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`}></th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`} scope="col">
+                                            Status
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            NIC
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`} scope="col">
+                                            RO Name
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No.
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Billing Center Area count
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`} scope="col"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1102,11 +1140,14 @@ export default function RO_DRCUserList() {
                                             <tr
                                                 key={item.ro_id || index}
                                                 className={`${
-                                                    index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
+                                                    index % 2 === 0
+                                                        ? "bg-white bg-opacity-75"
+                                                        : "bg-gray-50 bg-opacity-50"
                                                 } border-b`}
                                             >
-                                              
-                                                <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                                                <td
+                                                    className={`${GlobalStyle.tableData} flex justify-center items-center`}
+                                                >
                                                     {getStatusIcon(item.drcUser_status) || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
@@ -1138,20 +1179,25 @@ export default function RO_DRCUserList() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="7" className="text-center py-4">No cases available</td>
+                                            <td colSpan="6" className="text-center py-4">
+                                                No cases available
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         {/* Pagination Section */}
                         {roTotalPages > 1 && (
                             <div className={GlobalStyle.navButtonContainer}>
                                 <button
                                     onClick={() => handlePrevNext("prev")}
                                     disabled={roCurrentPage === 1}
-                                    className={`${GlobalStyle.navButton} ${roCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`${GlobalStyle.navButton} ${
+                                        roCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Previous page"
                                 >
                                     <FaArrowLeft />
                                 </button>
@@ -1159,7 +1205,10 @@ export default function RO_DRCUserList() {
                                 <button
                                     onClick={() => handlePrevNext("next")}
                                     disabled={roCurrentPage === roTotalPages}
-                                    className={`${GlobalStyle.navButton} ${roCurrentPage === roTotalPages ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`${GlobalStyle.navButton} ${
+                                        roCurrentPage === roTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Next page"
                                 >
                                     <FaArrowRight />
                                 </button>
@@ -1171,15 +1220,26 @@ export default function RO_DRCUserList() {
                 {activeTab === "drcUser" && (
                     <div>
                         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
-                            <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
+                            <table
+                                className={`${GlobalStyle.table} table-auto w-full`}
+                                style={{ fontSize: "0.875rem" }}
+                                aria-label="DRC User List Table"
+                            >
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
-                                        
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`}>Status</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>NIC</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`}>DRC User Name</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Contact No.</th>
-                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`}></th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`} scope="col">
+                                            Status
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            NIC
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`} scope="col">
+                                            DRC User Name
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No.
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`} scope="col"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1188,11 +1248,14 @@ export default function RO_DRCUserList() {
                                             <tr
                                                 key={item.drcUser_id || index}
                                                 className={`${
-                                                    index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
+                                                    index % 2 === 0
+                                                        ? "bg-white bg-opacity-75"
+                                                        : "bg-gray-50 bg-opacity-50"
                                                 } border-b`}
                                             >
-                                               
-                                                <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                                                <td
+                                                    className={`${GlobalStyle.tableData} flex justify-center items-center`}
+                                                >
                                                     {getStatusIcon(item.drcUser_status) || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
@@ -1221,20 +1284,25 @@ export default function RO_DRCUserList() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="text-center py-4">No cases available</td>
+                                            <td colSpan="5" className="text-center py-4">
+                                                No cases available
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         {/* Pagination Section */}
                         {drcTotalPages > 1 && (
                             <div className={GlobalStyle.navButtonContainer}>
                                 <button
                                     onClick={() => handlePrevNext("prev")}
                                     disabled={drcCurrentPage === 1}
-                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Previous page"
                                 >
                                     <FaArrowLeft />
                                 </button>
@@ -1242,7 +1310,10 @@ export default function RO_DRCUserList() {
                                 <button
                                     onClick={() => handlePrevNext("next")}
                                     disabled={drcCurrentPage === drcTotalPages}
-                                    className={`${GlobalStyle.navButton} ${drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Next page"
                                 >
                                     <FaArrowRight />
                                 </button>
