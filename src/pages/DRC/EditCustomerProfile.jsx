@@ -1019,11 +1019,11 @@ export default function EditCustomerProfile() {
 
 
 
-    // Validate address
-    if (!addressInputs[0]) {
-      setAddressError("Please enter a valid address.");
-      isValid = false;
-    }
+    // // Validate address
+    // if (!addressInputs[0]) {
+    //   setAddressError("Please enter a valid address.");
+    //   isValid = false;
+    // }
   
     // Validate identity number if provided
     if (customer_identification && customer_identification_type) {
