@@ -501,12 +501,12 @@ export default function MediationBoardCaselist() {
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
 
       <div  className={`${GlobalStyle.cardContainer} w-full gap-4 mt-8` }>
-        <div className="flex items-center justify-end  gap-4 "> 
+        <div className="flex  flex-wrap items-center justify-end  gap-2 "> 
         <select
           name="rtom"
           value={filters.rtom}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} `}
+          className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
            style={{ color: filters.rtom === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Rtom</option>
@@ -521,7 +521,7 @@ export default function MediationBoardCaselist() {
           name="action_type"
           value={filters.action_type}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} `}
+          className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
           style={{ color: filters.action_type === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Action Type</option>
@@ -536,7 +536,7 @@ export default function MediationBoardCaselist() {
           name="status"
           value={filters.status}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox}`}
+          className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
           style={{ color: filters.status === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Status</option>
@@ -556,20 +556,20 @@ export default function MediationBoardCaselist() {
           onChange={handlefromdatechange}
           dateFormat="dd/MM/yyyy"
           placeholderText="From"
-          className={`${GlobalStyle.inputText} `}
+          className={`${GlobalStyle.inputText} w-full sm:w-auto`} 
         />
         <DatePicker
           selected={toDate}
           onChange={handletodatechange}
           dateFormat="dd/MM/yyyy"
           placeholderText="To"
-          className={`${GlobalStyle.inputText} `}
+          className={`${GlobalStyle.inputText} w-full sm:w-auto`}
         />
 
         <div>
             {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
               <button
-                className={GlobalStyle.buttonPrimary}
+                className={`${GlobalStyle.buttonPrimary}  w-full sm:w-auto`}
                 onClick={handleFilterClick}
 
               >
@@ -580,7 +580,7 @@ export default function MediationBoardCaselist() {
 
             <div>
                   {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button className={GlobalStyle.buttonRemove} onClick={handleClearFilters}>
+                    <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`}onClick={handleClearFilters}>
                     Clear
                       </button>
                   )}
@@ -610,7 +610,7 @@ export default function MediationBoardCaselist() {
           </div>
         </div>
 
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>

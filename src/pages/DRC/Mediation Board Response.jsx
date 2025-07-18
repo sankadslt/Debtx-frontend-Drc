@@ -377,7 +377,10 @@ const MediationBoardResponse = () => {
         // Calculate durationTo
         const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
         const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
-        const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+        
+        const finalMonth = new Date(today.getFullYear(), today.getMonth() + 1 + (numValue - 1), 1); // first day of final month
+        const lastDayOfFinalMonth = new Date(finalMonth.getFullYear(), finalMonth.getMonth() + 1, 0); // last day of final month
+        const durationTo = lastDayOfFinalMonth.toLocaleDateString("en-GB");
 
         setFormData((prev) => ({
           ...prev,
@@ -752,7 +755,7 @@ const MediationBoardResponse = () => {
 
       {/* Case Details Card - Always visible */}
       <div className="flex justify-center items-center">
-          <div className={`${GlobalStyle.cardContainer}`}>
+          <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
             <table className="w-full  ">
               <tbody>
                 <tr className="flex items-start py-1">
@@ -1205,7 +1208,7 @@ const MediationBoardResponse = () => {
 
           { visibleTables[index] && (
             <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-200">
-              <div className={GlobalStyle.tableContainer}>
+              <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                 <table className={GlobalStyle.table}>
                   <thead className={GlobalStyle.thead}>
                     <tr>
@@ -1286,7 +1289,7 @@ const MediationBoardResponse = () => {
             <h3 className={`${GlobalStyle.headingMedium} mt-10 mb-4`}>
               Mediation Board Response History
             </h3>
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
                   <tr>
@@ -1375,7 +1378,7 @@ const MediationBoardResponse = () => {
             <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
               Payment Details
             </h3>
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead} >
                   <tr>
@@ -1456,7 +1459,7 @@ const MediationBoardResponse = () => {
             <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
               Requested Additional Details
             </h3>
-            <div className={GlobalStyle.tableContainer}>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead} >
                   <tr>
