@@ -19,11 +19,11 @@ import {
   fetchActiveNegotiations,
   getActiveRORequestsforNegotiationandMediation,
 } from "../../services/case/CaseService";
-import editIcon from "../../assets/images/edit.png"; 
+import editIcon from "../../assets/images/edit.png";
 import viewIcon from "../../assets/images/view.png";
 import Backbtn from "../../assets/images/back.png";
-import { useNavigate  , useLocation} from "react-router-dom";
-import {getLoggedUserId} from "/src/services/auth/authService.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getLoggedUserId } from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 
 import { Tooltip } from "react-tooltip";
@@ -35,7 +35,7 @@ import { refreshAccessToken } from "../../services/auth/authService";
 // import { set } from "react-datepicker/dist/date_utils";
 
 const Cus_Nego_Customer_Negotiation = () => {
-  
+
   const [activeTab, setActiveTab] = useState("negotiation");
   const [showResponseHistory, setShowResponseHistory] = useState(false);
   // const [showSubmitMessage, setShowSubmitMessage] = useState(false);
@@ -55,14 +55,14 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [drcId, setDrcId] = useState(null);
   const [userid, setUserid] = useState(null);
   const [roId, setRoId] = useState(null);
-   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
+  const [userRole, setUserRole] = useState(null); // Role-Based Buttons
 
   const caseid = location.state?.CaseID;
 
   const actiontype = location.state?.ActionType;
 
   //console.log("Case details passed to the paghe:", caseDetails);
-  const [userData, setUserData] = useState(null); 
+  const [userData, setUserData] = useState(null);
   //pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
@@ -105,7 +105,7 @@ const Cus_Nego_Customer_Negotiation = () => {
   const totalPages2 = Math.ceil(lastRequests.length / itemsPerPage2);
 
   // Role-Based Buttons
-   useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
@@ -140,21 +140,21 @@ const Cus_Nego_Customer_Negotiation = () => {
 
 
   const loadUser = async () => {
-  const user = await getLoggedUserId();
-  setUserData(user);
-  
-  setDrcId(user.drc_id);
-  setRoId(user.ro_id);
-  setUserid(user.user_id);
+    const user = await getLoggedUserId();
+    setUserData(user);
+
+    setDrcId(user.drc_id);
+    setRoId(user.ro_id);
+    setUserid(user.user_id);
   };
 
   useEffect(() => {
-  loadUser();
+    loadUser();
   }, []);
 
   const payload = {
-    case_id : caseid  ,
-    drc_id: drcId  ,
+    case_id: caseid,
+    drc_id: drcId,
     ro_id: roId || null,
   };
 
@@ -188,16 +188,16 @@ const Cus_Nego_Customer_Negotiation = () => {
     ref_products: [],
   };
   const [formData, setFormData] = useState(initialFormData);
-  
+
   useEffect(() => {
     const getcasedetails = async () => {
       try {
         if (drcId) {
           const payload = {
-            drc_id : parseInt(drcId),
-            case_id : parseInt(caseid),
-            ro_id : roId,
-          }  
+            drc_id: parseInt(drcId),
+            case_id: parseInt(caseid),
+            ro_id: roId,
+          }
 
           const caseDetails = await drcCaseDetails(payload);
           console.log("Payload for case details:", payload);
@@ -208,7 +208,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       } catch (error) {
         console.error("Error fetching case details:", error.message);
       }
-    } 
+    }
     const fetchRORequests = async () => {
       try {
         const RO_Requests = await getActiveRORequestsforNegotiationandMediation("Negotiation");
@@ -229,7 +229,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     getcasedetails();
     fetchRORequests();
   }, [drcId, roId]);
-  
+
   //calculate date from /to in settlement plan
   useEffect(() => {
     calculateDates(formData.month);
@@ -249,11 +249,11 @@ const Cus_Nego_Customer_Negotiation = () => {
     }
 
     const toDate = new Date(fromDate);
-    toDate.setMonth(toDate.getMonth() + month );
+    toDate.setMonth(toDate.getMonth() + month);
     toDate.setDate(0);
 
-  const fromDateFormatted = fromDate.toLocaleDateString("en-GB");
-  const toDateFormatted = toDate.toLocaleDateString("en-GB");
+    const fromDateFormatted = fromDate.toLocaleDateString("en-GB");
+    const toDateFormatted = toDate.toLocaleDateString("en-GB");
 
 
     setFormData((prevFormData) => ({
@@ -264,7 +264,7 @@ const Cus_Nego_Customer_Negotiation = () => {
   }
   const handleNegotiationSubmit = async (e) => {
     // e.preventDefault();
-  
+
     // const newErrors = {};
     // if (!formData.caseId) newErrors.case_id = "Case ID is required.";
     // if (!formData.field_reason) newErrors.field_reason = "Field reason is required.";
@@ -275,7 +275,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     //   setErrors(newErrors); 
     //   return; 
     // };
-    
+
     // try {
     //   // Find the selected request details
     //   const selectedRequest = activeRORequests.find(
@@ -283,7 +283,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     //   );
     //   formData.request_description = selectedRequest.request_description;
     //   formData.intraction_id = selectedRequest.intraction_id;
-  
+
     //   if (!selectedRequest) {
     //     alert("Invalid request selected.");
     //     return;
@@ -318,7 +318,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     e.preventDefault();
 
     if (!formData.reason && !formData.request) {
-       Swal.fire({
+      Swal.fire({
         icon: "warning",
         title: "Warning",
         text: "Please select a reason or request before submitting.",
@@ -328,7 +328,7 @@ const Cus_Nego_Customer_Negotiation = () => {
       return;
     }
 
-    if (formData.request){
+    if (formData.request) {
       if (!formData.request_remark) {
         Swal.fire({
           icon: "warning",
@@ -340,70 +340,70 @@ const Cus_Nego_Customer_Negotiation = () => {
       }
     }
 
-   if (formData.reason) {
-    if (!formData.nego_remark) {
-      Swal.fire({
-        icon: "warning",
-        title: "Warning",
-        text: "Reason remark is required.",
-        confirmButtonColor: "#ffc107",
-      });
-      return;
-    }
-  }
-
-  if (formData.reason === "Agreed To Settle") {
-    if (!formData.settlement_remark) {
-      Swal.fire({
-        icon: "warning",
-        title: "Warning",
-        text: "Settlement remark is required.",
-        confirmButtonColor: "#ffc107",
-      });
-      return;
+    if (formData.reason) {
+      if (!formData.nego_remark) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Reason remark is required.",
+          confirmButtonColor: "#ffc107",
+        });
+        return;
+      }
     }
 
-  };  
-  
-  console.log("Form Data:", formData);
-   const DRC_ID = initialFormData.drcId;
-   //console.log("Form data drc id :",  DRC_ID);
-   const roId = initialFormData.roId;
-   //console.log("Form data ro id :",  roId);
-   const arrearsAmount = caseDetails.current_arrears_amount;
-  //console.log("casedetails in submit:", caseDetails.drc);
-  const createddate = caseDetails.drc?.created_dtm;
-  const expiredate = caseDetails.drc?.expire_dtm;
-   const drcname = caseDetails.drc?.drc_name;
-   const status = caseDetails.case_current_status;
-   const createdby =  userid; // Get the user ID from userData
- // console.log("Form data user id :",  createdby , "ro id :", roId, "drc id :", 
- // DRC_ID, "arrears amount :", arrearsAmount, "status :", status ,
- //  "created date :", createddate, "expire date :", expiredate);
+    if (formData.reason === "Agreed To Settle") {
+      if (!formData.settlement_remark) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Settlement remark is required.",
+          confirmButtonColor: "#ffc107",
+        });
+        return;
+      }
+
+    };
+
+    console.log("Form Data:", formData);
+    const DRC_ID = initialFormData.drcId;
+    //console.log("Form data drc id :",  DRC_ID);
+    const roId = initialFormData.roId;
+    //console.log("Form data ro id :",  roId);
+    const arrearsAmount = caseDetails.current_arrears_amount;
+    //console.log("casedetails in submit:", caseDetails.drc);
+    const createddate = caseDetails.drc?.created_dtm;
+    const expiredate = caseDetails.drc?.expire_dtm;
+    const drcname = caseDetails.drc?.drc_name;
+    const status = caseDetails.case_current_status;
+    const createdby = userid; // Get the user ID from userData
+    // console.log("Form data user id :",  createdby , "ro id :", roId, "drc id :", 
+    // DRC_ID, "arrears amount :", arrearsAmount, "status :", status ,
+    //  "created date :", createddate, "expire date :", expiredate);
 
     try {
 
       const payload = {
-         case_id : formData.caseId,
-         request_id : formData.requestId,
-         request_type: formData.request,
-         request_comment : formData.request_remark,
-         current_arrears_amount : arrearsAmount,
-         case_current_status : status,
-         drc_id : DRC_ID,
-         ro_id : roId,
-         // ro_name : cant pass 
-         drc: drcname,
-         expire_dtm: expiredate,
-         created_dtm: createddate,
-         field_reason: formData.reason,
-         field_reason_remark: formData.nego_remark,
-         intraction_id: formData.intractionId,
-         initial_amount: formData.ini_amount,
-         calender_month: formData.month,
-         settlement_remark: formData.settlement_remark,
-         region: caseDetails.region ,
-         created_by: createdby,
+        case_id: formData.caseId,
+        request_id: formData.requestId,
+        request_type: formData.request,
+        request_comment: formData.request_remark,
+        current_arrears_amount: arrearsAmount,
+        case_current_status: status,
+        drc_id: DRC_ID,
+        ro_id: roId,
+        // ro_name : cant pass 
+        drc: drcname,
+        expire_dtm: expiredate,
+        created_dtm: createddate,
+        field_reason: formData.reason,
+        field_reason_remark: formData.nego_remark,
+        intraction_id: formData.intractionId,
+        initial_amount: formData.ini_amount,
+        calender_month: formData.month,
+        settlement_remark: formData.settlement_remark,
+        region: caseDetails.region,
+        created_by: createdby,
       }
 
       console.log("Payload for negotiation submission:", payload);
@@ -418,22 +418,22 @@ const Cus_Nego_Customer_Negotiation = () => {
       });
       setFormData(initialFormData);
     } catch (error) {
-  const backendData = error?.response?.data;
-  const resultMessage = backendData?.result?.message;
-  const resultReason = backendData?.result?.reason;
-  const finalMessage =
-    resultMessage && resultReason
-      ? `${resultMessage} - ${resultReason}`
-      : backendData?.message || error?.message || "An error occurred. Please try again.";
+      const backendData = error?.response?.data;
+      const resultMessage = backendData?.result?.message;
+      const resultReason = backendData?.result?.reason;
+      const finalMessage =
+        resultMessage && resultReason
+          ? `${resultMessage} - ${resultReason}`
+          : backendData?.message || error?.message || "An error occurred. Please try again.";
 
-  Swal.fire({
-    icon: "error",
-    title: "Error",
-    text: finalMessage,
-    confirmButtonColor: "#d33",
-  });
-  return;
-}
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: finalMessage,
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
 
   }
 
@@ -474,7 +474,7 @@ const Cus_Nego_Customer_Negotiation = () => {
           : "",
         [name]: value,
 
-        
+
       }));
 
     } else if (name === "month") {
@@ -503,29 +503,29 @@ const Cus_Nego_Customer_Negotiation = () => {
       try {
         const lastRequests = caseDetails.ro_requests
           ? caseDetails.ro_requests.map((ro_request) => ({
-              createdDtm: ro_request.created_dtm,
-              field_reason: ro_request.ro_request,
-              remark: ro_request.ro_request_remark ? ro_request.ro_request_remark :  "",
-            }))
+            createdDtm: ro_request.created_dtm,
+            field_reason: ro_request.ro_request,
+            remark: ro_request.ro_request_remark ? ro_request.ro_request_remark : "",
+          }))
           : [];
         setLastRoRequests(lastRequests);
-        
+
         const lastNagotiation = caseDetails.ro_negotiation
-        ? caseDetails.ro_negotiation.map((ro_nago) => ({
+          ? caseDetails.ro_negotiation.map((ro_nago) => ({
             createdDtm: ro_nago.created_dtm,
             field_reason: ro_nago.feild_reason,
-            remark: ro_nago.remark ? ro_nago.remark :  "",
+            remark: ro_nago.remark ? ro_nago.remark : "",
           }))
-        : [];
+          : [];
         setLastRONagotiation(lastNagotiation);
 
         const lastPayment = caseDetails.money_transactions
-        ? caseDetails.money_transactions.map((ro_payment) => ({
+          ? caseDetails.money_transactions.map((ro_payment) => ({
             createdDtm: ro_payment.payment_Dtm,
             paid_amount: ro_payment.payment,
-            settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced :  "",
+            settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced : "",
           }))
-        : [];
+          : [];
         setLastROPayment(lastPayment);
 
       } catch (error) {
@@ -542,29 +542,29 @@ const Cus_Nego_Customer_Negotiation = () => {
     if (actionType === "Not Submit") {
       console.log("this is the form data ", formData);
       setSelectedProduct(product);
-      setShowDetailedView(false);  
+      setShowDetailedView(false);
       navigate("/drc/customer-negotiation-editcpe", {
         state: {
-         
+
           product: product,
           caseId: payload.case_id,
           drcId: formData.drcId,  // Pass drcId here
           customerRef: caseDetails.customer_ref,
-          accountNo: formData.accountNo ,  // Assuming product object has caseId, customerRef, Service_address
+          accountNo: formData.accountNo,  // Assuming product object has caseId, customerRef, Service_address
           serviceAddress: product.Service_address,
         }
       });
 
-    }else{
-      setSelectedProduct(product); 
-      setShowDetailedView(true); 
+    } else {
+      setSelectedProduct(product);
+      setShowDetailedView(true);
     }
 
 
   };
 
   const handleBack = () => {
-    navigate ("/drc/ro-s-assigned-case-log") ; // Go back to the previous page
+    navigate("/drc/ro-s-assigned-case-log"); // Go back to the previous page
   };
 
 
@@ -579,49 +579,49 @@ const Cus_Nego_Customer_Negotiation = () => {
       <div className=" p-6 rounded-lg ">
         {/* Case Details Card */}
         <div className="flex justify-center items-center">
-        <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
-          <table className={`${GlobalStyle.table} `}>
-            <tbody>
-              <tr>
-                <th className={style.thStyle}>Case ID</th>
-                <td className={style.tdStyle}>:</td>
-                <td className={style.tdStyle}>{caseDetails.case_id}</td>
-              </tr>
-              <tr>
-                <th className={style.thStyle}>Customer Ref</th>
-                <td className={style.tdStyle}>:</td>
-                <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
-              </tr>
-              <tr>
-                <th className={style.thStyle}>Account No</th>
-                <td className={style.tdStyle}>:</td>
-                <td className={style.tdStyle}>{caseDetails.account_no}</td>
-              </tr>
-              <tr>
-                <th className={style.thStyle}>Arrears Amount</th>
-                <td className={style.tdStyle}>:</td>
-                <td className={style.tdStyle}>{caseDetails.current_arrears_amount}</td>
-              </tr>
-              <tr>
-                <th className={style.thStyle}>Last Payment Date</th>
-                <td className={style.tdStyle}>:</td>
-                <td className={style.tdStyle}>
-                {new Date(caseDetails.last_payment_date).toLocaleDateString('en-GB',
-                 {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                  })}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
+            <table className={`${GlobalStyle.table} `}>
+              <tbody>
+                <tr>
+                  <th className={style.thStyle}>Case ID</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>{caseDetails.case_id}</td>
+                </tr>
+                <tr>
+                  <th className={style.thStyle}>Customer Ref</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
+                </tr>
+                <tr>
+                  <th className={style.thStyle}>Account No</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>{caseDetails.account_no}</td>
+                </tr>
+                <tr>
+                  <th className={style.thStyle}>Arrears Amount</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>{caseDetails.current_arrears_amount}</td>
+                </tr>
+                <tr>
+                  <th className={style.thStyle}>Last Payment Date</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>
+                    {new Date(caseDetails.last_payment_date).toLocaleDateString('en-GB',
+                      {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div
           className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto w-full max-w-3xl`}
-        > 
-            <div >
+        >
+          <div >
             <div className="flex flex-col space-y-4 items-center justify-center">
               {/* Reason Selection */}
               <div className="flex items-center gap-4 w-full">
@@ -641,7 +641,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                     <option
                       key={negotiation.negotiation_id}
                       value={negotiation.negotiation_description}
-                       style={{ color: "black" }}
+                      style={{ color: "black" }}
                     >
                       {negotiation.negotiation_description}
                     </option>
@@ -656,19 +656,19 @@ const Cus_Nego_Customer_Negotiation = () => {
 
               {/* reason remark */}
               {formData.reason && (
-              <div className="flex items-center gap-4 w-full">
-                <label className={`${GlobalStyle.remarkTopic} `}>
-                  Reason Remark
-                </label>
-                <label className={`${GlobalStyle.remarkTopic} `}>:</label>
-                <textarea
-                  name="nego_remark"
-                  value={formData.nego_remark || ""}
-                  onChange={handleInputChange}
-                  className={`${GlobalStyle.remark} ml-2`}
-                  rows={4}
-                />
-              </div>
+                <div className="flex items-center gap-4 w-full">
+                  <label className={`${GlobalStyle.remarkTopic} `}>
+                    Reason Remark
+                  </label>
+                  <label className={`${GlobalStyle.remarkTopic} `}>:</label>
+                  <textarea
+                    name="nego_remark"
+                    value={formData.nego_remark || ""}
+                    onChange={handleInputChange}
+                    className={`${GlobalStyle.remark} ml-2`}
+                    rows={4}
+                  />
+                </div>
               )}
               {errors.nego_remark && (
                 <div className="text-red-500 text-sm ml-1/4">
@@ -683,7 +683,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 </label>
                 <label className={`${GlobalStyle.remarkTopic} ml-10`}>:</label>
                 <select
-                  name="request" 
+                  name="request"
                   value={formData.request || ""}
                   onChange={handleInputChange}
                   className={`${GlobalStyle.selectBox} ml-3`}
@@ -694,7 +694,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                     <option
                       key={RO_Requests.ro_request_id}
                       value={RO_Requests.request_description}
-                       style={{ color: "black" }}
+                      style={{ color: "black" }}
                     >
                       {RO_Requests.request_description}
                     </option>
@@ -708,19 +708,19 @@ const Cus_Nego_Customer_Negotiation = () => {
               )}
               {/* request remark */}
               {formData.request && (
-              <div className="flex items-center gap-4 w-full">
-                <label className={`${GlobalStyle.remarkTopic} `}>
-                  Request Remark
-                </label>
-                <label className={`${GlobalStyle.remarkTopic} mr-2`}>:</label>
-                <textarea
-                  name="request_remark"
-                  value={formData.request_remark || ""}
-                  onChange={handleInputChange}
-                  className={`${GlobalStyle.remark} `}
-                  rows={4}
-                />
-              </div>
+                <div className="flex items-center gap-4 w-full">
+                  <label className={`${GlobalStyle.remarkTopic} `}>
+                    Request Remark
+                  </label>
+                  <label className={`${GlobalStyle.remarkTopic} mr-2`}>:</label>
+                  <textarea
+                    name="request_remark"
+                    value={formData.request_remark || ""}
+                    onChange={handleInputChange}
+                    className={`${GlobalStyle.remark} `}
+                    rows={4}
+                  />
+                </div>
               )}
               {errors.request_remark && (
                 <div className="text-red-500 text-sm ml-1/4">
@@ -728,14 +728,14 @@ const Cus_Nego_Customer_Negotiation = () => {
                 </div>
               )}
             </div>
-            </div>
+          </div>
 
-            {/* settlement plan */}
-            {formData.reason === "Agreed To Settle" && (
-              <div className="flex justify-center items-center">
+          {/* settlement plan */}
+          {formData.reason === "Agreed To Settle" && (
+            <div className="flex justify-center items-center">
               <div className="space-y-4 mb-6 mt-4  w-full max-w-3xl">
                 <div>
-                   <h1 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
+                  <h1 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
                     <strong>Settlement Plan Creation</strong>
                   </h1>
                 </div>
@@ -813,41 +813,41 @@ const Cus_Nego_Customer_Negotiation = () => {
                   </div>
                 </div>
               </div>
-              </div>
-            )}
-            <div className="flex justify-end mb-8 mt-3 ">
-              <div>
-                {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                  <button
+            </div>
+          )}
+          <div className="flex justify-end mb-8 mt-3 ">
+            <div>
+              {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                <button
                   onClick={handleNegotiationSubmit}
                   className={GlobalStyle.buttonPrimary}
                 >
                   Submit
                 </button>
-                  )}
-                </div>
-              {/* <button
+              )}
+            </div>
+            {/* <button
                 onClick={handleNegotiationSubmit}
                 className={GlobalStyle.buttonPrimary}
               >
                 Submit
               </button> */}
-            </div>
-            </div>
+          </div>
+        </div>
       </div>
 
       <div>
         <div className="flex justify-start gap-4 mb-8">
           <div>
-            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+            {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
               <button
                 onClick={handleResponseHistoryClick}
                 className={GlobalStyle.buttonPrimary}
               >
                 Response History
               </button>
-              )}
-            </div>
+            )}
+          </div>
           {/* <button
             onClick={handleResponseHistoryClick}
             className={GlobalStyle.buttonPrimary}
@@ -902,14 +902,13 @@ const Cus_Nego_Customer_Negotiation = () => {
                 </tbody>
               </table>
             </div>
-             {/* Pagination for Last Negotiation Details */}
-             <div className={GlobalStyle.navButtonContainer}>
+            {/* Pagination for Last Negotiation Details */}
+            <div className={GlobalStyle.navButtonContainer}>
               <button
                 onClick={() => handlePrevNext("prev")}
                 disabled={currentPage === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage === 1 ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowLeft />
               </button>
@@ -919,20 +918,19 @@ const Cus_Nego_Customer_Negotiation = () => {
               <button
                 onClick={() => handlePrevNext("next")}
                 disabled={currentPage === totalPages}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage === totalPages ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowRight />
               </button>
             </div>
 
 
-          {/* Payment Details Table */}
-          <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
-            Payment Details
-          </h3>
-          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            {/* Payment Details Table */}
+            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+              Payment Details
+            </h3>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
               <table className={GlobalStyle.table}>
                 <thead className={GlobalStyle.thead}>
                   <tr>
@@ -979,9 +977,8 @@ const Cus_Nego_Customer_Negotiation = () => {
               <button
                 onClick={() => handlePrevNext1("prev")}
                 disabled={currentPage1 === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage1 === 1 ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage1 === 1 ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowLeft />
               </button>
@@ -991,9 +988,8 @@ const Cus_Nego_Customer_Negotiation = () => {
               <button
                 onClick={() => handlePrevNext1("next")}
                 disabled={currentPage1 === totalPages1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowRight />
               </button>
@@ -1048,13 +1044,12 @@ const Cus_Nego_Customer_Negotiation = () => {
             </div>
 
             {/* Pagination for Requested Additional Details */}
-             <div className={GlobalStyle.navButtonContainer}>
+            <div className={GlobalStyle.navButtonContainer}>
               <button
                 onClick={() => handlePrevNext2("prev")}
                 disabled={currentPage2 === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage2 === 1 ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage2 === 1 ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowLeft />
               </button>
@@ -1064,9 +1059,8 @@ const Cus_Nego_Customer_Negotiation = () => {
               <button
                 onClick={() => handlePrevNext2("next")}
                 disabled={currentPage2 === totalPages2}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
-                }`}
+                className={`${GlobalStyle.navButton} ${currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
+                  }`}
               >
                 <FaArrowRight />
               </button>
@@ -1099,7 +1093,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             </table>
           </div>
         </div>
-  
+
         {/* Table Section */}
         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
@@ -1124,13 +1118,13 @@ const Cus_Nego_Customer_Negotiation = () => {
                   const status = isEvenRow ? "Submitted" : "Not Submitted";
                   const icon = isEvenRow ? viewIcon : editIcon;
                   const actionType = isEvenRow ? "view" : "edit";
-  
+
                   return (
                     <tr key={product.product_id || index} className={`${rowClass} border-b`}>
                       <td className={GlobalStyle.tableData}>
                         {product.Product_Label || ""}
                       </td>
-                      <td className={GlobalStyle.tableData}>{ ""}</td>  {/*  the account number feild should come here */}
+                      <td className={GlobalStyle.tableData}>{""}</td>  {/*  the account number feild should come here */}
                       <td className={GlobalStyle.tableData}>{product.Service_Type || ""}</td>
                       <td className={GlobalStyle.tableData}>
                         {product.Equipment_Ownership || ""}
@@ -1138,17 +1132,17 @@ const Cus_Nego_Customer_Negotiation = () => {
                       <td className={GlobalStyle.tableData}>{product.RTOM || ""}</td>
                       <td className={GlobalStyle.tableData}>{""}</td>
                       <td className={GlobalStyle.tableData}>
-                        <img 
-                          src={product.product_status === "Not Submit" ? editIcon : viewIcon} 
-                          alt="Product Icon" 
-                          width={24} 
-                          height={24} 
+                        <img
+                          src={product.product_status === "Not Submit" ? editIcon : viewIcon}
+                          alt="Product Icon"
+                          width={24}
+                          height={24}
                           style={{ cursor: "pointer" }}
                           data-tooltip-id="tooltip"
                           data-tooltip-content={product.product_status === "Not Submit" ? "Edit" : "View"}
-                          onClick={() => handleIconClickbutton(product.product_status,product)}
+                          onClick={() => handleIconClickbutton(product.product_status, product)}
                         />
-                        <Tooltip id="tooltip" place="bottom" className="tooltip"  />
+                        <Tooltip id="tooltip" place="bottom" className="tooltip" />
                       </td>
                     </tr>
                   );
@@ -1157,7 +1151,7 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <tr>
                   <td colSpan="7" className={`${GlobalStyle.tableData} text-center`}>
                     No products available
-                  </td> 
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -1166,18 +1160,18 @@ const Cus_Nego_Customer_Negotiation = () => {
       </div>
     );
   };
-  {/*Deatils View */}
+  {/*Deatils View */ }
   const renderDetailedView = () => (
     <div className="p-6 min-h-screen flex flex-col ml-32 items-center justify-center">
       <div className={`${GlobalStyle.cardContainer} w-full max-w-lg`}>
         <table>
           <tbody>
-          <tr>
+            <tr>
               <th className={style.thStyle}>Case ID</th>
               <td className={style.tdStyle}>:</td>
               <td className={style.tdStyle}>{caseDetails.case_id}</td>
-              </tr>
-              <tr>
+            </tr>
+            <tr>
               <th className={style.thStyle}>Customer Ref</th>
               <td className={style.tdStyle}>:</td>
               <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
@@ -1189,7 +1183,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             </tr>
           </tbody>
         </table>
-            <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
+        <h1 className={`${style.thStyle} underline mt-6 mb-4`}>CPE Details</h1>
         <table>
           <tbody>
             <tr>
@@ -1197,7 +1191,7 @@ const Cus_Nego_Customer_Negotiation = () => {
               <td className={style.tdStyle}>:</td>
               <td className={style.tdStyle}>{selectedProduct.product_label}</td>
             </tr>
-              {/* <tr>
+            {/* <tr>
               <th className={style.thStyle}>Account No</th>
               <td className={style.tdStyle}>:</td>
               <td className={style.tdStyle}>{formData.accountNo}</td>
@@ -1219,7 +1213,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         <h1 className={`${style.thStyle} underline mt-4 mb-4`}>RCMP Details</h1>
         <table>
           <tbody>
-          <tr>
+            <tr>
               <th className={style.thStyle}> Status</th>
               <td className={style.tdStyle}>:</td>
               <td className={style.tdStyle}>{ }</td>
@@ -1256,15 +1250,15 @@ const Cus_Nego_Customer_Negotiation = () => {
           setShowDetailedView(false); // Hide detailed view
         }}
       > */}
-       <div className="w-full max-w-lg flex justify-start">
-         <button className={GlobalStyle.buttonPrimary}  
-         onClick={() => {
-           setActiveTab("cpe"); // Switch back to CPE view
-           setShowDetailedView(false); // Hide detailed view
-         }}>
+      <div className="w-full max-w-lg flex justify-start">
+        <button className={GlobalStyle.buttonPrimary}
+          onClick={() => {
+            setActiveTab("cpe"); // Switch back to CPE view
+            setShowDetailedView(false); // Hide detailed view
+          }}>
           <FaArrowLeft className="mr-2" />
-         </button>
-       </div>
+        </button>
+      </div>
 
       {/* </button>    */}
     </div>
@@ -1274,27 +1268,25 @@ const Cus_Nego_Customer_Negotiation = () => {
       <h1 className={`${GlobalStyle.headingLarge} mb-6`}>
         {activeTab === "negotiation" ? "Customer Negotiation" : "CPE Collect"}
       </h1>
-  
+
       {/* Tab Navigation */}
       <div className="flex">
         <button
-          className={`px-8 py-3 rounded-t-lg font-medium ${
-            activeTab === "negotiation"
+          className={`px-8 py-3 rounded-t-lg font-medium ${activeTab === "negotiation"
               ? "border-b-2 border-blue-500 font-bold"
               : "text-gray-500"
-          }`}
+            }`}
           onClick={() => setActiveTab("negotiation")}
         >
           Customer Negotiation
         </button>
         <button
-          className={`px-8 py-3 rounded-t-lg font-medium ${
-            activeTab === "cpe"
+          className={`px-8 py-3 rounded-t-lg font-medium ${activeTab === "cpe"
               ? "border-b-2 border-blue-500 font-bold"
               : "text-gray-500"
-          }`}
+            }`}
           onClick={() => {
-            if (actiontype === "Arrears Collect"){
+            if (actiontype === "Arrears Collect") {
               return; // Prevent tab switch
             }
             setActiveTab("cpe");
@@ -1310,22 +1302,22 @@ const Cus_Nego_Customer_Negotiation = () => {
       {/* Back Button */}
 
       <div className="mt-4" style={{ cursor: 'pointer' }}>
-          {/* <img
+        {/* <img
             src={back}
             alt="Back"
             title="Back"
             style={{ width: "50px", height: "auto" }}
           /> */}
-           <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
-         <FaArrowLeft className="mr-2" />
+        <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
+          <FaArrowLeft className="mr-2" />
         </button>
-        </div>
+      </div>
 
     </div>
 
-    
+
   );
-      
+
 };
 
 export default Cus_Nego_Customer_Negotiation; 
