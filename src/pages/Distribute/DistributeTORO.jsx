@@ -18,13 +18,14 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
-import { listHandlingCasesByDRC } from "../../services/case/CaseService";
+import { listHandlingCasesByDRC, List_Handling_Cases_By_DRC_Without_RO } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
 import { assignROToCase } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
+import { Tooltip } from "react-tooltip";
 
 //Status Icons
 import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
@@ -369,7 +370,7 @@ const DistributeTORO = () => {
       };
 
       setLoading(true);
-      const response = await listHandlingCasesByDRC(payload);
+      const response = await List_Handling_Cases_By_DRC_Without_RO(payload);
 
       if (Array.isArray(response)) {
         // setFilteredData(response);
@@ -825,21 +826,25 @@ const DistributeTORO = () => {
   };
 
   // render status icon with tooltip
-  const renderStatusIcon = (status) => {
+  const renderStatusIcon = (status, index) => {
     const iconPath = getStatusIcon(status);
+    const tooltipId = `status-tooltip-${index}`;
 
     if (!iconPath) {
       return <span>{status}</span>;
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <img
-          src={iconPath}
-          alt={status}
-          title={status}
-          className="w-6 h-6"
-        />
+      <div>
+        <div className="flex items-center gap-2">
+          <img
+            src={iconPath}
+            alt={status}
+            className="w-6 h-6"
+            data-tooltip-id={tooltipId}
+          />
+        </div>
+        <Tooltip id={tooltipId} className="tooltip" effect="solid" place="bottom" content={status} />
       </div>
     );
   };
@@ -869,7 +874,7 @@ const DistributeTORO = () => {
             }}
             style={{ color: selectedRTOM === "" ? "gray" : "black" }}
           >
-            <option value="" hidden>RTOM</option>
+            <option value="" hidden>Billing Center</option>
             {rtoms.length > 0 ? (
               rtoms.map((rtom) => (
                 <option key={rtom.rtom_id} value={rtom.area_name} style={{ color: "black" }}>
@@ -877,7 +882,7 @@ const DistributeTORO = () => {
                 </option>
               ))
             ) : (
-              <option disabled>No RTOMs found</option>
+              <option disabled>No Billing Centers found</option>
             )}
           </select>
 
@@ -964,8 +969,8 @@ const DistributeTORO = () => {
               <th className={GlobalStyle.tableHeader}>DRC Assigned Date</th>
               <th className={GlobalStyle.tableHeader}>Amount (LKR)</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
-              <th className={GlobalStyle.tableHeader}>RTOM Area</th>
-              <th className={GlobalStyle.tableHeader}>RO</th>
+              <th className={GlobalStyle.tableHeader}>Billing Center</th>
+              {/* <th className={GlobalStyle.tableHeader}>RO</th> */}
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
             </tr>
           </thead>
@@ -985,14 +990,14 @@ const DistributeTORO = () => {
                     />
                   </td>
                   <td className={GlobalStyle.tableData}> {item.case_id || ""} </td>
-                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status)}</td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status, index)}</td>
                   <td className={GlobalStyle.tableData}> {item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
                     : ""} </td>
                   <td className={GlobalStyle.tableCurrency}> {item.current_arrears_amount || ""} </td>
                   <td className={GlobalStyle.tableData}> {item.action_type || ""} </td>
                   <td className={GlobalStyle.tableData}> {item.area || ""} </td>
-                  <td className={GlobalStyle.tableData}> {item.ro_name || ""} </td>
+                  {/* <td className={GlobalStyle.tableData}> {item.ro_name || ""} </td> */}
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
                     ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
                     : ""}  </td>

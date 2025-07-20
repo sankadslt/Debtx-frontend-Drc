@@ -121,7 +121,7 @@ export default function RO_Monitoring_CPE() {
     }, [userData?.drc_id, case_id]);
 
     const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
+        if (!dateString) return "";
         try {
             return new Date(dateString).toLocaleDateString("en-GB");
         } catch (error) {
@@ -255,7 +255,7 @@ export default function RO_Monitoring_CPE() {
                                     <p key={index} className="mb-2 flex items-center">
                                         <strong className="w-40 text-left">{item.label}</strong>
                                         <span className="w-6 text-center">:</span>
-                                        <span className="flex-1">{item.value || "N/A"}</span>
+                                        <span className="flex-1">{item.value || ""}</span>
                                     </p>
                                 ))}
                             </div>
@@ -286,7 +286,7 @@ export default function RO_Monitoring_CPE() {
                                                 <p key={idx} className="mb-2 flex items-center">
                                                     <strong className="w-40 text-left">{item.label}</strong>
                                                     <span className="w-6 text-center">:</span>
-                                                    <span className="flex-1">{item.value || "N/A"}</span>
+                                                    <span className="flex-1">{item.value || ""}</span>
                                                 </p>
                                             ))}
                                         </div>
@@ -294,7 +294,7 @@ export default function RO_Monitoring_CPE() {
 
                                     {/* Table for Last Negotiation Details */}
                                     <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
-                                    <div className={`${GlobalStyle.tableContainer} mb-4`}>
+                                    <div className={`${GlobalStyle.tableContainer} mb-4 overflow-x-auto`}>
                                         <table className={GlobalStyle.table}>
                                             <thead className={GlobalStyle.thead}>
                                                 <tr>
@@ -305,7 +305,9 @@ export default function RO_Monitoring_CPE() {
                                             </thead>
                                             <tbody>
                                                 {product?.negotiation.length > 0 ? (
-                                                    product?.negotiation.map((item, idx) => (
+                                                    product?.negotiation
+                                                        .sort((a, b) => new Date(b.collected_date) - new Date(a.collected_date)) // Sort latest first
+                                                        .map((item, idx) => (
                                                             <tr
                                                                 key={item._id || idx}
                                                                 className={idx % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}
@@ -314,7 +316,7 @@ export default function RO_Monitoring_CPE() {
                                                                     {formatDate(item.collected_date)}
                                                                 </td>
                                                                 <td className={GlobalStyle.tableData}></td>
-                                                                <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
+                                                                <td className={GlobalStyle.tableData}>{item.remark || ""}</td>
                                                             </tr>
                                                         ))) : (
                                                     <tr>
@@ -356,7 +358,7 @@ export default function RO_Monitoring_CPE() {
                                     <p key={index} className="mb-2 flex items-center">
                                         <strong className="w-40 text-left">{item.label}</strong>
                                         <span className="w-6 text-center">:</span>
-                                        <span className="flex-1">{item.value || "N/A"}</span>
+                                        <span className="flex-1">{item.value || ""}</span>
                                     </p>
                                 ))}
                             </div>
@@ -365,7 +367,7 @@ export default function RO_Monitoring_CPE() {
                         {/* Content for the Last Negotiation Detail Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4`}>Last Negotiation Detail</h2>
                         {/* Table Section */}
-                        <div className={GlobalStyle.tableContainer}>
+                        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
@@ -376,19 +378,21 @@ export default function RO_Monitoring_CPE() {
                                 </thead>
                                 <tbody>
                                     {dataInPageNegotiationDetails.length > 0 ? (
-                                        dataInPageNegotiationDetails.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`${index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                                    } border-b`}
-                                            >
-                                                <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableData}>{item.field_reason || "N/A"}</td>
-                                                <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
-                                            </tr>
-                                        ))
+                                        dataInPageNegotiationDetails
+                                            .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                                            .map((item, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`${index % 2 === 0
+                                                        ? GlobalStyle.tableRowEven
+                                                        : GlobalStyle.tableRowOdd
+                                                        } border-b`}
+                                                >
+                                                    <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
+                                                    <td className={GlobalStyle.tableData}>{item.field_reason || ""}</td>
+                                                    <td className={GlobalStyle.tableData}>{item.remark || ""}</td>
+                                                </tr>
+                                            ))
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="text-center py-4">
@@ -415,7 +419,7 @@ export default function RO_Monitoring_CPE() {
                         {/* Content for the Settlement Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Settlement Details</h2>
                         {/* Table Section */}
-                        <div className={GlobalStyle.tableContainer}>
+                        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
@@ -426,19 +430,21 @@ export default function RO_Monitoring_CPE() {
                                 </thead>
                                 <tbody>
                                     {dataInPageSettlementDetails.length > 0 ? (
-                                        dataInPageSettlementDetails.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`${index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                                    } border-b`}
-                                            >
-                                                <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableData}>{item.settlement_status || "N/A"}</td>
-                                                <td className={GlobalStyle.tableData}>{formatDate(item.expire_date)}</td>
-                                            </tr>
-                                        ))
+                                        dataInPageSettlementDetails
+                                            .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                                            .map((item, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`${index % 2 === 0
+                                                        ? GlobalStyle.tableRowEven
+                                                        : GlobalStyle.tableRowOdd
+                                                        } border-b`}
+                                                >
+                                                    <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
+                                                    <td className={GlobalStyle.tableData}>{item.settlement_status || ""}</td>
+                                                    <td className={GlobalStyle.tableData}>{formatDate(item.expire_date)}</td>
+                                                </tr>
+                                            ))
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="text-center py-4">
@@ -465,7 +471,7 @@ export default function RO_Monitoring_CPE() {
                         {/* Content for the Payment Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Payment Details</h2>
                         {/* Table Section */}
-                        <div className={GlobalStyle.tableContainer}>
+                        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
@@ -476,33 +482,35 @@ export default function RO_Monitoring_CPE() {
                                 </thead>
                                 <tbody>
                                     {dataInPagePaymentDetails.length > 0 ? (
-                                        dataInPagePaymentDetails.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`${index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                                    } border-b`}
-                                            >
-                                                <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableCurrency}>
-                                                    {item?.money_transaction_amount &&
-                                                        item.money_transaction_amount.toLocaleString("en-LK", {
-                                                            style: "currency",
-                                                            currency: "LKR",
-                                                        })
-                                                    }
-                                                </td>
-                                                <td className={GlobalStyle.tableCurrency}>
-                                                    {item?.cummulative_settled_balance &&
-                                                        item.cummulative_settled_balance.toLocaleString("en-LK", {
-                                                            style: "currency",
-                                                            currency: "LKR",
-                                                        })
-                                                    }
-                                                </td>
-                                            </tr>
-                                        ))
+                                        dataInPagePaymentDetails
+                                            .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                                            .map((item, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`${index % 2 === 0
+                                                        ? GlobalStyle.tableRowEven
+                                                        : GlobalStyle.tableRowOdd
+                                                        } border-b`}
+                                                >
+                                                    <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
+                                                    <td className={GlobalStyle.tableCurrency}>
+                                                        {item?.money_transaction_amount &&
+                                                            item.money_transaction_amount.toLocaleString("en-LK", {
+                                                                style: "currency",
+                                                                currency: "LKR",
+                                                            })
+                                                        }
+                                                    </td>
+                                                    <td className={GlobalStyle.tableCurrency}>
+                                                        {item?.cummulative_settled_balance &&
+                                                            item.cummulative_settled_balance.toLocaleString("en-LK", {
+                                                                style: "currency",
+                                                                currency: "LKR",
+                                                            })
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            ))
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="text-center py-4">
@@ -529,7 +537,7 @@ export default function RO_Monitoring_CPE() {
                         {/* Content for the Requests Details Section */}
                         <h2 className={`${GlobalStyle.headingMedium} mb-4 mt-4`}>Requested Additional Details</h2>
                         {/* Table Section */}
-                        <div className={`${GlobalStyle.tableContainer} mb-4`}>
+                        <div className={`${GlobalStyle.tableContainer} mb-4 overflow-x-auto`}>
                             <table className={GlobalStyle.table}>
                                 <thead className={GlobalStyle.thead}>
                                     <tr>
@@ -540,19 +548,21 @@ export default function RO_Monitoring_CPE() {
                                 </thead>
                                 <tbody>
                                     {dataInPageRequestDetails.length > 0 ? (
-                                        dataInPageRequestDetails.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`${index % 2 === 0
-                                                    ? GlobalStyle.tableRowEven
-                                                    : GlobalStyle.tableRowOdd
-                                                    } border-b`}
-                                            >
-                                                <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
-                                                <td className={GlobalStyle.tableData}>{item.ro_request || "N/A"}</td>
-                                                <td className={GlobalStyle.tableData}>{item.remark || "N/A"}</td>
-                                            </tr>
-                                        ))
+                                        dataInPageRequestDetails
+                                            .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                                            .map((item, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`${index % 2 === 0
+                                                        ? GlobalStyle.tableRowEven
+                                                        : GlobalStyle.tableRowOdd
+                                                        } border-b`}
+                                                >
+                                                    <td className={GlobalStyle.tableData}>{formatDate(item.created_dtm)}</td>
+                                                    <td className={GlobalStyle.tableData}>{item.ro_request || ""}</td>
+                                                    <td className={GlobalStyle.tableData}>{item.request_remark || ""}</td>
+                                                </tr>
+                                            ))
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="text-center py-4">
