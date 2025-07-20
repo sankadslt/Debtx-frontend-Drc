@@ -371,10 +371,10 @@ const Cus_Nego_Customer_Negotiation = () => {
    const roId = initialFormData.roId;
    //console.log("Form data ro id :",  roId);
    const arrearsAmount = caseDetails.current_arrears_amount;
-
-  const createddate = caseDetails.drc[0].created_dtm;
-  const expiredate = caseDetails.drc[0].expire_dtm;
-   const drcname = caseDetails.drc[0].drc_name;
+  //console.log("casedetails in submit:", caseDetails.drc);
+  const createddate = caseDetails.drc?.created_dtm;
+  const expiredate = caseDetails.drc?.expire_dtm;
+   const drcname = caseDetails.drc?.drc_name;
    const status = caseDetails.case_current_status;
    const createdby =  userid; // Get the user ID from userData
  // console.log("Form data user id :",  createdby , "ro id :", roId, "drc id :", 
@@ -465,7 +465,10 @@ const Cus_Nego_Customer_Negotiation = () => {
           ? selectedRORequests.intraction_id
           : "",
         [name]: value,
+
+        
       }));
+
     } else if (name === "month") {
       const monthValue = parseInt(value, 10);
       if (monthValue >= 1 && monthValue <= 3) {
@@ -482,6 +485,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         [name]: value,
       }));
     }
+    console.log("Form Data changed:", formData);
   };
 
   //load response history data
