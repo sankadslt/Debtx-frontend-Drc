@@ -402,7 +402,7 @@ const Cus_Nego_Customer_Negotiation = () => {
          initial_amount: formData.ini_amount,
          calender_month: formData.month,
          settlement_remark: formData.settlement_remark,
-         //region
+         region: caseDetails.region ,
          created_by: createdby,
       }
 
@@ -418,14 +418,22 @@ const Cus_Nego_Customer_Negotiation = () => {
       });
       setFormData(initialFormData);
     } catch (error) {
-         Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error?.response?.data?.message || error?.message || "An error occurred. Please try again.",
-        confirmButtonColor: "#d33",
-      });
-      return;
-    }
+  const backendData = error?.response?.data;
+  const resultMessage = backendData?.result?.message;
+  const resultReason = backendData?.result?.reason;
+  const finalMessage =
+    resultMessage && resultReason
+      ? `${resultMessage} - ${resultReason}`
+      : backendData?.message || error?.message || "An error occurred. Please try again.";
+
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: finalMessage,
+    confirmButtonColor: "#d33",
+  });
+  return;
+}
 
   }
 
@@ -1120,15 +1128,15 @@ const Cus_Nego_Customer_Negotiation = () => {
                   return (
                     <tr key={product.product_id || index} className={`${rowClass} border-b`}>
                       <td className={GlobalStyle.tableData}>
-                        {product.product_label || "N/A"}
+                        {product.Product_Label || ""}
                       </td>
-                      <td className={GlobalStyle.tableData}>{product.product_label || "N/A"}</td>
-                      <td className={GlobalStyle.tableData}>{product.service || "N/A"}</td>
+                      <td className={GlobalStyle.tableData}>{ ""}</td>  {/*  the account number feild should come here */}
+                      <td className={GlobalStyle.tableData}>{product.Service_Type || ""}</td>
                       <td className={GlobalStyle.tableData}>
-                        {product.product_ownership || "N/A"}
+                        {product.Equipment_Ownership || ""}
                       </td>
-                      <td className={GlobalStyle.tableData}>{product.rtom || "N/A"}</td>
-                      <td className={GlobalStyle.tableData}>{product.product_status || "N/A"}</td>
+                      <td className={GlobalStyle.tableData}>{product.RTOM || ""}</td>
+                      <td className={GlobalStyle.tableData}>{""}</td>
                       <td className={GlobalStyle.tableData}>
                         <img 
                           src={product.product_status === "Not Submit" ? editIcon : viewIcon} 
