@@ -266,7 +266,7 @@ export default function RO_DRCUserInfo() {
         </div>
       </div>
 
-      <div className="flex justify-end mt-6 px-4">
+      {/* <div className="flex justify-end mt-6 px-4">
         <button 
           className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
           onClick={handleEnd}
@@ -279,6 +279,40 @@ export default function RO_DRCUserInfo() {
       <div className="flex justify-start mt-6 mb-6 px-4">
         <button className={GlobalStyle.buttonPrimary} onClick={() => setShowPopup(true)}>
           Log History
+        </button>
+      </div> */}
+
+      {/* <div className="flex justify-between mt-6 mb-6 px-4 gap-4 flex-wrap">
+        <button 
+          className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
+          onClick={handleEnd}
+          disabled={isTerminated}
+        >
+          End
+        </button>
+
+        <button 
+          className={GlobalStyle.buttonPrimary} 
+          onClick={() => setShowPopup(true)}
+        >
+          Log History
+        </button>
+      </div> */}
+
+      <div className="flex justify-between items-center mt-6 mb-6 px-4">
+        <button 
+          className={GlobalStyle.buttonPrimary} 
+          onClick={() => setShowPopup(true)}
+        >
+          Log History
+        </button>
+
+        <button 
+          className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
+          onClick={handleEnd}
+          disabled={isTerminated}
+        >
+          End
         </button>
       </div>
 
