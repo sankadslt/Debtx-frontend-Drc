@@ -732,7 +732,7 @@ const MediationBoardResponse = () => {
 
         const mediationbordhistory = historyTables.mediation_board
           ? historyTables.mediation_board.map((media_board) => ({
-            callingdate: media_board.mediation_board_calling_dtm,
+            callingdate: media_board.mediation_board_calling_dtm || "",
             createdDtm: media_board.created_dtm,
             customerrep: media_board.customer_available,
             agreetosettle: media_board.agree_to_settle || "",
@@ -1333,10 +1333,10 @@ const MediationBoardResponse = () => {
                       }
                     >
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.callingdate).toLocaleDateString("en-GB")}
+                        {new Date(entry.callingdate).toLocaleDateString("en-GB") || " "} 
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
+                        {new Date(entry.createdDtm).toLocaleDateString("en-GB") || " "}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {entry.customerrep}
