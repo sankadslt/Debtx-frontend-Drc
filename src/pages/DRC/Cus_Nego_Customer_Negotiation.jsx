@@ -178,13 +178,13 @@ const Cus_Nego_Customer_Negotiation = () => {
     roId: roId || null,
     requestId: null,
     intractionId: null, // Use intractionId instead of intraction_id
-
+   
     request: null,
     request_remark: null,
     intraction_id: null, // Use intraction_id instead of intractionId
     todo: null,
     completed: null,
-    reason_id: "", // Use reason_id instead of reasonId
+    reasonId: null, // Use reasonId instead of reason_id
     ref_products: [],
   };
   const [formData, setFormData] = useState(initialFormData);
@@ -393,6 +393,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         drc_id: DRC_ID,
         ro_id: roId,
         // ro_name : cant pass 
+        Field_reason_ID : formData.reasonId, // Use reasonId instead of reason_id
         drc: drcname,
         expire_dtm: expiredate,
         created_dtm: createddate,
