@@ -726,7 +726,7 @@ const MediationBoardResponse = () => {
             field_reason: ro_request.ro_request,
             remark: ro_request.request_remark ? ro_request.request_remark : "",
           }))
-          .reverse() // Reverse the order to show latest first
+            .reverse() // Reverse the order to show latest first
           : [];
         setLastRoRequests(lastRequests);
 
@@ -738,7 +738,7 @@ const MediationBoardResponse = () => {
             agreetosettle: media_board.agree_to_settle || "",
             remark: media_board.comment ? media_board.comment : "",
           }))
-          .reverse() // Reverse the order to show latest first
+            .reverse() // Reverse the order to show latest first
           : [];
         setMediationBoardHistory(mediationbordhistory);
 
@@ -808,73 +808,73 @@ const MediationBoardResponse = () => {
             <strong>Mediation Board Form </strong>
           </h2>
           <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
-  <table className="w-full table-auto">
-    <tbody>
-      <tr>
-        <td className="font-semibold w-48 align-top">Calling Round</td>
-        <td className="px-4 font-semibold align-top">:</td>
-        <td className="text-gray-700">{caseDetails.callingRound}</td>
-      </tr>
+            <table className="w-full table-auto">
+              <tbody>
+                <tr>
+                  <td className="font-semibold w-48 align-top">Calling Round</td>
+                  <td className="px-4 font-semibold align-top">:</td>
+                  <td className="text-gray-700">{caseDetails.callingRound}</td>
+                </tr>
 
-      {caseDetails.callingRound >= 3 && (
-        <tr>
-          <td className="font-semibold w-48 align-top">Handover Non-Settlement</td>
-          <td className="px-4 font-semibold align-top">:</td>
-          <td>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="handoverNonSettlement"
-                  value="Yes"
-                  checked={handoverNonSettlement === "Yes"}
-                  onChange={handleHandoverChange}
-                  className="mr-2"
-                  aria-label="Yes for handover non-settlement"
-                />
-                Yes
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="handoverNonSettlement"
-                  value="No"
-                  checked={handoverNonSettlement === "No"}
-                  onChange={handleHandoverChange}
-                  className="mr-2"
-                  aria-label="No for handover non-settlement"
-                />
-                No
-              </label>
-            </div>
-          </td>
-        </tr>
-      )}
+                {caseDetails.callingRound >= 3 && (
+                  <tr>
+                    <td className="font-semibold w-48 align-top">Handover Non-Settlement</td>
+                    <td className="px-4 font-semibold align-top">:</td>
+                    <td>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="handoverNonSettlement"
+                            value="Yes"
+                            checked={handoverNonSettlement === "Yes"}
+                            onChange={handleHandoverChange}
+                            className="mr-2"
+                            aria-label="Yes for handover non-settlement"
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="handoverNonSettlement"
+                            value="No"
+                            checked={handoverNonSettlement === "No"}
+                            onChange={handleHandoverChange}
+                            className="mr-2"
+                            aria-label="No for handover non-settlement"
+                          />
+                          No
+                        </label>
+                      </div>
+                    </td>
+                  </tr>
+                )}
 
-      {(caseDetails.callingRound < 3 ||
-        (caseDetails.callingRound >= 3 &&
-          handoverNonSettlement === "No")) && (
-        <tr>
-          <td className="font-semibold w-48 align-top">Next Calling Date</td>
-          <td className="px-4 font-semibold align-top">:</td>
-          <td>
-            <input
-              type="date"
-              value={nextCallingDate}
-              onChange={handleNextCallingDateChange}
-              className="p-2 border rounded-md w-full max-w-xs"
-              disabled={
-                caseDetails.callingRound >= 3 &&
-                handoverNonSettlement === "Yes"
-              }
-              aria-label="Next calling date"
-            />
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+                {(caseDetails.callingRound < 3 ||
+                  (caseDetails.callingRound >= 3 &&
+                    handoverNonSettlement === "No")) && (
+                    <tr>
+                      <td className="font-semibold w-48 align-top">Next Calling Date</td>
+                      <td className="px-4 font-semibold align-top">:</td>
+                      <td>
+                        <input
+                          type="date"
+                          value={nextCallingDate}
+                          onChange={handleNextCallingDateChange}
+                          className="p-2 border rounded-md w-full max-w-xs"
+                          disabled={
+                            caseDetails.callingRound >= 3 &&
+                            handoverNonSettlement === "Yes"
+                          }
+                          aria-label="Next calling date"
+                        />
+                      </td>
+                    </tr>
+                  )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Main Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -1333,10 +1333,14 @@ const MediationBoardResponse = () => {
                       }
                     >
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.callingdate).toLocaleDateString("en-GB") || " "} 
+                        {entry.callingdate
+                          ? new Date(entry.callingdate).toLocaleDateString("en-GB")
+                          : ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.createdDtm).toLocaleDateString("en-GB") || " "}
+                        {entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {entry.customerrep}
@@ -1419,7 +1423,9 @@ const MediationBoardResponse = () => {
                       }
                     >
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
+                       { entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
                       </td>
                       <td className={GlobalStyle.tableCurrency}>
                         {entry.paid_amount}
@@ -1498,7 +1504,9 @@ const MediationBoardResponse = () => {
                       }
                     >
                       <td className={GlobalStyle.tableData}>
-                        {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
+                        {entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
                       </td>
                       <td className={GlobalStyle.tableData}>
                         {entry.field_reason}
