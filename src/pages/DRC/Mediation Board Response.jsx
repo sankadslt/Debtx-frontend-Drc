@@ -161,6 +161,7 @@ const MediationBoardResponse = () => {
     comment: "",
     requestcomment: "",
     failComment: "",
+    nonsettlementcomment: "",
     settle: "",
     failReason: "",
     nextCallingDate: "",
@@ -287,7 +288,7 @@ const MediationBoardResponse = () => {
         const callingRound = casedetails.callingRound;
         console.log("Calling Round:", callingRound);
 
-        console.log("Data fetched:", data);
+        console.log("Data fetched here:", data);
         
         setCaseDetails({
           caseId: data[0].case_id || "",
@@ -303,6 +304,8 @@ const MediationBoardResponse = () => {
           console.log("History Tables:", historyTables);
         setFailReasons(failReasonsList || []);
         setRoRequests(roRequestsList || []);
+        console.log("RO Requests:", roRequestsList);
+
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching case details:", error);
@@ -484,7 +487,7 @@ const MediationBoardResponse = () => {
     // Adjust validation based on handover status
     if (caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
-      if (!formData.comment.trim()) {
+      if (!formData.nonsettlementcomment.trim()) {
         Swal.fire({
           icon: "warning",
           title: "Warning",
@@ -521,6 +524,8 @@ const MediationBoardResponse = () => {
         request_type : formData.request,
         request_comment : formData.requestcomment,
         handed_over_non_settlement: handoverNonSettlement,
+        non_settlement_comment: formData.nonsettlementcomment,
+        fail_reason_comment: formData.failComment,
         intraction_id : formData.interactionId,
         comment : formData.comment,
         settle : formData.settle,
@@ -624,6 +629,8 @@ const MediationBoardResponse = () => {
         request_type : formData.request,
         request_comment : formData.requestcomment,
         handed_over_non_settlement: handoverNonSettlement,
+        non_settlement_comment: formData.nonsettlementcomment,
+        fail_reason_comment: formData.failComment,
         intraction_id : formData.interactionId,
         comment : formData.comment,
         settle : formData.settle,
@@ -690,20 +697,20 @@ const MediationBoardResponse = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
-        <h2 className="text-lg font-bold mb-2">Error</h2>
-        <p>{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
+  //       <h2 className="text-lg font-bold mb-2">Error</h2>
+  //       <p>{error}</p>
+  //       <button
+  //         onClick={() => window.location.reload()}
+  //         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+  //       >
+  //         Retry
+  //       </button>
+  //     </div>
+  //   );
+  // }
 
    const handleBack = () => {
     navigate ("/drc/mediation-board-case-list") ; // Go back to the previous page
@@ -1156,12 +1163,12 @@ const MediationBoardResponse = () => {
                 <div className="flex">
                   <span className="w-48 font-semibold">Non-settlement comment:</span>
                   <textarea
-                    name="comment"
-                    value={formData.comment}
+                    name="nonsettlementcomment"
+                    value={formData.nonsettlementcomment}
                     onChange={handleInputChange}
                     className={GlobalStyle.remark}
                     rows="5"
-                    aria-label="Comment"
+                    aria-label="Non-settlement comment"
                   />
                 </div>
               )}
