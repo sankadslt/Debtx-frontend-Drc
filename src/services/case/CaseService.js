@@ -646,7 +646,7 @@ export const getActiveRORequestsforNegotiationandMediation = async (
     const activeRORequests = data.map((requests) => ({
       ro_request_id: requests.ro_request_id,
       request_description: requests.request_description,
-      intraction_id: requests.Intraction_ID,
+      intraction_id: requests.intraction_id,
     }));
 
     return activeRORequests;

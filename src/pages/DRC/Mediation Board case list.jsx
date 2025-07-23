@@ -540,14 +540,14 @@ export default function MediationBoardCaselist() {
           style={{ color: filters.status === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Status</option>
-          <option value="Forward_to_Mediation_Board" style={{ color: "black" }}>Forward to Mediation Board</option>
-          <option value="MB_fail_with_pending_non_settlement" style={{ color: "black" }}>MB Fail with Pending non Settlement</option>
-          <option value="MB_Handed_Customer_Info" style={{ color: "black" }}>MB Handed Customer Info</option>
-          <option value="MB_Negotiation" style={{ color: "black" }}>MB Negotiation</option>
-          <option value="MB_Request_Customer_Info" style={{ color: "black" }}>MB Request Customer Info</option>
-          <option value="MB_Settle_Active" style={{ color: "black" }}>MB Settle Active</option>
-          <option value="MB_Settle_open_pending" style={{ color: "black" }}>MB Settle Open Pending</option>
-          <option value="MB_Settle_pending" style={{ color: "black" }}>MB Settle Pending</option>
+          <option value="Forward to Mediation Board" style={{ color: "black" }}>Forward to Mediation Board</option>
+          <option value="MB fail with pending non settlement" style={{ color: "black" }}>MB Fail with Pending non Settlement</option>
+          <option value="MB Handed Customer Info" style={{ color: "black" }}>MB Handed Customer Info</option>
+          <option value="MB Negotiation" style={{ color: "black" }}>MB Negotiation</option>
+          <option value="MB Request Customer Info" style={{ color: "black" }}>MB Request Customer Info</option>
+          <option value="MB Settle Active" style={{ color: "black" }}>MB Settle Active</option>
+          <option value="MB Settle Open Pending" style={{ color: "black" }}>MB Settle Open Pending</option>
+          <option value="MB Settle Pending" style={{ color: "black" }}>MB Settle Pending</option>
         </select>
 
         <label className={GlobalStyle.dataPickerDate}>Date:</label>

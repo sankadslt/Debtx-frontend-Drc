@@ -178,13 +178,13 @@ const Cus_Nego_Customer_Negotiation = () => {
     roId: roId || null,
     requestId: null,
     intractionId: null, // Use intractionId instead of intraction_id
-
+   
     request: null,
     request_remark: null,
     intraction_id: null, // Use intraction_id instead of intractionId
     todo: null,
     completed: null,
-    reason_id: "", // Use reason_id instead of reasonId
+    reasonId: null, // Use reasonId instead of reason_id
     ref_products: [],
   };
   const [formData, setFormData] = useState(initialFormData);
@@ -393,6 +393,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         drc_id: DRC_ID,
         ro_id: roId,
         // ro_name : cant pass 
+        Field_reason_ID : formData.reasonId, // Use reasonId instead of reason_id
         drc: drcname,
         expire_dtm: expiredate,
         created_dtm: createddate,
@@ -505,17 +506,19 @@ const Cus_Nego_Customer_Negotiation = () => {
           ? caseDetails.ro_requests.map((ro_request) => ({
             createdDtm: ro_request.created_dtm,
             field_reason: ro_request.ro_request,
-            remark: ro_request.ro_request_remark ? ro_request.ro_request_remark : "",
+            remark: ro_request.request_remark ? ro_request.request_remark : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastRoRequests(lastRequests);
 
         const lastNagotiation = caseDetails.ro_negotiation
           ? caseDetails.ro_negotiation.map((ro_nago) => ({
             createdDtm: ro_nago.created_dtm,
-            field_reason: ro_nago.feild_reason,
-            remark: ro_nago.remark ? ro_nago.remark : "",
+            field_reason: ro_nago.field_reason,
+            remark: ro_nago.negotiation_remark ? ro_nago.negotiation_remark : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastRONagotiation(lastNagotiation);
 
@@ -525,6 +528,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             paid_amount: ro_payment.payment,
             settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastROPayment(lastPayment);
 
