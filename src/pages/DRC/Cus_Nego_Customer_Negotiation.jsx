@@ -506,17 +506,19 @@ const Cus_Nego_Customer_Negotiation = () => {
           ? caseDetails.ro_requests.map((ro_request) => ({
             createdDtm: ro_request.created_dtm,
             field_reason: ro_request.ro_request,
-            remark: ro_request.ro_request_remark ? ro_request.ro_request_remark : "",
+            remark: ro_request.request_remark ? ro_request.request_remark : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastRoRequests(lastRequests);
 
         const lastNagotiation = caseDetails.ro_negotiation
           ? caseDetails.ro_negotiation.map((ro_nago) => ({
             createdDtm: ro_nago.created_dtm,
-            field_reason: ro_nago.feild_reason,
-            remark: ro_nago.remark ? ro_nago.remark : "",
+            field_reason: ro_nago.field_reason,
+            remark: ro_nago.negotiation_remark ? ro_nago.negotiation_remark : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastRONagotiation(lastNagotiation);
 
@@ -526,6 +528,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             paid_amount: ro_payment.payment,
             settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced : "",
           }))
+          .reverse() // Reverse the order to show the latest first
           : [];
         setLastROPayment(lastPayment);
 
