@@ -14,6 +14,7 @@ Notes: The following page conatins the code for both the UI's */
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
@@ -405,13 +406,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentNegotiationPage + 1} of {pagesNegotiationDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("next")} disabled={currentNegotiationPage === pagesNegotiationDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleNegotiationPageChange("next")} disabled={currentNegotiationPage === pagesNegotiationDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -457,13 +458,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("prev")} disabled={currentSettlementPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleSettlementPageChange("prev")} disabled={currentSettlementPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentSettlementPage + 1} of {pagesSettlementDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("next")} disabled={currentSettlementPage === pagesSettlementDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleSettlementPageChange("next")} disabled={currentSettlementPage === pagesSettlementDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -523,13 +524,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handlePaymentPageChange("prev")} disabled={currentPaymentPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handlePaymentPageChange("prev")} disabled={currentPaymentPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentPaymentPage + 1} of {pagesPaymentDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handlePaymentPageChange("next")} disabled={currentPaymentPage === pagesPaymentDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handlePaymentPageChange("next")} disabled={currentPaymentPage === pagesPaymentDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -574,13 +575,13 @@ export default function RO_Monitoring_CPE() {
                             </table>
                         </div>
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleRequestPageChange("prev")} disabled={currentRequestPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleRequestPageChange("prev")} disabled={currentRequestPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentRequestPage + 1} of {pagesRequestDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleRequestPageChange("next")} disabled={currentRequestPage === pagesRequestDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleRequestPageChange("next")} disabled={currentRequestPage === pagesRequestDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
