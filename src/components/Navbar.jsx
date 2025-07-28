@@ -375,18 +375,18 @@ const Navbar = () => {
     name: "Guest",
     role: "Visitor",
     profileOptions: [
-      {
-        id: 1,
-        label: "Profile",
-        icon: <FaUser />,
-        onClick: () => alert("Profile Clicked"),
-      },
-      {
-        id: 2,
-        label: "Settings & Privacy",
-        icon: <FaCog />,
-        onClick: () => alert("Settings Clicked"),
-      },
+      // {
+      //   id: 1,
+      //   label: "Profile",
+      //   icon: <FaUser />,
+      //   onClick: () => alert("Profile Clicked"),
+      // },
+      // {
+      //   id: 2,
+      //   label: "Settings & Privacy",
+      //   icon: <FaCog />,
+      //   onClick: () => alert("Settings Clicked"),
+      // },
       {
         id: 3,
         label: "Log Out",
@@ -565,7 +565,7 @@ const Navbar = () => {
           )}
         </div>
 
-        <FaCog className="w-6 h-6 text-blue-500 bg-white rounded-full p-1 shadow-md cursor-pointer" />
+       {/* <FaCog className="w-6 h-6 text-blue-500 bg-white rounded-full p-1 shadow-md cursor-pointer" /> */}
         <div className="relative" ref={dropdownRef}>
           <div
             className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer"

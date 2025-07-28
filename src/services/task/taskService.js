@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getUserData } from "../auth/authService";
+import { getLoggedUserId } from "../auth/authService";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL; 
 const TASK_URL = `${BASE_URL}/task`;
@@ -151,3 +152,26 @@ export const Task_for_Download_Incidents = async (incidentData) => {
         throw error.response?.data || error; 
       }
   }
+
+  export const Create_Task_Assigned_Case_for_DRC = async (filteredParams) => {
+    try {
+      // const user = await getUserData();
+      const user = await getLoggedUserId();
+  
+      const taskData = {
+        Template_Task_Id: 34,
+        task_type: "Create Task for Download Assign Case List For DRC",
+        Created_By: user.user_id,
+        task_status: "open",
+        Incident_Status: "Assign Case for DRC",
+        filteredParams: { ...filteredParams }
+      };
+      console.log("Task Data:", taskData); 
+  
+      const response = await axios.post(`${TASK_URL}/Create_Task`, taskData);
+      return response; 
+    } catch (error) {
+      console.error("Error creating task:", error.response?.data || error.message);
+      throw error.response?.data || error; 
+    }
+  };

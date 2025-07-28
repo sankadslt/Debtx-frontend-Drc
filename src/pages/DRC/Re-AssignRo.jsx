@@ -3,6 +3,7 @@ Created Date: 2025-01-07
 Created By: Sanjaya (sanjayaperera80@gmail.com)
 Last Modified Date: 2025-02-19
 Modified by: Nimesh Perera(nimeshmathew999@gmail.com), Sasindu srinayaka(sasindusrinayaka@gmail.com)
+Modified By: Janani Kumarasiri (jkktg001@gmail.com)
 Version: node 20
 ui number : 2.5
 Dependencies: tailwind css
@@ -10,19 +11,20 @@ Related Files: (routes)
 Notes: The following page conatins the code for the Re-Assign RO  */
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { assignROToCase, fetchBehaviorsOfCaseDuringDRC, updateLastRoDetails } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
-  const { case_id } = useParams();
+  const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // State to manage case details
   const [caseDetails, setCaseDetails] = useState({
@@ -33,49 +35,25 @@ export default function Re_AssignRo() {
     lastPaymentDate: "",
   });
 
+  const [caseRTOM, setCaseRTOM] = useState("");
+
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
   const [settlementDetails, setSettlementDetails] = useState([]);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const rowsPerPage = 5;
+  const [currentNegotiationPage, setCurrentNegotiationPage] = useState(0);
+  const [currentSettlementPage, setCurrentSettlementPage] = useState(0);
 
   // State for managing the remark text area value
   const [textareaValue, setTextareaValue] = useState("");
-
-  // const loadUser = async () => {
-  //   let token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     setUserData(null);
-  //     return;
-  //   }
-
-  //   try {
-  //     let decoded = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     if (decoded.exp < currentTime) {
-  //       token = await refreshAccessToken();
-  //       if (!token) return;
-  //       decoded = jwtDecode(token);
-  //     }
-
-  //     setUserData({
-  //       id: decoded.user_id,
-  //       role: decoded.role,
-  //       drc_id: decoded.drc_id,
-  //       ro_id: decoded.ro_id,
-  //     });
-  //   } catch (error) {
-  //     console.error("Invalid token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadUser();
-  // }, [localStorage.getItem("accessToken")]);
+  const case_id = location.state?.CaseID;
+  // console.log("caseid", case_id);
 
   const loadUser = async () => {
     const user = await getLoggedUserId();
     setUserData(user);
-    console.log("User data:", user);
+    // console.log("User data:", user);
   };
 
   useEffect(() => {
@@ -91,9 +69,10 @@ export default function Re_AssignRo() {
             case_id: Number(case_id),
           };
 
+          setIsLoading(true);
           const data = await fetchBehaviorsOfCaseDuringDRC(payload);
 
-          console.log("Data:", data);
+          // console.log("Data:", data);
 
           if (data && data.status !== "error") {
             const caseDetailsData = data.data.formattedCaseDetails;
@@ -111,70 +90,111 @@ export default function Re_AssignRo() {
               lastPaymentDate: last_payment_date || "",
             });
 
-            const negotiations = caseDetailsData.ro_negotiation || [];
+            console.log("Case RTOM: ", caseDetailsData.rtom);
+            setCaseRTOM(caseDetailsData.rtom || "");
+
+            const negotiations = caseDetailsData.ro_negotiation_re_assign_ro || [];
 
             setLastNegotiationDetails(
-              negotiations.map((negotiation) => ({
-                date: negotiation.created_dtm.split("T")[0], // Keep only the date
-                negotiation: negotiation.feild_reason,
-                remark: negotiation.remark,
+              (negotiations || []).map((negotiation) => ({
+                date: negotiation?.created_dtm
+                  ? negotiation.created_dtm.split("T")[0]
+                  : "N/A",
+                negotiation: negotiation?.field_reason || "N/A",
+                remark: negotiation?.remark || "N/A",
               }))
+              // negotiations.map((negotiation) => ({
+              //   date: negotiation.created_dtm.split("T")[0], // Keep only the date
+              //   negotiation: negotiation.feild_reason,
+              //   remark: negotiation.remark,
+              // }))
             );
 
-            const settlementDetailsData = data.data.settlementData;
+            setSettlementDetails(data.data.settlementData_ro_re_assign)
 
-            if (settlementDetailsData) {
-              setSettlementDetails([
-                {
-                  date: settlementDetailsData.created_dtm
-                    ? settlementDetailsData.created_dtm.split("T")[0]
-                    : "",
-                  status: settlementDetailsData.settlement_status || "",
-                  expiresOn: settlementDetailsData.expire_date
-                    ? settlementDetailsData.expire_date.split("T")[0]
-                    : "",
-                },
-              ]);
-            } else {
-              setSettlementDetails([]);
-            }
           } else {
-            console.error("Error in API response:", data?.message || "Unknown error");
+            // console.error("Error in API response:", data?.message || "Unknown error");
+            Swal.fire({
+              title: "Error",
+              text: "Error fetching case details.",
+              icon: "error",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+            })
           }
         }
       } catch (error) {
-        console.error("Error fetching case details:", error);
+        // console.error("Error fetching case details:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching case details.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
+      } finally {
+        setIsLoading(false);
       }
     };
 
     const fetchRecoveryOfficers = async () => {
       try {
-        if (userData?.drc_id) {
+        if (userData?.drc_id && caseRTOM) {
           const numericDrcId = Number(userData?.drc_id);
+
+          console.log("Case Rtom from recovery officer: ", caseRTOM);
+
+          setIsLoading(true);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
-    
+
           if (Array.isArray(officers)) {
             // Map recovery officers with ro_id and other details
             const formattedOfficers = officers.map((officer) => ({
               ro_id: officer.ro_id,
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
-            }));
-    
+            }))
+              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase()));
+
             setRecoveryOfficers(formattedOfficers);
-            console.log("Recovery Officers:", formattedOfficers);
+            // console.log("Recovery Officers:", formattedOfficers);
           } else {
-            console.error("Invalid response format:", officers);
+            // console.error("Invalid response format:", officers);
+
+            Swal.fire({
+              title: "Error",
+              text: "Error fetching recovery officers details.",
+              icon: "error",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+            })
             setRecoveryOfficers([]);
             setError("Failed to fetch recovery officers. Invalid response format.");
           }
         } else {
-          setError("DRC ID not found in URL.");
+          // setError("DRC ID not found in URL.");
         }
       } catch (error) {
-        console.error("Error fetching recovery officers:", error);
+        // console.error("Error fetching recovery officers:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Error fetching recovery officers details.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         setError("Failed to fetch recovery officers.");
         setRecoveryOfficers([]); // Set empty array to prevent further errors
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -182,14 +202,23 @@ export default function Re_AssignRo() {
       fetchData();
       fetchRecoveryOfficers();
     }
-  }, [userData, case_id]);
+  }, [userData, case_id, caseRTOM]);
 
   const handleTextarea = async (remark) => {
     try {
-      console.log("Data: ", case_id, userData?.drc_id, remark);
+      // console.log("Data: ", case_id, userData?.drc_id, remark);
       await updateLastRoDetails(case_id, userData?.drc_id, remark);
     } catch (error) {
-      console.error("Error in handleTextArea: ", error);
+      // console.error("Error in handleTextArea: ", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to update Last RO details.",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
+      })
       throw new Error("Failed to update Last RO details");
     }
   }
@@ -200,34 +229,79 @@ export default function Re_AssignRo() {
       // Ensure selectedRO is available (the value from the dropdown)
       const selectedRtom = selectedRO; // The selected RO name from the dropdown
       if (!selectedRtom) {
-        Swal.fire("Error", "No Recovery Officer selected!", "error");
+        // Swal.fire("Error", "No Recovery Officer selected!", "error");
+        Swal.fire({
+          title: "Error",
+          text: "No Recovery Officer selected!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
       // Find the corresponding Recovery Officer object from recoveryOfficers
       const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_name === selectedRtom);
       if (!selectedOfficer) {
-        Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+        // Swal.fire("Error", "Selected Recovery Officer not found!", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Selected Recovery Officer not found!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
       // Get the ro_id of the selected officer
       const ro_id = selectedOfficer.ro_id;
       if (!ro_id) {
-        Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+        // Swal.fire("Error", "Recovery Officer ID is missing.", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Recovery Officer ID is missing.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
       if (!textareaValue.trim()) {
-        Swal.fire("Error", "Last RO details are required!", "error");
+        // Swal.fire("Error", "Last RO details are required!", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Last RO details are required!",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
       try {
         await handleTextarea(textareaValue);
       } catch (error) {
-        console.error("Error in updating last ro details: ", error);
-        Swal.fire("Error", "Failed to update Last Ro details.", "error");
+        // console.error("Error in updating last ro details: ", error);
+        // Swal.fire("Error", "Failed to update Last Ro details.", "error");
+        Swal.fire({
+          title: "Error",
+          text: "Failed to update Last RO details.",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
@@ -246,26 +320,106 @@ export default function Re_AssignRo() {
 
       // Call the API to assign the cases with separate parameters (caseIds and roId)
       const response = await assignROToCase(assignmentPayload);
-      console.log("response: ", response);
+      // console.log("response: ", response);
 
       // Check if there are any failed cases
       if (response.details?.failed_cases?.length > 0) {
-        Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        // Swal.fire("Error", "The RTOM area does not match any RTOM area assigned to Recovery Officer", "error");
+        Swal.fire({
+          title: "Error",
+          text: "The RTOM area does not match any RTOM area assigned to Recovery Officer",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
         return;
       }
 
       if (response.status === 'success') {
-        Swal.fire("Success", "Cases assigned successfully!", "success");
+        // Swal.fire("Success", "Cases assigned successfully!", "success");
+        Swal.fire({
+          title: "Success",
+          text: "Cases assigned successfully!",
+          icon: "success",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#28a745",
+        })
         navigate(`/drc/assigned-ro-case-log`);
       } else {
-        Swal.fire("Error", response.message, "error");
+        // Swal.fire("Error", response.message, "error");
+        Swal.fire({
+          title: "Error",
+          text: "response.message",
+          icon: "error",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#d33",
+        })
       }
 
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
-      Swal.fire("Error", "An error occurred while assigning cases.", "error");
+      // console.error("Error in handleSubmit:", error);
+      // Swal.fire("Error", "An error occurred while assigning cases.", "error");
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while assigning cases.",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
+      })
     }
   };
+
+  // const NegotiationDetails = cusNegotiationData?.additionalData?.ro_negotiation || [];
+  const pagesNegotiationDetails = Math.ceil(lastNegotiationDetails.length / rowsPerPage);
+  const startIndexNegotiationDetails = currentNegotiationPage * rowsPerPage;
+  const endIndexNegotiationDetails = startIndexNegotiationDetails + rowsPerPage;
+  const dataInPageNegotiationDetails = lastNegotiationDetails.slice(startIndexNegotiationDetails, endIndexNegotiationDetails);
+
+  const handleNegotiationPageChange = (direction) => {
+    if (direction === "next") {
+      if (currentNegotiationPage < pagesNegotiationDetails - 1) {
+        setCurrentNegotiationPage(currentNegotiationPage + 1);
+      }
+    } else if (direction === "prev") {
+      if (currentNegotiationPage > 0) {
+        setCurrentNegotiationPage(currentNegotiationPage - 1);
+      }
+    }
+  };
+
+  // const SettlementDetails = cusNegotiationData?.settlementData || [];
+  const pagesSettlementDetails = Math.ceil(settlementDetails.length / rowsPerPage);
+  const startIndexSettlementDetails = currentSettlementPage * rowsPerPage;
+  const endIndexSettlementDetails = startIndexSettlementDetails + rowsPerPage;
+  const dataInPageSettlementDetails = settlementDetails.slice(startIndexSettlementDetails, endIndexSettlementDetails);
+
+  const handleSettlementPageChange = (direction) => {
+    if (direction === "next") {
+      if (currentSettlementPage < pagesSettlementDetails - 1) {
+        setCurrentSettlementPage(currentSettlementPage + 1);
+      }
+    } else if (direction === "prev") {
+      if (currentSettlementPage > 0) {
+        setCurrentSettlementPage(currentSettlementPage - 1);
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
@@ -273,36 +427,87 @@ export default function Re_AssignRo() {
         <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
       </div>
 
-      <div className={`${GlobalStyle.cardContainer || ""}`}>
-        {[
-          { label: "Case ID", value: caseDetails?.caseId },
-          { label: "Customer Ref", value: caseDetails?.customerRef },
-          { label: "Account No", value: caseDetails?.accountNo },
-          { label: "Arrears Amount", value: caseDetails?.arrearsAmount },
-          {
-            label: "Last Payment Date",
-            value: caseDetails?.lastPaymentDate
-              ? new Date(caseDetails.lastPaymentDate).toLocaleDateString("en-CA")
-              : "N/A"
-          },
-        ].map((item, index) => (
-          <p key={index} className="mb-2 flex items-center">
-            <strong className="w-40 text-left">{item.label}</strong>
-            <span className="w-6 text-center">:</span>
-            <span className="flex-1">{item.value || "N/A"}</span>
-          </p>
-        ))}
+      <div className="flex justify-center items-center mb-4">
+        <div className={`${GlobalStyle.cardContainer || ""}`}>
+          {[
+            { label: "Case ID", value: caseDetails?.caseId },
+            { label: "Customer Ref", value: caseDetails?.customerRef },
+            { label: "Account No", value: caseDetails?.accountNo },
+            { label: "Arrears Amount", value: caseDetails?.arrearsAmount },
+            {
+              label: "Last Payment Date",
+              value: caseDetails?.lastPaymentDate
+                ? new Date(caseDetails.lastPaymentDate).toLocaleDateString("en-CA")
+                : "N/A"
+            },
+          ].map((item, index) => (
+            <p key={index} className="mb-2 flex items-center">
+              <strong className="w-40 text-left">{item.label}</strong>
+              <span className="w-6 text-center">:</span>
+              <span className="flex-1">{item.value || "N/A"}</span>
+            </p>
+          ))}
+        </div>
       </div>
 
-      {/* remark box */}
-      <div className="mb-6 flex items-center space-x-6">
-        <label className={GlobalStyle.remarkTopic}>Last RO details</label>
-        <textarea
-          value={textareaValue}
-          onChange={(e) => setTextareaValue(e.target.value)}
-          className={`${GlobalStyle.remark}`}
-          rows="5"
-        ></textarea>
+      <div className="flex items-center justify-center mb-4 w-full">
+        <div className={`${GlobalStyle.cardContainer}`}>
+          {/* remark box */}
+          <div className="mb-6 items-center space-x-6">
+            <label className={GlobalStyle.remarkTopic}>Last RO details</label>
+            <div>
+              <textarea
+                value={textareaValue}
+                onChange={(e) => setTextareaValue(e.target.value)}
+                className={`${GlobalStyle.remark} w-full`}
+                rows="5"
+              ></textarea>
+            </div>
+          </div>
+
+          {/* dropdown */}
+          <div className="flex gap-10">
+            <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
+            <select
+              id="ro-select"
+              className={`${GlobalStyle.selectBox}`}
+              // style={{ width: "600px" }}
+              style={{ color: selectedRO === "" ? "gray" : "black" }}
+              value={selectedRO || ""}
+              onChange={(e) => {
+                const selectedName = e.target.value;
+                if (selectedName) {
+                  setSelectedRO(selectedName);
+                }
+              }}
+            >
+              <option value="" hidden>
+                Select RO
+              </option>
+              {recoveryOfficers && recoveryOfficers.length > 0 ? (
+                recoveryOfficers.map((officer, index) => {
+                  const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+                  const displayName = `${officer.ro_name} - ${rtomsNames}`;
+
+                  return (
+                    <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
+                      {displayName}
+                    </option>
+                  );
+                })
+              ) : (
+                <option value="" disabled>
+                  No officers available
+                </option>
+              )}
+            </select>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end items-center w-full mt-6">
+            <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
+          </div>
+        </div>
       </div>
 
       {/* Heading  */}
@@ -312,18 +517,18 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
                 <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Negotiation</th>
-                <th className={GlobalStyle.tableHeader}>Remark</th>
+                {/* <th className={GlobalStyle.tableHeader}>Remark</th> */}
               </tr>
             </thead>
             <tbody>
-              {lastNegotiationDetails.length > 0 ? (
-                lastNegotiationDetails
+              {dataInPageNegotiationDetails.length > 0 ? (
+                dataInPageNegotiationDetails
                   .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort latest first
                   .map((item, index) => (
                     <tr
@@ -334,14 +539,18 @@ export default function Re_AssignRo() {
                           : GlobalStyle.tableRowOdd
                       }
                     >
-                      <td className={GlobalStyle.tableData}>{item.date}</td>
+                      <td className={GlobalStyle.tableData}>
+                        {
+                          new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")
+                        }
+                      </td>
                       <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                      <td className={GlobalStyle.tableData}>{item.remark}</td>
+                      {/* <td className={GlobalStyle.tableData}>{item.remark}</td> */}
                     </tr>
                   ))
               ) : (
                 <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData}>
+                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                     No negotiation details available
                   </td>
                 </tr>
@@ -351,6 +560,18 @@ export default function Re_AssignRo() {
         </div>
       </div>
 
+      <div className={GlobalStyle.navButtonContainer}>
+        <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
+          <FaArrowLeft />
+        </button>
+        <span className="text-gray-700">
+          Page {currentNegotiationPage + 1} of {pagesNegotiationDetails}
+        </span>
+        <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("next")} disabled={currentNegotiationPage === pagesNegotiationDetails - 1}>
+          <FaArrowRight />
+        </button>
+      </div>
+
       {/* Settlement details section */}
       <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
         Settlement details :
@@ -358,18 +579,20 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>Date</th>
+                <th className={GlobalStyle.tableHeader}>Created Date</th>
                 <th className={GlobalStyle.tableHeader}>Status</th>
                 <th className={GlobalStyle.tableHeader}>Expires on</th>
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(settlementDetails) && settlementDetails.length > 0 ? (
-                settlementDetails.map((item, index) => (
+              {Array.isArray(dataInPageSettlementDetails) && dataInPageSettlementDetails.length > 0 ? (
+                dataInPageSettlementDetails
+                .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                .map((item, index) => (
                   <tr
                     key={index}
                     className={
@@ -378,14 +601,28 @@ export default function Re_AssignRo() {
                         : GlobalStyle.tableRowOdd
                     }
                   >
-                    <td className={GlobalStyle.tableData}>{item.date}</td>
-                    <td className={GlobalStyle.tableData}>{item.status}</td>
-                    <td className={GlobalStyle.tableData}>{item.expiresOn}</td>
+                    <td className={GlobalStyle.tableData}>
+                      {item?.created_dtm &&
+                        new Date(item.created_dtm).toLocaleString("en-GB", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })}
+                    </td>
+                    <td className={GlobalStyle.tableData}>{item.settlement_status}</td>
+                    <td className={GlobalStyle.tableData}>
+                      {item?.expire_date &&
+                        new Date(item.expire_date).toLocaleString("en-GB", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData}>
+                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                     No settlement details available
                   </td>
                 </tr>
@@ -395,13 +632,26 @@ export default function Re_AssignRo() {
         </div>
       </div>
 
+      <div className={GlobalStyle.navButtonContainer}>
+        <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("prev")} disabled={currentSettlementPage === 0}>
+          <FaArrowLeft />
+        </button>
+        <span className="text-gray-700">
+          Page {currentSettlementPage + 1} of {pagesSettlementDetails}
+        </span>
+        <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("next")} disabled={currentSettlementPage === pagesSettlementDetails - 1}>
+          <FaArrowRight />
+        </button>
+      </div>
+
       {/* dropdown */}
-      <div className="flex gap-10">
+      {/* <div className="flex gap-10">
         <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
         <select
           id="ro-select"
           className={`${GlobalStyle.selectBox}`}
-          style={{ width: "600px" }}
+          // style={{ width: "600px" }}
+          style={{ color: selectedRO === "" ? "gray" : "black" }}
           value={selectedRO || ""}
           onChange={(e) => {
             const selectedName = e.target.value;
@@ -410,7 +660,7 @@ export default function Re_AssignRo() {
             }
           }}
         >
-          <option value="" disabled>
+          <option value="" hidden>
             Select RO
           </option>
           {recoveryOfficers && recoveryOfficers.length > 0 ? (
@@ -430,17 +680,17 @@ export default function Re_AssignRo() {
             </option>
           )}
         </select>
-      </div>
+      </div> */}
 
       {/* Submit Button */}
-      <div className="flex justify-end items-center w-full mt-6">
+      {/* <div className="flex justify-end items-center w-full mt-6">
         <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
-      </div>
+      </div> */}
       <button
-        onClick={() => navigate(-1)}
-        className={`${GlobalStyle.navButton} `}
+        onClick={() => navigate("/drc/assigned-ro-case-log")}
+        className={`${GlobalStyle.buttonPrimary} `}
       >
-        <FaArrowLeft />Go Back
+        <FaArrowLeft className="mr-2" />
       </button>
     </div>
   );

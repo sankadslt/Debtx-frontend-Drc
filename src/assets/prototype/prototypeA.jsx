@@ -18,6 +18,12 @@ const PrototypeA = () => {
         <button className={GlobalStyle.buttonPrimary}>Submit</button>
       </div>
       <br />
+      {/* remove button */}
+      <div className="flex gap-4">
+        <h1>Remove</h1>
+        <button className={GlobalStyle.buttonRemove}>Remove</button>
+      </div>
+      <br />
       {/* textbox */}
       <div className="flex gap-4">
         <h1>Textbox</h1>

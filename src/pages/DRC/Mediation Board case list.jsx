@@ -21,7 +21,7 @@ import { ListALLMediationCasesownnedbyDRCRO } from "../../services/case/CaseServ
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import edit from "../../assets/images/mediationBoard/edit.png";
-import {  getLoggedUserId } from "../../services/auth/authService.js";
+import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
 import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
@@ -32,6 +32,10 @@ import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Requ
 import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
 import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
 import MB_Settle_pending from "../../assets/images/mediationBoard/MB_Settle_pending.png";
+
+import { jwtDecode } from "jwt-decode";
+import { refreshAccessToken } from "../../services/auth/authService";
+import { Tooltip } from "react-tooltip";
 
 // Status icon mapping
 const STATUS_ICONS = {
@@ -72,20 +76,23 @@ const STATUS_ICONS = {
 // Status Icon component with tooltip
 const StatusIcon = ({ status }) => {
   const statusInfo = STATUS_ICONS[status];
-  
+  const tooltipId = `tooltip-${status.replace(/\s+/g, '-')}`;
   if (!statusInfo) return <span>{status}</span>;
 
   return (
     <div className="relative group">
-      <img 
-        src={statusInfo.icon} 
+      <img
+        src={statusInfo.icon}
         alt={status}
-        className="w-6 h-6 cursor-help"
+        data-tooltip-id={tooltipId}
+        data-tooltip-content={statusInfo.tooltip}
+
+        className="w-6 h-6 "
       />
-      <div className="absolute invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 left-1/2 transform -translate-x-1/2 bottom-full mb-1 whitespace-nowrap z-10">
+      {/* <div className="absolute invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 left-1/2 transform -translate-x-1/2 bottom-full mb-1 whitespace-nowrap z-10">
         {statusInfo.tooltip}
         <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-gray-800 rotate-45"></div>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -108,6 +115,7 @@ export default function MediationBoardCaselist() {
     status: "",
   });
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
+   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
 
   const rowsPerPage = 7;
 
@@ -157,7 +165,30 @@ export default function MediationBoardCaselist() {
   // useEffect(() => {
   //   loadUser();
   // }, [localStorage.getItem("accessToken")]);
-  
+
+
+   // Role-Based Buttons
+   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }, []);
 
   const loadUser = async () => {
     const user = await getLoggedUserId();
@@ -186,8 +217,8 @@ export default function MediationBoardCaselist() {
 
     fetchRTOMs();
   }, [userData?.drc_id, userData?.ro_id]); // Only depend on userData
-  
-  // Date handlers
+
+  /* // Date handlers
   const handleFromDateChange = (date) => {
     if (toDate && date > toDate) {
       setError("The 'From' date cannot be later than the 'To' date.");
@@ -206,6 +237,87 @@ export default function MediationBoardCaselist() {
       setError("");
       setToDate(date);
     }
+  }; */
+
+
+  const handlefromdatechange = (date) => {
+    if (date === null) {
+      setFromDate(null);
+      return;
+    }
+
+    if (toDate) {
+
+      if (date > toDate) {
+
+        Swal.fire({
+          title: "Warning",
+          text: "The 'From' date cannot be later than the 'To' date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
+        });
+        return;
+      } else {
+        checkdatediffrence(date, toDate);
+        setFromDate(date);
+      }
+
+    } else {
+
+      setFromDate(date);
+
+    }
+
+
+  };
+  const handletodatechange = (date) => {
+    if (date === null) {
+      setToDate(null);
+      return;
+    }
+
+    if (fromDate) {
+      if (date < fromDate) {
+        Swal.fire({
+          title: "Warning",
+          text: "The 'To' date cannot be before the 'From' date.",
+          icon: "warning",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#f1c40f"
+        });
+        return;
+      } else {
+        checkdatediffrence(fromDate, date);
+        setToDate(date);
+      }
+    } else {
+      setToDate(date);
+    }
+  };
+
+
+  const checkdatediffrence = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const diffInMs = end - start;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30;
+
+    if (diffInMonths > 1) {
+      Swal.fire({
+        title: "Date Range Exceeded",
+        text: "The selected dates have more than a 1-month gap.",
+        icon: "warning",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#f1c40f"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setToDate(null);
+         // console.log("Dates cleared");
+        }
+      });
+    }
   };
 
   // Filter handlers
@@ -219,71 +331,146 @@ export default function MediationBoardCaselist() {
   };
 
   // Fetch cases data
-const fetchCases = async () => {
-  try {
-    // Check if required filters are set
-    const hasActiveFilters =
-      filters.rtom ||
-      filters.action_type ||
-      filters.status ||
-      fromDate ||
-      toDate;
+  const fetchCases = async () => {
+    try {
+      /* // Check if required filters are set
+      const hasActiveFilters =
+        filters.rtom ||
+        filters.action_type ||
+        filters.status ||
+        fromDate ||
+        toDate;
+  
+      if (!hasActiveFilters) {
+        setError("Please set at least one filter before searching.");
+        return;
+      } */
 
-    if (!hasActiveFilters) {
-      setError("Please set at least one filter before searching.");
-      return;
+
+      setCases([]); // Clear previous results
+
+      /*  // Format the date to 'YYYY-MM-DD' format
+       const formatDate = (date) => {
+         if (!date) return null;
+         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+         return offsetDate.toISOString().split('T')[0];
+       }; */
+
+      if (!filters.rtom && !filters.action_type && !filters.status && !fromDate && !toDate) {
+        Swal.fire({
+          title: "Warning",
+          text: "No filter data is selected. Please, select data.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonColor: "#f1c40f"
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      };
+
+      if ((fromDate && !toDate) || (!fromDate && toDate)) {
+        Swal.fire({
+          title: "Warning",
+          text: "Both From Date and To Date must be selected.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          cancelButtonColor:"#f1c40f"
+        });
+        setToDate(null);
+        setFromDate(null);
+        return;
+      }
+
+
+
+
+
+
+
+
+
+
+
+      // Check if userData is available
+      if (!userData) {
+        setError("User data is not available. Please refresh the page or log in again.");
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      const payload = {
+        // Use Number() to ensure these are numbers and not strings
+        drc_id: userData.drc_id,
+        ro_id: userData.ro_id, // Fixed: was using drc_id instead of ro_id
+        
+        ...(filters.rtom && { rtom: filters.rtom }),
+        ...(filters.action_type && { action_type: filters.action_type }),
+        ...(filters.status && { status: filters.status }),
+        ...(fromDate && { from_date: fromDate.toISOString() }),
+        ...(toDate && { to_date: toDate.toISOString() }),
+      };
+
+      console.log("Sending payload to fetch cases:", payload);
+
+      const data = await ListALLMediationCasesownnedbyDRCRO(payload);
+      console.log("Cases data received:", data);
+
+      setCases(Array.isArray(data) ? data : []);
+      setCurrentPage(0);
+      setHasInitialFetch(true);
+    } catch (error) {
+      console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+      setError(error.message || "Failed to fetch cases. Please try again.");
+      setCases([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Check if userData is available
+  const handleFilterClick = () => {
     if (!userData) {
       setError("User data is not available. Please refresh the page or log in again.");
       return;
     }
 
-    setLoading(true);
+    if (!userData.drc_id && !userData.ro_id) {
+      setError("DRC ID or RO ID is required");
+      return;
+    }
+
+    fetchCases();
+
+    
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      rtom: "",
+      action_type: "",
+      status: "",
+    });
+    setFromDate(null);
+    setToDate(null);
+    setSearchQuery("");
     setError("");
-
-    const payload = {
-      // Use Number() to ensure these are numbers and not strings
-      drc_id: Number(userData.drc_id),
-      ro_id: Number(userData.ro_id), // Fixed: was using drc_id instead of ro_id
-      ...(filters.rtom && { rtom: filters.rtom }),
-      ...(filters.action_type && { action_type: filters.action_type }),
-      ...(filters.status && { case_current_status: filters.status }),
-      ...(fromDate && { from_date: fromDate.toISOString() }),
-      ...(toDate && { to_date: toDate.toISOString() }),
-    };
-
-    console.log("Sending payload to fetch cases:", payload);
     
-    const data = await ListALLMediationCasesownnedbyDRCRO(payload);
-    console.log("Cases data received:", data);
-    
-    setCases(Array.isArray(data) ? data : []);
-    setCurrentPage(0);
-    setHasInitialFetch(true);
-  } catch (err) {
-    console.error("Error fetching cases:", err);
-    setError(err.message || "Failed to fetch cases. Please try again.");
-    setCases([]);
-  } finally {
-    setLoading(false);
+    setCases([]); // Clear the cases when filters are cleared
   }
-};
 
-const handleFilterClick = () => {
-  if (!userData) {
-    setError("User data is not available. Please refresh the page or log in again.");
-    return;
-  }
-  
-  if (!userData.drc_id && !userData.ro_id) {
-    setError("DRC ID or RO ID is required");
-    return;
-  }
-  
-  fetchCases();
-};
+
+
+
   // Data filtering and pagination
   const filteredData = cases.filter((row) =>
     Object.values(row)
@@ -307,20 +494,24 @@ const handleFilterClick = () => {
     setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
   };
 
+  
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h1 className={GlobalStyle.headingLarge}>Mediation Board Case List</h1>
 
-      <div className="flex flex-wrap md:flex-nowrap items-center justify-end my-6 gap-1 mb-8">
+      <div  className={`${GlobalStyle.cardContainer} w-full gap-4 mt-8` }>
+        <div className="flex  flex-wrap items-center justify-end  gap-2 "> 
         <select
           name="rtom"
           value={filters.rtom}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+          className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
+           style={{ color: filters.rtom === "" ? "gray" : "black" }}
         >
-          <option value="">Rtom</option>
+          <option value="" hidden>Rtom</option>
           {rtoms.map((rtom) => (
-            <option key={rtom.area_name} value={rtom.area_name}>
+            <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
               {rtom.area_name}
             </option>
           ))}
@@ -330,59 +521,81 @@ const handleFilterClick = () => {
           name="action_type"
           value={filters.action_type}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+          className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
+          style={{ color: filters.action_type === "" ? "gray" : "black" }}
         >
-          <option value="">Action Type</option>
-          <option value="Arrears Collect">Arrears Collect</option>
-          <option value="Arrears and CPE Collect">
+          <option value="" hidden>Action Type</option>
+          <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
+          <option value="Arrears and CPE Collect" style={{ color: "black" }}>
             Arrears and CPE Collect
           </option>
-          <option value="CPE Collect">CPE Collect</option>
+          <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
         </select>
 
         <select
           name="status"
           value={filters.status}
           onChange={handleFilterChange}
-          className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+          className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
+          style={{ color: filters.status === "" ? "gray" : "black" }}
         >
-          <option value="">Status</option>
-          <option value="Forward_to_Mediation_Board">Forward to Mediation Board</option>
-          <option value="MB_fail_with_pending_non_settlement">MB Fail with Pending non Settlement</option>
-          <option value="MB_Handed_Customer_Info">MB Handed Customer Info</option>
-          <option value="MB_Negotiation">MB Negotiation</option>
-          <option value="MB_Request_Customer_Info">MB Request Customer Info</option>
-          <option value="MB_Settle_Active">MB Settle Active</option>
-          <option value="MB_Settle_open_pending">MB Settle Open Pending</option>
-          <option value="MB_Settle_pending">MB Settle Pending</option>
+          <option value="" hidden>Status</option>
+          <option value="Forward to Mediation Board" style={{ color: "black" }}>Forward to Mediation Board</option>
+          <option value="MB fail with pending non settlement" style={{ color: "black" }}>MB Fail with Pending non Settlement</option>
+          <option value="MB Handed Customer Info" style={{ color: "black" }}>MB Handed Customer Info</option>
+          <option value="MB Negotiation" style={{ color: "black" }}>MB Negotiation</option>
+          <option value="MB Request Customer Info" style={{ color: "black" }}>MB Request Customer Info</option>
+          <option value="MB Settle Active" style={{ color: "black" }}>MB Settle Active</option>
+          <option value="MB Settle Open Pending" style={{ color: "black" }}>MB Settle Open Pending</option>
+          <option value="MB Settle Pending" style={{ color: "black" }}>MB Settle Pending</option>
         </select>
 
-        <label className={GlobalStyle.dataPickerDate}>Date</label>
+        <label className={GlobalStyle.dataPickerDate}>Date:</label>
         <DatePicker
           selected={fromDate}
-          onChange={handleFromDateChange}
+          onChange={handlefromdatechange}
           dateFormat="dd/MM/yyyy"
-          placeholderText="dd/MM/yyyy"
-          className={`${GlobalStyle.inputText} w-32 md:w-40`}
+          placeholderText="From"
+          className={`${GlobalStyle.inputText} w-full sm:w-auto`} 
         />
         <DatePicker
           selected={toDate}
-          onChange={handleToDateChange}
+          onChange={handletodatechange}
           dateFormat="dd/MM/yyyy"
-          placeholderText="dd/MM/yyyy"
-          className={`${GlobalStyle.inputText} w-32 md:w-40`}
+          placeholderText="To"
+          className={`${GlobalStyle.inputText} w-full sm:w-auto`}
         />
 
-        <button
+        <div>
+            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+              <button
+                className={`${GlobalStyle.buttonPrimary}  w-full sm:w-auto`}
+                onClick={handleFilterClick}
+
+              >
+                {loading ? "Filter" : "Filter"}
+              </button>
+              )}
+            </div>
+
+            <div>
+                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                    <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`}onClick={handleClearFilters}>
+                    Clear
+                      </button>
+                  )}
+                </div>
+        {/* <button
           className={GlobalStyle.buttonPrimary}
           onClick={handleFilterClick}
-         
+
         >
           {loading ? "Filter" : "Filter"}
-        </button>
+        </button> */}
+        </div>
       </div>
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {/* {error && <div className="text-red-500 mb-4">{error}</div>} */}
 
       <div className="flex flex-col">
         <div className="mb-4 flex justify-start">
@@ -397,16 +610,17 @@ const handleFilterClick = () => {
           </div>
         </div>
 
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
                 <th className={GlobalStyle.tableHeader}>Case ID</th>
                 <th className={GlobalStyle.tableHeader}>Status</th>
-                <th className={GlobalStyle.tableHeader}>Date</th>
+                
                 <th className={GlobalStyle.tableHeader}>RO Name</th>
                 <th className={GlobalStyle.tableHeader}>RTOM</th>
                 <th className={GlobalStyle.tableHeader}>Calling Round</th>
+                <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Next Calling Date</th>
                 <th className={GlobalStyle.tableHeader}></th>
               </tr>
@@ -415,48 +629,86 @@ const handleFilterClick = () => {
               {paginatedData.map((row, index) => (
                 <tr
                   key={row.case_id}
-                  className={`${
-                    index % 2 === 0
+                  className={`${index % 2 === 0
                       ? "bg-white bg-opacity-75"
                       : "bg-gray-50 bg-opacity-50"
-                  } border-b`}
+                    } border-b`}
                 >
                   <td className={GlobalStyle.tableData}>{row.case_id}</td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-              <StatusIcon status={row.status} />
-            </td>
-                  <td className={GlobalStyle.tableData}>
-                    {new Date(row.created_dtm).toLocaleDateString()}
+                    <StatusIcon status={row.status} />
+                     <Tooltip id={`tooltip-${row.status.replace(/\s+/g, '-')}`} className="tooltip" effect="solid" place="bottom" content={row.status} />
                   </td>
+
+                  
+
+                  
                   <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                   <td className={GlobalStyle.tableData}>{row.area}</td>
                   <td className={GlobalStyle.tableData}>
                     {row.mediation_board_count || 0}
                   </td>
-                  <td className={GlobalStyle.tableData}>{new Date(row.next_calling_date).toLocaleDateString()}</td>
-                  <td className={GlobalStyle.tableData}>
+                    <td className={GlobalStyle.tableData}>
+                   {row.created_dtm
+                      ? new Date(row.created_dtm).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </td>
+
+                  <td className={GlobalStyle.tableData}>{row.created_dtm
+                      ? new Date(row.next_calling_date).toLocaleDateString("en-GB")
+                      : "N/A"}</td>
+                  <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
+                    <div>
+                      {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+                        <button>
+                        <img
+                          src={edit}
+                          alt="Edit Case"
+                          data-tooltip-id="edit-tooltip"
+                          className={`w-6 h-6   ${row.status === "MB_fail_with_pending_non_settlement"
+                              ? "opacity-50 cursor-default"
+                              : "cursor-pointer"
+                            }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
+                          onClick={() =>
+                            row.status !== "MB_fail_with_pending_non_settlement" &&
+                            navigate(`/pages/DRC/Mediation Board Response`, {
+                              state: { DRc_id: userData.drc_id, CAse_id: row.case_id },
+                            }  )
+                          
+
+                          } // Prevent navigation for "MB_fail_with_pending_non_settlement"
+                        />
+                         <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
+                        </button>
+                      )}
+                    </div>
+                    {/* <button>
                     <img
                       src={edit}
                       alt="Edit Case"
-                      className={`w-6 h-6 ${
-                        row.status === "MB_fail_with_pending_non_settlement"
+                      className={`w-6 h-6 ${row.status === "MB_fail_with_pending_non_settlement"
                           ? "opacity-50 cursor-default"
                           : "cursor-pointer"
-                      }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
+                        }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
                       onClick={() =>
                         row.status !== "MB_fail_with_pending_non_settlement" &&
-                        navigate(`/pages/DRC/Mediation Board Response/${row.drc_id}/${row.case_id}`)
+                        navigate(`/pages/DRC/Mediation Board Response`, {
+                          state: { DRc_id: userData.drc_id, CAse_id: row.case_id },
+                        }  )
+                      
+
                       } // Prevent navigation for "MB_fail_with_pending_non_settlement"
                     />
+                    </button> */}
                   </td>
                 </tr>
               ))}
               {paginatedData.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    {loading ? "Loading..." : "No results found"}
+                <td colSpan="8" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                    No cases found.
                   </td>
-                </tr>
+              </tr>
               )}
             </tbody>
           </table>
