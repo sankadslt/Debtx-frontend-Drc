@@ -269,7 +269,8 @@ export default function RO_Monitoring_CPE() {
                                     onClick={() => handleAccordion(index)}
                                 >
                                     {/* <span>{`Equipment ${index + 1}`}</span> */}
-                                    <span>{`${product.account_no} - ${product.Service_Type}`}</span>
+                                    {/* <span>{`${product.account_no} - ${product.Service_Type}`}</span> */}
+                                    <span>{`${product.Service_Type}`}</span>
                                     <span className="flex items-center justify-center pr-2">
                                         <FaChevronDown className={`w-4 h-4 transition-transform ${isOpen === index ? "rotate-180" : "rotate-0"}`} />
                                     </span>
