@@ -1743,7 +1743,7 @@ export default function EditCustomerProfile() {
                                 <td className={`${GlobalStyle.tableData} block sm:hidden pl-4`}>
                                     <div className="w-full">
                                         <textarea
-                                            className={`${GlobalStyle.inputText} w-full text-left h-32 resize-none`}
+                                            className={`${GlobalStyle.remark} w-full`}
                                             value={caseDetails.remark}
                                             onChange={(e) => handleInputChange(e, "remark")}
                                             placeholder="Enter remark for this update..."
@@ -1757,7 +1757,7 @@ export default function EditCustomerProfile() {
                                 <td className="w-4 text-left hidden sm:table-cell">:</td>
                                 <td className={`${GlobalStyle.tableData} hidden sm:table-cell`}>
                                     <textarea
-                                        className={`${GlobalStyle.inputText} w-full text-left h-32 resize-none`}
+                                        className={`${GlobalStyle.remark} w-full `}
                                         value={caseDetails.remark}
                                         onChange={(e) => handleInputChange(e, "remark")}
                                         placeholder="Enter remark for this update..."
