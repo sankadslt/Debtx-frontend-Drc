@@ -690,9 +690,9 @@ export const caseDetailsforDRC = async (payload) => {
       account_no: data[0].account_no,
       current_arrears_amount: data[0].current_arrears_amount,
       last_payment_date: data[0].last_payment_date,
-      contactDetails: data[0].current_contact || [],
-      full_Address: data[0].full_Address,
-      nic: data[0].nic,
+      contactDetails: data[0].current_contact_details || [],
+      current_customer_identification: data[0].current_customer_identification,
+      // nic: data[0].nic,
     };
     console.log("Data from backend:", caseData.data.data);
     console.log("Case Details:", caseDetails);

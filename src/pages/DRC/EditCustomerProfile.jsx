@@ -789,17 +789,18 @@ export default function EditCustomerProfile() {
         accountNo: "",
         arrearsAmount: "",
         lastPaymentDate: "",
-        contact_type: "",
         contact_no: "",
-        customer_identification_type: "",
-        customer_identification: "",
         email: "",
         address: "",
+        PP: "",
+        DrivingLicense: "",
+        NIC: "",
         remark: "",
     });
     const navigate = useNavigate();
 
     const [contacts, setContacts] = useState([]);
+    const [current_customer_identification, setCurrent_customer_identification] = useState([]);
     const [userRole, setUserRole] = useState(null); // Role-Based Buttons
     const location = useLocation();
     const case_id = location.state?.CaseID;
@@ -828,6 +829,15 @@ export default function EditCustomerProfile() {
     // validation masseges
     const [validationMessage, setValidationMessage] = useState("");
     const [userData, setUserData] = useState(null);
+
+    // customer identifications
+    const [NIC, setNIC] = useState("");
+    const [NICError, setNICError] = useState("");
+    const [PP, setPP] = useState("");
+    const [PPError, setPPError] = useState("");
+    const [DrivingLicense, setDrivingLicense] = useState("");
+    const [DrivingLicenseError, setDrivingLicenseError] = useState("");
+
     // const { case_id } = useParams();
 
     // const loadUser = async () => {
@@ -919,14 +929,17 @@ export default function EditCustomerProfile() {
                 arrearsAmount: caseDetails.current_arrears_amount,
                 lastPaymentDate: caseDetails.last_payment_date,
 
-                fullAddress: caseDetails.full_Address,
-                nic: caseDetails.nic,
+                // fullAddress: caseDetails.full_Address,
+                // nic: caseDetails.nic,
                 remark: "",
                 contact_Details: caseDetails.contactDetails || [],
+                current_customer_identification: caseDetails.customer_identification || [],
             });
 
             // Ensure contactDetails is an array before setting it
             setContacts(Array.isArray(caseDetails.contactDetails) ? caseDetails.contactDetails : []);
+            setCurrent_customer_identification(Array.isArray(caseDetails.current_customer_identification) ? caseDetails.current_customer_identification : "");
+
         } catch (error) {
             console.error("Error fetching case details:", error.message);
             Swal.fire({
@@ -937,6 +950,44 @@ export default function EditCustomerProfile() {
             });
         }
     };
+
+    useEffect(() => {
+        const identifiers = {};
+
+        current_customer_identification.forEach(item => {
+            identifiers[item.Identification_type.replace(/\s/g, '_')] = item.contact;
+        });
+
+        setNIC(identifiers.NIC || "");
+        setPP(identifiers.Passport || "");
+        setDrivingLicense(identifiers.Driving_License || "");
+
+        setCaseDetails({
+            ...caseDetails,
+            NIC: identifiers.NIC || "",
+            PP: identifiers.Passport || "",
+            DrivingLicense: identifiers.Driving_License || "",
+        })
+    }, [current_customer_identification]);
+
+    useEffect(() => {
+        const identifiers = {};
+
+        contacts.forEach(item => {
+            identifiers[item.contact_type.replace(/\s/g, '_')] = item.contact;
+        });
+
+        setContact_no(identifiers.Mobile || "");
+        setEmail(identifiers.Email || "");
+        setAddress(identifiers.Address || "");
+
+        setCaseDetails({
+            ...caseDetails,
+            contact_no: identifiers.Mobile || "",
+            email: identifiers.Email || "",
+            address: identifiers.Address || "",
+        })
+    }, [contacts]);
 
     useEffect(() => {
         if (userData?.drc_id) {
@@ -957,11 +1008,52 @@ export default function EditCustomerProfile() {
         // Phone number validation (10 digits in this case)
         const phoneRegex = /^0[0-9]{9}$/;
 
-        if (!phoneRegex.test(newContact_no)) {
+        if (newContact_no && !phoneRegex.test(newContact_no)) {
             setPhoneError("Invalid phone number. Please enter 10 digits.");
         } else {
-            // Clear the error if the phone number is valid
+            // Clear the error if the phone number is valid or empty
             setPhoneError("");
+        }
+
+        // Clear validation message when user types in phone field
+        if (validationMessage) {
+            setValidationMessage("");
+        }
+    };
+
+    const handleDrivingLicenseChange = (e) => {
+        const value = e.target.value;
+        setDrivingLicense(value);
+
+        // Validate Driving License if value is provided
+        if (value) {
+            // Driving License example format: alphanumeric, 8-15 chars
+            const regex = /^[A-Z0-9-]{8,15}$/i;
+            if (!regex.test(value)) {
+                setDrivingLicenseError("Invalid Driving License. Alphanumeric, 8-15 chars.");
+            } else {
+                setDrivingLicenseError("");
+            }
+        } else {
+            setDrivingLicenseError("");
+        }
+    };
+
+    const handlePPChange = (e) => {
+        const value = e.target.value;
+        setPP(value);
+
+        // Validate Passport if value is provided
+        if (value) {
+            // Passport example: alphanumeric, 6-9 characters
+            const regex = /^[A-Z0-9]{6,9}$/i;
+            if (!regex.test(value)) {
+                setPPError("Invalid Passport. Alphanumeric, 6-9 chars.");
+            } else {
+                setPPError("");
+            }
+        } else {
+            setPPError("");
         }
     };
 
@@ -1158,8 +1250,22 @@ export default function EditCustomerProfile() {
         setContact_type(event.target.value);
     };
 
-    const handleContactNameChange = (event) => {
-        setContactName(event.target.value);
+    const handleNICChange = (event) => {
+        const value = event.target.value;
+        setNIC(value);
+
+        // Validate NIC if value is provided
+        if (value) {
+            // Sri Lankan NIC example formats: 123456789V or 200011200000
+            const regex = /^([1-2][0-9]{3}[0-9]{8}|[0-9]{9}[VXvx])$/;
+            if (!regex.test(value)) {
+                setNICError("Invalid NIC. Format: 123456789V or 200011200000");
+            } else {
+                setNICError("");
+            }
+        } else {
+            setNICError("");
+        }
     };
 
     const handleInputChange = (event, field) => {
@@ -1200,6 +1306,12 @@ export default function EditCustomerProfile() {
         // Update the address at the specific index
         updatedAddresses[index] = value;
         setAddressInputs(updatedAddresses);
+        setAddress(value);
+
+        // Clear address error when user starts typing
+        if (addressError && value.trim()) {
+            setAddressError("");
+        }
     };
 
     // NIC , PP , Driving license add function
@@ -1224,6 +1336,7 @@ export default function EditCustomerProfile() {
         const newEmailInputs = [...emailInputs];
         newEmailInputs[index] = value;
         setEmailInputs(newEmailInputs);
+        setEmail(value);
 
         // Regex to validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1274,7 +1387,7 @@ export default function EditCustomerProfile() {
                     <h1 className={GlobalStyle.headingLarge}>Edit Customer Profile</h1>
                 </div>
 
-                <div className="flex flex-col lg:flex-row items-center justify-center mb-4 gap-3">
+                <div className="flex flex-col lg:flex-row items-stretch justify-center mb-4 gap-3">
                     <div
                         // className={`${GlobalStyle.cardContainer}flex bg-white shadow-lg rounded-lg p-4`}
                         className={`${GlobalStyle.cardContainer} flex bg-white shadow-lg rounded-lg p-4 w-full lg:basis-[30%] lg:max-w-[30%]`}
@@ -1317,7 +1430,7 @@ export default function EditCustomerProfile() {
                                     </td>
                                     <td className="text-black">
                                         : {caseDetails.arrearsAmount && typeof caseDetails.arrearsAmount === 'number'
-                                            ? caseDetails.arrearsAmount.toLocaleString()
+                                            ? caseDetails.arrearsAmount.toLocaleString("en-LK", { style: "currency", currency: "LKR" })
                                             : caseDetails.arrearsAmount}
                                     </td>
                                 </tr>
@@ -1350,61 +1463,33 @@ export default function EditCustomerProfile() {
                         <table className={`${GlobalStyle.table}`}>
                             <tbody>
                                 <tr>
-                                    <td className="text-black">
+                                    <td className="text-black" colSpan="2">
                                         <p className="mb-2">
                                             <strong>Current Contacts </strong>
                                         </p>
                                     </td>
-                                    {/* <td className="text-black">: {caseDetails.caseId}</td> */}
                                 </tr>
 
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Customer Ref </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">: {caseDetails.customerRef}</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Account No </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">: {caseDetails.accountNo}</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Arrears Amount </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">
-                                        : {caseDetails.arrearsAmount && typeof caseDetails.arrearsAmount === 'number'
-                                            ? caseDetails.arrearsAmount.toLocaleString()
-                                            : caseDetails.arrearsAmount}
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Last Payment Date </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">
-                                        :{" "}
-                                        {caseDetails.lastPaymentDate
-                                            ? new Date(caseDetails.lastPaymentDate)
-                                                .toISOString().split("T")[0]
-                                                .replace(/-/g, ".")
-                                            : null}{" "}
-                                        {/* This removes the "N/A" part if lastPaymentDate is undefined */}
-                                    </td>
-                                </tr>
+                                {contacts && contacts.length > 0 ? (
+                                    contacts.map((contact, index) => (
+                                        contact.contact_type !== 'geo_location' && contact.contact && (
+                                            <tr key={index}>
+                                                <td className="text-black">
+                                                    <p className="mb-2">
+                                                        <strong>{contact.contact_type}</strong>
+                                                    </p>
+                                                </td>
+                                                <td className="text-black">: {contact.contact}</td>
+                                            </tr>
+                                        )
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td className="text-black" colSpan="2">
+                                            <p className="mb-2 text-gray-500">No contacts available</p>
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -1417,61 +1502,33 @@ export default function EditCustomerProfile() {
                         <table className={`${GlobalStyle.table}`}>
                             <tbody>
                                 <tr>
-                                    <td className="text-black">
+                                    <td className="text-black" colSpan="2">
                                         <p className="mb-2">
                                             <strong>Customer Identifications </strong>
                                         </p>
                                     </td>
-                                    {/* <td className="text-black">: {caseDetails.caseId}</td> */}
                                 </tr>
 
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Customer Ref </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">: {caseDetails.customerRef}</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Account No </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">: {caseDetails.accountNo}</td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Arrears Amount </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">
-                                        : {caseDetails.arrearsAmount && typeof caseDetails.arrearsAmount === 'number'
-                                            ? caseDetails.arrearsAmount.toLocaleString()
-                                            : caseDetails.arrearsAmount}
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td className="text-black">
-                                        <p className="mb-2">
-                                            <strong>Last Payment Date </strong>
-                                        </p>
-                                    </td>
-                                    <td className="text-black">
-                                        :{" "}
-                                        {caseDetails.lastPaymentDate
-                                            ? new Date(caseDetails.lastPaymentDate)
-                                                .toISOString().split("T")[0]
-                                                .replace(/-/g, ".")
-                                            : null}{" "}
-                                        {/* This removes the "N/A" part if lastPaymentDate is undefined */}
-                                    </td>
-                                </tr>
+                                {current_customer_identification && current_customer_identification.length > 0 ? (
+                                    current_customer_identification.map((ID, index) => (
+                                        ID.Identification_type !== 'geo_location' && ID.contact && (
+                                            <tr key={index}>
+                                                <td className="text-black">
+                                                    <p className="mb-2">
+                                                        <strong>{ID.Identification_type}</strong>
+                                                    </p>
+                                                </td>
+                                                <td className="text-black">: {ID.contact}</td>
+                                            </tr>
+                                        )
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td className="text-black" colSpan="2">
+                                            <p className="mb-2 text-gray-500">No customer identifications available</p>
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -1500,10 +1557,15 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter contact name"
-                                            value={contactName}
-                                            onChange={handleContactNameChange}
+                                            value={NIC}
+                                            onChange={handleNICChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
+                                        {NICError && (
+                                            <p style={{ color: "red", fontSize: "12px" }}>
+                                                {NICError}
+                                            </p>
+                                        )}
                                     </div>
                                 </td>
                                 <td className={`${GlobalStyle.tableData} font-medium whitespace-nowrap hidden sm:table-cell w-1/3 sm:w-1/4`}>
@@ -1511,14 +1573,19 @@ export default function EditCustomerProfile() {
                                 </td>
                                 <td className="w-4 text-left hidden sm:table-cell">:</td>
                                 <td className={`${GlobalStyle.tableData} hidden sm:table-cell`}>
-                                    <div className="flex justify-start w-full">
+                                    <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
                                             placeholder="Enter contact name"
-                                            value={contactName}
-                                            onChange={handleContactNameChange}
+                                            value={NIC}
+                                            onChange={handleNICChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
+                                        {NICError && (
+                                            <p style={{ color: "red", fontSize: "12px" }}>
+                                                {NICError}
+                                            </p>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -1533,13 +1600,13 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter contact number"
-                                            value={contact_no}
-                                            onChange={handlePhoneChange}
+                                            value={DrivingLicense}
+                                            onChange={handleDrivingLicenseChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
-                                        {phoneError && (
+                                        {DrivingLicenseError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
-                                                {phoneError}
+                                                {DrivingLicenseError}
                                             </p>
                                         )}
                                     </div>
@@ -1553,13 +1620,13 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter contact number"
-                                            value={contact_no}
-                                            onChange={handlePhoneChange}
+                                            value={DrivingLicense}
+                                            onChange={handleDrivingLicenseChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
-                                        {phoneError && (
+                                        {DrivingLicenseError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
-                                                {phoneError}
+                                                {DrivingLicenseError}
                                             </p>
                                         )}
                                     </div>
@@ -1576,10 +1643,15 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter contact name"
-                                            value={contactName}
-                                            onChange={handleContactNameChange}
+                                            value={PP}
+                                            onChange={handlePPChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
+                                        {PPError && (
+                                            <p style={{ color: "red", fontSize: "12px" }}>
+                                                {PPError}
+                                            </p>
+                                        )}
                                     </div>
                                 </td>
                                 <td className={`${GlobalStyle.tableData} font-medium whitespace-nowrap hidden sm:table-cell w-1/3 sm:w-1/4`}>
@@ -1587,14 +1659,19 @@ export default function EditCustomerProfile() {
                                 </td>
                                 <td className="w-4 text-left hidden sm:table-cell">:</td>
                                 <td className={`${GlobalStyle.tableData} hidden sm:table-cell`}>
-                                    <div className="flex justify-start w-full">
+                                    <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
                                             placeholder="Enter contact name"
-                                            value={contactName}
-                                            onChange={handleContactNameChange}
+                                            value={PP}
+                                            onChange={handlePPChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
+                                        {PPError && (
+                                            <p style={{ color: "red", fontSize: "12px" }}>
+                                                {PPError}
+                                            </p>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -1616,13 +1693,13 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter identification number"
-                                            value={customer_identification}
-                                            onChange={handleIdentificationChange}
+                                            value={contact_no}
+                                            onChange={handlePhoneChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
-                                        {validationMessage && (
+                                        {phoneError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
-                                                {validationMessage}
+                                                {phoneError}
                                             </p>
                                         )}
                                     </div>
@@ -1636,13 +1713,13 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="text"
                                             placeholder="Enter identification number"
-                                            value={customer_identification}
-                                            onChange={handleIdentificationChange}
+                                            value={contact_no}
+                                            onChange={handlePhoneChange}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
-                                        {validationMessage && (
+                                        {phoneError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
-                                                {validationMessage}
+                                                {phoneError}
                                             </p>
                                         )}
                                     </div>
@@ -1659,7 +1736,7 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="email"
                                             placeholder="Enter email address"
-                                            value={emailInputs[0]}
+                                            value={email}
                                             onChange={(e) => handleEmailInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
@@ -1679,7 +1756,7 @@ export default function EditCustomerProfile() {
                                         <input
                                             type="email"
                                             placeholder="Enter email address"
-                                            value={emailInputs[0]}
+                                            value={email}
                                             onChange={(e) => handleEmailInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.inputText} w-full`}
                                         />
@@ -1699,12 +1776,12 @@ export default function EditCustomerProfile() {
                                 </td>
                                 <td className={`${GlobalStyle.tableData} block sm:hidden pl-4`}>
                                     <div className="w-full">
-                                        <input
+                                        <textarea
                                             type="text"
                                             placeholder="Enter address"
-                                            value={addressInputs[0]}
+                                            value={address}
                                             onChange={(e) => handleAddressInputChange(0, e.target.value)}
-                                            className={`${GlobalStyle.inputText} w-full`}
+                                            className={`${GlobalStyle.remark} w-full`}
                                         />
                                         {addressError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
@@ -1719,12 +1796,12 @@ export default function EditCustomerProfile() {
                                 <td className="w-4 text-left hidden sm:table-cell">:</td>
                                 <td className={`${GlobalStyle.tableData} hidden sm:table-cell`}>
                                     <div className="flex justify-start w-full flex-col">
-                                        <input
+                                        <textarea
                                             type="text"
                                             placeholder="Enter address"
-                                            value={addressInputs[0]}
+                                            value={address}
                                             onChange={(e) => handleAddressInputChange(0, e.target.value)}
-                                            className={`${GlobalStyle.inputText} w-full`}
+                                            className={`${GlobalStyle.remark} w-full`}
                                         />
                                         {addressError && (
                                             <p style={{ color: "red", fontSize: "12px" }}>
