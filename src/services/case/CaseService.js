@@ -711,29 +711,29 @@ export const caseDetailsforDRC = async (payload) => {
 export const updateCustomerContacts = async (payload) => {
   try {
     // Validate required fields
-    if (!payload.case_id) {
-      throw new Error("Case ID is required");
-    }
+    // if (!payload.case_id) {
+    //   throw new Error("Case ID is required");
+    // }
 
     // Extract the needed fields from the payload structure
-    const requestData = {
-      case_id: payload.case_id,
-      drc_id: payload.drc_id,
-      ro_id: payload.caseData.ro_id,
-      contact_type: payload.caseData.contact_type,
-      contact_no: payload.caseData.contact_no,
-      email: payload.caseData.email,
-      customer_identification: payload.caseData.customer_identification,
-      customer_identification_type:
-        payload.caseData.customer_identification_type,
-      address: payload.caseData.address,
-      remark: payload.caseData.remark,
-    };
+    // const requestData = {
+    //   case_id: payload.case_id,
+    //   drc_id: payload.drc_id,
+    //   ro_id: payload.caseData.ro_id,
+    //   contact_type: payload.caseData.contact_type,
+    //   contact_no: payload.caseData.contact_no,
+    //   email: payload.caseData.email,
+    //   customer_identification: payload.caseData.customer_identification,
+    //   customer_identification_type:
+    //     payload.caseData.customer_identification_type,
+    //   address: payload.caseData.address,
+    //   remark: payload.caseData.remark,
+    // };
 
     // Send a POST request to update customer contacts
     const updatedData = await axios.patch(
       `${URL}/Update_Customer_Contacts`,
-      requestData
+      payload
     );
     console.log("Update Response:", updatedData);
 

@@ -838,6 +838,8 @@ export default function EditCustomerProfile() {
     const [DrivingLicense, setDrivingLicense] = useState("");
     const [DrivingLicenseError, setDrivingLicenseError] = useState("");
 
+    const [isEdited, setIsEdited] = useState(false);
+
     // const { case_id } = useParams();
 
     // const loadUser = async () => {
@@ -932,13 +934,13 @@ export default function EditCustomerProfile() {
                 // fullAddress: caseDetails.full_Address,
                 // nic: caseDetails.nic,
                 remark: "",
-                contact_Details: caseDetails.contactDetails || [],
-                current_customer_identification: caseDetails.customer_identification || [],
+                // contact_Details: caseDetails.contactDetails || [],
+                // current_customer_identification: caseDetails.customer_identification || [],
             });
 
             // Ensure contactDetails is an array before setting it
             setContacts(Array.isArray(caseDetails.contactDetails) ? caseDetails.contactDetails : []);
-            setCurrent_customer_identification(Array.isArray(caseDetails.current_customer_identification) ? caseDetails.current_customer_identification : "");
+            setCurrent_customer_identification(Array.isArray(caseDetails.current_customer_identification) ? caseDetails.current_customer_identification : []);
 
         } catch (error) {
             console.error("Error fetching case details:", error.message);
@@ -962,12 +964,12 @@ export default function EditCustomerProfile() {
         setPP(identifiers.Passport || "");
         setDrivingLicense(identifiers.Driving_License || "");
 
-        setCaseDetails({
-            ...caseDetails,
+        setCaseDetails(prev => ({
+            ...prev,
             NIC: identifiers.NIC || "",
             PP: identifiers.Passport || "",
             DrivingLicense: identifiers.Driving_License || "",
-        })
+        }));
     }, [current_customer_identification]);
 
     useEffect(() => {
@@ -981,12 +983,12 @@ export default function EditCustomerProfile() {
         setEmail(identifiers.Email || "");
         setAddress(identifiers.Address || "");
 
-        setCaseDetails({
-            ...caseDetails,
+        setCaseDetails(prev => ({
+            ...prev,
             contact_no: identifiers.Mobile || "",
             email: identifiers.Email || "",
             address: identifiers.Address || "",
-        })
+        }));
     }, [contacts]);
 
     useEffect(() => {
@@ -995,11 +997,13 @@ export default function EditCustomerProfile() {
         }
     }, [userData?.drc_id, case_id]);
 
-    useEffect(() => {
-        if (Array.isArray(caseDetails.contact_Details)) {
-            setContacts(caseDetails.contact_Details);
-        }
-    }, [caseDetails.contact_Details]);
+
+    // console.log("Case Details:", caseDetails);
+    // useEffect(() => {
+    //     if (Array.isArray(caseDetails.contact_Details)) {
+    //         setContacts(caseDetails.contact_Details);
+    //     }
+    // }, [caseDetails.contact_Details]);
 
     const handlePhoneChange = (e) => {
         const newContact_no = e.target.value;
@@ -1057,57 +1061,125 @@ export default function EditCustomerProfile() {
         }
     };
 
+    console.log("NIC:", NIC);
     // submit function
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
 
-        let isValid = true;
-
-        if (!contact_no && !addressInputs[0] && !emailInputs[0] && !customer_identification && !customer_identification_type && !caseDetails.remark && !contact_type && !contactName && !address && !email) {
+        if (!contact_no || !email || !address || !NIC || !caseDetails.remark) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Warning',
-                text: 'Please fill in at least one field before submitting.',
+                text: 'Please fill in all required fields before submitting.',
                 confirmButtonColor: "#f1c40f",
             });
             return;
         }
+
+        // let isValid = true;
+        const userDataID = await getLoggedUserId();
+
+        let payload = {}
+
+        // let payload = {
+        payload.drc_id = userData?.drc_id;
+        payload.ro_id = userData?.ro_id;
+        payload.case_id = Number(case_id);
+        payload.Email = caseDetails.email;
+        payload.Mobile = caseDetails.contact_no;
+        payload.Address = caseDetails.address;
+        payload.Driving_License = caseDetails.DrivingLicense;
+        payload.Passport = caseDetails.PP;
+        payload.NIC = caseDetails.NIC;
+        payload.Remark = caseDetails.remark;
+        payload.edited_by = userDataID.user_id;
+        // };
+
+        if (contact_no != caseDetails.contact_no) {
+            payload.Edited_Mobile = contact_no;
+            setIsEdited(true);
+        }
+
+        if (email != caseDetails.email) {
+            payload.Edited_Email = email;
+            setIsEdited(true);
+        }
+
+        if (address != caseDetails.address) {
+            payload.Edited_Address = address;
+            setIsEdited(true);
+        }
+
+        if (PP != caseDetails.PP) {
+            payload.Edited_Passport = PP;
+            setIsEdited(true);
+        }
+
+        if (DrivingLicense != caseDetails.DrivingLicense) {
+            payload.Edited_Driving_License = DrivingLicense;
+            setIsEdited(true);
+        }
+
+        if (NIC != caseDetails.NIC) {
+            payload.Edited_NIC = NIC;
+            setIsEdited(true);
+        }
+
+        if (!isEdited) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Changes Detected',
+                text: 'No changes were made to the customer profile.',
+                confirmButtonColor: "#f1c40f",
+            });
+            return;
+        }
+
+        // if (!contact_no && !addressInputs[0] && !emailInputs[0] && !customer_identification && !customer_identification_type && !caseDetails.remark && !contact_type && !contactName && !address && !email) {
+        //     Swal.fire({
+        //         icon: 'warning',
+        //         title: 'Warning',
+        //         text: 'Please fill in at least one field before submitting.',
+        //         confirmButtonColor: "#f1c40f",
+        //     });
+        //     return;
+        // }
 
         // Validate Contact Number section
-        const isContactSectionPartiallyFilled =
-            contact_no || contact_type || contactName;
+        // const isContactSectionPartiallyFilled =
+        //     contact_no || contact_type || contactName;
 
-        const isContactSectionIncomplete =
-            (contact_no && (!contact_type || !contactName)) ||
-            (contact_type && (!contact_no || !contactName)) ||
-            (contactName && (!contact_no || !contact_type));
+        // const isContactSectionIncomplete =
+        //     (contact_no && (!contact_type || !contactName)) ||
+        //     (contact_type && (!contact_no || !contactName)) ||
+        //     (contactName && (!contact_no || !contact_type));
 
-        if (isContactSectionPartiallyFilled && isContactSectionIncomplete) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Warning',
-                text: 'Please fill in all fields in the Contact Number section.',
-                confirmButtonColor: "#f1c40f",
-            });
-            return;
-        }
+        // if (isContactSectionPartiallyFilled && isContactSectionIncomplete) {
+        //     Swal.fire({
+        //         icon: 'warning',
+        //         title: 'Warning',
+        //         text: 'Please fill in all fields in the Contact Number section.',
+        //         confirmButtonColor: "#f1c40f",
+        //     });
+        //     return;
+        // }
 
-        const isIDSectionPartiallyFilled =
-            customer_identification || customer_identification_type;
+        // const isIDSectionPartiallyFilled =
+        //     customer_identification || customer_identification_type;
 
-        const isIDSectionIncomplete =
-            (customer_identification && !customer_identification_type) ||
-            (customer_identification_type && !customer_identification);
+        // const isIDSectionIncomplete =
+        //     (customer_identification && !customer_identification_type) ||
+        //     (customer_identification_type && !customer_identification);
 
-        if (isIDSectionPartiallyFilled && isIDSectionIncomplete) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Warning',
-                text: 'Please fill in all fields in the NIC/PP/Driving License section.',
-                confirmButtonColor: "#f1c40f",
-            });
-            return;
-        }
+        // if (isIDSectionPartiallyFilled && isIDSectionIncomplete) {
+        //     Swal.fire({
+        //         icon: 'warning',
+        //         title: 'Warning',
+        //         text: 'Please fill in all fields in the NIC/PP/Driving License section.',
+        //         confirmButtonColor: "#f1c40f",
+        //     });
+        //     return;
+        // }
 
 
 
@@ -1118,137 +1190,137 @@ export default function EditCustomerProfile() {
         // }
 
         // Validate identity number if provided
-        if (customer_identification && customer_identification_type) {
-            const message = validatecustomer_identification(customer_identification_type, customer_identification);
-            if (message) {
-                setValidationMessage(message);
-                isValid = false;
-            }
-        }
+        // if (customer_identification && customer_identification_type) {
+        //     const message = validatecustomer_identification(customer_identification_type, customer_identification);
+        //     if (message) {
+        //         setValidationMessage(message);
+        //         isValid = false;
+        //     }
+        // }
 
-        if (isValid) {
-            Swal.fire({
-                title: "Confirm Submission",
-                text: "Are you sure you want to submit the form details?",
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonColor: "#28a745",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, submit!",
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    // Prepare the data object for submission
-                    const caseData = {
-                        ro_id: userData?.ro_id, // Use actual ro_id from userData if available
-                        contact_type: contact_type,
-                        contact_no: contact_no,
-                        email: emailInputs[0],
-                        customer_identification: customer_identification,
-                        address: addressInputs[0],
-                        remark: caseDetails.remark,
-                        customer_identification_type: customer_identification_type,
-                    };
+        console.log("Payload:", payload)
 
-                    // console.log("caseData", caseData);
-                    try {
-                        // Submit the data and wait for the response
-                        const payload = {
-                            case_id: Number(case_id),
-                            drc_id: userData?.drc_id,
-                            caseData,
-                        };
+        Swal.fire({
+            title: "Confirm Submission",
+            text: "Are you sure you want to submit the form details?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, submit!",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Prepare the data object for submission
+                // const caseData = {
+                //     ro_id: userData?.ro_id, // Use actual ro_id from userData if available
+                //     contact_type: contact_type,
+                //     contact_no: contact_no,
+                //     email: emailInputs[0],
+                //     customer_identification: customer_identification,
+                //     address: addressInputs[0],
+                //     remark: caseDetails.remark,
+                //     customer_identification_type: customer_identification_type,
+                // };
 
-                        // Call the service function
-                        const response = await updateCustomerContacts(payload);
+                // console.log("caseData", caseData);
+                try {
+                    // Submit the data and wait for the response
+                    // const payload = {
+                    //     case_id: Number(case_id),
+                    //     drc_id: userData?.drc_id,
+                    //     caseData,
+                    // };
 
-                        // Check if the response was successful
-                        if (response && response.status === 200) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: 'Data submitted successfully!',
-                                confirmButtonColor: "#28a745",
-                            });
+                    // Call the service function
+                    const response = await updateCustomerContacts(payload);
 
-                            // Clear user input fields here
-                            setContact_no("");
-                            setContact_type("");
-                            setPhoneError("");
-                            setContactName("");
+                    // Check if the response was successful
+                    if (response && response.status === 200) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Data submitted successfully!',
+                            confirmButtonColor: "#28a745",
+                        });
 
-                            setEmail("");
-                            setEmailInputs([""]);
-                            setEmailError("");
+                        // Clear user input fields here
+                        // setContact_no("");
+                        // setContact_type("");
+                        // setPhoneError("");
+                        // setContactName("");
 
-                            setAddress("");
-                            setAddressInputs([""]);
-                            setAddressError("");
+                        // setEmail("");
+                        // setEmailInputs([""]);
+                        // setEmailError("");
 
-                            setcustomer_identification_type("");
-                            setcustomer_identification("");
-                            setValidationMessage("");
+                        // setAddress("");
+                        // setAddressInputs([""]);
+                        // setAddressError("");
 
-                            // Clear the remark field
-                            setCaseDetails((prevDetails) => ({
-                                ...prevDetails,
-                                remark: "",
-                            }));
+                        // setcustomer_identification_type("");
+                        // setcustomer_identification("");
+                        // setValidationMessage("");
 
-                            // Refresh case details to show the updated information
-                            fetchCaseDetails();
-                        } else {
-                            // Handle error response
+                        // Clear the remark field
+                        setCaseDetails((prevDetails) => ({
+                            ...prevDetails,
+                            remark: "",
+                        }));
+
+                        // Refresh case details to show the updated information
+                        fetchCaseDetails();
+                    } else {
+                        // Handle error response
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to submit data. Please try again.',
+                            confirmButtonColor: "#d33",
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error submitting data:", error);
+
+                    // Handle specific error cases based on backend error messages
+                    if (error.response && error.response.data) {
+                        const errorMessage = error.response.data.error;
+
+                        if (errorMessage === "Duplicate data detected: Mobile already exists") {
+                            setPhoneError("Mobile number already exists. Please use a different Mobile number.");
+                        }
+                        else if (errorMessage === "Duplicate data detected: NIC already exists") {
+                            setValidationMessage("NIC/PP/Driving License already exists. Please use a different One.");
+                        }
+                        else if (errorMessage === "Duplicate data detected: Email already exists") {
+                            setEmailError("Email already exists. Please use a different email.");
+                        }
+                        else if (errorMessage === "Duplicate data detected: address already exists") {
+                            setAddressError("Address already exists. Please use a different address.");
+                        }
+                        else {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'Failed to submit data. Please try again.',
+                                text: errorMessage || 'Failed to submit data. Please try again.',
                                 confirmButtonColor: "#d33",
                             });
                         }
-                    } catch (error) {
-                        console.error("Error submitting data:", error);
-
-                        // Handle specific error cases based on backend error messages
-                        if (error.response && error.response.data) {
-                            const errorMessage = error.response.data.error;
-
-                            if (errorMessage === "Duplicate data detected: Mobile already exists") {
-                                setPhoneError("Mobile number already exists. Please use a different Mobile number.");
-                            }
-                            else if (errorMessage === "Duplicate data detected: NIC already exists") {
-                                setValidationMessage("NIC/PP/Driving License already exists. Please use a different One.");
-                            }
-                            else if (errorMessage === "Duplicate data detected: Email already exists") {
-                                setEmailError("Email already exists. Please use a different email.");
-                            }
-                            else if (errorMessage === "Duplicate data detected: address already exists") {
-                                setAddressError("Address already exists. Please use a different address.");
-                            }
-                            else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: errorMessage || 'Failed to submit data. Please try again.',
-                                    confirmButtonColor: "#d33",
-                                });
-                            }
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Failed to submit data. Please try again.',
-                                confirmButtonColor: "#d33",
-                            });
-                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to submit data. Please try again.',
+                            confirmButtonColor: "#d33",
+                        });
                     }
                 }
-            });
-        }
+            }
+        });
     };
 
-    const handlePhoneTypeChange = (event) => {
-        setContact_type(event.target.value);
-    };
+    // const handlePhoneTypeChange = (event) => {
+    //     setContact_type(event.target.value);
+    // };
 
     const handleNICChange = (event) => {
         const value = event.target.value;
@@ -1306,7 +1378,7 @@ export default function EditCustomerProfile() {
         // Update the address at the specific index
         updatedAddresses[index] = value;
         setAddressInputs(updatedAddresses);
-        setAddress(value);
+        setAddress(value.trim());
 
         // Clear address error when user starts typing
         if (addressError && value.trim()) {
@@ -1850,8 +1922,21 @@ export default function EditCustomerProfile() {
                         <div>
                             {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
                                 <button
-                                    className={`${GlobalStyle.buttonPrimary} ml-4`}
+                                    className={`${GlobalStyle.buttonPrimary} ml-4 ${(phoneError ||
+                                        emailError ||
+                                        addressError ||
+                                        NICError ||
+                                        DrivingLicenseError ||
+                                        PPError) ? "opacity-50 cursor-not-allowed" : ""}`}
                                     onClick={handleSubmit}
+                                    disabled={
+                                        phoneError ||
+                                        emailError ||
+                                        addressError ||
+                                        NICError ||
+                                        DrivingLicenseError ||
+                                        PPError
+                                    }
                                 >
                                     Submit
                                 </button>
