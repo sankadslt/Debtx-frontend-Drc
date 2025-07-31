@@ -550,9 +550,9 @@ export const Pre_Negotiation = () => {
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>
+                {/* <th className={GlobalStyle.tableHeader}>
                   Call Inquiry Sequence
-                </th>
+                </th> */}
                 <th className={GlobalStyle.tableHeader}>Remark</th>
                 <th className={GlobalStyle.tableHeader}>Call Topic</th>
 
@@ -579,10 +579,10 @@ export const Pre_Negotiation = () => {
                     {item.task_id || "N/A"}
                   </td> */}
 
-                    <td className={GlobalStyle.tableData}>
+                    {/* <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.seq || "N/A"}{" "}
-                    </td>
+                    </td> */}
                     <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.call_inquiry_remark || "N/A"}{" "}
