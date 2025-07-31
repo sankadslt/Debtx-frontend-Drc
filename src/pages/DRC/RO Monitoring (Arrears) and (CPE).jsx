@@ -14,6 +14,7 @@ Notes: The following page conatins the code for both the UI's */
 import { useEffect, useState } from "react";
 import { FaChevronDown, FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { fetchBehaviorsOfCaseDuringDRC } from "../../services/case/CaseService.js";
 import { getLoggedUserId } from "../../services/auth/authService.js";
@@ -268,7 +269,8 @@ export default function RO_Monitoring_CPE() {
                                     onClick={() => handleAccordion(index)}
                                 >
                                     {/* <span>{`Equipment ${index + 1}`}</span> */}
-                                    <span>{`${product.account_no} - ${product.service}`}</span>
+                                    {/* <span>{`${product.account_no} - ${product.Service_Type}`}</span> */}
+                                    <span>{`${product.Service_Type}`}</span>
                                     <span className="flex items-center justify-center pr-2">
                                         <FaChevronDown className={`w-4 h-4 transition-transform ${isOpen === index ? "rotate-180" : "rotate-0"}`} />
                                     </span>
@@ -277,11 +279,11 @@ export default function RO_Monitoring_CPE() {
                                     <div className="flex flex-col items-center justify-center">
                                         <div className={`${GlobalStyle.cardContainer}`}>
                                             {[
-                                                { label: "Product Label", value: product.product_label },
-                                                { label: "Service Type", value: product.service },
-                                                { label: "Service Address", value: product.service_address },
-                                                { label: "Service Status", value: product.product_status },
-                                                { label: "Ownership", value: product.product_ownership },
+                                                { label: "Product Label", value: product.Product_Label },
+                                                { label: "Service Type", value: product.Service_Type },
+                                                { label: "Service Address", value: product.Service_Address },
+                                                { label: "Service Status", value: product.Product_Status },
+                                                { label: "Ownership", value: product.Equipment_Ownership },
                                             ].map((item, idx) => (
                                                 <p key={idx} className="mb-2 flex items-center">
                                                     <strong className="w-40 text-left">{item.label}</strong>
@@ -299,7 +301,7 @@ export default function RO_Monitoring_CPE() {
                                             <thead className={GlobalStyle.thead}>
                                                 <tr>
                                                     <th className={GlobalStyle.tableHeader}>Date</th>
-                                                    <th className={GlobalStyle.tableHeader}>Negotiation</th>
+                                                    {/* <th className={GlobalStyle.tableHeader}>Negotiation</th> */}
                                                     <th className={GlobalStyle.tableHeader}>Remark</th>
                                                 </tr>
                                             </thead>
@@ -315,7 +317,7 @@ export default function RO_Monitoring_CPE() {
                                                                 <td className={GlobalStyle.tableData}>
                                                                     {formatDate(item.collected_date)}
                                                                 </td>
-                                                                <td className={GlobalStyle.tableData}></td>
+                                                                {/* <td className={GlobalStyle.tableData}></td> */}
                                                                 <td className={GlobalStyle.tableData}>{item.remark || ""}</td>
                                                             </tr>
                                                         ))) : (
@@ -405,13 +407,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentNegotiationPage + 1} of {pagesNegotiationDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("next")} disabled={currentNegotiationPage === pagesNegotiationDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleNegotiationPageChange("next")} disabled={currentNegotiationPage === pagesNegotiationDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -457,13 +459,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("prev")} disabled={currentSettlementPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleSettlementPageChange("prev")} disabled={currentSettlementPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentSettlementPage + 1} of {pagesSettlementDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleSettlementPageChange("next")} disabled={currentSettlementPage === pagesSettlementDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleSettlementPageChange("next")} disabled={currentSettlementPage === pagesSettlementDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -523,13 +525,13 @@ export default function RO_Monitoring_CPE() {
                         </div>
 
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handlePaymentPageChange("prev")} disabled={currentPaymentPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handlePaymentPageChange("prev")} disabled={currentPaymentPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentPaymentPage + 1} of {pagesPaymentDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handlePaymentPageChange("next")} disabled={currentPaymentPage === pagesPaymentDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handlePaymentPageChange("next")} disabled={currentPaymentPage === pagesPaymentDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
@@ -574,13 +576,13 @@ export default function RO_Monitoring_CPE() {
                             </table>
                         </div>
                         <div className={GlobalStyle.navButtonContainer}>
-                            <button className={GlobalStyle.navButton} onClick={handleRequestPageChange("prev")} disabled={currentRequestPage === 0}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleRequestPageChange("prev")} disabled={currentRequestPage === 0}>
                                 <FaArrowLeft />
                             </button>
                             <span className="text-gray-700">
                                 Page {currentRequestPage + 1} of {pagesRequestDetails}
                             </span>
-                            <button className={GlobalStyle.navButton} onClick={handleRequestPageChange("next")} disabled={currentRequestPage === pagesRequestDetails - 1}>
+                            <button className={GlobalStyle.navButton} onClick={() => handleRequestPageChange("next")} disabled={currentRequestPage === pagesRequestDetails - 1}>
                                 <FaArrowRight />
                             </button>
                         </div>
