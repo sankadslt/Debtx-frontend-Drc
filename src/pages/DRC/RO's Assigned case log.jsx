@@ -687,8 +687,8 @@ export default function ROsAssignedcaselog() {
             <option value="Negotiation Settle Pending" style={{ color: "black" }}>Negotiation Settle Pending</option>
             <option value="Negotiation Settle Open-Pending" style={{ color: "black" }}>Negotiation Settle Open-Pending</option>
             <option value="Negotiation Settle Active" style={{ color: "black" }}>Negotiation Settle Active</option>
-            <option value="RO Negotiation Extension Pending" style={{ color: "black" }}>RO Negotiation Extension Pending</option>
-            <option value="RO Negotiation Extended" style={{ color: "black" }}>RO Negotiation Extended</option>
+            {/* <option value="RO Negotiation Extension Pending" style={{ color: "black" }}>RO Negotiation Extension Pending</option> */}
+            {/* <option value="RO Negotiation Extended" style={{ color: "black" }}>RO Negotiation Extended</option> */}
             <option value="RO Negotiation FMB Pending" style={{ color: "black" }}>RO Negotiation FMB Pending</option>
           </select>
 
