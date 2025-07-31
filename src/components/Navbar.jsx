@@ -527,54 +527,107 @@ const Navbar = () => {
           {isTaskListOpen && (
             <div
               ref={taskListRef}
-              className="absolute top-12 right-0 w-[420px] bg-gray-800 text-white rounded-lg shadow-lg p-4"
+              className="absolute top-12 right-0 w-[550px] border-2 border-[#00256A] bg-white bg-opacity-40 backdrop-blur-sm   text-[#E1E4F5] rounded-xl shadow-2xl p-5"
             >
-              <p className="text-lg font-semibold text-center mb-4">
-                Task List
-              </p>
-              <ul
-                className="divide-y divide-gray-700 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
-                onScroll={(e) => {
-                  const { scrollTop, scrollHeight, clientHeight } = e.target;
-                  if (scrollTop + clientHeight >= scrollHeight) {
-                    loadMoreTasks();
-                  }
-                }}
-              >
+              <div className="flex items-center justify-center mb-5">
+                <div className="flex items-center gap-2">
+
+                  <h3 className="text-xl font-bold text-black">Task List</h3>
+                </div>
+              </div>
+
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 scrollbar-thumb-rounded-full">
                 {taskData
-                  .filter((task) => task.user_id === userData?.id)
+                  // .filter((task) => task.task && (!task.showParameters || task.showParameters.every((key) => task[key] !== undefined)))
+                  // .filter((task) => task.task)
                   .slice(0, visibleTasks)
                   .map((task) => (
-                    <li
+
+                    <div
                       key={task._id}
-                      className="flex items-center justify-between py-3 px-2 hover:bg-gray-700 rounded-lg"
+                      className="group relative bg-white bg-opacity-60 border-2 border-[#b1c4e] rounded-lg p-4 transition-all duration-300 hover:bg-[#00256A]
+ hover:border-blue-100 hover:shadow-md"
                     >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-3 h-3 rounded-full ${
-                            task.completed ? "bg-green-500" : "bg-red-500"
-                          }`}
-                        ></span>
-                        <span>{task.task}</span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0 pr-16 pb-7">
+                          <div className="flex items-center gap-3 mb-2">
+                            {/* <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${task.completed
+                              ? "bg-green-400 shadow-md"
+                              : "bg-red-500   shadow-md "
+                              }`}></div> */}
+                            <h4 className="font-semibold text-[#00256A] text-sm leading-tight line-clamp-2 group-hover:text-white transition-colors">
+                              {task.task}
+                            </h4>
+
+
+                          </div>
+                          {task.showParameters && Array.isArray(task.showParameters) &&
+                            task.showParameters.map((paramKey) => (
+                              task.filtered_parameters[paramKey.toLowerCase()] &&
+                              (<div key={paramKey} className="text-sm text-gray-900  group-hover:text-white ">
+                                {paramKey.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: {task.filtered_parameters[paramKey.toLowerCase()]}
+                              </div>)
+                            ))
+                          }
+                        </div>
+
+                        <div className="absolute top-2 right-3 text-xs text-gray-500 group-hover:text-white ">
+                          {new Date(task.CreateDTM).toLocaleDateString("en-GB")}
+                        </div>
+
+                        <div className="absolute bottom-3 right-3">
+                          {/* <div className="text-xs text-gray-500 mt-2">
+                            {new Date(task.CreateDTM).toLocaleDateString("en-GB")}
+                          </div> */}
+
+
+                          <button
+                            onClick={() => handleTaskClick(task.Interaction_Log_ID, task.url)}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-full border border-[#fffff] transition-all duration-200 flex-shrink-0 w-auto ${task.completed
+                              ? "bg-green-200 text-green-900 hover:bg-green-300"
+                              // : "bg-[#00256A] text-white group-hover:text-blue hover:bg-white"
+                              : "bg-[#00256A] text-white hover:text-[#00256A] hover:bg-white"
+
+                              }`}
+                          >
+                            {task.completed ? "✓ Done" : "Ok"}
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleTaskClick(task._id, task.url)}
-                        className={`text-xs font-semibold py-1 px-2 rounded-md ${
-                          task.completed
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-blue-500 text-white hover:bg-blue-600"
-                        }`}
-                      >
-                        {task.completed ? "Done" : "Mark as Read"}
-                      </button>
-                    </li>
+                    </div>
                   ))}
-              </ul>
+
+                {taskData.length === 0 && (
+                  <div className="text-center py-8">
+                    <FaTasks className="mx-auto text-4xl text-gray-400 mb-3" />
+                    <p className="text-gray-500 text-sm">No tasks available</p>
+                  </div>
+                )}
+
+                {visibleTasks < taskData.length && (
+                  <div className="text-center pt-3">
+                    <button
+                      onClick={loadMoreTasks}
+                      className="text-xs text-[#00256A] hover:text-blue-700 transition-colors font-medium"
+                    >
+                      Load more tasks...
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center mt-5">
+                <div className="flex items-center gap-2">
+                  <button className="text-l text-[#00256A]">Go To Full Worklist</button>
+                </div>
+              </div>
             </div>
           )}
+
+
         </div>
 
-       {/* <FaCog className="w-6 h-6 text-blue-500 bg-white rounded-full p-1 shadow-md cursor-pointer" /> */}
+        {/* <FaCog className="w-6 h-6 text-blue-500 bg-white rounded-full p-1 shadow-md cursor-pointer" /> */}
         <div className="relative" ref={dropdownRef}>
           <div
             className="w-10 h-10 rounded-full overflow-hidden border-2 border-white cursor-pointer"
