@@ -489,20 +489,20 @@ export const listDRCAllCases = async (payload) => {
     }
 
     // Format the response data including status
-    const formattedCases = response.data.data.map((caseData) => {
-      return {
-        case_id: caseData.case_id,
-        status: caseData.status, // Added status field
-        created_dtm: caseData.created_dtm,
-        ro_name: caseData.ro_name || null,
-        contact_no: caseData.contact_no || null,
-        area: caseData.area,
-        action_type: caseData.action_type,
-      };
-    });
-    console.log("Formatted Cases:", formattedCases);
+    // const formattedCases = response.data.data.map((caseData) => {
+    //   return {
+    //     case_id: caseData.case_id,
+    //     status: caseData.status, // Added status field
+    //     created_dtm: caseData.created_dtm,
+    //     ro_name: caseData.ro_name || null,
+    //     contact_no: caseData.contact_no || null,
+    //     area: caseData.area,
+    //     action_type: caseData.action_type,
+    //   };
+    // });
+    // console.log("Formatted Cases:", formattedCases);
 
-    return formattedCases;
+    return response;
   } catch (error) {
     console.error(
       "Error retrieving cases by DRC:",
