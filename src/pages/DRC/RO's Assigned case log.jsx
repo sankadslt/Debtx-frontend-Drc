@@ -701,11 +701,11 @@ export default function ROsAssignedcaselog() {
             style={{ color: filters.action_type === "" ? "gray" : "black" }}
           >
             <option value="" hidden>Action Type</option>
-            <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
-            <option value="Arrears and CPE Collect" style={{ color: "black" }}>
+            <option value="collect arrears" style={{ color: "black" }}>Arrears Collect</option>
+            <option value="collect arrears and CPE" style={{ color: "black" }}>
               Arrears and CPE Collect
             </option>
-            <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
+            <option value="collect CPE" style={{ color: "black" }}>CPE Collect</option>
           </select>
 
           {/* <div className={`${GlobalStyle.datePickerContainer} flex`}> */}
