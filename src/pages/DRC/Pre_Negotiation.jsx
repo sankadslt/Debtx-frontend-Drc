@@ -25,6 +25,7 @@ export const Pre_Negotiation = () => {
     useState(null);
 
   const [userId, setUserId] = useState(null);
+  
   const [selectedDate, setSelectedDate] = useState(null);
   const [caseDetails, setCaseDetails] = useState(null);
   const [selectedSubmission, setSelectedSubmission] = useState("");
@@ -145,18 +146,20 @@ export const Pre_Negotiation = () => {
       // Updated response handling
       if (response && response.data) {
         console.log("Valid data received:", response.data);
+        setCaseDetails(response.data[0]);
 
         if (currentPage === 1) {
-          setFilteredData(response.data); // Set initial data for page 1
+          // setFilteredData(response.data); // Set initial data for page 1
+          setFilteredData(response.data[0].inquiries);
         } else {
           // setFilteredData(response.data);
 
-          setFilteredData((prevData) => [...prevData, ...response.data]);
+          setFilteredData((prevData) => [...prevData, ...response.data[0].inquiries]);
         }
 
         // setFilteredData((prevData) => [...prevData, ...response.data]);
 
-        if (response.data.length === 0) {
+        if (response.data[0].inquiries.length === 0) {
           setIsMoreDataAvailable(false); // No more data available
           if (currentPage === 1) {
             // Swal.fire({
@@ -172,7 +175,7 @@ export const Pre_Negotiation = () => {
           }
         } else {
           const maxData = currentPage === 1 ? 10 : 30;
-          if (response.data.length < maxData) {
+          if (response.data[0].inquiries.length < maxData) {
             setIsMoreDataAvailable(false); // More data available
           }
         }
@@ -305,9 +308,10 @@ export const Pre_Negotiation = () => {
             } else {
               // callAPI({
               //   case_id,
-              //   currentPage,
+              //   currentPage:1,
               // });
               setCurrentPage(1); // Reset to the first page if LODType changes
+              setIsMoreDataAvailable(true); // Reset the flag for more data availability
             }
           }
         });
@@ -417,9 +421,9 @@ export const Pre_Negotiation = () => {
 
       {/* </div> */}
 
-      <div className="flex flex-row gap-4 w-full items-start">
+      <div className="flex flex-row gap-4 w-full items-stretch">
         {/* Account Details Card */}
-        <div className="flex-1 mb-4 w-full">
+        {/* <div className="flex-1 mb-4 w-full">
           <div
             className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
           >
@@ -441,15 +445,52 @@ export const Pre_Negotiation = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
+        <div className="flex-1 mb-4 w-full">
+  <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full h-full`}>
+    <div className="flex flex-col w-full">
+      {isLoading ? (
+        <p className="text-center">Loading...</p>
+      ) : caseDetails ? (
+        [
+          { label: "Case ID", value: caseDetails.case_id },
+          { label: "Account Number", value: account_no },
+          {
+            label: "Last Payment Date",
+            value: caseDetails.last_payment_date
+              ? new Date(caseDetails.last_payment_date).toLocaleDateString("en-GB")
+              : "N/A",
+          },
+          { label: "Billing Centre", value: caseDetails.rtom || "N/A" },
+          { label: "NIC", value: caseDetails.nic || "N/A" },
+          {
+            label: "Current Arrears Amount",
+            value: caseDetails.current_arrears_amount || "N/A",
+          },
+        ].map((item, index) => (
+          <div
+            key={index}
+            className="flex flex-col sm:flex-row sm:items-center px-4 py-2"
+          >
+            <div className="font-bold w-full sm:w-40">{item.label}</div>
+            <div className="px-4 py-2 sm:w-10">:</div>
+            <div className="px-4 py-2 flex-1">{item.value}</div>
+          </div>
+        ))
+      ) : (
+        <p className="text-center">No case details available</p>
+      )}
+    </div>
+  </div>
+</div>
         {/* Form Card */}
         <div
           className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
         >
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-start mb-4 w-full">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-strech justify-start mb-4 w-full">
             <div className="flex gap-4 items-center justify-start mb-4 w-full">
               <label className="w-56">Call Negotiation</label>
-              <select
+              {/* <select
                 className={`${GlobalStyle.selectBox}`}
                 value={selectedSubmission}
                 onChange={(e) => setSelectedSubmission(e.target.value)}
@@ -457,7 +498,21 @@ export const Pre_Negotiation = () => {
                 <option value="">Select</option>
                 <option value="Legal Accepted">Legal Accepted</option>
                 <option value="Legal Rejected">Legal Rejected</option>
-              </select>
+              </select> */}
+               <select
+                        
+                        value={selectedSubmission}
+                        onChange={(e) => setSelectedSubmission(e.target.value)}
+                        className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
+                        style={{ color: selectedSubmission === "" ? "gray" : "black" }}
+                      >
+                        <option value="" hidden>Select</option>
+                        <option value="Legal Accepted" style={{ color: "black" }}>Legal Accepted</option>
+                        <option value="Legal Rejected" style={{ color: "black" }}>
+                          Legal Rejected
+                        </option>
+                        
+                      </select>
             </div>
           </div>
           {/* Remark */}
@@ -495,9 +550,9 @@ export const Pre_Negotiation = () => {
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>
+                {/* <th className={GlobalStyle.tableHeader}>
                   Call Inquiry Sequence
-                </th>
+                </th> */}
                 <th className={GlobalStyle.tableHeader}>Remark</th>
                 <th className={GlobalStyle.tableHeader}>Call Topic</th>
 
@@ -524,10 +579,10 @@ export const Pre_Negotiation = () => {
                     {item.task_id || "N/A"}
                   </td> */}
 
-                    <td className={GlobalStyle.tableData}>
+                    {/* <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.seq || "N/A"}{" "}
-                    </td>
+                    </td> */}
                     <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.call_inquiry_remark || "N/A"}{" "}
