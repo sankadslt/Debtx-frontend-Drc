@@ -326,6 +326,7 @@ import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken, logoutUser } from "../services/auth/authService";
 import { fetchUserTasks, markTaskAsCompleted } from "../services/userTask/userTaskService";
 
+
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -466,10 +467,18 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchTasks = async () => {
+      console.log("Fetching tasks for user:", userData);
+      console.log("delegete user id: ", userData?.id);
       try {
-        const tasks = await fetchUserTasks(localStorage.getItem("accessToken"), userData?.user_id);
+        const tasks = await fetchUserTasks(localStorage.getItem("accessToken"), userData?.id);
+        console.log("Fetched tasks:", tasks);
 
-        setTaskData(tasks);
+        const enriched = tasks.map((t) => ({
+          ...t,
+          task: t.Process,
+        }));
+
+        setTaskData(enriched);
       } catch (error) {
         console.error("Error fetching tasks:", error.message);
       }
