@@ -25,6 +25,7 @@ export const Pre_Negotiation = () => {
     useState(null);
 
   const [userId, setUserId] = useState(null);
+  
   const [selectedDate, setSelectedDate] = useState(null);
   const [caseDetails, setCaseDetails] = useState(null);
   const [selectedSubmission, setSelectedSubmission] = useState("");
@@ -145,34 +146,36 @@ export const Pre_Negotiation = () => {
       // Updated response handling
       if (response && response.data) {
         console.log("Valid data received:", response.data);
+        setCaseDetails(response.data[0]);
 
         if (currentPage === 1) {
-          setFilteredData(response.data); // Set initial data for page 1
+          // setFilteredData(response.data); // Set initial data for page 1
+          setFilteredData(response.data[0].inquiries);
         } else {
           // setFilteredData(response.data);
 
-          setFilteredData((prevData) => [...prevData, ...response.data]);
+          setFilteredData((prevData) => [...prevData, ...response.data[0].inquiries]);
         }
 
         // setFilteredData((prevData) => [...prevData, ...response.data]);
 
-        if (response.data.length === 0) {
+        if (response.data[0].inquiries.length === 0) {
           setIsMoreDataAvailable(false); // No more data available
           if (currentPage === 1) {
-            Swal.fire({
-              title: "No Results",
-              text: "No matching data found for the selected filters.",
-              icon: "warning",
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-              confirmButtonColor: "#f1c40f",
-            });
+            // Swal.fire({
+            //   title: "No Results",
+            //   text: "No matching data found for the selected filters.",
+            //   icon: "warning",
+            //   allowOutsideClick: false,
+            //   allowEscapeKey: false,
+            //   confirmButtonColor: "#f1c40f",
+            // });
           } else if (currentPage === 2) {
             setCurrentPage(1);
           }
         } else {
           const maxData = currentPage === 1 ? 10 : 30;
-          if (response.data.length < maxData) {
+          if (response.data[0].inquiries.length < maxData) {
             setIsMoreDataAvailable(false); // More data available
           }
         }
@@ -275,11 +278,13 @@ export const Pre_Negotiation = () => {
         created_by: userData?.user_id,
         drc_id: userData?.drc_id,
       };
-      console.log("Payload sent by submit: ", { payload });
 
-      setIsLoading(true);
+      if (userData?.drc_id){
+
+        setIsLoading(true);
       const response = await Create_Pre_Negotiation(payload);
       setIsLoading(false);
+      console.log("Payload sent by submit: ", { payload });
       // console.log(response)
       if (response === "success") {
         Swal.fire({
@@ -287,6 +292,7 @@ export const Pre_Negotiation = () => {
           text: "Pre Negotation entry added successfully!", // Change to "withdrawal" if intended
           icon: "success",
           confirmButtonText: "OK",
+          confirmButtonColor: "#28a745",
         }).then((result) => {
           if (result.isConfirmed) {
             // setFilteredData([]); // Clear previous data when LODType changes
@@ -302,9 +308,10 @@ export const Pre_Negotiation = () => {
             } else {
               // callAPI({
               //   case_id,
-              //   currentPage,
+              //   currentPage:1,
               // });
               setCurrentPage(1); // Reset to the first page if LODType changes
+              setIsMoreDataAvailable(true); // Reset the flag for more data availability
             }
           }
         });
@@ -312,14 +319,36 @@ export const Pre_Negotiation = () => {
         setRemark("");
         // isLoading(true);
       } else {
-        Swal.fire(
-          "Error",
-          `Failed to submit pre negotiation request: ${response.message}`,
-          "error"
+        Swal.fire(        
+          {
+          title: "Error",
+          text: "Failed to submit pre negotiation request.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        }
         );
       }
+        
+      }else{
+        Swal.fire({
+          title: "Error",
+          text: "No drc id found! Make sure you are logged in as DRC user.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+
+      }
+      
+
+      
     } catch (err) {
       console.error("Error pre negotiation request response:", err);
+      Swal.fire({
+          title: "Error",
+          text: "Could not submit pre negotiation request. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
     } finally {
       setIsLoading(false);
     }
@@ -392,9 +421,9 @@ export const Pre_Negotiation = () => {
 
       {/* </div> */}
 
-      <div className="flex flex-row gap-4 w-full items-start">
+      <div className="flex flex-row gap-4 w-full items-stretch">
         {/* Account Details Card */}
-        <div className="flex-1 mb-4 w-full">
+        {/* <div className="flex-1 mb-4 w-full">
           <div
             className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
           >
@@ -416,15 +445,52 @@ export const Pre_Negotiation = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
+        <div className="flex-1 mb-4 w-full">
+  <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full h-full`}>
+    <div className="flex flex-col w-full">
+      {isLoading ? (
+        <p className="text-center">Loading...</p>
+      ) : caseDetails ? (
+        [
+          { label: "Case ID", value: caseDetails.case_id },
+          { label: "Account Number", value: account_no },
+          {
+            label: "Last Payment Date",
+            value: caseDetails.last_payment_date
+              ? new Date(caseDetails.last_payment_date).toLocaleDateString("en-GB")
+              : "N/A",
+          },
+          { label: "Billing Centre", value: caseDetails.rtom || "N/A" },
+          { label: "NIC", value: caseDetails.nic || "N/A" },
+          {
+            label: "Current Arrears Amount",
+            value: caseDetails.current_arrears_amount || "N/A",
+          },
+        ].map((item, index) => (
+          <div
+            key={index}
+            className="flex flex-col sm:flex-row sm:items-center px-4 py-2"
+          >
+            <div className="font-bold w-full sm:w-40">{item.label}</div>
+            <div className="px-4 py-2 sm:w-10">:</div>
+            <div className="px-4 py-2 flex-1">{item.value}</div>
+          </div>
+        ))
+      ) : (
+        <p className="text-center">No case details available</p>
+      )}
+    </div>
+  </div>
+</div>
         {/* Form Card */}
         <div
           className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] w-full`}
         >
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-start mb-4 w-full">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-strech justify-start mb-4 w-full">
             <div className="flex gap-4 items-center justify-start mb-4 w-full">
               <label className="w-56">Call Negotiation</label>
-              <select
+              {/* <select
                 className={`${GlobalStyle.selectBox}`}
                 value={selectedSubmission}
                 onChange={(e) => setSelectedSubmission(e.target.value)}
@@ -432,7 +498,21 @@ export const Pre_Negotiation = () => {
                 <option value="">Select</option>
                 <option value="Legal Accepted">Legal Accepted</option>
                 <option value="Legal Rejected">Legal Rejected</option>
-              </select>
+              </select> */}
+               <select
+                        
+                        value={selectedSubmission}
+                        onChange={(e) => setSelectedSubmission(e.target.value)}
+                        className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
+                        style={{ color: selectedSubmission === "" ? "gray" : "black" }}
+                      >
+                        <option value="" hidden>Select</option>
+                        <option value="Legal Accepted" style={{ color: "black" }}>Legal Accepted</option>
+                        <option value="Legal Rejected" style={{ color: "black" }}>
+                          Legal Rejected
+                        </option>
+                        
+                      </select>
             </div>
           </div>
           {/* Remark */}
@@ -470,9 +550,9 @@ export const Pre_Negotiation = () => {
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>
+                {/* <th className={GlobalStyle.tableHeader}>
                   Call Inquiry Sequence
-                </th>
+                </th> */}
                 <th className={GlobalStyle.tableHeader}>Remark</th>
                 <th className={GlobalStyle.tableHeader}>Call Topic</th>
 
@@ -499,10 +579,10 @@ export const Pre_Negotiation = () => {
                     {item.task_id || "N/A"}
                   </td> */}
 
-                    <td className={GlobalStyle.tableData}>
+                    {/* <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.seq || "N/A"}{" "}
-                    </td>
+                    </td> */}
                     <td className={GlobalStyle.tableData}>
                       {" "}
                       {item.call_inquiry_remark || "N/A"}{" "}
@@ -705,11 +785,20 @@ export const Pre_Negotiation = () => {
         </div>
       )}
 
-      <div>
+       <div>
+            <button
+                onClick={handleBackButton}
+                className={GlobalStyle.buttonPrimary}
+            >
+                <FaArrowLeft className="mr-2" />
+            </button>
+        </div>
+
+      {/* <div>
         <button className={GlobalStyle.navButton} onClick={handleBackButton}>
           <FaArrowLeft />
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

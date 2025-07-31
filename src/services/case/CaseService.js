@@ -489,20 +489,20 @@ export const listDRCAllCases = async (payload) => {
     }
 
     // Format the response data including status
-    const formattedCases = response.data.data.map((caseData) => {
-      return {
-        case_id: caseData.case_id,
-        status: caseData.status, // Added status field
-        created_dtm: caseData.created_dtm,
-        ro_name: caseData.ro_name || null,
-        contact_no: caseData.contact_no || null,
-        area: caseData.area,
-        action_type: caseData.action_type,
-      };
-    });
-    console.log("Formatted Cases:", formattedCases);
+    // const formattedCases = response.data.data.map((caseData) => {
+    //   return {
+    //     case_id: caseData.case_id,
+    //     status: caseData.status, // Added status field
+    //     created_dtm: caseData.created_dtm,
+    //     ro_name: caseData.ro_name || null,
+    //     contact_no: caseData.contact_no || null,
+    //     area: caseData.area,
+    //     action_type: caseData.action_type,
+    //   };
+    // });
+    // console.log("Formatted Cases:", formattedCases);
 
-    return formattedCases;
+    return response;
   } catch (error) {
     console.error(
       "Error retrieving cases by DRC:",
@@ -690,9 +690,9 @@ export const caseDetailsforDRC = async (payload) => {
       account_no: data[0].account_no,
       current_arrears_amount: data[0].current_arrears_amount,
       last_payment_date: data[0].last_payment_date,
-      contactDetails: data[0].current_contact || [],
-      full_Address: data[0].full_Address,
-      nic: data[0].nic,
+      contactDetails: data[0].current_contact_details || [],
+      current_customer_identification: data[0].current_customer_identification,
+      // nic: data[0].nic,
     };
     console.log("Data from backend:", caseData.data.data);
     console.log("Case Details:", caseDetails);
@@ -711,29 +711,29 @@ export const caseDetailsforDRC = async (payload) => {
 export const updateCustomerContacts = async (payload) => {
   try {
     // Validate required fields
-    if (!payload.case_id) {
-      throw new Error("Case ID is required");
-    }
+    // if (!payload.case_id) {
+    //   throw new Error("Case ID is required");
+    // }
 
     // Extract the needed fields from the payload structure
-    const requestData = {
-      case_id: payload.case_id,
-      drc_id: payload.drc_id,
-      ro_id: payload.caseData.ro_id,
-      contact_type: payload.caseData.contact_type,
-      contact_no: payload.caseData.contact_no,
-      email: payload.caseData.email,
-      customer_identification: payload.caseData.customer_identification,
-      customer_identification_type:
-        payload.caseData.customer_identification_type,
-      address: payload.caseData.address,
-      remark: payload.caseData.remark,
-    };
+    // const requestData = {
+    //   case_id: payload.case_id,
+    //   drc_id: payload.drc_id,
+    //   ro_id: payload.caseData.ro_id,
+    //   contact_type: payload.caseData.contact_type,
+    //   contact_no: payload.caseData.contact_no,
+    //   email: payload.caseData.email,
+    //   customer_identification: payload.caseData.customer_identification,
+    //   customer_identification_type:
+    //     payload.caseData.customer_identification_type,
+    //   address: payload.caseData.address,
+    //   remark: payload.caseData.remark,
+    // };
 
     // Send a POST request to update customer contacts
     const updatedData = await axios.patch(
       `${URL}/Update_Customer_Contacts`,
-      requestData
+      payload
     );
     console.log("Update Response:", updatedData);
 
