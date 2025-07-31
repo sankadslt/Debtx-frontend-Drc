@@ -796,7 +796,7 @@ export default function ROsAssignedcaselog() {
 
                 <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                 <td className={GlobalStyle.tableData}>
-                  {row.contact_no}
+                  {row.current_contact_details?.contact}
                 </td>
                 <td className={GlobalStyle.tableData}>{row.rtom}</td>
                 <td className={GlobalStyle.tableData}>{row.action_type}</td>
