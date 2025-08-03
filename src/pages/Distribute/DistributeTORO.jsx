@@ -1058,7 +1058,8 @@ const DistributeTORO = () => {
           <option value="" hidden>Select RO</option>
           {filteredOfficers.length > 0 ? filteredOfficers.map((officer) => (
             <option key={officer.ro_id} value={officer.ro_id} style={{ color: "black" }}>
-              {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
+              {/* {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")} */}
+              {officer.ro_name}
             </option>
           )) : (
             <option value="" disabled>No Recovery Officers available</option>
