@@ -380,11 +380,11 @@ export default function AssignedCaseListforDRC() {
         }
       } else {
         Swal.fire({
-          title: "Error",
+          title: "Warning",
 
           text: "No valid data found in response.",
-          icon: "error",
-          confirmButtonColor: "#d33"
+          icon: "warning",
+          confirmButtonColor: "#f1c40f"
 
         });
         setFilteredData([]);
