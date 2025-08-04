@@ -253,7 +253,7 @@ export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
         case_id: caseData.case_id,
         status: caseData.status, // Added status field
         created_dtm: caseData.created_dtm,
-        area: caseData.area,
+        rtom: caseData.rtom,
         ro_name: caseData.ro_name || null,
         mediation_board_count: caseData.mediation_board_count,
         next_calling_date: caseData.next_calling_date,
