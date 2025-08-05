@@ -516,16 +516,21 @@ const MediationBoardCaselist = () => {
           <select
               value={rtom}
               onChange={(e) => setRtom(e.target.value)}
-              className={`${GlobalStyle.selectBox} mt-3`}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
               style={{ color: rtom === "" ? "gray" : "black" }}
             >
           
-          <option value="" hidden>Rtom</option>
-          {rtoms.map((rtom) => (
-            <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
-              {rtom.area_name}
-            </option>
-          ))}
+          <option value="" hidden>Billing Center</option>
+          {(rtoms.length > 0 ? rtoms.map((rtom) => (
+              <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
+                {rtom.area_name}
+              </option>
+            )) : (
+              <option value="" disabled style={{ color: "grey" }}>
+                No Billing Centers available
+              </option>
+            ))}
+          
         </select>
 
         <select
@@ -535,13 +540,12 @@ const MediationBoardCaselist = () => {
           className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
           style={{ color: actionType === "" ? "gray" : "black" }}
         >
-          <option value="" hidden>Action Type</option>
-          <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
-          <option value="Arrears and CPE Collect" style={{ color: "black" }}>
-            Arrears and CPE Collect
-          </option>
-          <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
-        </select>
+            <option value="" hidden>Action Type</option>
+            <option value="collect arrears" style={{ color: "black" }}>Arrears Collect</option>
+            <option value="collect arrears and CPE" style={{ color: "black" }}>
+              Arrears and CPE Collect
+            </option>
+            <option value="collect CPE" style={{ color: "black" }}>CPE Collect</option></select>
 
         <select
           name="status"
@@ -631,7 +635,7 @@ const MediationBoardCaselist = () => {
                 <th className={GlobalStyle.tableHeader}>Status</th>
                 
                 <th className={GlobalStyle.tableHeader}>RO Name</th>
-                <th className={GlobalStyle.tableHeader}>RTOM</th>
+                <th className={GlobalStyle.tableHeader}>Billing Center</th>
                 <th className={GlobalStyle.tableHeader}>Calling Round</th>
                 <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Next Calling Date</th>
@@ -659,7 +663,7 @@ const MediationBoardCaselist = () => {
 
                   
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                  <td className={GlobalStyle.tableData}>{item.area}</td>
+                  <td className={GlobalStyle.tableData}>{item.rtom}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.mediation_board_count || 0}
                   </td>
