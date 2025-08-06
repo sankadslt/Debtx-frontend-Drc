@@ -42,11 +42,11 @@ import { Tooltip } from "react-tooltip";
 // Status icon mapping
 const STATUS_ICONS = {
   "Forward to Mediation Board": {
-    icon: Forward_to_Mediation_Board,
+    icon:  FMB,
     tooltip: "Forward to Mediation Board"
   },
   "MB Fail with Pending Non-Settlement": {
-    icon: MB_fail_with_pending_non_settlement,
+    icon: MB_Fail_with_Pending_Non_Settlement ,
     tooltip: "MB Fail with Pending Non-Settlement"
   },
   "MB Fail with Non-Settlement": {
@@ -66,11 +66,11 @@ const STATUS_ICONS = {
     tooltip: "MB Settle Active"
   },
   "MB Settle Open-Pending": {
-    icon: MB_Settle_open_pending,
+    icon:  MB_Settle_Open_Pending,
     tooltip: "MB Settle Open-Pending"
   },
   "MB Settle Pending": {
-    icon: MB_Settle_pending,
+    icon:MB_Settle_Pending,
     tooltip: "MB Settle Pending"
   }
 };
