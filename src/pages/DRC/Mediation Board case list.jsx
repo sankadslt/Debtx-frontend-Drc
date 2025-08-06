@@ -26,15 +26,17 @@ import edit from "../../assets/images/mediationBoard/edit.png";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
-import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
-import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
-import MB_Handed_Customer_Info from "../../assets/images/mediationBoard/MB_Handed_Customer_Info.png";
-import MB_Negotiation from "../../assets/images/mediationBoard/MB_Negotiation.png";
-import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Request_Customer_Info.png";
-import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
-import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
-import MB_Settle_pending from "../../assets/images/mediationBoard/MB_Settle_pending.png";
-import MB_Fail_with_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_non_settlement.png";
+
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Fail_with_non_settlement from "../../assets/images/Mediation _Board/MB Fail with non settlement.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
+
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService";
 import { Tooltip } from "react-tooltip";
