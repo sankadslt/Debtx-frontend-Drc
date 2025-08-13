@@ -98,3 +98,25 @@ export const getUserData = async () => {
     throw error.response?.data || error;
   }
 };
+
+//mobile login
+
+// Send OTP
+export const sendOtp = async (phone_number) => {
+  try {
+    const response = await axios.post(`${AUTH_URL}/mobile/send-otp`, { phone_number });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Verify OTP
+export const verifyOtp = async (phone_number, otp_input) => {
+  try {
+    const response = await axios.post(`${AUTH_URL}/mobile/verify-otp`, { phone_number, otp_input }, { withCredentials: true });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
