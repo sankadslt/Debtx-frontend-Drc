@@ -68,17 +68,26 @@
 import { useState } from "react";
 import logo from "../assets/images/logo.png";
 import backgroundImage from "../assets/images/loginbg.png";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { loginUser } from "../services/auth/authService";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMobileAlt, FaKey } from "react-icons/fa";
+import { loginUser, sendOtp , verifyOtp } from "../services/auth/authService";
 import { useNavigate } from "react-router-dom";
+// import axios from "axios";
 
 const Login = () => {
   const [error, setError] = useState("");
   const [socialLoading, setSocialLoading] = useState("");
   const [showTestLogin, setShowTestLogin] = useState(false);
+  const [showMobileLogin, setShowMobileLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Mobile login states
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleGoogleLogin = (e) => {
@@ -99,6 +108,72 @@ const Login = () => {
       setError(error.response?.data?.message || "Login failed");
     }
   };
+
+  // // Send OTP
+  // const handleSendOtp = async () => {
+  //   setError("");
+  //   setLoading(true);
+  //   try {
+  //     await axios.post(`${import.meta.env.VITE_BASE_URL}/mobile/send-otp`, {
+  //       phone_number: mobileNumber,
+  //     });
+  //     setOtpSent(true);
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || "Failed to send OTP");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // // Verify OTP
+  // const handleVerifyOtp = async () => {
+  //   setError("");
+  //   setLoading(true);
+  //   try {
+  //     const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/mobile/verify-otp`, {
+  //       phone_number: mobileNumber,
+  //       otp_input: otp,
+  //     });
+
+  //     localStorage.setItem("accessToken", res.data.accessToken);
+  //     localStorage.setItem("user", JSON.stringify(res.data.user));
+  //     navigate("/dashboard");
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || "Invalid OTP");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Send OTP
+const handleSendOtp = async () => {
+  setError("");
+  setLoading(true);
+  try {
+    await sendOtp(mobileNumber);
+    setOtpSent(true);
+  } catch (err) {
+    setError(err.message || "Failed to send OTP");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Verify OTP
+const handleVerifyOtp = async () => {
+  setError("");
+  setLoading(true);
+  try {
+    const res = await verifyOtp(mobileNumber, otp);
+    localStorage.setItem("accessToken", res.accessToken);
+    localStorage.setItem("user", JSON.stringify(res.user));
+    navigate("/dashboard");
+  } catch (err) {
+    setError(err.message || "Invalid OTP");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div
@@ -139,13 +214,21 @@ const Login = () => {
                   : "Sign in with Google"}
               </button>
 
-{/*               <button
+              <button
                 type="button"
                 className="w-full py-2 bg-white hover:bg-gray-100 text-blue-600 font-semibold rounded-lg border border-blue-600 transition-all duration-200"
                 onClick={() => setShowTestLogin(true)}
               >
                 Test Login
-              </button> */}
+              </button>
+
+              <button
+                type="button"
+                className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-200"
+                onClick={() => setShowMobileLogin(true)}
+              >
+                Mobile Login
+              </button>
             </form>
           </div>
         </div>
@@ -207,6 +290,70 @@ const Login = () => {
                 Login
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Login Modal */}
+      {showMobileLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+            <button
+              onClick={() => setShowMobileLogin(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl"
+            >
+              &times;
+            </button>
+            <div className="flex justify-center mb-4">
+              <img src={logo} alt="Logo" className="h-16" />
+            </div>
+            <h2 className="text-xl font-bold text-center mb-4">Mobile Login</h2>
+
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+
+            {!otpSent ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <FaMobileAlt className="absolute left-3 top-3 text-gray-500" />
+                  <input
+                    type="tel"
+                    placeholder="Mobile Number"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <button
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  {loading ? "Sending..." : "Send OTP"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative">
+                  <FaKey className="absolute left-3 top-3 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={loading}
+                  className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
