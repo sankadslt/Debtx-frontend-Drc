@@ -509,6 +509,9 @@ export default function RO_ADDro() {
   const [nic, setNic] = useState('');
   const [nicError, setNicError] = useState('');
   const [drcName, setDrcName] = useState("");
+  const [contactNoTwo, setContactNoTwo] = useState(itemData?.contact_no_two || '');
+  const [userRole, setUserRole] = useState((itemData?.user_role || 'DRC Coordinator').toLowerCase());
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -613,6 +616,18 @@ export default function RO_ADDro() {
       setContactError('');
     }
 
+     if (!contactNoTwo) {
+      setContactError('Please enter a contact number.');
+      isValid = false;
+    } else if (contactNoTwo.length !== 10) {
+      setContactError('Contact number must be 10 digits.');
+      isValid = false;
+    } else {
+      setContactError('');
+    }
+
+
+
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
         title: 'Validation Error',
@@ -625,6 +640,14 @@ export default function RO_ADDro() {
 
     return isValid;
   };
+
+  // Maps canonical backend role values → nice labels for the UI
+  const ROLE_LABEL = Object.freeze({
+    "drc coordinator": "DRC Coordinator",
+    "call center": "Call Center",
+    "drc staff": "DRC Staff",
+  });
+
 
   const handleNameChange = (e) => {
     const value = e.target.value;
@@ -663,11 +686,13 @@ export default function RO_ADDro() {
 
     const payload = {
       drcUser_type: userType,
+      user_role: userRole,
       drc_id: userDetail?.drc_id,
       ro_name: name,
       nic: nic,
       login_email: email,
       login_contact_no: contactNo,
+      login_contact_no_two: contactNoTwo,
       create_by: userDetail?.user_id,
       rtoms: userType === "RO" ? rtomAreas.map((area, index) => {
         const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
@@ -705,6 +730,79 @@ export default function RO_ADDro() {
       });
     }
   };
+  // const handleAddRO = async () => {
+  //   if (!validateInputs()) return;
+
+  //   // Map UI choice to backend contract
+  //   const createType = userType === "RO" ? "ro" : "drc_officer";
+  //   const createRole = userType === "RO" ? undefined : userRole; // canonical, lowercase
+
+  //   if (createType === "drc_officer" && !createRole) {
+  //     await Swal.fire({ title: "Error", text: "User role is required for DRC users.", icon: "error" });
+  //     return;
+  //   }
+
+  //   // Build base payload — use `name` (NOT ro_name)
+  //   const base = {
+  //     drcUser_type: createType,          // "ro" | "drc_officer"
+  //     user_role: createRole,             // only for drc_officer
+  //     drc_id: userDetail?.drc_id,
+  //     name,                              // ✅ backend expects `name`
+  //     nic,
+  //     login_email: email,
+  //     login_contact_no: contactNo,
+  //     login_contact_no_two: contactNoTwo,
+  //     create_by: userDetail?.user_id,
+  //     remark,
+  //     status,
+  //   };
+
+  //   if (createType === "ro") {
+  //     const rtomPayload = rtomAreas.map((area, index) => {
+  //       const option = rtomAreaOptions.find(
+  //         (opt) => opt.area_name === area.rtom_name || opt.area_name === area.name
+  //       );
+  //       return {
+  //         rtom_id: option?.rtom_id || area.rtom_id,
+  //         rtom_name: area.rtom_name || area.name,
+  //         billing_center_code: area.billing_center_code || option?.billing_center_code || "N/A",
+  //         rtom_status: area.status ? "Active" : "Inactive",
+  //         handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary"),
+  //       };
+  //     });
+
+  //     // Some APIs use `rtom`, others `rtoms` – send both to be safe.
+  //     base.rtom = rtomPayload;
+  //     base.rtoms = rtomPayload;
+  //   }
+
+  //   try {
+  //     await createNewDRCUserOrRO(base);
+  //     await Swal.fire({
+  //       title: "Success",
+  //       text:
+  //         createType === "ro"
+  //           ? "Recovery Officer added successfully and sent for approval!"
+  //           : `${ROLE_LABEL[createRole] || "DRC User"} added successfully and sent for approval!`,
+  //       icon: "success",
+  //       confirmButtonColor: "#28a745",
+  //       confirmButtonText: "OK",
+  //       allowOutsideClick: false,
+  //       allowEscapeKey: false,
+  //     });
+  //     navigate(-1);
+  //   } catch (error) {
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: error?.response?.data?.message || error.message || "Something went wrong. Please try again.",
+  //       icon: "error",
+  //       confirmButtonColor: "#d33",
+  //       confirmButtonText: "OK",
+  //       allowOutsideClick: false,
+  //       allowEscapeKey: false,
+  //     });
+  //   }
+  // };
 
   const handleAddRtomArea = () => {
     if (selectedRtomArea && !rtomAreas.some(area => area.name === selectedRtomArea)) {
@@ -776,6 +874,27 @@ export default function RO_ADDro() {
                 </div>
               </div>
 
+              {/* Only show User Role field when userType is "drcUser" */}
+              {userType === "drcUser" && (
+                <div className="table-row">
+                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    User Role <span className="text-red-500">*</span>
+                  </div>
+                  <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                  <div className="table-cell px-2 sm:px-4 py-2">
+                    <select
+                      className={`${GlobalStyle.selectBox} w-full sm:w-[150px] md:w-[200px]`}
+                      value={userRole}
+                      onChange={(e) => setUserRole(e.target.value)}  
+                    >
+                      <option value="drc Coordinator">DRC Coordinator</option>
+                      <option value="call center">Call Center</option>
+                      <option value="drc staff">DRC Staff</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   {userType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"} <span className="text-red-500">*</span>
@@ -817,7 +936,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number <span className="text-red-500">*</span>
+                  Contact Number 1<span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -828,6 +947,24 @@ export default function RO_ADDro() {
                     onChange={handleContactChange}
                   />
                   {contactError && <p className="text-red-500 text-xs mt-1">{contactError}</p>}
+                </div>
+              </div>
+
+              <div className="table-row">
+                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number 2 <span className="text-red-500">*</span>
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                  <input
+                    type="text"
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
+                    value={contactNoTwo}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 10) setContactNoTwo(value);
+                    }}
+                  />
                 </div>
               </div>
 

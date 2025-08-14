@@ -628,13 +628,19 @@ export default function RO_DRCUserDetailsEdit() {
   // State for fetched data
   const [fetchedData, setFetchedData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // TOp level type vs. DRC subtype
+  const [activeUserType, setActiveUserType] = useState(itemType);
+  const [activeUserRole, setActiveUserRole] = useState('');
   // Editable fields
   const [contactNo, setContactNo] = useState('');
   const [contactNoError, setContactNoError] = useState('');
+  const [contactNoTwo, setContactNoTwo] = useState('');
+  const [contactNoErrorTwo, setContactNoErrorTwo] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
   const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
+  //RTOM areas (only for RO)
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -642,13 +648,23 @@ export default function RO_DRCUserDetailsEdit() {
   const [rtomAreaOptions, setRtomAreaOptions] = useState([]);
   // Track initial values for change detection
   const [initialContactNo, setInitialContactNo] = useState('');
+  const [initialContactNoTwo, setInitialContactNoTwo] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
   const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
 
+  //Helper
+  const roleLabels = {
+    drcCoordinator: "DRC Coordinator",
+    drcCallCenter: "DRC Call Center",
+    drcStaff: "DRC Staff",
+  }
+
+
   // Fetch user data on mount
   useEffect(() => {
     const fetchUserData = async () => {
+
       if (!itemType || !itemData || (!itemData.ro_id && !itemData.drcUser_id)) {
         Swal.fire({
           title: 'Error',
@@ -678,11 +694,23 @@ export default function RO_DRCUserDetailsEdit() {
 
         if (response && response.data) {
           setFetchedData(response.data);
+          // setActiveUserRole(response.data);
           setContactNo(response.data.contact_no || '');
+          setContactNoTwo(response.data.contact_no_two || '');
           setInitialContactNo(response.data.contact_no || '');
+          setInitialContactNoTwo(response.data.contact_no_two || '');
           setEmail(response.data.email || '');
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
+
+          if (response.data.user_role) {
+            const apiRole = response.data.user_role;
+            const displayRole = roleLabels[apiRole]
+              ? roleLabels[apiRole]
+              : apiRole.charAt(0).toUpperCase() + apiRole.slice(1).toLowerCase();
+            setActiveUserRole(displayRole);
+          }
+
           // Normalize drcUser_status
           let normalizedStatus;
           if (typeof response.data.drcUser_status === 'boolean') {
@@ -744,6 +772,8 @@ export default function RO_DRCUserDetailsEdit() {
       }
     };
 
+
+
     fetchUserData();
   }, [itemType, itemData, navigate]);
 
@@ -769,6 +799,30 @@ export default function RO_DRCUserDetailsEdit() {
     fetchRTOMs();
   }, []);
 
+//   useEffect(() => {
+//   if (location.state?.itemType) {
+//     const itemType = location.state.itemType;
+//     const itemData = location.state.itemData;
+
+//     setActiveUserType(itemType);
+
+//     if (itemType === "drcUser" && itemData?.user_role) {
+//       setActiveUserRole(itemData.user_role);
+//     }
+//   }
+// }, [location.state]);
+
+// useEffect(() => {
+//   if (itemType) {
+//     setActiveUserType(itemType);
+//     if (itemType === "drcUser" && itemData?.user_role) {
+//       setActiveUserRole(itemData.user_role);
+//     }
+//   }
+// }, [itemType, itemData]);
+
+
+
   const handleContactNoChange = (value) => {
     const cleaned = value.replace(/[^+\d]/g, '');
     const digitsOnly = cleaned.replace(/\D/g, '');
@@ -780,6 +834,19 @@ export default function RO_DRCUserDetailsEdit() {
       setContactNo(cleaned);
     }
   };
+
+   const handleContactNoChangeTwo = (value) => {
+    const cleaned = value.replace(/[^+\d]/g, '');
+    const digitsOnly = cleaned.replace(/\D/g, '');
+
+    if (digitsOnly.length > 10) {
+      setContactNoErrorTwo('Contact number cannot exceed 10 digits.');
+    } else {
+      setContactNoErrorTwo(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
+      setContactNoTwo(cleaned);
+    }
+  };
+
 
   const handleEmailChange = (value) => {
     setEmail(value);
@@ -810,6 +877,11 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
+    if (!contactNoTwo || !/^\+?\d{9,10}$/.test(contactNoTwo)) {
+      setContactNoErrorTwo('Please enter a valid contact number (e.g., +94771234567).');
+      isValid = false;
+    }
+
     // Validate remark
     if (!remark.trim()) {
       Swal.fire({
@@ -826,6 +898,7 @@ export default function RO_DRCUserDetailsEdit() {
     // Check for changes
     const hasChanges =
       contactNo !== initialContactNo ||
+       contactNoTwo !== initialContactNoTwo ||
       email !== initialEmail ||
       drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
@@ -913,8 +986,10 @@ export default function RO_DRCUserDetailsEdit() {
         ...(itemType === 'RO' ? { ro_id: roId } : { drcUser_id: drcUserId }),
         drc_id: drcId,
         ro_name: fetchedData?.drcUser_name || fetchedData?.recovery_officer_name || 'N/A',
+        user_role: activeUserRole,
         login_email: email,
         login_contact_no: contactNo,
+        login_contact_no_two: contactNoTwo,
         drcUser_status: drcUserStatus,
         create_by: create_by,
         remark: remark || 'Updated user details',
@@ -1056,6 +1131,18 @@ export default function RO_DRCUserDetailsEdit() {
     );
   }
 
+
+const getUserRoleDisplayText = (role) => {
+  const roleMapping = {
+    'DRC Coordinator': 'DRC Coordinator',
+    'call center': 'Call Center',
+    'user staff': 'User Staff'
+  };
+  return roleMapping[role] || role || 'N/A';
+};
+
+
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
@@ -1086,6 +1173,24 @@ export default function RO_DRCUserDetailsEdit() {
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{fetchedData.added_date || 'N/A'}</div>
               </div>
               <div className="table-row">
+              <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Type</div>
+              <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+              <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                {activeUserType === "RO" ? "Recovery Officer" : activeUserType === "drcUser" ? "DRC User" : "N/A"}
+              </div>
+            </div>
+
+            {activeUserType === "drcUser" && (
+              <div className="table-row">
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Role</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                  {getUserRoleDisplayText(activeUserRole)}
+                </div>
+              </div>
+            )}
+            
+              <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
                 </div>
@@ -1094,11 +1199,14 @@ export default function RO_DRCUserDetailsEdit() {
                   {fetchedData.drcUser_name || fetchedData.recovery_officer_name || 'N/A'}
                 </div>
               </div>
+              
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">NIC</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{fetchedData.nic || 'N/A'}</div>
               </div>
+             
+
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-bold text-sm sm:text-base">Login Method</div>
                 <div className="table-cell px-1 sm:px-4 py-2"></div>
@@ -1106,23 +1214,43 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number
+                  Contact Number 1
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-    <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
-    <input
-      type="text"
-      value={contactNo}
-      onChange={(e) => handleContactNoChange(e.target.value)}
-      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
-    />
-  </div>
-  {contactNoError && (
-    <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
-  )}
-</div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
+                  <input
+                    type="text"
+                    value={contactNo}
+                    onChange={(e) => handleContactNoChange(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {contactNoError && (
+                  <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
+                )}
+              </div>
+              </div>
+               <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number 2
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base">{initialContactNoTwo || 'N/A'}</span>
+                  <input
+                    type="text"
+                    value={contactNoTwo}
+                    onChange={(e) => handleContactNoChangeTwo(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoErrorTwo ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {contactNoErrorTwo && (
+                  <p className="text-red-500 text-xs mt-1">{contactNoErrorTwo}</p>
+                )}
+              </div>
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
