@@ -159,14 +159,14 @@ export const Pre_Negotiation = () => {
         if (response.data.length === 0) {
           setIsMoreDataAvailable(false); // No more data available
           if (currentPage === 1) {
-            Swal.fire({
-              title: "No Results",
-              text: "No matching data found for the selected filters.",
-              icon: "warning",
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-              confirmButtonColor: "#f1c40f",
-            });
+            // Swal.fire({
+            //   title: "No Results",
+            //   text: "No matching data found for the selected filters.",
+            //   icon: "warning",
+            //   allowOutsideClick: false,
+            //   allowEscapeKey: false,
+            //   confirmButtonColor: "#f1c40f",
+            // });
           } else if (currentPage === 2) {
             setCurrentPage(1);
           }
@@ -275,11 +275,13 @@ export const Pre_Negotiation = () => {
         created_by: userData?.user_id,
         drc_id: userData?.drc_id,
       };
-      console.log("Payload sent by submit: ", { payload });
 
-      setIsLoading(true);
+      if (userData?.drc_id){
+
+        setIsLoading(true);
       const response = await Create_Pre_Negotiation(payload);
       setIsLoading(false);
+      console.log("Payload sent by submit: ", { payload });
       // console.log(response)
       if (response === "success") {
         Swal.fire({
@@ -287,6 +289,7 @@ export const Pre_Negotiation = () => {
           text: "Pre Negotation entry added successfully!", // Change to "withdrawal" if intended
           icon: "success",
           confirmButtonText: "OK",
+          confirmButtonColor: "#28a745",
         }).then((result) => {
           if (result.isConfirmed) {
             // setFilteredData([]); // Clear previous data when LODType changes
@@ -312,14 +315,36 @@ export const Pre_Negotiation = () => {
         setRemark("");
         // isLoading(true);
       } else {
-        Swal.fire(
-          "Error",
-          `Failed to submit pre negotiation request: ${response.message}`,
-          "error"
+        Swal.fire(        
+          {
+          title: "Error",
+          text: "Failed to submit pre negotiation request.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        }
         );
       }
+        
+      }else{
+        Swal.fire({
+          title: "Error",
+          text: "No drc id found! Make sure you are logged in as DRC user.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+
+      }
+      
+
+      
     } catch (err) {
       console.error("Error pre negotiation request response:", err);
+      Swal.fire({
+          title: "Error",
+          text: "Could not submit pre negotiation request. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
     } finally {
       setIsLoading(false);
     }
@@ -705,11 +730,20 @@ export const Pre_Negotiation = () => {
         </div>
       )}
 
-      <div>
+       <div>
+            <button
+                onClick={handleBackButton}
+                className={GlobalStyle.buttonPrimary}
+            >
+                <FaArrowLeft className="mr-2" />
+            </button>
+        </div>
+
+      {/* <div>
         <button className={GlobalStyle.navButton} onClick={handleBackButton}>
           <FaArrowLeft />
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
