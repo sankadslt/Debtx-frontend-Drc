@@ -27,13 +27,13 @@ import { Tooltip } from "react-tooltip";
 
 
 // Import status icons with correct file extensions
-import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
-import RO_Negotiation_Extneded from "../../assets/images/negotiation/RO_Negotiation_Extneded.png";
-import RO_Negotiation_Extension_Pending from "../../assets/images/negotiation/RO_Negotiation_Extension_Pending.png";
-import Negotiation_Settle_Active from "../../assets/images/negotiation/Negotiation_Settle_Active.png";
-import Negotiation_Settle_Open_Pending from "../../assets/images/negotiation/Negotiation_Settle_Open-Pending.png";
-import Negotiation_Settle_Pending from "../../assets/images/negotiation/Negotiation_Settle_Pending.png";
-import RO_Negotiation from "../../assets/images/negotiation/RO_Negotiation.png";
+import RO_Negotiation_FMB_pending from "../../assets/images/Negotiation_new/RO_Negotiation_FMB_Pending.png";
+import RO_Negotiation_Extneded from "../../assets/images/Negotiation_new/RO Negotiation extended.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/Negotiation_new/RO Negotiation extend pending.png";
+import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Settle_Active.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
+import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
+import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
 
 // Status icon mapping
 const STATUS_ICONS = {
