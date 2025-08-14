@@ -26,15 +26,17 @@ import edit from "../../assets/images/mediationBoard/edit.png";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
-import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
-import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
-import MB_Handed_Customer_Info from "../../assets/images/mediationBoard/MB_Handed_Customer_Info.png";
-import MB_Negotiation from "../../assets/images/mediationBoard/MB_Negotiation.png";
-import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Request_Customer_Info.png";
-import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
-import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
-import MB_Settle_pending from "../../assets/images/mediationBoard/MB_Settle_pending.png";
-import MB_Fail_with_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_non_settlement.png";
+
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Fail_with_non_settlement from "../../assets/images/Mediation _Board/MB Fail with non settlement.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
+
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService";
 import { Tooltip } from "react-tooltip";
@@ -42,11 +44,11 @@ import { Tooltip } from "react-tooltip";
 // Status icon mapping
 const STATUS_ICONS = {
   "Forward to Mediation Board": {
-    icon: Forward_to_Mediation_Board,
+    icon:  FMB,
     tooltip: "Forward to Mediation Board"
   },
   "MB Fail with Pending Non-Settlement": {
-    icon: MB_fail_with_pending_non_settlement,
+    icon: MB_Fail_with_Pending_Non_Settlement ,
     tooltip: "MB Fail with Pending Non-Settlement"
   },
   "MB Fail with Non-Settlement": {
@@ -66,11 +68,11 @@ const STATUS_ICONS = {
     tooltip: "MB Settle Active"
   },
   "MB Settle Open-Pending": {
-    icon: MB_Settle_open_pending,
+    icon:  MB_Settle_Open_Pending,
     tooltip: "MB Settle Open-Pending"
   },
   "MB Settle Pending": {
-    icon: MB_Settle_pending,
+    icon:MB_Settle_Pending,
     tooltip: "MB Settle Pending"
   }
 };
@@ -516,16 +518,21 @@ const MediationBoardCaselist = () => {
           <select
               value={rtom}
               onChange={(e) => setRtom(e.target.value)}
-              className={`${GlobalStyle.selectBox} mt-3`}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
               style={{ color: rtom === "" ? "gray" : "black" }}
             >
           
-          <option value="" hidden>Rtom</option>
-          {rtoms.map((rtom) => (
-            <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
-              {rtom.area_name}
-            </option>
-          ))}
+          <option value="" hidden>Billing Center</option>
+          {(rtoms.length > 0 ? rtoms.map((rtom) => (
+              <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
+                {rtom.area_name}
+              </option>
+            )) : (
+              <option value="" disabled style={{ color: "grey" }}>
+                No Billing Centers available
+              </option>
+            ))}
+          
         </select>
 
         <select
@@ -535,13 +542,12 @@ const MediationBoardCaselist = () => {
           className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
           style={{ color: actionType === "" ? "gray" : "black" }}
         >
-          <option value="" hidden>Action Type</option>
-          <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
-          <option value="Arrears and CPE Collect" style={{ color: "black" }}>
-            Arrears and CPE Collect
-          </option>
-          <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
-        </select>
+            <option value="" hidden>Action Type</option>
+            <option value="collect arrears" style={{ color: "black" }}>Arrears Collect</option>
+            <option value="collect arrears and CPE" style={{ color: "black" }}>
+              Arrears and CPE Collect
+            </option>
+            <option value="collect CPE" style={{ color: "black" }}>CPE Collect</option></select>
 
         <select
           name="status"
@@ -631,7 +637,7 @@ const MediationBoardCaselist = () => {
                 <th className={GlobalStyle.tableHeader}>Status</th>
                 
                 <th className={GlobalStyle.tableHeader}>RO Name</th>
-                <th className={GlobalStyle.tableHeader}>RTOM</th>
+                <th className={GlobalStyle.tableHeader}>Billing Center</th>
                 <th className={GlobalStyle.tableHeader}>Calling Round</th>
                 <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Next Calling Date</th>
@@ -659,7 +665,7 @@ const MediationBoardCaselist = () => {
 
                   
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
-                  <td className={GlobalStyle.tableData}>{item.area}</td>
+                  <td className={GlobalStyle.tableData}>{item.rtom}</td>
                   <td className={GlobalStyle.tableData}>
                     {item.mediation_board_count || 0}
                   </td>
