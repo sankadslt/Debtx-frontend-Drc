@@ -177,10 +177,10 @@ export default function RO_DRCUserInfo() {
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-    {activeUserType === "drcUser" 
-      ? getUserRoleDisplayText(activeUserRole) 
-      : "Recovery Officer"}
-  </h2>
+      {activeUserType === "drcUser" 
+        ? getUserRoleDisplayText(activeUserRole) 
+        : "Recovery Officer"}
+    </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name : {userData?.drc_name || 'N/A'}
       </h2>
