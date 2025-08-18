@@ -709,7 +709,9 @@ export default function RO_DRCUserList() {
     const [drcTotalAPIPages, setDrcTotalAPIPages] = useState(1);
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
-    const [activeTab, setActiveTab] = useState("RO");
+    const [activeTab, setActiveTab] = useState(() => {
+        return localStorage.getItem("activeTab") || "RO";
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -943,21 +945,27 @@ export default function RO_DRCUserList() {
     };
 
     const handleClear = () => {
-        if (activeTab === "RO") {
-            setRoData([]);
-            setRoCurrentPage(1);
-            setRoMaxPage(0);
-            setRoTotalPages(1);
-            setRoTotalAPIPages(1);
-            setRoStatus("");
-        } else {
-            setDrcData([]);
-            setDrcCurrentPage(1);
-            setDrcMaxPage(0);
-            setDrcTotalPages(1);
-            setDrcTotalAPIPages(1);
-            setDrcUserStatus("");
-        }
+        // if (activeTab === "RO") {
+        //     setRoData([]);
+        //     setRoCurrentPage(1);
+        //     setRoMaxPage(0);
+        //     setRoTotalPages(1);
+        //     setRoTotalAPIPages(1);
+        //     setRoStatus("");
+        // } else {
+        //     setDrcData([]);
+        //     setDrcCurrentPage(1);
+        //     setDrcMaxPage(0);
+        //     setDrcTotalPages(1);
+        //     setDrcTotalAPIPages(1);
+        //     setDrcUserStatus("");
+        // }
+
+        // Store the current tab in localStorage
+        localStorage.setItem("activeTab", activeTab);
+
+        // Refresh the page
+        window.location.reload();
     };
 
     // useEffect(() => {
