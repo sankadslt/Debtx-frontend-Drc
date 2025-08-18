@@ -1092,7 +1092,7 @@ export default function RO_DRCUserList() {
 
             {activeTab === "drcCoordinator" && (
                 <div>
-                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC User List</h2>
+                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC Coordinator</h2>
                     <div className="flex justify-end mt-6">
                         <button
                             className={GlobalStyle.buttonPrimary}
@@ -1100,7 +1100,7 @@ export default function RO_DRCUserList() {
                                 navigate("/ro/ro-add-ro", { state: { from: "drcCoordination" } })
                             }
                         >
-                            Add DRC User
+                            Add DRC - Coordinator
                         </button>
                     </div>
                 </div>
@@ -1222,7 +1222,10 @@ export default function RO_DRCUserList() {
                                             RO Name
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
-                                            Contact No.
+                                            Contact No. 1
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 2
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
                                             Billing Center Area count
@@ -1254,6 +1257,9 @@ export default function RO_DRCUserList() {
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.login_contact_no || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no_two || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.rtom_area_count || "0"}
