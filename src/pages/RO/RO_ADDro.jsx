@@ -510,10 +510,12 @@ export default function RO_ADDro() {
   const [nic, setNic] = useState(itemData?.nic || '');
   const [nicError, setNicError] = useState('');
   const [drcName, setDrcName] = useState("");
-  const [userRole, setUserRole] = useState((itemData?.user_role || 'DRC Coordinator'));
+  // const [userRole, setUserRole] = useState((itemData?.user_role || 'DRC Coordinator'));
 
   // Mapping for backend-compatible roles
   const ROLE_LABEL = {
+    RO: "Recovery Officer",
+    "drcUser": "DRC User",
     "drc coordinator": "DRC Coordinator",
     "call center": "call center",
     "drc staff": "DRC staff",
@@ -789,11 +791,20 @@ export default function RO_ADDro() {
     }
   };
 
+  const roleFromTab = (() => {
+    if (from === "drcCoordinator") return "drc coordinator";
+    if (from === "drcCallCenter") return "call center";
+    if (from === "drcStaff") return "drc staff";
+    return "drc coordinator"; // fallback
+  })();
+
+  const [userRole, setUserRole] = useState((itemData?.user_role || roleFromTab).toLowerCase());
+
 
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        {userType === "RO" ? "Register Recovery Officer" : "Register DRC User"}
+        Register {ROLE_LABEL[userRole?.toLowerCase()] || ROLE_LABEL[userType]}
       </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name: {drcName || 'N/A'}
