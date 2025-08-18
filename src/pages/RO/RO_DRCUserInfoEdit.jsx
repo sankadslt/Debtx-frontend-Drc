@@ -665,7 +665,7 @@ export default function RO_DRCUserDetailsEdit() {
   useEffect(() => {
     const fetchUserData = async () => {
 
-      if (!itemType || !itemData || (!itemData.ro_id && !itemData.drcUser_id)) {
+      if (!itemType || !itemData || (!itemData.ro_id && !itemData.drc_officer_id)) {
         Swal.fire({
           title: 'Error',
           text: 'Missing user type or ID. Please try again.',
@@ -679,7 +679,7 @@ export default function RO_DRCUserDetailsEdit() {
       }
 
       try {
-        const payload = itemData.ro_id ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id };
+        const payload = itemData.ro_id ? { ro_id: itemData.ro_id } : { drc_officer_id: itemData.drc_officer_id };
         setIsLoading(true);
         const response = await List_RO_Info_Own_By_RO_Id(payload);
         setIsLoading(false);
@@ -687,7 +687,7 @@ export default function RO_DRCUserDetailsEdit() {
         console.log('API Response:', {
           itemType,
           ro_id: itemData.ro_id,
-          drcUser_id: itemData.drcUser_id,
+          drc_officer_id: itemData.drc_officer_id,
           drcUser_status: response.data?.drcUser_status,
           data: response.data,
         });
@@ -969,21 +969,21 @@ export default function RO_DRCUserDetailsEdit() {
       if (!validateInputs()) return;
 
       const roId = itemData?.ro_id;
-      const drcUserId = itemData?.drcUser_id;
+      const drcUserId = itemData?.drc_officer_id;
       const drcId = fetchedData?.drc_id || 1;
 
       if (itemType === 'RO' && !roId) {
         throw new Error('Missing ro_id for Recovery Officer.');
       }
       if (itemType === 'drcUser' && !drcUserId) {
-        throw new Error('Missing drcUser_id for DRC User.');
+        throw new Error('Missing drc_officer_id for DRC User.');
       }
 
       const userPayload = await getLoggedUserId();
       const create_by = userPayload?.user_id;
 
       const basePayload = {
-        ...(itemType === 'RO' ? { ro_id: roId } : { drcUser_id: drcUserId }),
+        ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
         drc_id: drcId,
         ro_name: fetchedData?.drcUser_name || fetchedData?.recovery_officer_name || 'N/A',
         user_role: activeUserRole,
