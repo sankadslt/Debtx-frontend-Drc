@@ -590,7 +590,7 @@
 //                                                     <td
 //                                                         className={`${GlobalStyle.tableData} text-black`}
 //                                                     >
-//                                                         {item.drcUser_id || "N/A"}
+//                                                         {item.drc_officer_id || "N/A"}
 //                                                     </td>
 
 //                                                     <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
@@ -1263,7 +1263,7 @@ export default function RO_DRCUserList() {
                                                                 itemData:
                                                                 activeTab === "RO"
                                                                     ? { ro_id: item.ro_id }
-                                                                    : { drcUser_id: item.drcUser_id ?? item.drc_officer_id ?? item._id },
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id, },
                                                                 },
                                                             })
                                                         }
@@ -1343,7 +1343,7 @@ export default function RO_DRCUserList() {
                                     {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
                                         drcFilteredDataBySearch.map((item, index) => (
                                             <tr
-                                                key={item.drcUser_id || index}
+                                                key={item.drc_officer_id || index}
                                                 className={`${
                                                     index % 2 === 0
                                                         ? "bg-white bg-opacity-75"
@@ -1380,7 +1380,7 @@ export default function RO_DRCUserList() {
                                                                 itemData:
                                                                 activeTab === "RO"
                                                                     ? { ro_id: item.ro_id }
-                                                                    : { drcUser_id: item.drcUser_id ?? item.drc_officer_id ?? item._id },
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
                                                                 },
                                                             })
                                                         }
@@ -1460,7 +1460,7 @@ export default function RO_DRCUserList() {
                                     {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
                                         drcFilteredDataBySearch.map((item, index) => (
                                             <tr
-                                                key={item.drcUser_id || index}
+                                                key={item.drc_officer_id || index}
                                                 className={`${
                                                     index % 2 === 0
                                                         ? "bg-white bg-opacity-75"
@@ -1497,7 +1497,7 @@ export default function RO_DRCUserList() {
                                                                 itemData:
                                                                 activeTab === "RO"
                                                                     ? { ro_id: item.ro_id }
-                                                                    : { drcUser_id: item.drcUser_id ?? item.drc_officer_id ?? item._id },
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
                                                                 },
                                                             })
                                                         }
@@ -1577,7 +1577,7 @@ export default function RO_DRCUserList() {
                                     {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
                                         drcFilteredDataBySearch.map((item, index) => (
                                             <tr
-                                                key={item.drcUser_id || index}
+                                                key={item.drc_officer_id || index}
                                                 className={`${
                                                     index % 2 === 0
                                                         ? "bg-white bg-opacity-75"
@@ -1614,7 +1614,7 @@ export default function RO_DRCUserList() {
                                                                 itemData:
                                                                 activeTab === "RO"
                                                                     ? { ro_id: item.ro_id }
-                                                                    : { drcUser_id: item.drcUser_id ?? item.drc_officer_id ?? item._id },
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
                                                                 },
                                                             })
                                                         }

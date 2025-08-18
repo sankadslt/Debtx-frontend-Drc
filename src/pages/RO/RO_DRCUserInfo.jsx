@@ -46,13 +46,14 @@ export default function RO_DRCUserInfo() {
 
     try {
       let payload = {};
-      if (activeUserType === "RO") {
-        if (!itemData.ro_id) throw new Error("Missing ro_id");
-        payload = { ro_id: itemData.ro_id };
-        } else if (activeUserType === "drcUser") {
-          if (!itemData.drcUser_id) throw new Error("Missing drcUser_id");
-          payload = { drcUser_id: itemData.drcUser_id };
-      }
+     if (activeUserType === "RO") {
+    if (!itemData.ro_id) throw new Error("Missing ro_id");
+    payload = { ro_id: itemData.ro_id };
+    } else if (activeUserType === "drcUser") {
+        if (!itemData.drc_officer_id) throw new Error("Missing drc_officer_id");
+        payload = { drc_officer_id: itemData.drc_officer_id };
+    }
+
 
       setIsLoading(true);
       const response = await List_RO_Info_Own_By_RO_Id(payload);
@@ -114,7 +115,7 @@ export default function RO_DRCUserInfo() {
     } else {
       const userDataToPass = {
         ...userData,
-        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id }),
+        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drc_officer_id: itemData.drc_officer_id }),
       };
 
       navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
@@ -138,7 +139,7 @@ export default function RO_DRCUserInfo() {
       itemType: activeUserType,
       itemData: {
         ro_id: activeUserType === 'RO' ? itemData.ro_id : undefined,
-        drcUser_id: activeUserType === 'drcUser' ? itemData.drcUser_id : undefined,
+        drc_officer_id: activeUserType === 'drcUser' ? itemData.drc_officer_id : undefined,
       },
     };
 
@@ -176,8 +177,10 @@ export default function RO_DRCUserInfo() {
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        {activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"}
-      </h2>
+    {activeUserType === "drcUser" 
+      ? getUserRoleDisplayText(activeUserRole) 
+      : "Recovery Officer"}
+  </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name : {userData?.drc_name || 'N/A'}
       </h2>
