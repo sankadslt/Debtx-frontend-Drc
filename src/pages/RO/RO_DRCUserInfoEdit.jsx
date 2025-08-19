@@ -639,6 +639,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
+  const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
   //RTOM areas (only for RO)
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
@@ -649,6 +650,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [initialContactNo, setInitialContactNo] = useState('');
   const [initialContactNoTwo, setInitialContactNoTwo] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
+  const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
 
   //Helper
@@ -686,6 +688,7 @@ export default function RO_DRCUserDetailsEdit() {
           itemType,
           ro_id: itemData.ro_id,
           drc_officer_id: itemData.drc_officer_id,
+          drcUser_status: response.data?.drcUser_status,
           data: response.data,
         });
 
@@ -707,6 +710,33 @@ export default function RO_DRCUserDetailsEdit() {
               : apiRole.charAt(0).toUpperCase() + apiRole.slice(1).toLowerCase();
             setActiveUserRole(displayRole);
           }
+
+          // Normalize drcUser_status
+          let normalizedStatus;
+          if (typeof response.data.drcUser_status === 'boolean') {
+            normalizedStatus = response.data.drcUser_status ? 'Active' : 'Inactive';
+          } else {
+            const apiStatus = response.data.drcUser_status?.toLowerCase();
+            normalizedStatus =
+              apiStatus === 'active' ? 'Active' :
+              apiStatus === 'inactive' ? 'Inactive' :
+              apiStatus && ['active', 'inactive'].includes(apiStatus) ?
+                apiStatus.charAt(0).toUpperCase() + apiStatus.slice(1).toLowerCase() :
+                'Inactive';
+          }
+
+          if (response.data.drcUser_status == null) {
+            console.warn('drcUser_status missing in API response, defaulting to Inactive:', payload);
+          } else if (typeof response.data.drcUser_status !== 'boolean' && !['active', 'inactive'].includes(response.data.drcUser_status?.toLowerCase())) {
+            console.warn('Invalid drcUser_status value, defaulting to Inactive:', {
+              drcUser_status: response.data.drcUser_status,
+              payload,
+            });
+          }
+
+          console.log('Normalized Status:', normalizedStatus);
+          setDrcUserStatus(normalizedStatus);
+          setInitialDrcUserStatus(normalizedStatus);
 
           if (itemType === 'RO') {
             const areas = (response.data.rtom_areas || []).map(area => ({
@@ -742,6 +772,8 @@ export default function RO_DRCUserDetailsEdit() {
       }
     };
 
+
+
     fetchUserData();
   }, [itemType, itemData, navigate]);
 
@@ -767,6 +799,30 @@ export default function RO_DRCUserDetailsEdit() {
     fetchRTOMs();
   }, []);
 
+//   useEffect(() => {
+//   if (location.state?.itemType) {
+//     const itemType = location.state.itemType;
+//     const itemData = location.state.itemData;
+
+//     setActiveUserType(itemType);
+
+//     if (itemType === "drcUser" && itemData?.user_role) {
+//       setActiveUserRole(itemData.user_role);
+//     }
+//   }
+// }, [location.state]);
+
+// useEffect(() => {
+//   if (itemType) {
+//     setActiveUserType(itemType);
+//     if (itemType === "drcUser" && itemData?.user_role) {
+//       setActiveUserRole(itemData.user_role);
+//     }
+//   }
+// }, [itemType, itemData]);
+
+
+
   const handleContactNoChange = (value) => {
     const cleaned = value.replace(/[^+\d]/g, '');
     const digitsOnly = cleaned.replace(/\D/g, '');
@@ -790,6 +846,7 @@ export default function RO_DRCUserDetailsEdit() {
       setContactNoTwo(cleaned);
     }
   };
+
 
   const handleEmailChange = (value) => {
     setEmail(value);
@@ -843,6 +900,7 @@ export default function RO_DRCUserDetailsEdit() {
       contactNo !== initialContactNo ||
        contactNoTwo !== initialContactNoTwo ||
       email !== initialEmail ||
+      drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
         (rtomAreas.length !== initialRtomAreas.length ||
          rtomAreas.some((area, index) =>
@@ -870,6 +928,19 @@ export default function RO_DRCUserDetailsEdit() {
         Swal.fire({
           title: 'Invalid RTOM',
           text: `RTOM area "${invalidRtom.name}" is not valid.`,
+          icon: 'error',
+          confirmButtonColor: "#d33",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+        isValid = false;
+      }
+
+      // Ensure at least one RTOM is active if user status is Active
+      if (drcUserStatus === 'Active' && !rtomAreas.some(area => area.status)) {
+        Swal.fire({
+          title: 'Invalid RTOM Status',
+          text: 'At least one RTOM area must be active when the user status is Active.',
           icon: 'error',
           confirmButtonColor: "#d33",
           allowOutsideClick: false,
@@ -919,6 +990,7 @@ export default function RO_DRCUserDetailsEdit() {
         login_email: email,
         login_contact_no: contactNo,
         login_contact_no_two: contactNoTwo,
+        drcUser_status: drcUserStatus,
         create_by: create_by,
         remark: remark || 'Updated user details',
       };
@@ -970,6 +1042,10 @@ export default function RO_DRCUserDetailsEdit() {
     }
   };
 
+  const toggleStatus = () => {
+    setDrcUserStatus(prev => prev === 'Active' ? 'Inactive' : 'Active');
+  };
+
   const handleAddRtomArea = () => {
     if (selectedRtomArea && !rtomAreas.some(area => area.name === selectedRtomArea)) {
       const selectedOption = rtomAreaOptions.find(opt => opt.area_name === selectedRtomArea);
@@ -994,6 +1070,17 @@ export default function RO_DRCUserDetailsEdit() {
     }).then((result) => {
       if (result.isConfirmed) {
         const newRtomAreas = rtomAreas.filter((_, i) => i !== index);
+        if (drcUserStatus === 'Active' && newRtomAreas.length > 0 && !newRtomAreas.some(area => area.status)) {
+          Swal.fire({
+            title: 'Cannot Remove RTOM',
+            text: 'At least one RTOM area must remain active when the user status is Active.',
+            icon: 'error',
+            confirmButtonColor: "#d33",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+          return;
+        }
         setRtomAreas(newRtomAreas);
         Swal.fire({
           title: 'Removed',
@@ -1008,6 +1095,21 @@ export default function RO_DRCUserDetailsEdit() {
   };
 
   const toggleRtomAreaStatus = (index) => {
+    if (drcUserStatus === 'Active' && rtomAreas[index].status) {
+      const activeRtomCount = rtomAreas.filter(area => area.status).length;
+      if (activeRtomCount <= 1) {
+        Swal.fire({
+          title: 'Cannot Deactivate RTOM',
+          text: 'At least one RTOM area must remain active when the user status is Active.',
+          icon: 'error',
+          confirmButtonColor: "#d33",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+        return;
+      }
+    }
+
     const newRtomAreas = [...rtomAreas];
     newRtomAreas[index].status = !newRtomAreas[index].status;
     setRtomAreas(newRtomAreas);
@@ -1029,14 +1131,17 @@ export default function RO_DRCUserDetailsEdit() {
     );
   }
 
-  const getUserRoleDisplayText = (role) => {
-    const roleMapping = {
-      'DRC Coordinator': 'DRC Coordinator',
-      'call center': 'Call Center',
-      'user staff': 'User Staff'
-    };
-    return roleMapping[role] || role || 'N/A';
+
+const getUserRoleDisplayText = (role) => {
+  const roleMapping = {
+    'DRC Coordinator': 'DRC Coordinator',
+    'call center': 'Call Center',
+    'user staff': 'User Staff'
   };
+  return roleMapping[role] || role || 'N/A';
+};
+
+
 
   return (
     <div className={GlobalStyle.fontPoppins}>
@@ -1049,6 +1154,17 @@ export default function RO_DRCUserDetailsEdit() {
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
         <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center">
+            <div
+              className={`w-8 h-4 sm:w-11 sm:h-6 rounded-full transition-colors ${drcUserStatus === 'Active' ? 'bg-green-500' : 'bg-gray-400'} relative cursor-pointer`}
+              onClick={toggleStatus}
+            >
+              <div
+                className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${drcUserStatus === 'Active' ? 'left-[18px] sm:left-[26px]' : 'left-[2px]'}`}
+              />
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <div className="table w-full min-w-[300px]">
               <div className="table-row">
@@ -1089,6 +1205,7 @@ export default function RO_DRCUserDetailsEdit() {
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{fetchedData.nic || 'N/A'}</div>
               </div>
+             
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-bold text-sm sm:text-base">Login Method</div>
