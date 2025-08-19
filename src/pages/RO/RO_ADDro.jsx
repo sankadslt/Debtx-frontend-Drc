@@ -495,7 +495,7 @@ export default function RO_ADDro() {
   });
 
   const [contactNo, setContactNo] = useState(itemData?.contact_no || "");
-  const [contactError, setContactError] = useState("");
+  const [contactError, setContactError] = useState({ field: "", message: "" });
   const [contactNoTwo, setContactNoTwo] = useState(itemData?.contact_no_two || '');
   const [email, setEmail] = useState(itemData?.email || "");
   const [emailError, setEmailError] = useState("");
@@ -607,12 +607,14 @@ export default function RO_ADDro() {
     } else setEmailError('');
 
     if (!contactNo || contactNo.length !== 10) {
-      setContactError('Contact number must be 10 digits.');
+      setContactError({ field: "contact1", message: "Contact number must be 10 digits." });
       isValid = false;
     } else if (!contactNoTwo || contactNoTwo.length !== 10) {
-      setContactError('Second contact number must be 10 digits.');
+      setContactError({ field: "contact2", message: "Second contact number must be 10 digits." });
       isValid = false;
-    } else setContactError('');
+    } else {
+      setContactError({ field: "", message: "" });
+    }
 
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
@@ -888,11 +890,13 @@ export default function RO_ADDro() {
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError ? 'border-red-500' : ''}`}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError.field === "contact1" ? "border-red-500" : ""}`}
                     value={contactNo}
                     onChange={handleContactChange}
                   />
-                  {contactError && <p className="text-red-500 text-xs mt-1">{contactError}</p>}
+                  {contactError.field === "contact1" && (
+                    <p className="text-red-500 text-xs mt-1">{contactError.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -904,15 +908,19 @@ export default function RO_ADDro() {
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px]`}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError.field === "contact2" ? "border-red-500" : ""}`}
                     value={contactNoTwo}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
+                      const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 10) setContactNoTwo(value);
                     }}
                   />
+                  {contactError.field === "contact2" && (
+                    <p className="text-red-500 text-xs mt-1">{contactError.message}</p>
+                  )}
                 </div>
               </div>
+
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
