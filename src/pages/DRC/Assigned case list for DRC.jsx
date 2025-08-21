@@ -364,10 +364,10 @@ export default function AssignedCaseListforDRC() {
             Swal.fire({
               title: "No Results",
               text: "No matching data found.",
-              icon: "error",
+              icon: "warning",
               allowOutsideClick: false,
               allowEscapeKey: false,
-              confirmButtonColor: "#d33"
+              confirmButtonColor: "#f1c40f",
             });
           } else if (currentPage === 2) {
             setCurrentPage(1); // Reset to page 1 if no data found on page 2
@@ -380,11 +380,11 @@ export default function AssignedCaseListforDRC() {
         }
       } else {
         Swal.fire({
-          title: "Error",
+          title: "Warning",
 
           text: "No valid data found in response.",
-          icon: "error",
-          confirmButtonColor: "#d33"
+          icon: "warning",
+          confirmButtonColor: "#f1c40f"
 
         });
         setFilteredData([]);

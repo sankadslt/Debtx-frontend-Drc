@@ -387,10 +387,10 @@ const DistributeTORO = () => {
             Swal.fire({
               title: "No Results",
               text: "No matching data found.",
-              icon: "error",
+              icon: "warning",
               allowOutsideClick: false,
               allowEscapeKey: false,
-              confirmButtonColor: "#d33"
+              confirmButtonColor: "#f1c40f",
             });
           } else if (currentPage === 2) {
             setCurrentPage(1); // Reset to page 1 if no data found on page 2
@@ -1058,7 +1058,8 @@ const DistributeTORO = () => {
           <option value="" hidden>Select RO</option>
           {filteredOfficers.length > 0 ? filteredOfficers.map((officer) => (
             <option key={officer.ro_id} value={officer.ro_id} style={{ color: "black" }}>
-              {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")}
+              {/* {officer.ro_name} - {officer.rtoms_for_ro.map(rtom => rtom.name).join(", ")} */}
+              {officer.ro_name}
             </option>
           )) : (
             <option value="" disabled>No Recovery Officers available</option>
