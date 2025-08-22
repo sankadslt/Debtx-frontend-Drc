@@ -556,7 +556,7 @@ export default function RecoveryOfficerEndPage() {
         try {
             // Fetch the logged-in user's data and extract user_id
             const userPayload = await getLoggedUserId();
-            const end_by = userPayload?.user_id;
+            const end_by = String(userPayload?.user_id);
 
             const terminationDetails = {
                 [activeUserType === "drcUser" ? "drc_officer_id" : "ro_id"]: Number(userId),

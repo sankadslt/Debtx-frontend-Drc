@@ -1077,7 +1077,8 @@ export default function RO_DRCUserDetailsEdit() {
       }
 
       const userPayload = await getLoggedUserId();
-      const create_by = userPayload?.user_id;
+      const create_by = String(userPayload?.user_id);
+      
 
       const basePayload = {
         ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),

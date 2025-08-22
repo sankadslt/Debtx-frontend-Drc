@@ -765,7 +765,8 @@ if (contactNoTwo && contactNoTwo.length !== 10) {
       login_email: email || null,
       login_contact_no: contactNo,
       login_contact_no_two: contactNoTwo || "",
-      create_by: userDetail?.user_id,
+      // create_by: userDetail?.user_id,
+      create_by: String(userDetail?.user_id), 
       user_role: drcUserTypeBackend === "drc_officer" ? ROLE_LABEL[userRole.toLowerCase()] : undefined,
       rtoms: drcUserTypeBackend === "ro" ? rtomAreas.map((area, index) => ({
         rtom_id: area.rtom_id,
