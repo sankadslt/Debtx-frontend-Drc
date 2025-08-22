@@ -807,12 +807,12 @@ if (contactNoTwo && contactNoTwo.length !== 10) {
 
   return (
     <div className={GlobalStyle.fontPoppins}>
-      <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        Register {ROLE_LABEL[userRole?.toLowerCase()] || ROLE_LABEL[userType]}
-      </h2>
-      <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
-        DRC Name: {drcName || 'N/A'}
-      </h2>
+  <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
+    Register {userType === "RO" ? "Recovery Officer" : (ROLE_LABEL[userRole?.toLowerCase()] || ROLE_LABEL[userType])}
+  </h2>
+  <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
+    DRC Name: {drcName || 'N/A'}
+  </h2>
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
         <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
