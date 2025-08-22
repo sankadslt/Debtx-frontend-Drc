@@ -1259,7 +1259,7 @@ export default function RO_DRCUserList() {
                                                     {item.login_contact_no || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.login_contact_no_two || "N/A"}
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.rtom_area_count || "0"}
@@ -1379,7 +1379,7 @@ export default function RO_DRCUserList() {
                                                     {item.login_contact_no || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.login_contact_no_two || "N/A"}
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center`}>
                                                     <img
@@ -1496,7 +1496,7 @@ export default function RO_DRCUserList() {
                                                     {item.login_contact_no || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.login_contact_no_two || "N/A"}
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center`}>
                                                     <img
@@ -1613,7 +1613,7 @@ export default function RO_DRCUserList() {
                                                     {item.login_contact_no || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.login_contact_no_two || "N/A"}
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center`}>
                                                     <img

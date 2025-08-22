@@ -611,12 +611,14 @@ export default function RO_ADDro() {
     if (!contactNo || contactNo.length !== 10) {
       setContactError({ field: "contact1", message: "Contact number must be 10 digits." });
       isValid = false;
-    } else if (!contactNoTwo || contactNoTwo.length !== 10) {
-      setContactError({ field: "contact2", message: "Second contact number must be 10 digits." });
-      isValid = false;
     } else {
-      setContactError({ field: "", message: "" });
-    }
+  setContactError({ field: "", message: "" });
+}
+
+if (contactNoTwo && contactNoTwo.length !== 10) {
+  setContactError({ field: "contact2", message: "Second contact number must be 10 digits." });
+  isValid = false;
+}
 
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
@@ -762,7 +764,7 @@ export default function RO_ADDro() {
       nic: nic,
       login_email: email || null,
       login_contact_no: contactNo,
-      login_contact_no_two: contactNoTwo || null,
+      login_contact_no_two: contactNoTwo || "",
       create_by: userDetail?.user_id,
       user_role: drcUserTypeBackend === "drc_officer" ? ROLE_LABEL[userRole.toLowerCase()] : undefined,
       rtoms: drcUserTypeBackend === "ro" ? rtomAreas.map((area, index) => ({
@@ -913,7 +915,7 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number 2 <span className="text-red-500">*</span>
+                  Contact Number 2
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
