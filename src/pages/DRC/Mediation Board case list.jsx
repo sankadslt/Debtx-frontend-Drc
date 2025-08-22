@@ -4,8 +4,10 @@ Created By: Chamath (chamathjayasanka20@gmail.com)
 Last Modified Date:2025-01-08
 Last Modified Date:2025-02-01
 Last Modified Date:2025-02-17
+Last Modified Date:2025-07-29
 Modified By: Buthmi Mithara Abeysena (buthmimithara1234@gmail.com)
 Modified By: Chathundi Sakumini (sakuminic@gmail.com)
+Modified By: Sathmi Peiris (sathmipeiris@gmail.com)
 Version: node 20
 ui number : 2.15
 Dependencies: tailwind css
@@ -24,14 +26,16 @@ import edit from "../../assets/images/mediationBoard/edit.png";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 // Import status icons with correct file extensions
-import Forward_to_Mediation_Board from "../../assets/images/mediationBoard/Forward_to_Mediation_Board.png";
-import MB_fail_with_pending_non_settlement from "../../assets/images/mediationBoard/MB_fail_with_pending_non_settlement.png";
-import MB_Handed_Customer_Info from "../../assets/images/mediationBoard/MB_Handed_Customer_Info.png";
-import MB_Negotiation from "../../assets/images/mediationBoard/MB_Negotiation.png";
-import MB_Request_Customer_Info from "../../assets/images/mediationBoard/MB_Request_Customer_Info.png";
-import MB_Settle_Active from "../../assets/images/mediationBoard/MB_Settle_Active.png";
-import MB_Settle_open_pending from "../../assets/images/mediationBoard/MB_Settle_open_pending.png";
-import MB_Settle_pending from "../../assets/images/mediationBoard/MB_Settle_pending.png";
+
+import FMB from "../../assets/images/Mediation _Board/Forward_To_Mediation_Board.png";
+import MB_Negotiation from "../../assets/images/Mediation _Board/MB_Negotiation.png";
+import MB_Fail_with_non_settlement from "../../assets/images/Mediation _Board/MB Fail with non settlement.png";
+import MB_Request_Customer_Info from "../../assets/images/Mediation _Board/MB Request Customer-Info.png";
+import MB_Handover_Customer_Info from "../../assets/images/Mediation _Board/MB Handover Customer-Info.png";
+import MB_Settle_Pending from "../../assets/images/Mediation _Board/MB Settle Pending.png";
+import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Settle Open Pending.png";
+import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
+import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
 
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService";
@@ -39,19 +43,19 @@ import { Tooltip } from "react-tooltip";
 
 // Status icon mapping
 const STATUS_ICONS = {
-  "Forward_to_Mediation_Board": {
-    icon: Forward_to_Mediation_Board,
+  "Forward to Mediation Board": {
+    icon:  FMB,
     tooltip: "Forward to Mediation Board"
   },
-  "MB_fail_with_pending_non_settlement": {
-    icon: MB_fail_with_pending_non_settlement,
-    tooltip: "MB fail with pending non settlement"
+  "MB Fail with Pending Non-Settlement": {
+    icon: MB_Fail_with_Pending_Non_Settlement ,
+    tooltip: "MB Fail with Pending Non-Settlement"
   },
-  "MB_Handed_Customer_Info": {
-    icon: MB_Handed_Customer_Info,
-    tooltip: "MB Handed Customer Info"
+  "MB Fail with Non-Settlement": {
+    icon: MB_Fail_with_non_settlement,
+    tooltip: "MB Fail with Non-Settlement"
   },
-  "MB_Negotiation": {
+  "MB Negotiation": {
     icon: MB_Negotiation,
     tooltip: "MB Negotiation"
   },
@@ -59,17 +63,17 @@ const STATUS_ICONS = {
     icon: MB_Request_Customer_Info,
     tooltip: "MB Request Customer Info"
   },
-  "MB_Settle_Active": {
+  "MB Settle Active": {
     icon: MB_Settle_Active,
     tooltip: "MB Settle Active"
   },
-  "MB_Settle_open_pending": {
-    icon: MB_Settle_open_pending,
-    tooltip: "MB Settle open pending"
+  "MB Settle Open-Pending": {
+    icon:  MB_Settle_Open_Pending,
+    tooltip: "MB Settle Open-Pending"
   },
-  "MB_Settle_pending": {
-    icon: MB_Settle_pending,
-    tooltip: "MB Settle pending"
+  "MB Settle Pending": {
+    icon:MB_Settle_Pending,
+    tooltip: "MB Settle Pending"
   }
 };
 
@@ -98,77 +102,62 @@ const StatusIcon = ({ status }) => {
 };
 
 
-export default function MediationBoardCaselist() {
+const MediationBoardCaselist = () => {
   const navigate = useNavigate();
   const [fromDate, setFromDate] = useState(null);
-  const [rtoms, setRtoms] = useState([]);
   const [toDate, setToDate] = useState(null);
-  const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+
+
+  const [rtoms, setRtoms] = useState([]);
+  const [rtom, setRtom] = useState("");
+
+  const [drcId, setDrcId] = useState("");
+  const [status, setStatus] = useState("");
+  const [roId, setRoId] = useState("");
+  const [actionType, setActionType] = useState("");
+
+  const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+
+ 
+  const [error, setError] = useState("");
+ 
   const [loading, setLoading] = useState(false);
   const [cases, setCases] = useState([]);
   const [userData, setUserData] = useState(null);
-  const [filters, setFilters] = useState({
-    rtom: "",
-    action_type: "",
-    status: "",
-  });
+  // const [filters, setFilters] = useState({
+  //   rtom: "",
+  //   action_type: "",
+  //   status: "",
+  // });
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
    const [userRole, setUserRole] = useState(null); // Role-Based Buttons
 
-  const rowsPerPage = 7;
+    // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [maxCurrentPage, setMaxCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  // const [totalAPIPages, setTotalAPIPages] = useState(1);
+  const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true); // State to track if more data is available
+  const rowsPerPage = 10; // Number of rows per page
 
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const userData = await getUserData();
-  //       console.log("User Data: ", userData);
-  //       setUser(userData);
-  //       console.log("DRC ID: ", user?.drc_id);          
-  //     } catch (err) {
-  //       console.log("Eror in retrieving DRC ID: ", err);       
-  //     } 
-  //   };
+  // variables need for table
+  // const maxPages = Math.ceil(filteredDataBySearch.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+  
+  const [committedFilters, setCommittedFilters] = useState({
+     rtom: "",
+    actionType: "",
+    status: "",
+    fromDate: null,
+    toDate: null
+  });
 
-  //   fetchUserData();
-  // }, [user?.drc_id, user?.ro_id]); // Including drc_id to the Dependency array
-
-
-  // const loadUser = async () => {
-  //   let token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     setUserData(null);
-  //     return;
-  //   }
-
-  //   try {
-  //     let decoded = jwtDecode(token);
-  //     const currentTime = Date.now() / 1000;
-  //     if (decoded.exp < currentTime) {
-  //       token = await refreshAccessToken();
-  //       if (!token) return;
-  //       decoded = jwtDecode(token);
-  //     }
-
-  //     setUserData({
-  //       id: decoded.user_id,
-  //       role: decoded.role,
-  //       drc_id: decoded.drc_id,
-  //       ro_id: decoded.ro_id,
-  //     });
-  //   } catch (error) {
-  //     console.error("Invalid token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadUser();
-  // }, [localStorage.getItem("accessToken")]);
-
-
-   // Role-Based Buttons
-   useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
@@ -194,6 +183,7 @@ export default function MediationBoardCaselist() {
     const user = await getLoggedUserId();
     setUserData(user);
     console.log("User data:", user);
+    console.log("User DRC ID:", user?.drc_id);
   };
 
   useEffect(() => {
@@ -205,10 +195,23 @@ export default function MediationBoardCaselist() {
     const fetchRTOMs = async () => {
       try {
         if (userData?.drc_id) {
+                    console.log("drc id:",userData?.drc_id);
+
+
+          console.log("Fetching RTOMs for DRC ID:", userData?.drc_id);
           // Fetch RTOMs by DRC ID
           const rtomsList = await getActiveRTOMsByDRCID(userData?.drc_id);
           console.log("RTOM list retrieved:", rtomsList);
-          setRtoms(rtomsList);
+          
+          // Check if the response is successful and has data
+          if (rtomsList && Array.isArray(rtomsList)) {
+            setRtoms(rtomsList);
+          } else {
+            console.warn("No RTOMs found or invalid response format:", rtomsList);
+            setRtoms([]);
+          }
+        } else {
+          console.log("No DRC ID available yet, skipping RTOM fetch");
         }
       } catch (error) {
         console.error("Error fetching RTOMs:", error);
@@ -218,281 +221,284 @@ export default function MediationBoardCaselist() {
     fetchRTOMs();
   }, [userData?.drc_id, userData?.ro_id]); // Only depend on userData
 
-  /* // Date handlers
-  const handleFromDateChange = (date) => {
-    if (toDate && date > toDate) {
-      setError("The 'From' date cannot be later than the 'To' date.");
-      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
-    } else {
-      setError("");
-      setFromDate(date);
-    }
+
+  const handlestartdatechange = (date) => {
+    setFromDate(date);
+    // if (toDate) checkdatediffrence(date, toDate);
   };
 
-  const handleToDateChange = (date) => {
-    if (fromDate && date < fromDate) {
-      
-      Swal.fire("Warning", "To date should be greater than or equal to From date", "warning");
-    } else {
-      setError("");
-      setToDate(date);
-    }
-  }; */
+  const handleenddatechange = (date) => {
+    setToDate(date);
+    // if (fromDate) checkdatediffrence(fromDate, date);
+  };
 
-
-  const handlefromdatechange = (date) => {
-    if (date === null) {
+  // Check if toDate is greater than fromDate
+  useEffect(() => {
+    if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
+      Swal.fire({
+        title: "Warning",
+        text: "To date should be greater than or equal to From date",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
       setFromDate(null);
       return;
     }
+  }, [fromDate, toDate]);
 
-    if (toDate) {
-
-      if (date > toDate) {
-
-        Swal.fire({
-          title: "Warning",
-          text: "The 'From' date cannot be later than the 'To' date.",
-          icon: "warning",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#f1c40f"
-        });
-        return;
-      } else {
-        checkdatediffrence(date, toDate);
-        setFromDate(date);
-      }
-
-    } else {
-
-      setFromDate(date);
-
-    }
-
-
-  };
-  const handletodatechange = (date) => {
-    if (date === null) {
-      setToDate(null);
-      return;
-    }
-
-    if (fromDate) {
-      if (date < fromDate) {
-        Swal.fire({
-          title: "Warning",
-          text: "The 'To' date cannot be before the 'From' date.",
-          icon: "warning",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#f1c40f"
-        });
-        return;
-      } else {
-        checkdatediffrence(fromDate, date);
-        setToDate(date);
-      }
-    } else {
-      setToDate(date);
-    }
-  };
-
-
-  const checkdatediffrence = (startDate, endDate) => {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const diffInMs = end - start;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    const diffInMonths = diffInDays / 30;
-
-    if (diffInMonths > 1) {
-      Swal.fire({
-        title: "Date Range Exceeded",
-        text: "The selected dates have more than a 1-month gap.",
-        icon: "warning",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#f1c40f"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setToDate(null);
-         // console.log("Dates cleared");
-        }
-      });
-    }
-  };
-
-  // Filter handlers
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setError("");
-  };
-
-  // Fetch cases data
-  const fetchCases = async () => {
-    try {
-      /* // Check if required filters are set
-      const hasActiveFilters =
-        filters.rtom ||
-        filters.action_type ||
-        filters.status ||
-        fromDate ||
-        toDate;
-  
-      if (!hasActiveFilters) {
-        setError("Please set at least one filter before searching.");
-        return;
-      } */
-
-
-      setCases([]); // Clear previous results
-
-      /*  // Format the date to 'YYYY-MM-DD' format
-       const formatDate = (date) => {
-         if (!date) return null;
-         const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-         return offsetDate.toISOString().split('T')[0];
-       }; */
-
-      if (!filters.rtom && !filters.action_type && !filters.status && !fromDate && !toDate) {
-        Swal.fire({
-          title: "Warning",
-          text: "No filter data is selected. Please, select data.",
-          icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonColor: "#f1c40f"
-        });
-        setToDate(null);
-        setFromDate(null);
-        return;
-      };
-
-      if ((fromDate && !toDate) || (!fromDate && toDate)) {
-        Swal.fire({
-          title: "Warning",
-          text: "Both From Date and To Date must be selected.",
-          icon: "warning",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          cancelButtonColor:"#f1c40f"
-        });
-        setToDate(null);
-        setFromDate(null);
-        return;
-      }
-
-
-
-
-
-
-
-
-
-
-
-      // Check if userData is available
-      if (!userData) {
-        setError("User data is not available. Please refresh the page or log in again.");
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-
-      const payload = {
-        // Use Number() to ensure these are numbers and not strings
-        drc_id: userData.drc_id,
-        ro_id: userData.ro_id, // Fixed: was using drc_id instead of ro_id
-        
-        ...(filters.rtom && { rtom: filters.rtom }),
-        ...(filters.action_type && { action_type: filters.action_type }),
-        ...(filters.status && { status: filters.status }),
-        ...(fromDate && { from_date: fromDate.toISOString() }),
-        ...(toDate && { to_date: toDate.toISOString() }),
-      };
-
-      console.log("Sending payload to fetch cases:", payload);
-
-      const data = await ListALLMediationCasesownnedbyDRCRO(payload);
-      console.log("Cases data received:", data);
-
-      setCases(Array.isArray(data) ? data : []);
-      setCurrentPage(0);
-      setHasInitialFetch(true);
-    } catch (error) {
-      console.error("Error filtering cases:", error);
-      Swal.fire({
-        title: "Error",
-        text: "Failed to fetch filtered data. Please try again.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-      setError(error.message || "Failed to fetch cases. Please try again.");
-      setCases([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFilterClick = () => {
-    if (!userData) {
-      setError("User data is not available. Please refresh the page or log in again.");
-      return;
-    }
-
-    if (!userData.drc_id && !userData.ro_id) {
-      setError("DRC ID or RO ID is required");
-      return;
-    }
-
-    fetchCases();
-
-    
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      rtom: "",
-      action_type: "",
-      status: "",
-    });
-    setFromDate(null);
-    setToDate(null);
-    setSearchQuery("");
-    setError("");
-    
-    setCases([]); // Clear the cases when filters are cleared
-  }
-
-
-
-
-  // Data filtering and pagination
-  const filteredData = cases.filter((row) =>
+    // Search Section
+  const filteredDataBySearch = filteredData.filter((row) =>
     Object.values(row)
       .join(" ")
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
 
-  const pages = Math.ceil(filteredData.length / rowsPerPage);
-  const paginatedData = filteredData.slice(
-    currentPage * rowsPerPage,
-    (currentPage + 1) * rowsPerPage
-  );
+         const filterValidations = () => {
+    if (!rtom && !actionType && !status && !fromDate && !toDate ) {
+      Swal.fire({
+        title: "Warning",
+        text: "No filter is selected. Please, select a filter.",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    }
 
-  // Pagination handlers
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(0, prev - 1));
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      Swal.fire({
+        title: "Warning",
+        text: "Both From Date and To Date must be selected.",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    }
+
+    return true; // All validations passed
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
+  
+
+  
+  // Function to call the API and fetch filtered data
+  const callAPI = async (filters) => {
+    try {
+      // Check if userData is available before proceeding
+      if (!userData || !userData.drc_id) {
+        console.error("User data not available or missing DRC ID");
+        Swal.fire({
+          title: "Error",
+          text: "User data not available. Please refresh the page and try again.",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        return;
+      }
+
+      console.log(currentPage);
+
+   
+
+      const payload = {
+        drc_id: userData.drc_id,
+        ro_id: userData.ro_id,
+        rtom: filters.rtom ,
+        action_type: filters.actionType,
+        status: filters.status,
+        from_date: filters.fromDate,
+        to_date: filters.toDate, 
+        pages: filters.page,
+        
+      };
+      console.log("Payload sent to API: ", payload);
+
+      setIsLoading(true); // Set loading state to true
+      const response = await ListALLMediationCasesownnedbyDRCRO(payload);
+      setIsLoading(false); // Set loading state to false
+
+      // Updated response handling
+      if (response) {
+        console.log("API Response:", response);
+        // console.log("Valid data received:", response.data);
+        if ( response && response.length > 0) {
+          if (currentPage === 1) {
+            setFilteredData(response)
+            console.log("filyter data:", filteredData);
+          } else {
+            setFilteredData((prevData) => [...prevData, ...response]);
+            console.log("filyter data:", filteredData);
+          }
+        }
+
+        if (response.status === 204) {
+          setIsMoreDataAvailable(false); // No more data available
+          if (currentPage === 1) {
+            Swal.fire({
+              title: "No Results",
+              text: "No matching data found for the selected filters.",
+              icon: "warning",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonColor: "#f1c40f"
+            });
+          } else if (currentPage === 2) {
+            setCurrentPage(1); // Reset to page 1 if no data found on page 2
+          }
+        } else {
+          const maxData = currentPage === 1 ? 10 : 30;
+          if (response.length < maxData) {
+            setIsMoreDataAvailable(false); // More data available
+          }
+        }
+
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "No valid Mediation Board data found in response.",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        setFilteredData([]);
+      }
+    } catch (error) {
+      console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#d33"
+      });
+    } finally {
+      setIsLoading(false); // Ensure loading state is reset
+    }
+  }
+
+
+
+    // Handle filter button click
+  const handleFilterButton = () => {
+    setIsMoreDataAvailable(true);
+    setTotalPages(0); // Reset total pages
+    setMaxCurrentPage(0);
+    const isValid = filterValidations();
+    if (!isValid) {
+      return; // If validation fails, do not proceed
+    } else {
+      // setFilteredData([]);
+      setCommittedFilters({
+          rtom,
+          actionType,
+          status,
+          fromDate,
+          toDate
+      });
+      setFilteredData([]); // Clear previous results
+
+      if (currentPage === 1) {
+        callAPI({
+          rtom,
+          actionType,
+          status,
+          fromDate,
+          toDate,
+          page: 1
+        });
+      } else {
+        setCurrentPage(1);
+      }
+      
+    }
+  }
+
+
+
+    // return true; // All validations passed
+
+
+  
+
+ 
+
+
+  const handleClear = () => {
+    setActionType("");
+    setRtom("");
+    setStatus("");
+    setFromDate(null);
+    setToDate(null);
+    setSearchQuery("");
+    setTotalPages(0); // Reset total pages
+    setFilteredData([]); // Clear filtered data
+    setMaxCurrentPage(0); // Reset max current page
+    setIsMoreDataAvailable(true); // Reset more data available state
+    // Clear committed filters
+    setCommittedFilters({
+      actionType: "",
+      rtom: "",
+      status: "",
+      fromDate: null,
+      toDate: null
+    });
+    if (currentPage != 1) {
+      setCurrentPage(1); // Reset to page 1
+    } else {
+      setCurrentPage(0); // Temp set to 0
+      setTimeout(() => setCurrentPage(1), 0); // Reset to 1 after
+    }
   };
+
+
+
+  useEffect(() => {
+    if (isMoreDataAvailable && currentPage > maxCurrentPage && userData?.drc_id) {
+      setMaxCurrentPage(currentPage); // Update max current page
+      // callAPI(); // Call the function whenever currentPage changes
+      callAPI({
+        ...committedFilters,
+        page: currentPage
+      });
+    }
+  }, [currentPage, userData?.drc_id]);
+
+ 
+
+   // Handle Pagination
+  const handlePrevNext = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      // console.log("Current Page:", currentPage);
+    } else if (direction === "next") {
+      if (isMoreDataAvailable) {
+        setCurrentPage(currentPage + 1);
+      } else {
+        if (currentPage < Math.ceil(filteredData.length / rowsPerPage)) {
+          setCurrentPage(currentPage + 1);
+        }
+      }
+      // console.log("Current Page:", currentPage);
+    }
+  };
+
+    // display loading animation when data is loading
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   
 
@@ -502,65 +508,75 @@ export default function MediationBoardCaselist() {
 
       <div  className={`${GlobalStyle.cardContainer} w-full gap-4 mt-8` }>
         <div className="flex  flex-wrap items-center justify-end  gap-2 "> 
-        <select
+        {/* <select
           name="rtom"
           value={filters.rtom}
           onChange={handleFilterChange}
           className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
            style={{ color: filters.rtom === "" ? "gray" : "black" }}
-        >
-          <option value="" hidden>Rtom</option>
-          {rtoms.map((rtom) => (
-            <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
-              {rtom.area_name}
-            </option>
-          ))}
+        > */}
+          <select
+              value={rtom}
+              onChange={(e) => setRtom(e.target.value)}
+              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+              style={{ color: rtom === "" ? "gray" : "black" }}
+            >
+          
+          <option value="" hidden>Billing Center</option>
+          {(rtoms.length > 0 ? rtoms.map((rtom) => (
+              <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
+                {rtom.area_name}
+              </option>
+            )) : (
+              <option value="" disabled style={{ color: "grey" }}>
+                No Billing Centers available
+              </option>
+            ))}
+          
         </select>
 
         <select
-          name="action_type"
-          value={filters.action_type}
-          onChange={handleFilterChange}
+          name="actionType"
+          value={actionType}
+          onChange={(e) => setActionType(e.target.value)}
           className={`${GlobalStyle.selectBox}   w-32 md:w-40`}
-          style={{ color: filters.action_type === "" ? "gray" : "black" }}
+          style={{ color: actionType === "" ? "gray" : "black" }}
         >
-          <option value="" hidden>Action Type</option>
-          <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
-          <option value="Arrears and CPE Collect" style={{ color: "black" }}>
-            Arrears and CPE Collect
-          </option>
-          <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
-        </select>
+            <option value="" hidden>Action Type</option>
+            <option value="collect arrears" style={{ color: "black" }}>Arrears Collect</option>
+            <option value="collect arrears and CPE" style={{ color: "black" }}>
+              Arrears and CPE Collect
+            </option>
+            <option value="collect CPE" style={{ color: "black" }}>CPE Collect</option></select>
 
         <select
           name="status"
-          value={filters.status}
-          onChange={handleFilterChange}
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
           className={`${GlobalStyle.selectBox}  w-32 md:w-40`}
-          style={{ color: filters.status === "" ? "gray" : "black" }}
+          style={{ color: status === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Status</option>
           <option value="Forward to Mediation Board" style={{ color: "black" }}>Forward to Mediation Board</option>
-          <option value="MB fail with pending non settlement" style={{ color: "black" }}>MB Fail with Pending non Settlement</option>
-          <option value="MB Handed Customer Info" style={{ color: "black" }}>MB Handed Customer Info</option>
           <option value="MB Negotiation" style={{ color: "black" }}>MB Negotiation</option>
-          <option value="MB Request Customer Info" style={{ color: "black" }}>MB Request Customer Info</option>
-          <option value="MB Settle Active" style={{ color: "black" }}>MB Settle Active</option>
-          <option value="MB Settle Open Pending" style={{ color: "black" }}>MB Settle Open Pending</option>
           <option value="MB Settle Pending" style={{ color: "black" }}>MB Settle Pending</option>
+          <option value="MB Settle Open-Pending" style={{ color: "black" }}>MB Settle Open-Pending</option>
+          <option value="MB Settle Active" style={{ color: "black" }}>MB Settle Active</option>
+          <option value="MB Fail with Pending Non-Settlement" style={{ color: "black" }}>MB Fail with Pending Non-Settlement</option>
+          <option value="MB Fail with Non-Settlement" style={{ color: "black" }}>MB Fail with Non-Settlement</option>
         </select>
 
         <label className={GlobalStyle.dataPickerDate}>Date:</label>
         <DatePicker
           selected={fromDate}
-          onChange={handlefromdatechange}
+          onChange={handlestartdatechange}
           dateFormat="dd/MM/yyyy"
           placeholderText="From"
           className={`${GlobalStyle.inputText} w-full sm:w-auto`} 
         />
         <DatePicker
           selected={toDate}
-          onChange={handletodatechange}
+          onChange={handleenddatechange}
           dateFormat="dd/MM/yyyy"
           placeholderText="To"
           className={`${GlobalStyle.inputText} w-full sm:w-auto`}
@@ -570,7 +586,7 @@ export default function MediationBoardCaselist() {
             {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
               <button
                 className={`${GlobalStyle.buttonPrimary}  w-full sm:w-auto`}
-                onClick={handleFilterClick}
+                onClick={handleFilterButton}
 
               >
                 {loading ? "Filter" : "Filter"}
@@ -580,7 +596,7 @@ export default function MediationBoardCaselist() {
 
             <div>
                   {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`}onClick={handleClearFilters}>
+                    <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`}onClick={handleClear}>
                     Clear
                       </button>
                   )}
@@ -603,7 +619,10 @@ export default function MediationBoardCaselist() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                  setCurrentPage(1); // Reset to page 1 on search
+                  setSearchQuery(e.target.value)
+                }}
               className={GlobalStyle.inputSearch}
             />
             <FaSearch className={GlobalStyle.searchBarIcon} />
@@ -618,7 +637,7 @@ export default function MediationBoardCaselist() {
                 <th className={GlobalStyle.tableHeader}>Status</th>
                 
                 <th className={GlobalStyle.tableHeader}>RO Name</th>
-                <th className={GlobalStyle.tableHeader}>RTOM</th>
+                <th className={GlobalStyle.tableHeader}>Billing Center</th>
                 <th className={GlobalStyle.tableHeader}>Calling Round</th>
                 <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Next Calling Date</th>
@@ -626,37 +645,39 @@ export default function MediationBoardCaselist() {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((row, index) => (
+              {filteredDataBySearch && filteredDataBySearch.length > 0 ? (
+                  filteredDataBySearch.slice(startIndex, endIndex).map((item, index) => (
                 <tr
-                  key={row.case_id}
+                  key={item.case_id}
                   className={`${index % 2 === 0
-                      ? "bg-white bg-opacity-75"
-                      : "bg-gray-50 bg-opacity-50"
+                      ? GlobalStyle.tableRowEven
+                      : GlobalStyle.tableRowOdd
                     } border-b`}
                 >
-                  <td className={GlobalStyle.tableData}>{row.case_id}</td>
+                  <td className={GlobalStyle.tableData}>{item.case_id}</td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-                    <StatusIcon status={row.status} />
-                     <Tooltip id={`tooltip-${row.status.replace(/\s+/g, '-')}`} className="tooltip" effect="solid" place="bottom" content={row.status} />
+                    <StatusIcon status={item.status} />
+                    
+                     <Tooltip id={`tooltip-${item.status.replace(/\s+/g, '-')}`} className="tooltip" effect="solid" place="bottom" content={item.status} />
                   </td>
 
                   
 
                   
-                  <td className={GlobalStyle.tableData}>{row.ro_name}</td>
-                  <td className={GlobalStyle.tableData}>{row.area}</td>
+                  <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                  <td className={GlobalStyle.tableData}>{item.rtom}</td>
                   <td className={GlobalStyle.tableData}>
-                    {row.mediation_board_count || 0}
+                    {item.mediation_board_count || 0}
                   </td>
                     <td className={GlobalStyle.tableData}>
-                   {row.created_dtm
-                      ? new Date(row.created_dtm).toLocaleDateString("en-GB")
-                      : "N/A"}
+                   {item.created_dtm
+                      ? new Date(item.created_dtm).toLocaleDateString("en-GB")
+                      : ""}
                   </td>
 
-                  <td className={GlobalStyle.tableData}>{row.created_dtm
-                      ? new Date(row.next_calling_date).toLocaleDateString("en-GB")
-                      : "N/A"}</td>
+                  <td className={GlobalStyle.tableData}>{item.next_calling_date
+                      ? new Date(item.next_calling_date).toLocaleDateString("en-GB")
+                      : ""}</td>
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                     <div>
                       {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
@@ -665,14 +686,15 @@ export default function MediationBoardCaselist() {
                           src={edit}
                           alt="Edit Case"
                           data-tooltip-id="edit-tooltip"
-                          className={`w-6 h-6   ${row.status === "MB_fail_with_pending_non_settlement"
+                          className={`w-6 h-6   ${item.status === "MB_fail_with_pending_non_settlement"
                               ? "opacity-50 cursor-default"
                               : "cursor-pointer"
                             }`} // No cursor-pointer for "MB_fail_with_pending_non_settlement"
                           onClick={() =>
-                            row.status !== "MB_fail_with_pending_non_settlement" &&
+                            item.status !== "MB_fail_with_pending_non_settlement" &&
+                            userData?.drc_id &&
                             navigate(`/pages/DRC/Mediation Board Response`, {
-                              state: { DRc_id: userData.drc_id, CAse_id: row.case_id },
+                              state: { DRc_id: userData.drc_id, CAse_id: item.case_id },
                             }  )
                           
 
@@ -702,40 +724,54 @@ export default function MediationBoardCaselist() {
                     </button> */}
                   </td>
                 </tr>
-              ))}
-              {paginatedData.length === 0 && (
+              ))): (
+                  <tr>
+                    <td colSpan={9} className={`${GlobalStyle.tableData} text-center`}>No cases available</td>
+                  </tr>
+                )}
+              {/* // {paginatedData.length === 0 && (
                 <tr>
                 <td colSpan="8" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
                     No cases found.
                   </td>
               </tr>
-              )}
+              )} */}
             </tbody>
           </table>
         </div>
       </div>
 
-      {filteredData.length > rowsPerPage && (
-        <div className={GlobalStyle.navButtonContainer}>
-          <button
-            className={GlobalStyle.navButton}
-            onClick={handlePrevPage}
-            disabled={currentPage === 0}
-          >
-            <FaArrowLeft />
-          </button>
-          <span>
-            Page {currentPage + 1} of {pages}
-          </span>
-          <button
-            className={GlobalStyle.navButton}
-            onClick={handleNextPage}
-            disabled={currentPage === pages - 1}
-          >
-            <FaArrowRight />
-          </button>
-        </div>
-      )}
+       {/* Pagination Section */}
+          { filteredDataBySearch.length > 0 && (<div className={GlobalStyle.navButtonContainer}>
+            <button
+              onClick={() => handlePrevNext("prev")}
+              disabled={currentPage <= 1}
+              className={`${GlobalStyle.navButton} ${currentPage <= 1 ? "cursor-not-allowed" : ""}`}
+            >
+              <FaArrowLeft />
+            </button>
+            <span className={`${GlobalStyle.pageIndicator} mx-4`}>
+              Page {currentPage}
+            </span>
+            <button
+              onClick={() => handlePrevNext("next")}
+              disabled={
+                searchQuery
+                  ? currentPage >= Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                  : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / rowsPerPage
+                  )}
+              className={`${GlobalStyle.navButton} ${(searchQuery
+                ? currentPage >= Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / rowsPerPage))
+                ? "cursor-not-allowed"
+                : ""
+                }`}
+            >
+              <FaArrowRight />
+            </button>
+          </div>)}
     </div>
   );
-}
+};
+
+export default MediationBoardCaselist;
