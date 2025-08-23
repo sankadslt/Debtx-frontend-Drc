@@ -495,7 +495,8 @@ export default function RO_ADDro() {
   });
 
   const [contactNo, setContactNo] = useState(itemData?.contact_no || "");
-  const [contactError, setContactError] = useState("");
+  const [contactError, setContactError] = useState({ field: "", message: "" });
+  const [contactNoTwo, setContactNoTwo] = useState(itemData?.contact_no_two || '');
   const [email, setEmail] = useState(itemData?.email || "");
   const [emailError, setEmailError] = useState("");
   const [remark, setRemark] = useState(itemData?.remark || "");
@@ -504,11 +505,21 @@ export default function RO_ADDro() {
   const [selectedRtomArea, setSelectedRtomArea] = useState("");
   const [userDetail, setUserDetail] = useState(null);
   const [rtomAreaOptions, setRtomAreaOptions] = useState([]);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(itemData?.name || '');
   const [nameError, setNameError] = useState('');
-  const [nic, setNic] = useState('');
+  const [nic, setNic] = useState(itemData?.nic || '');
   const [nicError, setNicError] = useState('');
   const [drcName, setDrcName] = useState("");
+  // const [userRole, setUserRole] = useState((itemData?.user_role || 'DRC Coordinator'));
+
+  // Mapping for backend-compatible roles
+  const ROLE_LABEL = {
+    RO: "Recovery Officer",
+    "drcUser": "DRC User",
+    "drc coordinator": "DRC Coordinator",
+    "call center": "call center",
+    "drc staff": "DRC staff",
+  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -521,8 +532,6 @@ export default function RO_ADDro() {
           text: 'Failed to load user details. Please try again.',
           icon: 'error',
           confirmButtonColor: "#d33",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
         });
       }
     };
@@ -533,9 +542,13 @@ export default function RO_ADDro() {
     if (initialItemType && itemData) {
       setUserType(initialItemType);
       setContactNo(itemData.contact_no || "");
+      setContactNoTwo(itemData.contact_no_two || "");
       setEmail(itemData.email || "");
       setRemark(itemData.remark || "");
       setStatus(itemData.status ?? true);
+      setName(itemData.name || '');
+      setNic(itemData.nic || '');
+      setUserRole(itemData.user_role || 'DRC Coordinator');
       if (initialItemType === "RO") {
         setRtomAreas(itemData.rtom_areas || []);
       }
@@ -553,8 +566,6 @@ export default function RO_ADDro() {
           text: 'Failed to fetch RTOM areas. Please try again later.',
           icon: 'error',
           confirmButtonColor: "#d33",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
         });
       }
     };
@@ -582,9 +593,7 @@ export default function RO_ADDro() {
     if (!name) {
       setNameError('Please enter a name.');
       isValid = false;
-    } else {
-      setNameError('');
-    }
+    } else setNameError('');
 
     if (!nic) {
       setNicError('Please enter a NIC.');
@@ -592,31 +601,29 @@ export default function RO_ADDro() {
     } else if (nic.length !== 10 && nic.length !== 12) {
       setNicError('NIC must be 10 or 12 characters.');
       isValid = false;
-    } else {
-      setNicError('');
-    }
-    
+    } else setNicError('');
+
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError('Please enter a valid email address.');
       isValid = false;
-    } else {
-      setEmailError('');
-    }
+    } else setEmailError('');
 
-    if (!contactNo) {
-      setContactError('Please enter a contact number.');
-      isValid = false;
-    } else if (contactNo.length !== 10) {
-      setContactError('Contact number must be 10 digits.');
+    if (!contactNo || contactNo.length !== 10) {
+      setContactError({ field: "contact1", message: "Contact number must be 10 digits." });
       isValid = false;
     } else {
-      setContactError('');
-    }
+  setContactError({ field: "", message: "" });
+}
+
+if (contactNoTwo && contactNoTwo.length !== 10) {
+  setContactError({ field: "contact2", message: "Second contact number must be 10 digits." });
+  isValid = false;
+}
 
     if (userType === "RO" && rtomAreas.length === 0) {
       Swal.fire({
         title: 'Validation Error',
-        text: 'Please fill in all required fields and ensure valid inputs.',
+        text: 'Please add at least one RTOM area.',
         icon: 'error',
         confirmButtonColor: "#d33",
       });
@@ -626,86 +633,95 @@ export default function RO_ADDro() {
     return isValid;
   };
 
-  const handleNameChange = (e) => {
-    const value = e.target.value;
-    setName(value);
-    setNameError(value ? '' : 'Please enter a name.');
-  };
-
+  const handleNameChange = (e) => setName(e.target.value);
   const handleNicChange = (e) => {
-    const value = e.target.value;
-    if (value.length <= 12) {
-      setNic(value);
-      setNicError(value ? (value.length !== 10 && value.length !== 12 ? 'NIC must be 10 or 12 characters.' : '') : 'Please enter a NIC.');
-    } else {
-      setNicError('NIC cannot exceed 12 characters.');
-    }
+    const value = e.target.value.slice(0, 12);
+    setNic(value);
   };
-
   const handleContactChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 10) {
-      setContactNo(value);
-      setContactError(value ? (value.length !== 10 ? 'Contact number must be 10 digits.' : '') : 'Please enter a contact number.');
-    } else {
-      setContactError('Contact number cannot exceed 10 digits.');
-    }
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setContactNo(value);
   };
-
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-    setEmailError(value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Please enter a valid email address.');
+  const handleContactTwoChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setContactNoTwo(value);
   };
+  const handleEmailChange = (e) => setEmail(e.target.value);
 
-  const handleAddRO = async () => {
-    if (!validateInputs()) return;
 
-    const payload = {
-      drcUser_type: userType,
-      drc_id: userDetail?.drc_id,
-      ro_name: name,
-      nic: nic,
-      login_email: email,
-      login_contact_no: contactNo,
-      create_by: userDetail?.user_id,
-      rtoms: userType === "RO" ? rtomAreas.map((area, index) => {
-        const option = rtomAreaOptions.find(opt => opt.area_name === area.rtom_name || opt.area_name === area.name);
-        return {
-          rtom_id: option?.rtom_id || area.rtom_id,
-          rtom_name: area.rtom_name || area.name,
-          billing_center_code: area.billing_center_code || option?.billing_center_code || 'N/A',
-          rtom_status: area.status ? "Active" : "Inactive",
-          handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
-        };
-      }) : []
-    };
+  // const handleAddRO = async () => {
+  //   if (!validateInputs()) return;
 
-    try {
-      await createNewDRCUserOrRO(payload);
-      await Swal.fire({
-        title: "Success",
-        text: `${userType === "RO" ? "Recovery Officer" : "DRC User"} added successfully and sent for approval!`,
-        icon: "success",
-        confirmButtonColor: "#28a745",
-        confirmButtonText: "OK",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-      navigate(-1);
-    } catch (error) {
-      Swal.fire({
-        title: "Error",
-        text: error.message || "Something went wrong. Please try again.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-        confirmButtonText: "OK",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-    }
-  };
+  //   // Map UI choice to backend contract
+  //   const createType = userType === "RO" ? "ro" : "drc_officer";
+  //   const createRole = userType === "RO" ? undefined : userRole; // canonical, lowercase
 
+  //   if (createType === "drc_officer" && !createRole) {
+  //     await Swal.fire({ title: "Error", text: "User role is required for DRC users.", icon: "error" });
+  //     return;
+  //   }
+
+  //   // Build base payload — use `name` (NOT ro_name)
+  //   const base = {
+  //     drcUser_type: createType,          // "ro" | "drc_officer"
+  //     user_role: createRole,             // only for drc_officer
+  //     drc_id: userDetail?.drc_id,
+  //     name,                              // ✅ backend expects `name`
+  //     nic,
+  //     login_email: email,
+  //     login_contact_no: contactNo,
+  //     login_contact_no_two: contactNoTwo,
+  //     create_by: userDetail?.user_id,
+  //     remark,
+  //     status,
+  //   };
+
+  //   if (createType === "ro") {
+  //     const rtomPayload = rtomAreas.map((area, index) => {
+  //       const option = rtomAreaOptions.find(
+  //         (opt) => opt.area_name === area.rtom_name || opt.area_name === area.name
+  //       );
+  //       return {
+  //         rtom_id: option?.rtom_id || area.rtom_id,
+  //         rtom_name: area.rtom_name || area.name,
+  //         billing_center_code: area.billing_center_code || option?.billing_center_code || "N/A",
+  //         rtom_status: area.status ? "Active" : "Inactive",
+  //         handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary"),
+  //       };
+  //     });
+
+  //     // Some APIs use `rtom`, others `rtoms` – send both to be safe.
+  //     base.rtom = rtomPayload;
+  //     base.rtoms = rtomPayload;
+  //   }
+
+  //   try {
+  //     await createNewDRCUserOrRO(base);
+  //     await Swal.fire({
+  //       title: "Success",
+  //       text:
+  //         createType === "ro"
+  //           ? "Recovery Officer added successfully and sent for approval!"
+  //           : `${ROLE_LABEL[createRole] || "DRC User"} added successfully and sent for approval!`,
+  //       icon: "success",
+  //       confirmButtonColor: "#28a745",
+  //       confirmButtonText: "OK",
+  //       allowOutsideClick: false,
+  //       allowEscapeKey: false,
+  //     });
+  //     navigate(-1);
+  //   } catch (error) {
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: error?.response?.data?.message || error.message || "Something went wrong. Please try again.",
+  //       icon: "error",
+  //       confirmButtonColor: "#d33",
+  //       confirmButtonText: "OK",
+  //       allowOutsideClick: false,
+  //       allowEscapeKey: false,
+  //     });
+  //   }
+  // };
   const handleAddRtomArea = () => {
     if (selectedRtomArea && !rtomAreas.some(area => area.name === selectedRtomArea)) {
       const selectedOption = rtomAreaOptions.find(opt => opt.area_name === selectedRtomArea);
@@ -713,7 +729,6 @@ export default function RO_ADDro() {
         rtom_id: selectedOption.rtom_id,
         name: selectedRtomArea,
         status: true,
-        isNew: true,
         billing_center_code: selectedOption?.billing_center_code || 'N/A',
         handling_type: rtomAreas.length === 0 ? 'Primary' : 'Secondary',
       }]);
@@ -732,28 +747,73 @@ export default function RO_ADDro() {
       cancelButtonText: 'Cancel',
     }).then((result) => {
       if (result.isConfirmed) {
-        const newRtomAreas = rtomAreas.filter((_, i) => i !== index);
-        setRtomAreas(newRtomAreas);
-        Swal.fire({
-          title: 'Removed',
-          text: 'RTOM area has been removed successfully.',
-          icon: 'success',
-          confirmButtonColor: "#28a745",
-          confirmButtonText: 'OK',
-          timer: 1500,
-        });
+        setRtomAreas(rtomAreas.filter((_, i) => i !== index));
       }
     });
   };
 
+  const handleAddRO = async () => {
+    if (!validateInputs()) return;
+
+    const drcUserTypeBackend = userType === "RO" ? "ro" : "drc_officer";
+
+    const payload = {
+      drcUser_type: drcUserTypeBackend,
+      drc_id: userDetail?.drc_id,
+      name: name,
+      nic: nic,
+      login_email: email || null,
+      login_contact_no: contactNo,
+      login_contact_no_two: contactNoTwo || "",
+      // create_by: userDetail?.user_id,
+      create_by: String(userDetail?.user_id), 
+      user_role: drcUserTypeBackend === "drc_officer" ? ROLE_LABEL[userRole.toLowerCase()] : undefined,
+      rtoms: drcUserTypeBackend === "ro" ? rtomAreas.map((area, index) => ({
+        rtom_id: area.rtom_id,
+        rtom_name: area.name,
+        billing_center_code: area.billing_center_code || 'N/A',
+        rtom_status: area.status ? "Active" : "Inactive",
+        handling_type: area.handling_type || (index === 0 ? "Primary" : "Secondary")
+      })) : [],
+    };
+
+    try {
+      await createNewDRCUserOrRO(payload);
+      await Swal.fire({
+        title: "Success",
+        text: `${userType === "RO" ? "Recovery Officer" : "DRC User"} added successfully and sent for approval!`,
+        icon: "success",
+        confirmButtonColor: "#28a745",
+      });
+      navigate(-1);
+    } catch (error) {
+      Swal.fire({
+        title: "Error",
+        text: error.response?.data?.message || error.message || "Something went wrong.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const roleFromTab = (() => {
+    if (from === "drcCoordinator") return "drc coordinator";
+    if (from === "drcCallCenter") return "call center";
+    if (from === "drcStaff") return "drc staff";
+    return "drc coordinator"; // fallback
+  })();
+
+  const [userRole, setUserRole] = useState((itemData?.user_role || roleFromTab).toLowerCase());
+
+
   return (
     <div className={GlobalStyle.fontPoppins}>
-      <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        {userType === "RO" ? "Register Recovery Officer" : "Register DRC User"}
-      </h2>
-      <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
-        DRC Name: {drcName || 'N/A'}
-      </h2>
+  <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
+    Register {userType === "RO" ? "Recovery Officer" : (ROLE_LABEL[userRole?.toLowerCase()] || ROLE_LABEL[userType])}
+  </h2>
+  <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
+    DRC Name: {drcName || 'N/A'}
+  </h2>
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
         <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
@@ -775,6 +835,27 @@ export default function RO_ADDro() {
                   </select>
                 </div>
               </div>
+
+              {/* Only show User Role field when userType is "drcUser" */}
+              {userType === "drcUser" && (
+                <div className="table-row">
+                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    User Role <span className="text-red-500">*</span>
+                  </div>
+                  <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                  <div className="table-cell px-2 sm:px-4 py-2">
+                    <select
+                      className={`${GlobalStyle.selectBox} w-full sm:w-[150px] md:w-[200px]`}
+                      value={userRole}
+                      onChange={(e) => setUserRole(e.target.value)}  
+                    >
+                      <option value="drc Coordinator">DRC Coordinator</option>
+                      <option value="call center">Call Center</option>
+                      <option value="drc staff">DRC Staff</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
@@ -817,19 +898,43 @@ export default function RO_ADDro() {
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number <span className="text-red-500">*</span>
+                  Contact Number 1<span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <input
                     type="text"
-                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError ? 'border-red-500' : ''}`}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError.field === "contact1" ? "border-red-500" : ""}`}
                     value={contactNo}
                     onChange={handleContactChange}
                   />
-                  {contactError && <p className="text-red-500 text-xs mt-1">{contactError}</p>}
+                  {contactError.field === "contact1" && (
+                    <p className="text-red-500 text-xs mt-1">{contactError.message}</p>
+                  )}
                 </div>
               </div>
+
+              <div className="table-row">
+                <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number 2
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                  <input
+                    type="text"
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] ${contactError.field === "contact2" ? "border-red-500" : ""}`}
+                    value={contactNoTwo}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 10) setContactNoTwo(value);
+                    }}
+                  />
+                  {contactError.field === "contact2" && (
+                    <p className="text-red-500 text-xs mt-1">{contactError.message}</p>
+                  )}
+                </div>
+              </div>
+
 
               <div className="table-row">
                 <div className="table-cell px-6 sm:px-12 py-2 font-semibold text-sm sm:text-base">
