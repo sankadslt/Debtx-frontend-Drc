@@ -166,7 +166,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<MediationBoardcaselist />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
@@ -177,7 +177,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<Mediation_board_response />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
@@ -188,7 +188,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<ROsAssignedcaseLog />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
@@ -198,7 +198,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<EditCustomerProfile />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
@@ -207,7 +207,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<CustomerNegotiation />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
@@ -218,7 +218,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<EditCPECollect />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
+            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator", "recovery_officer"]}
           />
         }
       />
