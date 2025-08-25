@@ -838,7 +838,7 @@ export default function EditCustomerProfile() {
     const [DrivingLicense, setDrivingLicense] = useState("");
     const [DrivingLicenseError, setDrivingLicenseError] = useState("");
 
-    const [isEdited, setIsEdited] = useState(false);
+    // const [isEdited, setIsEdited] = useState(false);
 
     // const { case_id } = useParams();
 
@@ -909,7 +909,7 @@ export default function EditCustomerProfile() {
     // Move fetchCaseDetails outside of useEffect so it can be reused
     const fetchCaseDetails = async () => {
         try {
-            if (!userData?.drc_id) {
+            if (!userData?.drc_id || !case_id) {
                 //console.log("Missing DRC Id.", userData?.drc_id);
                 return;
             }
@@ -1094,35 +1094,35 @@ export default function EditCustomerProfile() {
         payload.Remark = caseDetails.remark;
         payload.edited_by = userDataID.user_id;
         // };
-
+        let isEdited = false;
         if (contact_no != caseDetails.contact_no) {
             payload.Edited_Mobile = contact_no;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (email != caseDetails.email) {
             payload.Edited_Email = email;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (address != caseDetails.address) {
             payload.Edited_Address = address;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (PP != caseDetails.PP) {
             payload.Edited_Passport = PP;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (DrivingLicense != caseDetails.DrivingLicense) {
             payload.Edited_Driving_License = DrivingLicense;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (NIC != caseDetails.NIC) {
             payload.Edited_NIC = NIC;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (!isEdited) {
