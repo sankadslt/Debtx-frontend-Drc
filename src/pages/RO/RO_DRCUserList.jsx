@@ -688,6 +688,8 @@ import RO_Pending_Approval from "../../assets/images/status/RO_DRC_Status_Icons/
 // Button Icons
 import moreInfoIcon from "../../assets/images/more-info.svg";
 
+import { Tooltip } from "react-tooltip";
+
 export default function RO_DRCUserList() {
     const [userData, setUserData] = useState(null);
 
