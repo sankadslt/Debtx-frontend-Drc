@@ -228,7 +228,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<RODRCUserList />}
-            allowedRoles={["drc_user", "DRC-Coordinator"]}
+            allowedRoles={["drc_user", "DRC-Coordinator", "superadmin"]}
           />
         }
       />
@@ -237,7 +237,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<RODRCUserInfo />}
-            allowedRoles={["drc_user", "DRC-Coordinator"]}
+            allowedRoles={["drc_user", "DRC-Coordinator", "superadmin"]}
           />
         }
       />
@@ -246,7 +246,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<RODRCUserInfoEnd />}
-            allowedRoles={["drc_user", "DRC-Coordinator"]}
+            allowedRoles={["drc_user", "DRC-Coordinator", "superadmin"]}
           />
         }
       />
@@ -255,7 +255,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<RODRCUserInfoEdit />}
-            allowedRoles={["drc_user", "DRC-Coordinator"]}
+            allowedRoles={["drc_user", "DRC-Coordinator", "superadmin"]}
           />
         }
       />
@@ -264,7 +264,7 @@ const Routers = () => {
         element={
           <ProtectedRoute
             element={<RO_ADDro />}
-            allowedRoles={["drc_user", "DRC-Coordinator"]}
+            allowedRoles={["drc_user", "DRC-Coordinator", "superadmin"]}
           />
         }
       />

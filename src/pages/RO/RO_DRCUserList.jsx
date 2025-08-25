@@ -590,7 +590,7 @@
 //                                                     <td
 //                                                         className={`${GlobalStyle.tableData} text-black`}
 //                                                     >
-//                                                         {item.drcUser_id || "N/A"}
+//                                                         {item.drc_officer_id || "N/A"}
 //                                                     </td>
 
 //                                                     <td className={`${GlobalStyle.tableData} flex justify-center items-center pt-6`}>
@@ -711,7 +711,9 @@ export default function RO_DRCUserList() {
     const [drcTotalAPIPages, setDrcTotalAPIPages] = useState(1);
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
-    const [activeTab, setActiveTab] = useState("RO");
+    const [activeTab, setActiveTab] = useState(() => {
+        return localStorage.getItem("activeTab") || "RO";
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -727,6 +729,22 @@ export default function RO_DRCUserList() {
     const currentStatus = activeTab === "RO" ? roStatus : drcUserStatus;
     const navigate = useNavigate();
 
+    const TABS = ["RO", "drcCoordinator", "drcCallCenter", "drcStaff"];
+
+    const TAB_LABELS = {
+    RO: "RO",
+    drcCoordinator: "DRC Coordinator",
+    drcCallCenter: "DRC Call Center",
+    drcStaff: "DRC Staff",
+    };
+
+    const TAB_TO_API = {
+        RO: { type: "ro", role: undefined },
+        drcCoordinator: { type: "drc_officer", role: "drc coordinator" },
+        drcCallCenter: { type: "drc_officer", role: "call center" },
+        drcStaff: { type: "drc_officer", role: "drc staff" },
+    };
+
     const loadUser = async () => {
         const user = await getLoggedUserId();
         setUserData(user);
@@ -741,24 +759,24 @@ export default function RO_DRCUserList() {
         const value = e.target.value;
         if (activeTab === "RO") {
             setRoStatus(value);
-        } else if (activeTab === "drcUser") {
+        } else {
             setDrcUserStatus(value);
         }
     };
 
     const handlePageChange = () => {
-        if (activeTab === "RO") {
-            if (roCurrentPage > roMaxPage && roCurrentPage <= roTotalAPIPages) {
-                setRoMaxPage(roCurrentPage);
-                handleFilter();
-            }
-        } else {
-            if (drcCurrentPage > drcMaxPage && drcCurrentPage <= drcTotalAPIPages) {
-                setDrcMaxPage(drcCurrentPage);
-                handleFilter();
-            }
-        }
-    };
+    if (activeTab === "RO") {
+      if (roCurrentPage > roMaxPage && roCurrentPage <= roTotalPages) {
+        setRoMaxPage(roCurrentPage);
+        handleFilter();
+      }
+    } else {
+      if (drcCurrentPage > drcMaxPage && drcCurrentPage <= drcTotalPages) {
+        setDrcMaxPage(drcCurrentPage);
+        handleFilter();
+      }
+    }
+  };
 
     useEffect(() => {
         if (isRoFilterApplied) {
@@ -786,15 +804,20 @@ export default function RO_DRCUserList() {
             .includes(searchQuery.toLowerCase())
     );
 
-    const getUserStatus = () => {
-        if (activeTab === "RO") {
-            return roStatus;
-        } else if (activeTab === "drcUser") {
-            return drcUserStatus;
-        } else {
-            return "";
-        }
-    };
+    // const getUserStatus = () => {
+    //     if (activeTab === "RO") {
+    //         return roStatus;
+    //     } else if (activeTab === "drcUser") {
+    //         return drcUserStatus;
+    //     } else {
+    //         return "";
+    //     }
+    // };
+
+    const getUserStatus = () => (
+        activeTab === "RO" ? roStatus : drcUserStatus
+    );
+
 
     const getCurrentPage = () => {
         if (activeTab === "RO") {
@@ -808,16 +831,47 @@ export default function RO_DRCUserList() {
         try {
             if (!userData) return;
 
-            const payload = {
-                drc_id: userData.drc_id,
-                drcUser_type: activeTab,
-                drcUser_status: getUserStatus(),
-                pages: getCurrentPage(),
-            };
+            // const payload = {
+            //     drc_id: userData.drc_id,
+            //     drcUser_type: activeTab,
+            //     drcUser_status: getUserStatus(),
+            //     pages: getCurrentPage(),
+            // };
 
-            console.log("Payload sent to API: ", payload);
+            // const { type, role } = TAB_TO_API[activeTab];
+            //     const payload = {
+            //         drc_id: userData.drc_id,
+            //         drcUser_type: type,                 // 'ro' or 'drc_officer'
+            //         user_role: role,                    // required for drc_officer tabs
+            //         drcUser_status: getUserStatus(),
+            //         pages: getCurrentPage(),
+            // };
+
+            // console.log("Payload sent to API: ", payload);
+            // setIsLoading(true);
+
+            const tabConfig = TAB_TO_API[activeTab];
+            if (!tabConfig) {
+                console.error("Unknown tab:", activeTab);
+                Swal.fire({
+                    title: "Error",
+                    text: "Unknown tab selected. Please refresh.",
+                    icon: "error",
+                });
+                  return;
+                }
+            
+                const { type, role } = tabConfig;
+
+                const payload = {
+                  drc_id: userData.drc_id,
+                  drcUser_type: type,      // 'ro' or 'drc_officer'
+                  user_role: role,         // role only for 'drc_officer'
+                  drcUser_status: getUserStatus(),
+                  pages: getCurrentPage(),
+                };
+            
             setIsLoading(true);
-
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
                 if (error.response && error.response.status === 404) {
                     if (activeTab === "RO") {
@@ -841,6 +895,7 @@ export default function RO_DRCUserList() {
             });
 
             console.log("Response from API:", response);
+
             setIsLoading(false);
 
             if (response && response.data) {
@@ -892,42 +947,55 @@ export default function RO_DRCUserList() {
     };
 
     const handleClear = () => {
-        if (activeTab === "RO") {
-            setRoData([]);
-            setRoCurrentPage(1);
-            setRoMaxPage(0);
-            setRoTotalPages(1);
-            setRoTotalAPIPages(1);
-            setRoStatus("");
-        } else {
-            setDrcData([]);
-            setDrcCurrentPage(1);
-            setDrcMaxPage(0);
-            setDrcTotalPages(1);
-            setDrcTotalAPIPages(1);
-            setDrcUserStatus("");
-        }
+        // if (activeTab === "RO") {
+        //     setRoData([]);
+        //     setRoCurrentPage(1);
+        //     setRoMaxPage(0);
+        //     setRoTotalPages(1);
+        //     setRoTotalAPIPages(1);
+        //     setRoStatus("");
+        // } else {
+        //     setDrcData([]);
+        //     setDrcCurrentPage(1);
+        //     setDrcMaxPage(0);
+        //     setDrcTotalPages(1);
+        //     setDrcTotalAPIPages(1);
+        //     setDrcUserStatus("");
+        // }
+
+        // Store the current tab in localStorage
+        localStorage.setItem("activeTab", activeTab);
+
+        // Refresh the page
+        window.location.reload();
     };
 
-    useEffect(() => {
-        if (userData) {
-            if (
-                activeTab === "RO" &&
-                roData.length === 0 &&
-                (roStatus === "" || isRoFilterApplied)
-            ) {
-                handleFilterButton();
-            }
+    // useEffect(() => {
+    //     if (userData) {
+    //         if (
+    //             activeTab === "RO" &&
+    //             roData.length === 0 &&
+    //             (roStatus === "" || isRoFilterApplied)
+    //         ) {
+    //             handleFilterButton();
+    //         }
 
-            if (
-                activeTab === "drcUser" &&
-                drcData.length === 0 &&
-                (drcUserStatus === "" || isDrcFilterApplied)
-            ) {
-                handleFilterButton();
-            }
-        }
-    }, [activeTab, userData, roStatus, drcUserStatus]);
+    //         // Any DRC tab loads (Coordinator / Call Center / Staff)
+    //         if (["drcCoordinator", "drcCallCenter", "drcStaff"].includes(activeTab) &&
+    //             drcData.length === 0 &&
+    //             (drcUserStatus === "" || isDrcFilterApplied)) {
+    //             handleFilterButton();
+    //         }
+    //     }
+    // }, [activeTab, userData, roStatus, drcUserStatus]);
+
+    // NEW – always reset & fetch when switching tabs
+    useEffect(() => {
+        if (!userData) return;
+        handleFilterButton();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, userData]);
+
 
     const handlePrevNext = (direction) => {
         if (activeTab === "RO") {
@@ -1024,17 +1092,47 @@ export default function RO_DRCUserList() {
                 </div>
             )}
 
-            {activeTab === "drcUser" && (
+            {activeTab === "drcCoordinator" && (
                 <div>
-                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC User List</h2>
+                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC Coordinator</h2>
                     <div className="flex justify-end mt-6">
                         <button
                             className={GlobalStyle.buttonPrimary}
                             onClick={() =>
-                                navigate("/ro/ro-add-ro", { state: { from: "drcUser" } })
+                                navigate("/ro/ro-add-ro", { state: { from: "drcCoordination" } })
                             }
                         >
-                            Add DRC User
+                            Add DRC - Coordinator
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "drcCallCenter" && (
+                <div>
+                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC Call Center</h2>
+                    <div className="flex justify-end mt-6">
+                        <button
+                            className={GlobalStyle.buttonPrimary}
+                            onClick={() => navigate("/ro/ro-add-ro", { state: { from: "drcCallCenter" } })}
+                            >
+                            Add DRC - Call Center
+                            </button>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "drcStaff" && (
+                <div>
+                    <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>DRC Staff</h2>
+                    <div className="flex justify-end mt-6">
+                        <button
+                            className={GlobalStyle.buttonPrimary}
+                            onClick={() =>
+                                navigate("/ro/ro-add-ro", { state: { from: "drcStaff" } })
+                            }
+                        >
+                            Add DRC - Saff
                         </button>
                     </div>
                 </div>
@@ -1091,17 +1189,15 @@ export default function RO_DRCUserList() {
 
             {/* Tabs */}
             <div className="flex border-b mb-4 mt-4 overflow-x-auto">
-                {["RO", "drcUser"].map((tab) => (
+                {TABS.map((tab) => (
                     <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 whitespace-nowrap ${
-                            activeTab === tab
-                                ? "border-b-2 border-blue-500 font-bold"
-                                : "text-gray-500"
-                        }`}
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 whitespace-nowrap ${
+                        activeTab === tab ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
+                    }`}
                     >
-                        {tab === "RO" ? "RO" : "DRC User"} List
+                    {TAB_LABELS[tab]} List
                     </button>
                 ))}
             </div>
@@ -1128,7 +1224,10 @@ export default function RO_DRCUserList() {
                                             RO Name
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
-                                            Contact No.
+                                            Contact No. 1
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 2
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
                                             Billing Center Area count
@@ -1156,10 +1255,13 @@ export default function RO_DRCUserList() {
                                                     {item.nic || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.ro_name || "N/A"}
+                                                    {item.name || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.login_contact_no || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.rtom_area_count || "0"}
@@ -1172,7 +1274,13 @@ export default function RO_DRCUserList() {
                                                         className="w-6 h-6 cursor-pointer"
                                                         onClick={() =>
                                                             navigate("/ro/ro-drc-user-info", {
-                                                                state: { itemType: activeTab, itemData: item },
+                                                                state: {
+                                                                itemType: activeTab === "RO" ? "RO" : "drcUser", // treat DRC tabs as drcUser
+                                                                itemData:
+                                                                activeTab === "RO"
+                                                                    ? { ro_id: item.ro_id }
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id, },
+                                                                },
                                                             })
                                                         }
                                                     />
@@ -1219,7 +1327,7 @@ export default function RO_DRCUserList() {
                     </div>
                 )}
 
-                {activeTab === "drcUser" && (
+                {activeTab === "drcCoordinator" && (
                     <div>
                         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
                             <table
@@ -1236,10 +1344,13 @@ export default function RO_DRCUserList() {
                                             NIC
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[150px]`} scope="col">
-                                            DRC User Name
+                                            RO Name
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
-                                            Contact No.
+                                            Contact No. 1
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 2
                                         </th>
                                         <th className={`${GlobalStyle.tableHeader} min-w-[60px]`} scope="col"></th>
                                     </tr>
@@ -1248,7 +1359,7 @@ export default function RO_DRCUserList() {
                                     {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
                                         drcFilteredDataBySearch.map((item, index) => (
                                             <tr
-                                                key={item.drcUser_id || index}
+                                                key={item.drc_officer_id || index}
                                                 className={`${
                                                     index % 2 === 0
                                                         ? "bg-white bg-opacity-75"
@@ -1264,10 +1375,13 @@ export default function RO_DRCUserList() {
                                                     {item.nic || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
-                                                    {item.ro_name || "N/A"}
+                                                    {item.name || "N/A"}
                                                 </td>
                                                 <td className={GlobalStyle.tableData}>
                                                     {item.login_contact_no || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no_two || ""}
                                                 </td>
                                                 <td className={`${GlobalStyle.tableData} flex justify-center`}>
                                                     <img
@@ -1277,7 +1391,13 @@ export default function RO_DRCUserList() {
                                                         className="w-6 h-6 cursor-pointer"
                                                         onClick={() =>
                                                             navigate("/ro/ro-drc-user-info", {
-                                                                state: { itemType: activeTab, itemData: item },
+                                                                state: {
+                                                                itemType: activeTab === "RO" ? "RO" : "drcUser", // treat DRC tabs as drcUser
+                                                                itemData:
+                                                                activeTab === "RO"
+                                                                    ? { ro_id: item.ro_id }
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
+                                                                },
                                                             })
                                                         }
                                                     />
@@ -1323,6 +1443,241 @@ export default function RO_DRCUserList() {
                         )}
                     </div>
                 )}
+
+                {activeTab === "drcCallCenter" && (
+                    <div>
+                        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+                            <table
+                                className={`${GlobalStyle.table} table-auto w-full`}
+                                style={{ fontSize: "0.875rem" }}
+                                aria-label="DRC User List Table"
+                            >
+                                <thead className={GlobalStyle.thead}>
+                                    <tr>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`} scope="col">
+                                            Status
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            NIC
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`} scope="col">
+                                            RO Name
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 1
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 2
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`} scope="col"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
+                                        drcFilteredDataBySearch.map((item, index) => (
+                                            <tr
+                                                key={item.drc_officer_id || index}
+                                                className={`${
+                                                    index % 2 === 0
+                                                        ? "bg-white bg-opacity-75"
+                                                        : "bg-gray-50 bg-opacity-50"
+                                                } border-b`}
+                                            >
+                                                <td
+                                                    className={`${GlobalStyle.tableData} flex justify-center items-center`}
+                                                >
+                                                    {getStatusIcon(item.drcUser_status) || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.nic || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.name || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no_two || ""}
+                                                </td>
+                                                <td className={`${GlobalStyle.tableData} flex justify-center`}>
+                                                    <img
+                                                        src={moreInfoIcon}
+                                                        alt="view info"
+                                                        title="view info"
+                                                        className="w-6 h-6 cursor-pointer"
+                                                        onClick={() =>
+                                                            navigate("/ro/ro-drc-user-info", {
+                                                                state: {
+                                                                itemType: activeTab === "RO" ? "RO" : "drcUser", // treat DRC tabs as drcUser
+                                                                itemData:
+                                                                activeTab === "RO"
+                                                                    ? { ro_id: item.ro_id }
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
+                                                                },
+                                                            })
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="text-center py-4">
+                                                No cases available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination Section */}
+                        {drcTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={drcCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Previous page"
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {drcCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={drcCurrentPage === drcTotalPages}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Next page"
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === "drcStaff" && (
+                    <div>
+                        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+                            <table
+                                className={`${GlobalStyle.table} table-auto w-full`}
+                                style={{ fontSize: "0.875rem" }}
+                                aria-label="DRC User List Table"
+                            >
+                                <thead className={GlobalStyle.thead}>
+                                    <tr>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[80px]`} scope="col">
+                                            Status
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            NIC
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[150px]`} scope="col">
+                                            RO Name
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 1
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[120px]`} scope="col">
+                                            Contact No. 2
+                                        </th>
+                                        <th className={`${GlobalStyle.tableHeader} min-w-[60px]`} scope="col"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {drcFilteredDataBySearch && drcFilteredDataBySearch.length > 0 ? (
+                                        drcFilteredDataBySearch.map((item, index) => (
+                                            <tr
+                                                key={item.drc_officer_id || index}
+                                                className={`${
+                                                    index % 2 === 0
+                                                        ? "bg-white bg-opacity-75"
+                                                        : "bg-gray-50 bg-opacity-50"
+                                                } border-b`}
+                                            >
+                                                <td
+                                                    className={`${GlobalStyle.tableData} flex justify-center items-center`}
+                                                >
+                                                    {getStatusIcon(item.drcUser_status) || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.nic || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.name || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no || "N/A"}
+                                                </td>
+                                                <td className={GlobalStyle.tableData}>
+                                                    {item.login_contact_no_two || ""}
+                                                </td>
+                                                <td className={`${GlobalStyle.tableData} flex justify-center`}>
+                                                    <img
+                                                        src={moreInfoIcon}
+                                                        alt="view info"
+                                                        title="view info"
+                                                        className="w-6 h-6 cursor-pointer"
+                                                        onClick={() =>
+                                                            navigate("/ro/ro-drc-user-info", {
+                                                                state: {
+                                                                itemType: activeTab === "RO" ? "RO" : "drcUser", // treat DRC tabs as drcUser
+                                                                itemData:
+                                                                activeTab === "RO"
+                                                                    ? { ro_id: item.ro_id }
+                                                                    : { drc_officer_id: item.drc_officer_id ?? item.drc_officer_id ?? item._id },
+                                                                },
+                                                            })
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="text-center py-4">
+                                                No cases available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination Section */}
+                        {drcTotalPages > 1 && (
+                            <div className={GlobalStyle.navButtonContainer}>
+                                <button
+                                    onClick={() => handlePrevNext("prev")}
+                                    disabled={drcCurrentPage === 1}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Previous page"
+                                >
+                                    <FaArrowLeft />
+                                </button>
+                                <span>Page {drcCurrentPage}</span>
+                                <button
+                                    onClick={() => handlePrevNext("next")}
+                                    disabled={drcCurrentPage === drcTotalPages}
+                                    className={`${GlobalStyle.navButton} ${
+                                        drcCurrentPage === drcTotalPages ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                    aria-label="Next page"
+                                >
+                                    <FaArrowRight />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
             </div>
         </div>
     );
