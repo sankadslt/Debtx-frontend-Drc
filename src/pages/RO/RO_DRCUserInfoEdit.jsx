@@ -628,28 +628,88 @@ export default function RO_DRCUserDetailsEdit() {
   // State for fetched data
   const [fetchedData, setFetchedData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Top level type vs. DRC subtype
+  const [activeUserType, setActiveUserType] = useState(itemType);
+  const [activeUserRole, setActiveUserRole] = useState('');
   // Editable fields
+  const [userName, setUserName] = useState('');
+  const [userNameError, setUserNameError] = useState('');
+  const [userNic, setUserNic] = useState('');
+  const [userNicError, setUserNicError] = useState('');
   const [contactNo, setContactNo] = useState('');
   const [contactNoError, setContactNoError] = useState('');
+  const [contactNoTwo, setContactNoTwo] = useState('');
+  const [contactNoErrorTwo, setContactNoErrorTwo] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
   const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
+  //RTOM areas (only for RO)
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [rtomAreaOptions, setRtomAreaOptions] = useState([]);
+  
   // Track initial values for change detection
+  const [initialUserName, setInitialUserName] = useState('');
+  const [initialUserNic, setInitialUserNic] = useState('');
   const [initialContactNo, setInitialContactNo] = useState('');
+  const [initialContactNoTwo, setInitialContactNoTwo] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
   const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
 
+  // 24-hour restriction states
+  const [canEditName, setCanEditName] = useState(true);
+  const [canEditNic, setCanEditNic] = useState(true);
+  const [userCreatedAt, setUserCreatedAt] = useState(null);
+  const [timeRestrictionMessage, setTimeRestrictionMessage] = useState('');
+
+  //Helper
+  const roleLabels = {
+    drcCoordinator: "DRC Coordinator",
+    drcCallCenter: "DRC Call Center",
+    drcStaff: "DRC Staff",
+  }
+
+  // Enhanced function to check 24-hour restriction
+  const check24HourRestriction = (createdAt) => {
+    if (!createdAt) {
+      return { 
+        canEditName: false, 
+        canEditNic: false, 
+        message: 'User creation date not found. Name and NIC editing disabled.' 
+      };
+    }
+    
+    const creationDate = new Date(createdAt);
+    const currentDate = new Date();
+    const hoursSinceCreation = (currentDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60);
+    
+    const canEdit = hoursSinceCreation < 24; // Strict 24-hour limit
+    
+    let message;
+    if (canEdit) {
+      const remainingHours = Math.max(0, 24 - hoursSinceCreation);
+      const hours = Math.floor(remainingHours);
+      const minutes = Math.floor((remainingHours - hours) * 60);
+      message = `Name and NIC can be edited for ${hours}h ${minutes}m more.`;
+    } else {
+      message = `Name and NIC editing disabled. 24-hour limit exceeded. User was created on ${creationDate.toLocaleString()}.`;
+    }
+    
+    return {
+      canEditName: canEdit,
+      canEditNic: canEdit,
+      message: message
+    };
+  };
+
   // Fetch user data on mount
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!itemType || !itemData || (!itemData.ro_id && !itemData.drcUser_id)) {
+      if (!itemType || !itemData || (!itemData.ro_id && !itemData.drc_officer_id)) {
         Swal.fire({
           title: 'Error',
           text: 'Missing user type or ID. Please try again.',
@@ -663,7 +723,7 @@ export default function RO_DRCUserDetailsEdit() {
       }
 
       try {
-        const payload = itemData.ro_id ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id };
+        const payload = itemData.ro_id ? { ro_id: itemData.ro_id } : { drc_officer_id: itemData.drc_officer_id };
         setIsLoading(true);
         const response = await List_RO_Info_Own_By_RO_Id(payload);
         setIsLoading(false);
@@ -671,18 +731,52 @@ export default function RO_DRCUserDetailsEdit() {
         console.log('API Response:', {
           itemType,
           ro_id: itemData.ro_id,
-          drcUser_id: itemData.drcUser_id,
+          drc_officer_id: itemData.drc_officer_id,
           drcUser_status: response.data?.drcUser_status,
           data: response.data,
         });
 
         if (response && response.data) {
           setFetchedData(response.data);
+          
+          // Set user name
+          const fetchedName = response.data.drcUser_name || response.data.recovery_officer_name || '';
+          setUserName(fetchedName);
+          setInitialUserName(fetchedName);
+          
+          // Set user NIC
+          const fetchedNic = response.data.nic || '';
+          setUserNic(fetchedNic);
+          setInitialUserNic(fetchedNic);
+          
+          // Set other fields
           setContactNo(response.data.contact_no || '');
+          setContactNoTwo(response.data.contact_no_two || '');
           setInitialContactNo(response.data.contact_no || '');
+          setInitialContactNoTwo(response.data.contact_no_two || '');
           setEmail(response.data.email || '');
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
+
+          // Set user creation date and check 24-hour restriction
+          const createdAt = response.data.createdAt || response.data.created_at;
+          setUserCreatedAt(createdAt);
+          
+          if (createdAt) {
+            const restriction = check24HourRestriction(createdAt);
+            setCanEditName(restriction.canEditName);
+            setCanEditNic(restriction.canEditNic);
+            setTimeRestrictionMessage(restriction.message);
+          }
+
+          if (response.data.user_role) {
+            const apiRole = response.data.user_role;
+            const displayRole = roleLabels[apiRole]
+              ? roleLabels[apiRole]
+              : apiRole.charAt(0).toUpperCase() + apiRole.slice(1).toLowerCase();
+            setActiveUserRole(displayRole);
+          }
+
           // Normalize drcUser_status
           let normalizedStatus;
           if (typeof response.data.drcUser_status === 'boolean') {
@@ -769,6 +863,48 @@ export default function RO_DRCUserDetailsEdit() {
     fetchRTOMs();
   }, []);
 
+  // Enhanced input handlers with proper restriction enforcement
+  const handleUserNameChange = (value) => {
+    if (!canEditName) {
+      Swal.fire({
+        title: 'Editing Disabled',
+        text: 'Name can only be edited within 24 hours of user creation.',
+        icon: 'warning',
+        confirmButtonColor: "#f1c40f",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+    setUserName(value);
+    setUserNameError(value.trim() ? '' : 'Name is required.');
+  };
+
+  const handleUserNicChange = (value) => {
+    if (!canEditNic) {
+      Swal.fire({
+        title: 'Editing Disabled',
+        text: 'NIC can only be edited within 24 hours of user creation.',
+        icon: 'warning',
+        confirmButtonColor: "#f1c40f",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+    // Basic NIC validation - adjust according to your country's format
+    const cleaned = value.replace(/[^0-9Vv]/g, '');
+    setUserNic(cleaned);
+    
+    if (!cleaned) {
+      setUserNicError('NIC is required.');
+    } else if (cleaned.length < 9 || cleaned.length > 12) {
+      setUserNicError('Please enter a valid NIC number.');
+    } else {
+      setUserNicError('');
+    }
+  };
+
   const handleContactNoChange = (value) => {
     const cleaned = value.replace(/[^+\d]/g, '');
     const digitsOnly = cleaned.replace(/\D/g, '');
@@ -778,6 +914,18 @@ export default function RO_DRCUserDetailsEdit() {
     } else {
       setContactNoError(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
       setContactNo(cleaned);
+    }
+  };
+
+  const handleContactNoChangeTwo = (value) => {
+    const cleaned = value.replace(/[^+\d]/g, '');
+    const digitsOnly = cleaned.replace(/\D/g, '');
+
+    if (digitsOnly.length > 10) {
+      setContactNoErrorTwo('Contact number cannot exceed 10 digits.');
+    } else {
+      setContactNoErrorTwo(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
+      setContactNoTwo(cleaned);
     }
   };
 
@@ -792,8 +940,21 @@ export default function RO_DRCUserDetailsEdit() {
     }
   };
 
+  // Enhanced validation function that considers restriction
   const validateInputs = () => {
     let isValid = true;
+
+    // Only validate name if it's editable
+    if (canEditName && !userName.trim()) {
+      setUserNameError('Name is required.');
+      isValid = false;
+    }
+
+    // Only validate NIC if it's editable
+    if (canEditNic && (!userNic || userNic.length < 9 || userNic.length > 12)) {
+      setUserNicError('Please enter a valid NIC number.');
+      isValid = false;
+    }
 
     // Validate email
     if (!email) {
@@ -810,6 +971,11 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
+    if (!contactNoTwo || !/^\+?\d{9,10}$/.test(contactNoTwo)) {
+      setContactNoErrorTwo('Please enter a valid contact number (e.g., +94771234567).');
+      isValid = false;
+    }
+
     // Validate remark
     if (!remark.trim()) {
       Swal.fire({
@@ -823,9 +989,12 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
-    // Check for changes
+    // Enhanced change detection that excludes restricted fields
     const hasChanges =
+      (canEditName && userName !== initialUserName) ||
+      (canEditNic && userNic !== initialUserNic) ||
       contactNo !== initialContactNo ||
+      contactNoTwo !== initialContactNoTwo ||
       email !== initialEmail ||
       drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
@@ -891,30 +1060,37 @@ export default function RO_DRCUserDetailsEdit() {
     return isValid;
   };
 
+  // Enhanced handleSave function to exclude restricted fields from payload
   const handleSave = async () => {
     try {
       if (!validateInputs()) return;
 
       const roId = itemData?.ro_id;
-      const drcUserId = itemData?.drcUser_id;
+      const drcUserId = itemData?.drc_officer_id;
       const drcId = fetchedData?.drc_id || 1;
 
       if (itemType === 'RO' && !roId) {
         throw new Error('Missing ro_id for Recovery Officer.');
       }
       if (itemType === 'drcUser' && !drcUserId) {
-        throw new Error('Missing drcUser_id for DRC User.');
+        throw new Error('Missing drc_officer_id for DRC User.');
       }
 
       const userPayload = await getLoggedUserId();
-      const create_by = userPayload?.user_id;
+      const create_by = String(userPayload?.user_id);
+      
 
       const basePayload = {
-        ...(itemType === 'RO' ? { ro_id: roId } : { drcUser_id: drcUserId }),
+        ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
         drc_id: drcId,
-        ro_name: fetchedData?.drcUser_name || fetchedData?.recovery_officer_name || 'N/A',
+        // Only include name if it can be edited AND has changed
+        ...(canEditName && userName !== initialUserName && { name: userName }),
+        // Only include NIC if it can be edited AND has changed  
+        ...(canEditNic && userNic !== initialUserNic && { nic: userNic }),
+        user_role: activeUserRole,
         login_email: email,
         login_contact_no: contactNo,
+        login_contact_no_two: contactNoTwo,
         drcUser_status: drcUserStatus,
         create_by: create_by,
         remark: remark || 'Updated user details',
@@ -937,7 +1113,7 @@ export default function RO_DRCUserDetailsEdit() {
         }),
       } : basePayload;
 
-      console.log('Sending payload:', payload);
+      console.log('Sending payload (restricted fields excluded if applicable):', payload);
 
       const response = await updateROorDRCUserDetails(payload);
 
@@ -1056,6 +1232,15 @@ export default function RO_DRCUserDetailsEdit() {
     );
   }
 
+  const getUserRoleDisplayText = (role) => {
+    const roleMapping = {
+      'DRC Coordinator': 'DRC Coordinator',
+      'call center': 'Call Center',
+      'user staff': 'User Staff'
+    };
+    return roleMapping[role] || role || 'N/A';
+  };
+
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
@@ -1064,6 +1249,13 @@ export default function RO_DRCUserDetailsEdit() {
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name: {fetchedData.drc_name || 'N/A'}
       </h2>
+
+      {/* 24-hour restriction notice */}
+      {timeRestrictionMessage && (
+        <div className={`mx-4 mt-4 p-3 rounded-md ${canEditName && canEditNic ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-red-100 border-red-400 text-red-700'} border`}>
+          <p className="text-sm font-medium">{timeRestrictionMessage}</p>
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
         <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
@@ -1086,19 +1278,83 @@ export default function RO_DRCUserDetailsEdit() {
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{fetchedData.added_date || 'N/A'}</div>
               </div>
               <div className="table-row">
-                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
-                </div>
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Type</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
-                  {fetchedData.drcUser_name || fetchedData.recovery_officer_name || 'N/A'}
+                  {activeUserType === "RO" ? "Recovery Officer" : activeUserType === "drcUser" ? "DRC User" : "N/A"}
                 </div>
               </div>
+
+              {activeUserType === "drcUser" && (
+                <div className="table-row">
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Role</div>
+                  <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                    {getUserRoleDisplayText(activeUserRole)}
+                  </div>
+                </div>
+              )}
+              
+              {/* Enhanced Name field with 24-hour restriction and visual disabled state */}
               <div className="table-row">
-                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">NIC</div>
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                  {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
+                  {!canEditName && <span className="text-red-500 text-xs ml-1">(Editing Disabled)</span>}
+                </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{fetchedData.nic || 'N/A'}</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                    <span className="text-sm sm:text-base">{initialUserName || 'N/A'}</span>
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(e) => handleUserNameChange(e.target.value)}
+                      disabled={!canEditName}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                        ${userNameError ? 'border-red-500' : ''} 
+                        ${!canEditName ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-60' : ''}`}
+                      placeholder={canEditName ? "Enter name" : "Editing disabled after 24 hours"}
+                    />
+                  </div>
+                  {userNameError && (
+                    <p className="text-red-500 text-xs mt-1">{userNameError}</p>
+                  )}
+                  {!canEditName && (
+                    <p className="text-orange-600 text-xs mt-1">Name editing is disabled after 24 hours of user creation.</p>
+                  )}
+                </div>
               </div>
+              
+              {/* Enhanced NIC field with 24-hour restriction and visual disabled state */}
+              <div className="table-row">
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                  NIC
+                  {!canEditNic && <span className="text-red-500 text-xs ml-1">(Editing Disabled)</span>}
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                    <span className="text-sm sm:text-base">{initialUserNic || 'N/A'}</span>
+                    <input
+                      type="text"
+                      value={userNic}
+                      onChange={(e) => handleUserNicChange(e.target.value)}
+                      disabled={!canEditNic}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                        ${userNicError ? 'border-red-500' : ''} 
+                        ${!canEditNic ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-60' : ''}`}
+                      placeholder={canEditNic ? "Enter NIC number" : "Editing disabled after 24 hours"}
+                    />
+                  </div>
+                  {userNicError && (
+                    <p className="text-red-500 text-xs mt-1">{userNicError}</p>
+                  )}
+                  {!canEditNic && (
+                    <p className="text-orange-600 text-xs mt-1">NIC editing is disabled after 24 hours of user creation.</p>
+                  )}
+                </div>
+              </div>
+
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-bold text-sm sm:text-base">Login Method</div>
                 <div className="table-cell px-1 sm:px-4 py-2"></div>
@@ -1106,23 +1362,43 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number
+                  Contact Number 1
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
-  <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-    <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
-    <input
-      type="text"
-      value={contactNo}
-      onChange={(e) => handleContactNoChange(e.target.value)}
-      className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
-    />
-  </div>
-  {contactNoError && (
-    <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
-  )}
-</div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
+                  <input
+                    type="text"
+                    value={contactNo}
+                    onChange={(e) => handleContactNoChange(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {contactNoError && (
+                  <p className="text-red-500 text-xs mt-1">{contactNoError}</p>
+                )}
+              </div>
+              </div>
+               <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Contact Number 2
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base">{initialContactNoTwo || 'N/A'}</span>
+                  <input
+                    type="text"
+                    value={contactNoTwo}
+                    onChange={(e) => handleContactNoChangeTwo(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoErrorTwo ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {contactNoErrorTwo && (
+                  <p className="text-red-500 text-xs mt-1">{contactNoErrorTwo}</p>
+                )}
+              </div>
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
@@ -1136,7 +1412,7 @@ export default function RO_DRCUserDetailsEdit() {
                       type="email"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
-                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-4px] sm:mt- ${emailError ? 'border-red-500' : ''}`}
+                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-4px] sm:mt-0 ${emailError ? 'border-red-500' : ''}`}
                     />
                   </div>
                   {emailError && (

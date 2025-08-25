@@ -409,18 +409,19 @@ export default function RecoveryOfficerEndPage() {
 
     const [endDate, setEndDate] = useState('');
     const [endDateError, setEndDateError] = useState('');
+    
     const [remark, setRemark] = useState('');
     const [remarkError, setRemarkError] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [userId, setUserId] = useState(null); // Stores ro_id or drcUser_id
+    const [userId, setUserId] = useState(null); // Stores ro_id or drc_officer_id
 
     const today = new Date().toISOString().split('T')[0];
 
     // Fetch user ID if not in userData
     useEffect(() => {
         const fetchId = async () => {
-            if (!userData?.ro_id && !userData?.drcUser_id) {
+            if (!userData?.ro_id && !userData?.drc_officer_id) {
                 if (activeUserType !== "drcUser" && userData?.recovery_officer_name) {
                     try {
                         const details = await GetRODetailsByID({ ro_id: userData.recovery_officer_name }); // Adjust if name-based query is unsupported
@@ -448,10 +449,10 @@ export default function RecoveryOfficerEndPage() {
                         });
                     }
                 } else if (activeUserType === "drcUser" && userData?.drcUser_name) {
-                    // Placeholder; adjust to fetch drcUser_id if needed
+                    // Placeholder; adjust to fetch drc_officer_id if needed
                     Swal.fire({
                         title: "Warning",
-                        text: "drcUser_id fetching not implemented. Please pass drcUser_id.",
+                        text: "drc_officer_id fetching not implemented. Please pass drc_officer_id.",
                         icon: "warning",
                         confirmButtonColor: "#f1c40f",
                         allowOutsideClick: false,
@@ -459,7 +460,7 @@ export default function RecoveryOfficerEndPage() {
                     });
                 }
             } else {
-                setUserId(userData.ro_id || userData.drcUser_id);
+                setUserId(userData.ro_id || userData.drc_officer_id);
             }
         };
         fetchId();
@@ -516,6 +517,16 @@ export default function RecoveryOfficerEndPage() {
         return isValid;
     };
 
+    // Function to get user role display text
+  const getUserRoleDisplayText = (role) => {
+    const roleMapping = {
+      'DRC Coordinator': 'DRC Coordinator',
+      'call center': 'Call Center',
+      'user staff': 'User Staff'
+    };
+    return roleMapping[role] || role || 'N/A';
+  };
+
     const handleEndDateChange = (e) => {
         const value = e.target.value;
         setEndDate(value);
@@ -545,10 +556,10 @@ export default function RecoveryOfficerEndPage() {
         try {
             // Fetch the logged-in user's data and extract user_id
             const userPayload = await getLoggedUserId();
-            const end_by = userPayload?.user_id;
+            const end_by = String(userPayload?.user_id);
 
             const terminationDetails = {
-                [activeUserType === "drcUser" ? "drcUser_id" : "ro_id"]: Number(userId),
+                [activeUserType === "drcUser" ? "drc_officer_id" : "ro_id"]: Number(userId),
                 end_by: end_by,
                 end_dtm: new Date(endDate).toISOString(),
                 remark: remark.trim()
@@ -603,6 +614,23 @@ export default function RecoveryOfficerEndPage() {
                             </div>
 
                             <div className="table-row">
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Type</div>
+                                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{
+                                activeUserType === "RO" ? "Recovery Officer" : activeUserType === "drcUser" ? "DRC User" : "N/A"
+                                }</div>
+                            </div>
+
+                            <div className="table-row">
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Role</div>
+                                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{activeUserType === "drcUser" 
+                                ? getUserRoleDisplayText(userData?.user_role) 
+                                : "N/A"}
+                                </div>
+                            </div>
+
+                            <div className="table-row">
                                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                                     {activeUserType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
                                 </div>
@@ -625,9 +653,15 @@ export default function RecoveryOfficerEndPage() {
                             </div>
 
                             <div className="table-row">
-                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Contact No</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Contact No 1</div>
                                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no || 'N/A'}</div>
+                            </div>
+
+                            <div className="table-row">
+                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Contact No 2</div>
+                                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no_two || 'N/A'}</div>
                             </div>
 
                             <div className="table-row">

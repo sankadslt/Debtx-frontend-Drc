@@ -55,10 +55,9 @@ const Sidebar = ({ onHoverChange }) => {
     },
     {
       icon: FaBuildingUser,
-      label: "RO List",
-      link: "/dashboard",
-      roles: ["superadmin", "admin", "user", "drc_admin"],
-      subItems: [],
+      label: "RO/DRC User List",
+      link: "/ro/ro-drc-user-list",
+      roles: ["superadmin", "admin", "user", "drc_admin", "drc_user", "DRC-Coordinator"],
     },
     {
       icon: IoIosListBox,
@@ -90,11 +89,11 @@ const Sidebar = ({ onHoverChange }) => {
           link: "/drc/mediation-board-case-list",
           roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
         },
-        {
-          label: "RO & DRC_User List",
-          link: "/ro/ro-drc-user-list",
-          roles: [ "DRC-Coordinator", "drc_user"],
-        },
+        // {
+        //   label: "RO & DRC_User List",
+        //   link: "/ro/ro-drc-user-list",
+        //   roles: [ "DRC-Coordinator", "drc_user"],
+        // },
        
       ],
     },
