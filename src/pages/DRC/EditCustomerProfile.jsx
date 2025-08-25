@@ -909,7 +909,7 @@ export default function EditCustomerProfile() {
     // Move fetchCaseDetails outside of useEffect so it can be reused
     const fetchCaseDetails = async () => {
         try {
-            if (!userData?.drc_id) {
+            if (!userData?.drc_id || !case_id) {
                 //console.log("Missing DRC Id.", userData?.drc_id);
                 return;
             }
