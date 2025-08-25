@@ -82,12 +82,12 @@ const Sidebar = ({ onHoverChange }) => {
         {
           label: "Negotiation Case List",
           link: "/drc/ro-s-assigned-case-log",
-          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user" , "recovery_officer"],
         },
         {
           label: "Mediation Board List",
           link: "/drc/mediation-board-case-list",
-          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user", "recovery_officer"],
         },
         // {
         //   label: "RO & DRC_User List",
