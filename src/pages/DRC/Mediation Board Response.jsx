@@ -162,6 +162,8 @@ const MediationBoardResponse = () => {
     requestcomment: "",
     failComment: "",
     nonsettlementcomment: "",
+    current_arrears_amount: "",
+    case_current_status: "",
     settle: "",
     failReason: "",
     nextCallingDate: "",
@@ -296,9 +298,11 @@ const MediationBoardResponse = () => {
           accountNo: data[0].account_no || "",
           arrearsAmount: data[0].current_arrears_amount || "",
           lastPaymentDate: data[0].last_payment_date
+
             ? format(new Date(data[0].last_payment_date), "yyyy-MM-dd")
             : "",
           callingRound: callingRound || 0,
+          case_current_status: data[0].case_current_status || ""
         });
         setHistoryTables(data[0]);
         console.log("History Tables:", historyTables);
@@ -485,7 +489,7 @@ const MediationBoardResponse = () => {
     e.preventDefault();
 
     // Adjust validation based on handover status
-    if (caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes") {
+    if (caseDetails.callingRound >= 0 && handoverNonSettlement === "Yes") {
       // For handover cases, only validate comment
       if (!formData.nonsettlementcomment.trim()) {
         Swal.fire({
@@ -532,7 +536,9 @@ const MediationBoardResponse = () => {
           settlement_count: settlementCount,
           initial_amount: formData.initialAmount,
           calendar_month: formData.calendarMonth,
-          duration: formData.calendarMonth,
+          current_arrears_amount: caseDetails.arrearsAmount,
+          case_current_status: caseDetails.case_current_status,
+          //duration: formData.calendarMonth,
           remark: formData.remark,
           fail_reason: formData.failReason,
           created_by: createdBy
@@ -637,7 +643,9 @@ const MediationBoardResponse = () => {
           settlement_count: settlementCount,
           initial_amount: formData.initialAmount,
           calendar_month: formData.calendarMonth,
-          duration: formData.calendarMonth,
+          current_arrears_amount: caseDetails.arrearsAmount,
+          case_current_status: caseDetails.case_current_status,
+         // duration: formData.calendarMonth,
           remark: formData.remark,
           fail_reason: formData.failReason,
           created_by: createdBy,
@@ -686,7 +694,7 @@ const MediationBoardResponse = () => {
 
   // Determine if form should be simplified based on handover selection
   const isSimplifiedForm =
-    caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes";
+    caseDetails.callingRound >= 0 && handoverNonSettlement === "Yes";
 
   if (isLoading) {
     return (
@@ -792,6 +800,7 @@ const MediationBoardResponse = () => {
                 <td className="font-bold w-48">Last Payment Date</td>
                 <td className="px-2 font-bold">:</td>
                 <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
+                
               </tr>
             </tbody>
           </table>
@@ -816,7 +825,7 @@ const MediationBoardResponse = () => {
                   <td className="text-gray-700">{caseDetails.callingRound}</td>
                 </tr>
 
-                {caseDetails.callingRound >= 3 && (
+                {caseDetails.callingRound >= 0 && (
                   <tr>
                     <td className="font-semibold w-48 align-top">Handover Non-Settlement</td>
                     <td className="px-4 font-semibold align-top">:</td>
