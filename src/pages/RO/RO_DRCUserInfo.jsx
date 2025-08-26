@@ -288,7 +288,7 @@ export default function RO_DRCUserInfo() {
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No 2</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no_two || 'N/A'}</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no_two }</div>
               </div>
 
               <div className="table-row">

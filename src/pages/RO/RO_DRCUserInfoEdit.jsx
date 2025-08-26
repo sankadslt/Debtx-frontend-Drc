@@ -644,7 +644,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
   const [drcUserStatus, setDrcUserStatus] = useState('Inactive');
-  //RTOM areas (only for RO)
+  // RTOM areas (only for RO)
   const [rtomAreas, setRtomAreas] = useState([]);
   const [selectedRtomArea, setSelectedRtomArea] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -660,51 +660,126 @@ export default function RO_DRCUserDetailsEdit() {
   const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
 
-  // 24-hour restriction states
+  // Enhanced 24-hour restriction states
   const [canEditName, setCanEditName] = useState(true);
   const [canEditNic, setCanEditNic] = useState(true);
   const [userCreatedAt, setUserCreatedAt] = useState(null);
   const [timeRestrictionMessage, setTimeRestrictionMessage] = useState('');
+  const [remainingEditTime, setRemainingEditTime] = useState(null);
 
-  //Helper
+  // Helper
   const roleLabels = {
     drcCoordinator: "DRC Coordinator",
     drcCallCenter: "DRC Call Center",
     drcStaff: "DRC Staff",
   }
 
-  // Enhanced function to check 24-hour restriction
+  // Enhanced function to check 24-hour restriction with better error handling
   const check24HourRestriction = (createdAt) => {
     if (!createdAt) {
+      console.log('No creation date found, allowing editing for new users');
       return { 
-        canEditName: false, 
-        canEditNic: false, 
-        message: 'User creation date not found. Name and NIC editing disabled.' 
+        canEditName: true, 
+        canEditNic: true, 
+        message: 'No creation date found. Name and NIC editing allowed.',
+        remainingTime: null
       };
     }
     
-    const creationDate = new Date(createdAt);
-    const currentDate = new Date();
-    const hoursSinceCreation = (currentDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60);
-    
-    const canEdit = hoursSinceCreation < 24; // Strict 24-hour limit
-    
-    let message;
-    if (canEdit) {
-      const remainingHours = Math.max(0, 24 - hoursSinceCreation);
-      const hours = Math.floor(remainingHours);
-      const minutes = Math.floor((remainingHours - hours) * 60);
-      message = `Name and NIC can be edited for ${hours}h ${minutes}m more.`;
-    } else {
-      message = `Name and NIC editing disabled. 24-hour limit exceeded. User was created on ${creationDate.toLocaleString()}.`;
+    try {
+      // Handle different date formats that might come from the API
+      let creationDate;
+      if (typeof createdAt === 'string') {
+        // Try parsing ISO date string
+        creationDate = new Date(createdAt);
+      } else if (createdAt instanceof Date) {
+        creationDate = createdAt;
+      } else {
+        throw new Error('Invalid date format');
+      }
+      
+      // Check if the date is valid
+      if (isNaN(creationDate.getTime())) {
+        console.warn('Invalid creation date format:', createdAt, 'allowing editing');
+        return { 
+          canEditName: true, 
+          canEditNic: true, 
+          message: 'Invalid creation date format. Name and NIC editing allowed.',
+          remainingTime: null
+        };
+      }
+      
+      const currentDate = new Date();
+      const hoursSinceCreation = (currentDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60);
+      
+      // Allow editing if less than 24 hours have passed
+      const canEdit = hoursSinceCreation < 24;
+      
+      let message;
+      let remainingTime = null;
+      
+      if (canEdit) {
+        const remainingHours = Math.max(0, 24 - hoursSinceCreation);
+        const hours = Math.floor(remainingHours);
+        const minutes = Math.floor((remainingHours - hours) * 60);
+        remainingTime = { hours, minutes };
+        
+        if (hours > 0) {
+          message = `Name and NIC can be edited for ${hours}h ${minutes}m more.`;
+        } else {
+          message = `Name and NIC can be edited for ${minutes}m more.`;
+        }
+      } else {
+        const hoursExceeded = Math.floor(hoursSinceCreation - 24);
+      }
+      
+      console.log('24-hour restriction check:', {
+        createdAt,
+        hoursSinceCreation: hoursSinceCreation.toFixed(2),
+        canEdit,
+        message
+      });
+      
+      return {
+        canEditName: canEdit,
+        canEditNic: canEdit,
+        message: message,
+        remainingTime: remainingTime
+      };
+    } catch (error) {
+      console.error('Error checking 24-hour restriction:', error);
+      console.log('Allowing editing due to error in date processing');
+      return { 
+        canEditName: true, 
+        canEditNic: true, 
+        message: 'Error checking time restriction. Name and NIC editing allowed.',
+        remainingTime: null
+      };
+    }
+  };
+
+  // Real-time countdown timer for remaining edit time
+  useEffect(() => {
+    let timer;
+    if (canEditName && canEditNic && userCreatedAt && remainingEditTime) {
+      timer = setInterval(() => {
+        const restriction = check24HourRestriction(userCreatedAt);
+        setCanEditName(restriction.canEditName);
+        setCanEditNic(restriction.canEditNic);
+        setTimeRestrictionMessage(restriction.message);
+        setRemainingEditTime(restriction.remainingTime);
+        
+        // If time has expired, clear the timer
+        if (!restriction.canEditName) {
+          clearInterval(timer);
+        }
+      }, 60000); // Update every minute
     }
     
-    return {
-      canEditName: canEdit,
-      canEditNic: canEdit,
-      message: message
+    return () => {
+      if (timer) clearInterval(timer);
     };
-  };
+  }, [canEditName, canEditNic, userCreatedAt, remainingEditTime]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -733,6 +808,7 @@ export default function RO_DRCUserDetailsEdit() {
           ro_id: itemData.ro_id,
           drc_officer_id: itemData.drc_officer_id,
           drcUser_status: response.data?.drcUser_status,
+          createdAt: response.data?.createdAt || response.data?.created_at,
           data: response.data,
         });
 
@@ -758,16 +834,17 @@ export default function RO_DRCUserDetailsEdit() {
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
 
-          // Set user creation date and check 24-hour restriction
-          const createdAt = response.data.createdAt || response.data.created_at;
+          // Enhanced user creation date handling and 24-hour restriction check
+          const createdAt = response.data.createdAt || response.data.created_at || response.data.added_date;
+          console.log('Raw createdAt from API:', createdAt);
+          
           setUserCreatedAt(createdAt);
           
-          if (createdAt) {
-            const restriction = check24HourRestriction(createdAt);
-            setCanEditName(restriction.canEditName);
-            setCanEditNic(restriction.canEditNic);
-            setTimeRestrictionMessage(restriction.message);
-          }
+          const restriction = check24HourRestriction(createdAt);
+          setCanEditName(restriction.canEditName);
+          setCanEditNic(restriction.canEditNic);
+          setTimeRestrictionMessage(restriction.message);
+          setRemainingEditTime(restriction.remainingTime);
 
           if (response.data.user_role) {
             const apiRole = response.data.user_role;
@@ -867,11 +944,11 @@ export default function RO_DRCUserDetailsEdit() {
   const handleUserNameChange = (value) => {
     if (!canEditName) {
       Swal.fire({
-        title: 'Editing Disabled',
-        text: 'Name can only be edited within 24 hours of user creation.',
+        title: 'Editing Restricted',
+        text: 'Name can only be edited within 24 hours of user creation. The 24-hour period has expired.',
         icon: 'warning',
         confirmButtonColor: "#f1c40f",
-        timer: 2000,
+        timer: 3000,
         showConfirmButton: false,
       });
       return;
@@ -883,11 +960,11 @@ export default function RO_DRCUserDetailsEdit() {
   const handleUserNicChange = (value) => {
     if (!canEditNic) {
       Swal.fire({
-        title: 'Editing Disabled',
-        text: 'NIC can only be edited within 24 hours of user creation.',
+        title: 'Editing Restricted',
+        text: 'NIC can only be edited within 24 hours of user creation. The 24-hour period has expired.',
         icon: 'warning',
         confirmButtonColor: "#f1c40f",
-        timer: 2000,
+        timer: 3000,
         showConfirmButton: false,
       });
       return;
@@ -921,7 +998,11 @@ export default function RO_DRCUserDetailsEdit() {
     const cleaned = value.replace(/[^+\d]/g, '');
     const digitsOnly = cleaned.replace(/\D/g, '');
 
-    if (digitsOnly.length > 10) {
+    if (cleaned === '') {
+      // Allow empty value since it's optional
+      setContactNoTwo('');
+      setContactNoErrorTwo('');
+    } else if (digitsOnly.length > 10) {
       setContactNoErrorTwo('Contact number cannot exceed 10 digits.');
     } else {
       setContactNoErrorTwo(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
@@ -940,7 +1021,6 @@ export default function RO_DRCUserDetailsEdit() {
     }
   };
 
-  // Enhanced validation function that considers restriction
   const validateInputs = () => {
     let isValid = true;
 
@@ -948,15 +1028,21 @@ export default function RO_DRCUserDetailsEdit() {
     if (canEditName && !userName.trim()) {
       setUserNameError('Name is required.');
       isValid = false;
+    } else if (!canEditName) {
+      // Clear name error if editing is not allowed
+      setUserNameError('');
     }
 
     // Only validate NIC if it's editable
     if (canEditNic && (!userNic || userNic.length < 9 || userNic.length > 12)) {
       setUserNicError('Please enter a valid NIC number.');
       isValid = false;
+    } else if (!canEditNic) {
+      // Clear NIC error if editing is not allowed
+      setUserNicError('');
     }
 
-    // Validate email
+    // Validate email (always required)
     if (!email) {
       setEmailError('Please enter an email address.');
       isValid = false;
@@ -965,15 +1051,19 @@ export default function RO_DRCUserDetailsEdit() {
       isValid = false;
     }
 
-    // Validate contact number
+    // Validate contact number 1 (always required)
     if (!contactNo || !/^\+?\d{9,10}$/.test(contactNo)) {
       setContactNoError('Please enter a valid contact number (e.g., +94771234567).');
       isValid = false;
     }
 
-    if (!contactNoTwo || !/^\+?\d{9,10}$/.test(contactNoTwo)) {
+    // Contact Number 2 is optional - only validate format if provided
+    if (contactNoTwo && !/^\+?\d{9,10}$/.test(contactNoTwo)) {
       setContactNoErrorTwo('Please enter a valid contact number (e.g., +94771234567).');
       isValid = false;
+    } else if (!contactNoTwo) {
+      // Clear error if field is empty (since it's optional)
+      setContactNoErrorTwo('');
     }
 
     // Validate remark
@@ -987,10 +1077,11 @@ export default function RO_DRCUserDetailsEdit() {
         allowEscapeKey: false,
       });
       isValid = false;
+      return isValid; // Return early if remark is missing
     }
 
-    // Enhanced change detection that excludes restricted fields
-    const hasChanges =
+    // Enhanced change detection that correctly handles restricted fields
+    const hasEditableChanges =
       (canEditName && userName !== initialUserName) ||
       (canEditNic && userNic !== initialUserNic) ||
       contactNo !== initialContactNo ||
@@ -1005,16 +1096,31 @@ export default function RO_DRCUserDetailsEdit() {
            area.status !== initialRtomAreas[index]?.status
          )));
 
-    if (!hasChanges && remark.trim()) {
+    if (!hasEditableChanges) {
+      let availableFields = ['Contact Number 1', 'Contact Number 2', 'Email', 'Status'];
+      if (itemType === 'RO') availableFields.push('RTOM Areas');
+      if (canEditName) availableFields.unshift('Name');
+      if (canEditNic) availableFields.unshift('NIC');
+      
+      let message = `You must make at least one change to save. Available fields: ${availableFields.join(', ')}.`;
+      
+      if (!canEditName || !canEditNic) {
+        let restrictedFields = [];
+        if (!canEditName) restrictedFields.push('Name');
+        if (!canEditNic) restrictedFields.push('NIC');
+        message += ` Note: ${restrictedFields.join(' and ')} cannot be edited after 24 hours.`;
+      }
+      
       Swal.fire({
         title: 'No Changes Detected',
-        text: 'You must make at least one change to the form before adding a remark.',
+        text: message,
         icon: 'warning',
         confirmButtonColor: "#f1c40f",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
       isValid = false;
+      return isValid;
     }
 
     // Validate RTOM areas for RO
@@ -1046,21 +1152,10 @@ export default function RO_DRCUserDetailsEdit() {
       }
     }
 
-    if (!isValid) {
-      Swal.fire({
-        title: 'Required Field',
-        text: 'You must make at least one change to the form and enter a remark.',
-        icon: 'error',
-        confirmButtonColor: "#d33",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-      });
-    }
-
     return isValid;
   };
 
-  // Enhanced handleSave function to exclude restricted fields from payload
+  // Updated handleSave function to always include login_contact_no_two
   const handleSave = async () => {
     try {
       if (!validateInputs()) return;
@@ -1077,24 +1172,36 @@ export default function RO_DRCUserDetailsEdit() {
       }
 
       const userPayload = await getLoggedUserId();
-      const create_by = String(userPayload?.user_id);
-      
+      const create_by = userPayload?.user_id;
 
+      // Build payload, always including login_contact_no_two
       const basePayload = {
         ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
         drc_id: drcId,
-        // Only include name if it can be edited AND has changed
-        ...(canEditName && userName !== initialUserName && { name: userName }),
-        // Only include NIC if it can be edited AND has changed  
-        ...(canEditNic && userNic !== initialUserNic && { nic: userNic }),
         user_role: activeUserRole,
         login_email: email,
         login_contact_no: contactNo,
-        login_contact_no_two: contactNoTwo,
+        login_contact_no_two: contactNoTwo, // Always include, even if empty
         drcUser_status: drcUserStatus,
         create_by: create_by,
         remark: remark || 'Updated user details',
       };
+
+      // Only add name to payload if it can be edited AND has actually changed
+      if (canEditName && userName !== initialUserName) {
+        basePayload.name = userName;
+        console.log('Including name in payload:', userName);
+      } else {
+        console.log('Excluding name from payload - either restricted or unchanged');
+      }
+
+      // Only add NIC to payload if it can be edited AND has actually changed
+      if (canEditNic && userNic !== initialUserNic) {
+        basePayload.nic = userNic;
+        console.log('Including NIC in payload:', userNic);
+      } else {
+        console.log('Excluding NIC from payload - either restricted or unchanged');
+      }
 
       const payload = itemType === 'RO' ? {
         ...basePayload,
@@ -1113,14 +1220,22 @@ export default function RO_DRCUserDetailsEdit() {
         }),
       } : basePayload;
 
-      console.log('Sending payload (restricted fields excluded if applicable):', payload);
+      console.log('Final payload:', payload);
 
       const response = await updateROorDRCUserDetails(payload);
 
       if (response.success) {
+        let successMessage = 'User details updated successfully!';
+        if (!canEditName || !canEditNic) {
+          let restrictedFields = [];
+          if (!canEditName) restrictedFields.push('Name');
+          if (!canEditNic) restrictedFields.push('NIC');
+          successMessage += ` (${restrictedFields.join(' and ')} were not updated due to 24-hour restriction)`;
+        }
+        
         Swal.fire({
           title: 'Success',
-          text: 'User details updated successfully!',
+          text: successMessage,
           icon: 'success',
           confirmButtonColor: "#28a745",
           allowOutsideClick: false,
@@ -1250,10 +1365,34 @@ export default function RO_DRCUserDetailsEdit() {
         DRC Name: {fetchedData.drc_name || 'N/A'}
       </h2>
 
-      {/* 24-hour restriction notice */}
+      {/* Enhanced 24-hour restriction notice */}
       {timeRestrictionMessage && (
-        <div className={`mx-4 mt-4 p-3 rounded-md ${canEditName && canEditNic ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-red-100 border-red-400 text-red-700'} border`}>
-          <p className="text-sm font-medium">{timeRestrictionMessage}</p>
+        <div className={`mx-4 mt-4 p-4 rounded-lg border-l-4 ${
+          canEditName && canEditNic 
+            ? 'bg-blue-50 border-blue-400 text-blue-800' 
+            : 'bg-red-50 border-red-400 text-red-800'
+        }`}>
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              {canEditName && canEditNic ? (
+                <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8.707-3.293a1 1 0 011.414 0L10 7.414l.293-.707a1 1 0 011.414 1.414L11 8.828l.707.707a1 1 0 01-1.414 1.414L10 10.242l-.707.707a1 1 0 01-1.414-1.414L8.586 9l-.707-.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                </svg>
+              )}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{timeRestrictionMessage}</p>
+              {!canEditName || !canEditNic ? (
+                <p className="text-xs mt-1 opacity-75">
+                  Only contact details, email, status, and RTOM areas can be modified.
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1295,62 +1434,104 @@ export default function RO_DRCUserDetailsEdit() {
                 </div>
               )}
               
-              {/* Enhanced Name field with 24-hour restriction and visual disabled state */}
+              {/* Enhanced Name field with better visual feedback for 24-hour restriction */}
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
-                  {!canEditName && <span className="text-red-500 text-xs ml-1">(Editing Disabled)</span>}
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-                    <span className="text-sm sm:text-base">{initialUserName || 'N/A'}</span>
-                    <input
-                      type="text"
-                      value={userName}
-                      onChange={(e) => handleUserNameChange(e.target.value)}
-                      disabled={!canEditName}
-                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
-                        ${userNameError ? 'border-red-500' : ''} 
-                        ${!canEditName ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-60' : ''}`}
-                      placeholder={canEditName ? "Enter name" : "Editing disabled after 24 hours"}
-                    />
+                    <span className="text-sm sm:text-base font-medium text-gray-700">{initialUserName || 'N/A'}</span>
+                    {canEditName ? (
+                      <input
+                        type="text"
+                        value={userName}
+                        onChange={(e) => handleUserNameChange(e.target.value)}
+                        className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                          ${userNameError ? 'border-red-500' : ''}`}
+                        placeholder="Enter name"
+                      />
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={userName}
+                          onClick={() => handleUserNameChange(userName)} // Trigger warning on click
+                          readOnly
+                          className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                            bg-gray-100 text-gray-500 cursor-not-allowed opacity-60 border-gray-300`}
+                          placeholder="Editing disabled after 24 hours"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {userNameError && (
                     <p className="text-red-500 text-xs mt-1">{userNameError}</p>
                   )}
                   {!canEditName && (
-                    <p className="text-orange-600 text-xs mt-1">Name editing is disabled after 24 hours of user creation.</p>
+                    <p className="text-orange-600 text-xs mt-1 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                      </svg>
+                      Name editing is disabled after 24 hours of user creation.
+                    </p>
                   )}
                 </div>
               </div>
               
-              {/* Enhanced NIC field with 24-hour restriction and visual disabled state */}
+              {/* Enhanced NIC field with better visual feedback for 24-hour restriction */}
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   NIC
-                  {!canEditNic && <span className="text-red-500 text-xs ml-1">(Editing Disabled)</span>}
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-                    <span className="text-sm sm:text-base">{initialUserNic || 'N/A'}</span>
-                    <input
-                      type="text"
-                      value={userNic}
-                      onChange={(e) => handleUserNicChange(e.target.value)}
-                      disabled={!canEditNic}
-                      className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
-                        ${userNicError ? 'border-red-500' : ''} 
-                        ${!canEditNic ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-60' : ''}`}
-                      placeholder={canEditNic ? "Enter NIC number" : "Editing disabled after 24 hours"}
-                    />
+                    <span className="text-sm sm:text-base font-medium text-gray-700">{initialUserNic || 'N/A'}</span>
+                    {canEditNic ? (
+                      <input
+                        type="text"
+                        value={userNic}
+                        onChange={(e) => handleUserNicChange(e.target.value)}
+                        className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                          ${userNicError ? 'border-red-500' : ''}`}
+                        placeholder="Enter NIC number"
+                      />
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={userNic}
+                          onClick={() => handleUserNicChange(userNic)} // Trigger warning on click
+                          readOnly
+                          className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-2px] sm:mt-0 
+                            bg-gray-100 text-gray-500 cursor-not-allowed opacity-60 border-gray-300`}
+                          placeholder="Editing disabled after 24 hours"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {userNicError && (
                     <p className="text-red-500 text-xs mt-1">{userNicError}</p>
                   )}
                   {!canEditNic && (
-                    <p className="text-orange-600 text-xs mt-1">NIC editing is disabled after 24 hours of user creation.</p>
+                    <p className="text-orange-600 text-xs mt-1 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                      </svg>
+                      NIC editing is disabled after 24 hours of user creation.
+                    </p>
                   )}
                 </div>
               </div>
@@ -1362,17 +1543,18 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number 1
+                  Contact Number 1 <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-                  <span className="text-sm sm:text-base">{initialContactNo || 'N/A'}</span>
+                  <span className="text-sm sm:text-base font-medium text-gray-700">{initialContactNo || 'N/A'}</span>
                   <input
                     type="text"
                     value={contactNo}
                     onChange={(e) => handleContactNoChange(e.target.value)}
                     className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoError ? 'border-red-500' : ''}`}
+                    placeholder="Enter contact number"
                   />
                 </div>
                 {contactNoError && (
@@ -1380,19 +1562,21 @@ export default function RO_DRCUserDetailsEdit() {
                 )}
               </div>
               </div>
-               <div className="table-row">
+              
+              <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Contact Number 2
+                  Contact Number 2 <span className="text-gray-500 font-normal">(Optional)</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-                  <span className="text-sm sm:text-base">{initialContactNoTwo || 'N/A'}</span>
+                  <span className="text-sm sm:text-base font-medium text-gray-700">{initialContactNoTwo || 'Set Number'}</span>
                   <input
                     type="text"
                     value={contactNoTwo}
                     onChange={(e) => handleContactNoChangeTwo(e.target.value)}
                     className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${contactNoErrorTwo ? 'border-red-500' : ''}`}
+                    placeholder="Enter contact number (optional)"
                   />
                 </div>
                 {contactNoErrorTwo && (
@@ -1402,17 +1586,18 @@ export default function RO_DRCUserDetailsEdit() {
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Email
+                  Email <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-                    <span className="text-sm sm:text-base">{initialEmail || 'N/A'}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-700">{initialEmail || 'N/A'}</span>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       className={`${GlobalStyle.inputText} w-full sm:w-[200px] md:w-[250px] mt-[-4px] sm:mt-0 ${emailError ? 'border-red-500' : ''}`}
+                      placeholder="Enter email address"
                     />
                   </div>
                   {emailError && (
@@ -1537,6 +1722,7 @@ export default function RO_DRCUserDetailsEdit() {
                   value={remark}
                   onChange={(e) => setRemark(e.target.value)}
                   className={`${GlobalStyle.inputText} w-full h-20 sm:h-24`}
+                  placeholder="Please enter a remark explaining the changes made..."
                 />
               </div>
             </div>
@@ -1544,7 +1730,7 @@ export default function RO_DRCUserDetailsEdit() {
 
           <div className="flex justify-end p-2 sm:p-4">
             <button className={GlobalStyle.buttonPrimary} onClick={handleSave}>
-              Save
+              Save Changes
             </button>
           </div>
         </div>
@@ -1578,6 +1764,7 @@ export default function RO_DRCUserDetailsEdit() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={GlobalStyle.inputSearch}
+                  placeholder="Search log history..."
                 />
                 <FaSearch className={GlobalStyle.searchBarIcon} />
               </div>
