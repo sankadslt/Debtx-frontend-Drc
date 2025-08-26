@@ -838,7 +838,7 @@ export default function EditCustomerProfile() {
     const [DrivingLicense, setDrivingLicense] = useState("");
     const [DrivingLicenseError, setDrivingLicenseError] = useState("");
 
-    const [isEdited, setIsEdited] = useState(false);
+    // const [isEdited, setIsEdited] = useState(false);
 
     // const { case_id } = useParams();
 
@@ -909,7 +909,7 @@ export default function EditCustomerProfile() {
     // Move fetchCaseDetails outside of useEffect so it can be reused
     const fetchCaseDetails = async () => {
         try {
-            if (!userData?.drc_id) {
+            if (!userData?.drc_id || !case_id) {
                 //console.log("Missing DRC Id.", userData?.drc_id);
                 return;
             }
@@ -1094,35 +1094,35 @@ export default function EditCustomerProfile() {
         payload.Remark = caseDetails.remark;
         payload.edited_by = userDataID.user_id;
         // };
-
+        let isEdited = false;
         if (contact_no != caseDetails.contact_no) {
             payload.Edited_Mobile = contact_no;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (email != caseDetails.email) {
             payload.Edited_Email = email;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (address != caseDetails.address) {
             payload.Edited_Address = address;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (PP != caseDetails.PP) {
             payload.Edited_Passport = PP;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (DrivingLicense != caseDetails.DrivingLicense) {
             payload.Edited_Driving_License = DrivingLicense;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (NIC != caseDetails.NIC) {
             payload.Edited_NIC = NIC;
-            setIsEdited(true);
+            isEdited = true;
         }
 
         if (!isEdited) {
@@ -1628,7 +1628,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact name"
                                             value={NIC}
                                             onChange={handleNICChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1648,7 +1647,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact name"
                                             value={NIC}
                                             onChange={handleNICChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1671,7 +1669,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact number"
                                             value={DrivingLicense}
                                             onChange={handleDrivingLicenseChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1691,7 +1688,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact number"
                                             value={DrivingLicense}
                                             onChange={handleDrivingLicenseChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1714,7 +1710,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact name"
                                             value={PP}
                                             onChange={handlePPChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1734,7 +1729,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
-                                            placeholder="Enter contact name"
                                             value={PP}
                                             onChange={handlePPChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1764,7 +1758,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <input
                                             type="text"
-                                            placeholder="Enter identification number"
                                             value={contact_no}
                                             onChange={handlePhoneChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1784,7 +1777,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="text"
-                                            placeholder="Enter identification number"
                                             value={contact_no}
                                             onChange={handlePhoneChange}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1807,7 +1799,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <input
                                             type="email"
-                                            placeholder="Enter email address"
                                             value={email}
                                             onChange={(e) => handleEmailInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1827,7 +1818,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <input
                                             type="email"
-                                            placeholder="Enter email address"
                                             value={email}
                                             onChange={(e) => handleEmailInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.inputText} w-full`}
@@ -1850,7 +1840,6 @@ export default function EditCustomerProfile() {
                                     <div className="w-full">
                                         <textarea
                                             type="text"
-                                            placeholder="Enter address"
                                             value={address}
                                             onChange={(e) => handleAddressInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.remark} w-full`}
@@ -1870,7 +1859,6 @@ export default function EditCustomerProfile() {
                                     <div className="flex justify-start w-full flex-col">
                                         <textarea
                                             type="text"
-                                            placeholder="Enter address"
                                             value={address}
                                             onChange={(e) => handleAddressInputChange(0, e.target.value)}
                                             className={`${GlobalStyle.remark} w-full`}
@@ -1895,7 +1883,6 @@ export default function EditCustomerProfile() {
                                             className={`${GlobalStyle.remark} w-full`}
                                             value={caseDetails.remark}
                                             onChange={(e) => handleInputChange(e, "remark")}
-                                            placeholder="Enter remark for this update..."
                                             rows="5"
                                         />
                                     </div>
@@ -1909,7 +1896,6 @@ export default function EditCustomerProfile() {
                                         className={`${GlobalStyle.remark} w-full `}
                                         value={caseDetails.remark}
                                         onChange={(e) => handleInputChange(e, "remark")}
-                                        placeholder="Enter remark for this update..."
                                         rows="5"
                                     />
                                 </td>

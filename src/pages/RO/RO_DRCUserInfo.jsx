@@ -11,8 +11,9 @@ import crossIcon from "../../assets/images/Cross.png";
 
 export default function RO_DRCUserInfo() {
   const location = useLocation();
-  const { itemType, itemData } = location.state || {};
+  const { itemType, itemData = {} } = location.state || {};
   const [activeUserType, setActiveUserType] = useState("");
+  const [activeUserRole, setActiveUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +27,10 @@ export default function RO_DRCUserInfo() {
   useEffect(() => {
     if (itemType) {
       setActiveUserType(itemType);
+      // if you already have the role on itemData, initialize it here
+      if (itemType === "drcUser" && itemData?.user_role) {
+        setActiveUserRole(itemData.user_role);
+      }
     }
   }, [itemType]);
 
@@ -41,13 +46,14 @@ export default function RO_DRCUserInfo() {
 
     try {
       let payload = {};
-      if (activeUserType === "RO") {
-        if (!itemData.ro_id) throw new Error("Missing ro_id");
-        payload = { ro_id: itemData.ro_id };
-      } else if (activeUserType === "drcUser") {
-        if (!itemData.drcUser_id) throw new Error("Missing drcUser_id");
-        payload = { drcUser_id: itemData.drcUser_id };
-      }
+     if (activeUserType === "RO") {
+    if (!itemData.ro_id) throw new Error("Missing ro_id");
+    payload = { ro_id: itemData.ro_id };
+    } else if (activeUserType === "drcUser") {
+        if (!itemData.drc_officer_id) throw new Error("Missing drc_officer_id");
+        payload = { drc_officer_id: itemData.drc_officer_id };
+    }
+
 
       setIsLoading(true);
       const response = await List_RO_Info_Own_By_RO_Id(payload);
@@ -55,7 +61,13 @@ export default function RO_DRCUserInfo() {
       setIsLoading(false);
 
       if (response && response.data) {
-        setUserData(response.data);
+        const data = response.data;
+        setUserData(data);
+        
+        // Set the user role from the API response
+        if (data.user_role) {
+          setActiveUserRole(data.user_role);
+        }
       } else {
         Swal.fire({
           title: "No Results",
@@ -103,7 +115,7 @@ export default function RO_DRCUserInfo() {
     } else {
       const userDataToPass = {
         ...userData,
-        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id }),
+        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drc_officer_id: itemData.drc_officer_id }),
       };
 
       navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
@@ -127,13 +139,23 @@ export default function RO_DRCUserInfo() {
       itemType: activeUserType,
       itemData: {
         ro_id: activeUserType === 'RO' ? itemData.ro_id : undefined,
-        drcUser_id: activeUserType === 'drcUser' ? itemData.drcUser_id : undefined,
+        drc_officer_id: activeUserType === 'drcUser' ? itemData.drc_officer_id : undefined,
       },
     };
 
     console.log('handleEdit - Edit - Sending data:', dataToPass);
 
     navigate('/ro/ro-drc-user-info-edit', { state: { dataToPass } });
+  };
+
+  // Function to get user role display text
+  const getUserRoleDisplayText = (role) => {
+    const roleMapping = {
+      'DRC Coordinator': 'DRC Coordinator',
+      'call center': 'Call Center',
+      'user staff': 'User Staff'
+    };
+    return roleMapping[role] || role || 'N/A';
   };
 
   if (isLoading) {
@@ -155,8 +177,10 @@ export default function RO_DRCUserInfo() {
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        {activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"}
-      </h2>
+    {activeUserType === "drcUser" 
+      ? getUserRoleDisplayText(activeUserRole) 
+      : "Recovery Officer"}
+  </h2>
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name : {userData?.drc_name || 'N/A'}
       </h2>
@@ -180,6 +204,28 @@ export default function RO_DRCUserInfo() {
               </div>
 
               <div className="table-row">
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Type</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{
+                activeUserType === "RO" ? "Recovery Officer" : activeUserType === "drcUser" ? "DRC User" : "N/A"
+                }</div>
+              </div>
+
+              {activeUserType === "drcUser" && (
+                <div className="table-row">
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    User Role
+                  </div>
+                  <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    :
+                  </div>
+                  <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                    {getUserRoleDisplayText(activeUserRole)}
+                  </div>
+                </div>
+              )}
+
+              <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
                   {activeUserType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
                 </div>
@@ -200,9 +246,15 @@ export default function RO_DRCUserInfo() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No</div>
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No 1</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no || 'N/A'}</div>
+              </div>
+
+              <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No 2</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no_two || 'N/A'}</div>
               </div>
 
               <div className="table-row">
@@ -265,39 +317,6 @@ export default function RO_DRCUserInfo() {
           )}
         </div>
       </div>
-
-      {/* <div className="flex justify-end mt-6 px-4">
-        <button 
-          className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
-          onClick={handleEnd}
-          disabled={isTerminated}
-        >
-          End
-        </button>
-      </div>
-
-      <div className="flex justify-start mt-6 mb-6 px-4">
-        <button className={GlobalStyle.buttonPrimary} onClick={() => setShowPopup(true)}>
-          Log History
-        </button>
-      </div> */}
-
-      {/* <div className="flex justify-between mt-6 mb-6 px-4 gap-4 flex-wrap">
-        <button 
-          className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
-          onClick={handleEnd}
-          disabled={isTerminated}
-        >
-          End
-        </button>
-
-        <button 
-          className={GlobalStyle.buttonPrimary} 
-          onClick={() => setShowPopup(true)}
-        >
-          Log History
-        </button>
-      </div> */}
 
       <div className="flex justify-between items-center mt-6 mb-6 px-4">
         <button 
