@@ -723,12 +723,6 @@ export default function RO_DRCUserDetailsEdit() {
         const hours = Math.floor(remainingHours);
         const minutes = Math.floor((remainingHours - hours) * 60);
         remainingTime = { hours, minutes };
-        
-        if (hours > 0) {
-          message = `Name and NIC can be edited for ${hours}h ${minutes}m more.`;
-        } else {
-          message = `Name and NIC can be edited for ${minutes}m more.`;
-        }
       } else {
         const hoursExceeded = Math.floor(hoursSinceCreation - 24);
       }
@@ -1156,108 +1150,144 @@ export default function RO_DRCUserDetailsEdit() {
   };
 
   // Updated handleSave function to always include login_contact_no_two
-  const handleSave = async () => {
-    try {
-      if (!validateInputs()) return;
+// Add this enhanced error handling to your handleSave function in the frontend
 
-      const roId = itemData?.ro_id;
-      const drcUserId = itemData?.drc_officer_id;
-      const drcId = fetchedData?.drc_id || 1;
+const handleSave = async () => {
+  try {
+    if (!validateInputs()) return;
 
-      if (itemType === 'RO' && !roId) {
-        throw new Error('Missing ro_id for Recovery Officer.');
-      }
-      if (itemType === 'drcUser' && !drcUserId) {
-        throw new Error('Missing drc_officer_id for DRC User.');
-      }
+    const roId = itemData?.ro_id;
+    const drcUserId = itemData?.drc_officer_id;
+    const drcId = fetchedData?.drc_id || 1;
 
-      const userPayload = await getLoggedUserId();
-      const create_by = userPayload?.user_id;
+    if (itemType === 'RO' && !roId) {
+      throw new Error('Missing ro_id for Recovery Officer.');
+    }
+    if (itemType === 'drcUser' && !drcUserId) {
+      throw new Error('Missing drc_officer_id for DRC User.');
+    }
 
-      // Build payload, always including login_contact_no_two
-      const basePayload = {
-        ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
-        drc_id: drcId,
-        user_role: activeUserRole,
-        login_email: email,
-        login_contact_no: contactNo,
-        login_contact_no_two: contactNoTwo, // Always include, even if empty
-        drcUser_status: drcUserStatus,
-        create_by: create_by,
-        remark: remark || 'Updated user details',
-      };
+    const userPayload = await getLoggedUserId();
+    const create_by = userPayload?.user_id;
 
-      // Only add name to payload if it can be edited AND has actually changed
-      if (canEditName && userName !== initialUserName) {
-        basePayload.name = userName;
-        console.log('Including name in payload:', userName);
-      } else {
-        console.log('Excluding name from payload - either restricted or unchanged');
-      }
+    if (!create_by) {
+      throw new Error('Unable to identify current user. Please login again.');
+    }
 
-      // Only add NIC to payload if it can be edited AND has actually changed
-      if (canEditNic && userNic !== initialUserNic) {
-        basePayload.nic = userNic;
-        console.log('Including NIC in payload:', userNic);
-      } else {
-        console.log('Excluding NIC from payload - either restricted or unchanged');
-      }
+    // Build payload with proper validation
+    const basePayload = {
+      ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
+      drc_id: drcId,
+      user_role: activeUserRole,
+      login_email: email,
+      login_contact_no: contactNo,
+      login_contact_no_two: contactNoTwo || '', // Always include, even if empty
+      drcUser_status: drcUserStatus,
+      create_by: create_by,
+      remark: remark || 'Updated user details',
+    };
 
-      const payload = itemType === 'RO' ? {
-        ...basePayload,
-        rtoms: rtomAreas.map(area => {
-          const rtomOption = rtomAreaOptions.find(opt => opt.area_name === area.name);
-          if (!rtomOption) {
-            throw new Error(`Invalid RTOM area: ${area.name}`);
-          }
-          return {
-            rtom_id: rtomOption.rtom_id,
-            rtom_status: area.status ? 'Active' : 'Inactive',
-            rtom_name: area.name,
-            billing_center_code: area.billing_center_code || rtomOption.billing_center_code || 'N/A',
-            handling_type: area.handling_type || 'Primary',
-          };
-        }),
-      } : basePayload;
+    // Only add name if it can be edited AND has changed
+    if (canEditName && userName !== initialUserName && userName.trim()) {
+      basePayload.name = userName.trim();
+    }
 
-      console.log('Final payload:', payload);
+    // Only add NIC if it can be edited AND has changed
+    if (canEditNic && userNic !== initialUserNic && userNic.trim()) {
+      basePayload.nic = userNic.trim();
+    }
 
-      const response = await updateROorDRCUserDetails(payload);
-
-      if (response.success) {
-        let successMessage = 'User details updated successfully!';
-        if (!canEditName || !canEditNic) {
-          let restrictedFields = [];
-          if (!canEditName) restrictedFields.push('Name');
-          if (!canEditNic) restrictedFields.push('NIC');
-          successMessage += ` (${restrictedFields.join(' and ')} were not updated due to 24-hour restriction)`;
+    const payload = itemType === 'RO' ? {
+      ...basePayload,
+      rtoms: rtomAreas.map(area => {
+        const rtomOption = rtomAreaOptions.find(opt => opt.area_name === area.name);
+        if (!rtomOption) {
+          throw new Error(`Invalid RTOM area: ${area.name}`);
         }
+        return {
+          rtom_id: rtomOption.rtom_id,
+          rtom_status: area.status ? 'Active' : 'Inactive',
+          rtom_name: area.name,
+          billing_center_code: area.billing_center_code || rtomOption.billing_center_code || 'N/A',
+          handling_type: area.handling_type || 'Primary',
+        };
+      }),
+    } : basePayload;
+
+    console.log('Sending payload:', payload);
+
+    const response = await updateROorDRCUserDetails(payload);
+
+    if (response.success) {
+      let successMessage = 'User details updated successfully!';
+      
+      // Show which Python APIs succeeded
+      if (response.pythonCallsSucceeded) {
+        const succeededCalls = Object.entries(response.pythonCallsSucceeded)
+          .filter(([, succeeded]) => succeeded)
+          .map(([call]) => call);
         
-        Swal.fire({
-          title: 'Success',
-          text: successMessage,
-          icon: 'success',
-          confirmButtonColor: "#28a745",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-        });
-        navigate(-1);
-      } else {
-        throw new Error(response.message || 'Failed to update user details.');
+        if (succeededCalls.length > 0) {
+          successMessage += ` Updated: ${succeededCalls.join(', ')}`;
+        }
       }
-    } catch (error) {
-      console.error('Error updating user details:', error);
+      
+      if (!canEditName || !canEditNic) {
+        let restrictedFields = [];
+        if (!canEditName) restrictedFields.push('Name');
+        if (!canEditNic) restrictedFields.push('NIC');
+        successMessage += ` (${restrictedFields.join(' and ')} were not updated due to 24-hour restriction)`;
+      }
+      
       Swal.fire({
-        title: 'Unable to Edit Details',
-        text: error.message || 'Internal server error. Please try again later.',
-        icon: 'error',
-        confirmButtonColor: "#d33",
+        title: 'Success',
+        text: successMessage,
+        icon: 'success',
+        confirmButtonColor: "#28a745",
         allowOutsideClick: false,
         allowEscapeKey: false,
       });
+      navigate(-1);
+    } else {
+      throw new Error(response.message || 'Failed to update user details.');
     }
-  };
-
+  } catch (error) {
+    console.error('Error updating user details:', error);
+    
+    // Enhanced error message handling
+    let errorTitle = 'Unable to Update Details';
+    let errorMessage = 'An unexpected error occurred. Please try again.';
+    
+    if (error.message.includes('Profile update error')) {
+      errorTitle = 'Profile Update Failed';
+      errorMessage = 'There was an issue updating the profile information. Please check your input and try again.';
+    } else if (error.message.includes('Contact update error')) {
+      errorTitle = 'Contact Update Failed';
+      errorMessage = 'There was an issue updating the contact information. Please verify the contact numbers and try again.';
+    } else if (error.message.includes('Status update error') || error.message.includes('Status validation error')) {
+      errorTitle = 'Status Update Failed';
+      errorMessage = 'There was an issue updating the user status. Please try again or contact support.';
+    } else if (error.message.includes('24 hours') || error.message.includes('restricted')) {
+      errorTitle = 'Editing Restricted';
+      errorMessage = error.message;
+    } else if (error.message.includes('Network Error') || error.message.includes('timeout')) {
+      errorTitle = 'Connection Error';
+      errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+    } else if (error.message.includes('Missing') || error.message.includes('required')) {
+      errorTitle = 'Missing Information';
+      errorMessage = error.message;
+    }
+    
+    Swal.fire({
+      title: errorTitle,
+      text: errorMessage,
+      icon: 'error',
+      confirmButtonColor: "#d33",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    });
+  }
+};
   const toggleStatus = () => {
     setDrcUserStatus(prev => prev === 'Active' ? 'Inactive' : 'Active');
   };
@@ -1364,37 +1394,6 @@ export default function RO_DRCUserDetailsEdit() {
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name: {fetchedData.drc_name || 'N/A'}
       </h2>
-
-      {/* Enhanced 24-hour restriction notice */}
-      {timeRestrictionMessage && (
-        <div className={`mx-4 mt-4 p-4 rounded-lg border-l-4 ${
-          canEditName && canEditNic 
-            ? 'bg-blue-50 border-blue-400 text-blue-800' 
-            : 'bg-red-50 border-red-400 text-red-800'
-        }`}>
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              {canEditName && canEditNic ? (
-                <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8.707-3.293a1 1 0 011.414 0L10 7.414l.293-.707a1 1 0 011.414 1.414L11 8.828l.707.707a1 1 0 01-1.414 1.414L10 10.242l-.707.707a1 1 0 01-1.414-1.414L8.586 9l-.707-.707a1 1 0 010-1.414z" clipRule="evenodd"/>
-                </svg>
-              )}
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{timeRestrictionMessage}</p>
-              {!canEditName || !canEditNic ? (
-                <p className="text-xs mt-1 opacity-75">
-                  Only contact details, email, status, and RTOM areas can be modified.
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4 justify-center px-4">
         <div className={`${GlobalStyle.cardContainer} relative w-full max-w-4xl`}>
