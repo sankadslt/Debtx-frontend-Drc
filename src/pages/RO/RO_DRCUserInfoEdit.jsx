@@ -1226,18 +1226,8 @@ const handleSave = async () => {
         const succeededCalls = Object.entries(response.pythonCallsSucceeded)
           .filter(([, succeeded]) => succeeded)
           .map(([call]) => call);
-        
-        if (succeededCalls.length > 0) {
-          successMessage += ` Updated: ${succeededCalls.join(', ')}`;
-        }
       }
       
-      if (!canEditName || !canEditNic) {
-        let restrictedFields = [];
-        if (!canEditName) restrictedFields.push('Name');
-        if (!canEditNic) restrictedFields.push('NIC');
-        successMessage += ` (${restrictedFields.join(' and ')} were not updated due to 24-hour restriction)`;
-      }
       
       Swal.fire({
         title: 'Success',
@@ -1436,7 +1426,7 @@ const handleSave = async () => {
               {/* Enhanced Name field with better visual feedback for 24-hour restriction */}
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"}
+                  {itemType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -1487,7 +1477,7 @@ const handleSave = async () => {
               {/* Enhanced NIC field with better visual feedback for 24-hour restriction */}
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  NIC
+                  NIC <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
