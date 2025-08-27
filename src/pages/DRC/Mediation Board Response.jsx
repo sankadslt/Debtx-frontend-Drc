@@ -577,6 +577,7 @@ const MediationBoardResponse = () => {
           text: "Please select whether customer is represented",
           confirmButtonColor: "#f1c40f",
         });
+
         return;
       }
 
@@ -590,6 +591,18 @@ const MediationBoardResponse = () => {
         return;
       }
 
+      if (formData.customerRepresented === "no" && formData.comment.trim() === "") {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment",
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      
+
       if (showFailReasonFields && !formData.failReason) {
         Swal.fire({
           icon: "warning",
@@ -600,15 +613,33 @@ const MediationBoardResponse = () => {
         return;
       }
 
+      if (showFailReasonFields && ! formData.failComment.trim()) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment for the fail reason",
+           confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
       // Validate settlement table if settlements are shown
-      if (showSettlementTable) {
+      if (showSettlementFields) {
         let isValid = true;
 
-        settlements.forEach((settlement) => {
-          if (!settlement.dueDate || !settlement.amount) {
-            isValid = false;
-          }
-        });
+        // settlements.forEach((settlement) => {
+        //   if (!settlement.dueDate || !settlement.amount) {
+        //     isValid = false;
+        //   }
+        // });
+
+        if (!formData.initialAmount || !formData.calendarMonth) {
+          isValid = false;
+        }
+
+        if (!formData.remark.trim()) {
+          isValid = false;
+        }
 
         if (!isValid) {
           Swal.fire({
