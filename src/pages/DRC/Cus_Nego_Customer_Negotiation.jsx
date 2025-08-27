@@ -178,7 +178,7 @@ const Cus_Nego_Customer_Negotiation = () => {
     roId: roId || null,
     requestId: null,
     intractionId: null, // Use intractionId instead of intraction_id
-   
+
     request: null,
     request_remark: null,
     intraction_id: null, // Use intraction_id instead of intractionId
@@ -236,8 +236,8 @@ const Cus_Nego_Customer_Negotiation = () => {
   }, [formData.month]);
 
   function calculateDates(month) {
-    if (month < 1 || month > 3) {
-      console.error("Month should be in the range of 1 to 3");
+    if (month < 1 || month > 12) {
+      console.error("Month should be in the range of 1 to 12");
       return;
     }
 
@@ -393,7 +393,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         drc_id: DRC_ID,
         ro_id: roId,
         // ro_name : cant pass 
-        Field_reason_ID : formData.reasonId, // Use reasonId instead of reason_id
+        Field_reason_ID: formData.reasonId, // Use reasonId instead of reason_id
         drc: drcname,
         expire_dtm: expiredate,
         created_dtm: createddate,
@@ -451,6 +451,15 @@ const Cus_Nego_Customer_Negotiation = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "ini_amount") {
+      const numValue = value.replace(/\D/g, ""); // remove non-digits
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: numValue,
+      }));
+    }
+
     //fetch data for the field reason dropdown
     if (name === "reason") {
       const selectedNegotiation = activeNegotiations.find(
@@ -480,13 +489,13 @@ const Cus_Nego_Customer_Negotiation = () => {
 
     } else if (name === "month") {
       const monthValue = parseInt(value, 10);
-      if (monthValue >= 1 && monthValue <= 3) {
+      if (monthValue >= 1 && monthValue <= 12) {
         setFormData((prevFormData) => ({
           ...prevFormData,
           [name]: monthValue,
         }));
       } else {
-        console.error("Month should be in the range of 1 to 3");
+        console.error("Month should be in the range of 1 to 12");
       }
     } else {
       setFormData((prevFormData) => ({
@@ -508,7 +517,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             field_reason: ro_request.ro_request,
             remark: ro_request.request_remark ? ro_request.request_remark : "",
           }))
-          .reverse() // Reverse the order to show the latest first
+            .reverse() // Reverse the order to show the latest first
           : [];
         setLastRoRequests(lastRequests);
 
@@ -518,7 +527,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             field_reason: ro_nago.field_reason,
             remark: ro_nago.negotiation_remark ? ro_nago.negotiation_remark : "",
           }))
-          .reverse() // Reverse the order to show the latest first
+            .reverse() // Reverse the order to show the latest first
           : [];
         setLastRONagotiation(lastNagotiation);
 
@@ -528,7 +537,7 @@ const Cus_Nego_Customer_Negotiation = () => {
             paid_amount: ro_payment.payment,
             settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced : "",
           }))
-          .reverse() // Reverse the order to show the latest first
+            .reverse() // Reverse the order to show the latest first
           : [];
         setLastROPayment(lastPayment);
 
@@ -610,12 +619,13 @@ const Cus_Nego_Customer_Negotiation = () => {
                   <th className={style.thStyle}>Last Payment Date</th>
                   <td className={style.tdStyle}>:</td>
                   <td className={style.tdStyle}>
-                    {new Date(caseDetails.last_payment_date).toLocaleDateString('en-GB',
-                      {
+                    {caseDetails?.last_payment_date
+                      ? new Date(caseDetails.last_payment_date).toLocaleDateString('en-GB', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric'
-                      })}
+                      })
+                      : ""}
                   </td>
                 </tr>
               </tbody>
@@ -750,10 +760,15 @@ const Cus_Nego_Customer_Negotiation = () => {
                     </label>
                     <label className={`${GlobalStyle.remarkTopic} ml-3`}>:</label>
                     <input
-                      type="text"
+                      type="number"
                       name="ini_amount"
                       value={formData.ini_amount}
                       onChange={handleInputChange}
+                      onKeyDown={(e) => {
+                        if (["-", "+", "e"].includes(e.key)) {
+                          e.preventDefault(); // block minus, plus, exponential notation
+                        }
+                      }}
                       className={`${GlobalStyle.inputText} ml-1 min-w-[200px] `}
                     />
                   </div>
@@ -768,8 +783,10 @@ const Cus_Nego_Customer_Negotiation = () => {
                       name="month"
                       value={formData.month}
                       min="1"
+                      max="12"
                       onChange={handleInputChange}
-                      className={`${GlobalStyle.inputText} ml-1 min-w-[200px]`}
+                      onKeyDown={(e) => e.preventDefault()}
+                      className="w-20 p-2 border-2 border-[#0056A2] border-opacity-30 rounded-md"
                     />
                   </div>
 
@@ -1069,6 +1086,59 @@ const Cus_Nego_Customer_Negotiation = () => {
                 <FaArrowRight />
               </button>
             </div>
+
+            {/* Call History Table  */}
+
+            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+              Call History
+            </h3>
+            <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+              <table className={GlobalStyle.table}>
+                <thead className={GlobalStyle.thead}>
+                  <tr>
+                    <th className={GlobalStyle.tableHeader}>Call Inquiry Seq</th>
+                    <th className={GlobalStyle.tableHeader}>Remark</th>
+                    <th className={GlobalStyle.tableHeader}>Call Topic</th>
+                    <th className={GlobalStyle.tableHeader}>Created Date</th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* {callHistory.length > 0 ? (
+                    callHistory.map((call, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                         
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                         
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                         
+                        </td>
+                        <td className={GlobalStyle.tableData}>
+                         
+                        </td>
+                       
+                      </tr>
+                    ))
+                  ) : ( */}
+                  <tr>
+                    <td colSpan="5" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No Call History Available.
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -1277,8 +1347,8 @@ const Cus_Nego_Customer_Negotiation = () => {
       <div className="flex">
         <button
           className={`px-8 py-3 rounded-t-lg font-medium ${activeTab === "negotiation"
-              ? "border-b-2 border-blue-500 font-bold"
-              : "text-gray-500"
+            ? "border-b-2 border-blue-500 font-bold"
+            : "text-gray-500"
             }`}
           onClick={() => setActiveTab("negotiation")}
         >
@@ -1286,8 +1356,8 @@ const Cus_Nego_Customer_Negotiation = () => {
         </button>
         <button
           className={`px-8 py-3 rounded-t-lg font-medium ${activeTab === "cpe"
-              ? "border-b-2 border-blue-500 font-bold"
-              : "text-gray-500"
+            ? "border-b-2 border-blue-500 font-bold"
+            : "text-gray-500"
             }`}
           onClick={() => {
             if (actiontype === "Arrears Collect") {
