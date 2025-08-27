@@ -236,8 +236,8 @@ const MediationBoardResponse = () => {
   // Derived state for showing settlement toggle
   const showSettlementToggle =
     //handoverNonSettlement === "No" &&
-    formData.customerRepresented === "Yes" &&
-    formData.settle === "Yes";
+    formData.customerRepresented === "yes" &&
+    formData.settle === "yes";
 
 
   useEffect(() => {
@@ -439,7 +439,7 @@ const MediationBoardResponse = () => {
 
   const handleHandoverChange = (e) => {
     setHandoverNonSettlement(e.target.value);
-    if (e.target.value === "Yes") {
+    if (e.target.value === "yes") {
       setNextCallingDate("");
     }
   };
@@ -489,7 +489,7 @@ const MediationBoardResponse = () => {
     e.preventDefault();
 
     // Adjust validation based on handover status
-    if (caseDetails.callingRound >= 0 && handoverNonSettlement === "Yes") {
+    if (caseDetails.callingRound >= 0 && handoverNonSettlement === "yes") {
       // For handover cases, only validate comment
       if (!formData.nonsettlementcomment.trim()) {
         Swal.fire({
@@ -580,7 +580,7 @@ const MediationBoardResponse = () => {
         return;
       }
 
-      if (formData.customerRepresented === "Yes" && formData.settle === "") {
+      if (formData.customerRepresented === "yes" && formData.settle === "") {
         Swal.fire({
           icon: "warning",
           title: "Warning",
@@ -645,7 +645,7 @@ const MediationBoardResponse = () => {
           calendar_month: formData.calendarMonth,
           current_arrears_amount: caseDetails.arrearsAmount,
           case_current_status: caseDetails.case_current_status,
-         // duration: formData.calendarMonth,
+          // duration: formData.calendarMonth,
           remark: formData.remark,
           fail_reason: formData.failReason,
           created_by: createdBy,
@@ -686,15 +686,15 @@ const MediationBoardResponse = () => {
 
   // Show additional fields when customer is represented and agrees to settle
   const showSettlementFields =
-    formData.customerRepresented === "Yes" && formData.settle === "Yes";
+    formData.customerRepresented === "yes" && formData.settle === "yes";
 
   // Show fail reason fields when customer is represented but doesn't agree to settle
   const showFailReasonFields =
-    formData.customerRepresented === "Yes" && formData.settle === "No";
+    formData.customerRepresented === "yes" && formData.settle === "no";
 
   // Determine if form should be simplified based on handover selection
   const isSimplifiedForm =
-    caseDetails.callingRound >= 0 && handoverNonSettlement === "Yes";
+    caseDetails.callingRound >= 0 && handoverNonSettlement === "yes";
 
   if (isLoading) {
     return (
@@ -800,7 +800,7 @@ const MediationBoardResponse = () => {
                 <td className="font-bold w-48">Last Payment Date</td>
                 <td className="px-2 font-bold">:</td>
                 <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
-                
+
               </tr>
             </tbody>
           </table>
@@ -835,8 +835,8 @@ const MediationBoardResponse = () => {
                           <input
                             type="radio"
                             name="handoverNonSettlement"
-                            value="Yes"
-                            checked={handoverNonSettlement === "Yes"}
+                            value="yes"
+                            checked={handoverNonSettlement === "yes"}
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="Yes for handover non-settlement"
@@ -847,8 +847,8 @@ const MediationBoardResponse = () => {
                           <input
                             type="radio"
                             name="handoverNonSettlement"
-                            value="No"
-                            checked={handoverNonSettlement === "No"}
+                            value="no"
+                            checked={handoverNonSettlement === "no"}
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="No for handover non-settlement"
@@ -860,9 +860,9 @@ const MediationBoardResponse = () => {
                   </tr>
                 )}
 
-                {(caseDetails.callingRound < 3 ||
-                  (caseDetails.callingRound >= 3 &&
-                    handoverNonSettlement === "No")) && (
+                {(caseDetails.callingRound < 0 ||
+                  (caseDetails.callingRound >= 0 &&
+                    handoverNonSettlement === "no")) && (
                     <tr>
                       <td className="font-semibold w-48 align-top">Next Calling Date</td>
                       <td className="px-4 font-semibold align-top">:</td>
@@ -874,7 +874,7 @@ const MediationBoardResponse = () => {
                           className="p-2 border rounded-md w-full max-w-xs"
                           disabled={
                             caseDetails.callingRound >= 3 &&
-                            handoverNonSettlement === "Yes"
+                            handoverNonSettlement === "yes"
                           }
                           aria-label="Next calling date"
                         />
@@ -890,24 +890,26 @@ const MediationBoardResponse = () => {
             {/* Only show these fields when NOT in simplified mode */}
             {!isSimplifiedForm && (
               <>
-                <div className="flex items-center">
-                  <span className="w-48 font-semibold">Request : </span>
-                  <select
-                    name="request"
-                    value={formData.request}
-                    onChange={handleInputChange}
-                    className={GlobalStyle.selectBox}
-                    aria-label="Request type"
-                    style={{ color: formData.request === "" ? "gray" : "black" }}
-                  >
-                    <option value="" hidden>Select Request</option>
-                    {roRequests && roRequests.map((request) => (
-                      <option key={request._id} value={request.request_description} data-id={request.ro_request_id} interaction_id={request.intraction_id} style={{ color: "black" }}>
-                        {request.request_description || "Unnamed Request"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {handoverNonSettlement === "no" && (
+                  <div className="flex items-center">
+                    <span className="w-48 font-semibold">Request : </span>
+                    <select
+                      name="request"
+                      value={formData.request}
+                      onChange={handleInputChange}
+                      className={GlobalStyle.selectBox}
+                      aria-label="Request type"
+                      style={{ color: formData.request === "" ? "gray" : "black" }}
+                    >
+                      <option value="" hidden>Select Request</option>
+                      {roRequests && roRequests.map((request) => (
+                        <option key={request._id} value={request.request_description} data-id={request.ro_request_id} interaction_id={request.intraction_id} style={{ color: "black" }}>
+                          {request.request_description || "Unnamed Request"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {formData.request && (
                   <div className="flex">
@@ -923,43 +925,46 @@ const MediationBoardResponse = () => {
                   </div>
                 )}
 
-                <div className="flex items-center">
-                  <span className="font-semibold">Customer Represented : </span>
-                  <div className="ml-4 flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="customerRepresented"
-                        value="Yes"
-                        checked={formData.customerRepresented === "Yes"}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                        aria-label="Yes for customer represented"
-                      />
-                      Yes
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="customerRepresented"
-                        value="No"
-                        checked={formData.customerRepresented === "No"}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                        aria-label="No for customer represented"
-                      />
-                      No
-                    </label>
+
+                {handoverNonSettlement === "no" && (
+                  <div className="flex items-center">
+                    <span className="font-semibold">Customer Represented : </span>
+                    <div className="ml-4 flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="customerRepresented"
+                          value="yes"
+                          checked={formData.customerRepresented === "yes"}
+                          onChange={handleInputChange}
+                          className="mr-2"
+                          aria-label="Yes for customer represented"
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="customerRepresented"
+                          value="no"
+                          checked={formData.customerRepresented === "no"}
+                          onChange={handleInputChange}
+                          className="mr-2"
+                          aria-label="No for customer represented"
+                        />
+                        No
+                      </label>
 
 
 
+                    </div>
                   </div>
-                </div>
+                )}
 
 
                 {/* Comment section - Moved directly below customer represented */}
 
-                {formData.customerRepresented === "Yes" && (
+                {formData.customerRepresented === "yes" && (
 
                   <div className="flex items-center">
                     <span className="w-48 font-semibold mb-6">Agree to Settle : </span>
@@ -968,10 +973,10 @@ const MediationBoardResponse = () => {
                         <input
                           type="radio"
                           name="settle"
-                          value="Yes"
-                          checked={formData.settle === "Yes"}
+                          value="yes"
+                          checked={formData.settle === "yes"}
                           onChange={(e) => {
-                            if (caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")) {
+                            if (caseDetails.callingRound >= 0 && (!handoverNonSettlement || handoverNonSettlement === "")) {
 
                               Swal.fire({
                                 icon: "warning",
@@ -995,8 +1000,8 @@ const MediationBoardResponse = () => {
                         <input
                           type="radio"
                           name="settle"
-                          value="No"
-                          checked={formData.settle === "No"}
+                          value="no"
+                          checked={formData.settle === "no"}
 
                           onChange={(e) => {
                             if (caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")) {
@@ -1022,7 +1027,7 @@ const MediationBoardResponse = () => {
                 )}
 
                 {/* Comment section - Only shown when customer is not represented */}
-                {formData.customerRepresented === "No" && (
+                {formData.customerRepresented === "no" && (
                   <div className="flex">
                     <span className="w-48 font-semibold">Comment:</span>
                     <textarea
@@ -1104,8 +1109,15 @@ const MediationBoardResponse = () => {
                       <input
                         type="number"
                         name="initialAmount"
+                        min="0"
+
                         value={formData.initialAmount}
                         onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (["-", "+", "e"].includes(e.key)) {
+                            e.preventDefault(); // block minus, plus, exponential notation, 
+                          }
+                        }}
                         className="w-72 p-2 border rounded-md"
                         aria-label="Initial amount"
                       />
@@ -1432,7 +1444,7 @@ const MediationBoardResponse = () => {
                       }
                     >
                       <td className={GlobalStyle.tableData}>
-                       { entry.createdDtm
+                        {entry.createdDtm
                           ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
                           : ""}
                       </td>
