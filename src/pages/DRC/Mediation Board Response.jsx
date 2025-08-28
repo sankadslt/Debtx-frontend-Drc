@@ -573,6 +573,18 @@ const MediationBoardResponse = () => {
 
     else {
       // Regular validation for non-handover cases
+
+      if ( nextCallingDate === "") {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select a next calling date",
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      
       if (formData.customerRepresented === "") {
         Swal.fire({
           icon: "warning",
