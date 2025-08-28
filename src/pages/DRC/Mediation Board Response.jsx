@@ -445,6 +445,15 @@ const MediationBoardResponse = () => {
   };
 
   const handleNextCallingDateChange = (e) => {
+    if (e.target.value < format(new Date(), "yyyy-MM-dd")) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Next calling date cannot be in the past",
+        confirmButtonColor: "#f1c40f"
+      });
+      return;
+    }
     setNextCallingDate(e.target.value);
   };
 
