@@ -871,6 +871,7 @@ const MediationBoardResponse = () => {
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="Yes for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
                           />
                           Yes
                         </label>
@@ -883,6 +884,7 @@ const MediationBoardResponse = () => {
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="No for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
                           />
                           No
                         </label>
@@ -970,6 +972,7 @@ const MediationBoardResponse = () => {
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="Yes for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         Yes
                       </label>
@@ -982,6 +985,7 @@ const MediationBoardResponse = () => {
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="No for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         No
                       </label>
@@ -1023,6 +1027,7 @@ const MediationBoardResponse = () => {
                           }}
                           className="mr-2"
                           aria-label="Yes for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
                         // disabled={caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes"}
                         />
                         Yes
@@ -1050,6 +1055,7 @@ const MediationBoardResponse = () => {
                           }}
                           className="mr-2"
                           aria-label="No for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
                         />
                         No
                       </label>
