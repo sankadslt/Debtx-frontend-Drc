@@ -552,6 +552,9 @@ const MediationBoardResponse = () => {
           title: "Success",
           text: "Data sent successfully.",
           confirmButtonColor: "#28a745",
+        }).then(() => {
+          // refresh the page when submission is successful
+          window.location.reload();
         });
       } catch (error) {
         console.error("Error submitting form:", error);
@@ -692,6 +695,8 @@ const MediationBoardResponse = () => {
           title: "Success",
           text: "Data sent successfully.",
           confirmButtonColor: "#28a745",
+        }).then(() => {
+          window.location.reload();
         });
 
       } catch (error) {
