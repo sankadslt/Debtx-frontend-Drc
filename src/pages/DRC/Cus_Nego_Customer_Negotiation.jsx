@@ -458,7 +458,7 @@ const Cus_Nego_Customer_Negotiation = () => {
         field_reason: formData.reason,
         field_reason_remark: formData.nego_remark,
         intraction_id: formData.intractionId,
-        initial_amount: formData.ini_amount,
+        initial_amount: parseInt(formData.ini_amount, 10),
         calender_month: formData.month,
         settlement_remark: formData.settlement_remark,
         region: caseDetails.region,
