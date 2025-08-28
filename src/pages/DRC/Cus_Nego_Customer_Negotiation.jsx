@@ -19,6 +19,8 @@ import {
   fetchActiveNegotiations,
   getActiveRORequestsforNegotiationandMediation,
 } from "../../services/case/CaseService";
+
+import {List_Pre_Negotiation} from "../../services/Drc/Drc.js";
 import editIcon from "../../assets/images/edit.png";
 import viewIcon from "../../assets/images/view.png";
 import Backbtn from "../../assets/images/back.png";
@@ -51,11 +53,15 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPage1, setCurrentPage1] = useState(1);
   const [currentPage2, setCurrentPage2] = useState(1);
+  const [currentPage4, setCurrentPage4] = useState(1);
   const location = useLocation();
   const [drcId, setDrcId] = useState(null);
   const [userid, setUserid] = useState(null);
   const [roId, setRoId] = useState(null);
   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
+  const [preNegotiation, setPreNegotiation] = useState([]);
+//  const [PRENegotiation, setPRENegotiation] = useState([]);
+
 
   const caseid = location.state?.CaseID;
 
@@ -103,6 +109,24 @@ const Cus_Nego_Customer_Negotiation = () => {
   const endIndex2 = startIndex2 + itemsPerPage2;
   const currentRows2 = lastRequests.slice(startIndex2, endIndex2);
   const totalPages2 = Math.ceil(lastRequests.length / itemsPerPage2);
+
+
+
+  const itemsPerPage4 = 4;
+  const startIndex4 = (currentPage4 - 1) * itemsPerPage4;
+  const endIndex4 = startIndex4 + itemsPerPage4;
+  const currentRows4 = preNegotiation.slice(startIndex4, endIndex4);
+  const totalPages4 = Math.ceil(preNegotiation.length / itemsPerPage4);
+
+
+  const handlePrevNext4 = (direction) => {
+    if (direction === "prev" && currentPage4 > 1) {
+      setCurrentPage4(currentPage4 - 1);
+    }
+    if (direction === "next" && currentPage4 < totalPages4) {
+      setCurrentPage4(currentPage4 + 1);
+    }
+  };
 
   // Role-Based Buttons
   useEffect(() => {
@@ -225,10 +249,44 @@ const Cus_Nego_Customer_Negotiation = () => {
         console.error("Error fetching field reason:", error.message);
       }
     };
+
+    const fetchPreNegotiation = async () => {
+      try {
+        const payload = {
+          case_id: caseid,
+        };
+        const preNegotiationData = await List_Pre_Negotiation(payload);
+        const inquiries = preNegotiationData?.data?.[0]?.inquiries || [];
+        setPreNegotiation(inquiries);
+        console.log("Pre-Negotiation Data:", inquiries);
+      } catch (error) {
+        console.error("Error fetching pre-negotiation data:", error.message);
+      }
+    };
+
     fetchFieldRequest();
     getcasedetails();
     fetchRORequests();
+    fetchPreNegotiation();
   }, [drcId, roId]);
+
+
+  // useEffect(() => {
+  //   const fetchPreNegotiation = async () => {
+  //     try {
+  //       const payload = {
+  //         case_id: caseid,
+  //       };
+  //       const preNegotiationData = await List_Pre_Negotiation(payload);
+  //       setPreNegotiation(preNegotiationData);
+  //       console.log("Pre-Negotiation Data:", preNegotiationData);
+  //     } catch (error) {
+  //       console.error("Error fetching pre-negotiation data:", error.message);
+  //     }
+  //   };
+
+  //   fetchPreNegotiation();
+  // }, [payload]);
 
   //calculate date from /to in settlement plan
   useEffect(() => {
@@ -1104,8 +1162,8 @@ const Cus_Nego_Customer_Negotiation = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {callHistory.length > 0 ? (
-                    callHistory.map((call, index) => (
+                   {currentRows4.length > 0 ? (
+                    currentRows4.map((call, index) => (
                       <tr
                         key={index}
                         className={
@@ -1115,30 +1173,53 @@ const Cus_Nego_Customer_Negotiation = () => {
                         }
                       >
                         <td className={GlobalStyle.tableData}>
-                         
+                          {call.seq}
                         </td>
                         <td className={GlobalStyle.tableData}>
-                         
+                          {call.call_inquiry_remark}
                         </td>
                         <td className={GlobalStyle.tableData}>
-                         
+                          {call.call_topic}
                         </td>
                         <td className={GlobalStyle.tableData}>
-                         
+                          {new Date(call.created_date).toLocaleDateString("en-GB")}
                         </td>
-                       
                       </tr>
                     ))
-                  ) : ( */}
-                  <tr>
-                    <td colSpan="5" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                      No Call History Available.
-                    </td>
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                        No Call History Available.
+                      </td>
                   </tr>
-
+                   )}
                 </tbody>
               </table>
             </div>
+
+             {/* Pagination for the call history */}
+
+             <div className={GlobalStyle.navButtonContainer}>
+               <button
+                 onClick={() => handlePrevNext4("prev")}
+                 disabled={currentPage4 === 1}
+                 className={`${GlobalStyle.navButton} ${currentPage4 === 1 ? "cursor-not-allowed" : ""
+                   }`}
+               >
+                 <FaArrowLeft />
+               </button>
+               <span>
+                 Page {currentPage4} of {totalPages4}
+               </span>
+               <button
+                 onClick={() => handlePrevNext4("next")}
+                 disabled={currentPage4 === totalPages4}
+                 className={`${GlobalStyle.navButton} ${currentPage4 === totalPages4 ? "cursor-not-allowed" : ""
+                   }`}
+               >
+                 <FaArrowRight />
+               </button>
+             </div>
           </div>
         )}
       </div>
