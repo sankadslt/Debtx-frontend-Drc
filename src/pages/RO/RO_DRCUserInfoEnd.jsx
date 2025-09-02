@@ -621,14 +621,16 @@ export default function RecoveryOfficerEndPage() {
                                 }</div>
                             </div>
 
-                            <div className="table-row">
-                                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Role</div>
-                                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
-                                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{activeUserType === "drcUser" 
-                                ? getUserRoleDisplayText(userData?.user_role) 
-                                : "N/A"}
+                            {/* Conditionally render User Role field only for DRC users */}
+                            {activeUserType === "drcUser" && (
+                                <div className="table-row">
+                                    <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Role</div>
+                                    <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                                    <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                                        {getUserRoleDisplayText(userData?.user_role)}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="table-row">
                                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
