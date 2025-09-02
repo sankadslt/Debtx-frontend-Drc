@@ -445,6 +445,15 @@ const MediationBoardResponse = () => {
   };
 
   const handleNextCallingDateChange = (e) => {
+    if (e.target.value < format(new Date(), "yyyy-MM-dd")) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Next calling date cannot be in the past",
+        confirmButtonColor: "#f1c40f"
+      });
+      return;
+    }
     setNextCallingDate(e.target.value);
   };
 
@@ -573,6 +582,18 @@ const MediationBoardResponse = () => {
 
     else {
       // Regular validation for non-handover cases
+
+      if ( nextCallingDate === "") {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select a next calling date",
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      
       if (formData.customerRepresented === "") {
         Swal.fire({
           icon: "warning",
@@ -876,6 +897,7 @@ const MediationBoardResponse = () => {
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="Yes for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
                           />
                           Yes
                         </label>
@@ -888,6 +910,7 @@ const MediationBoardResponse = () => {
                             onChange={handleHandoverChange}
                             className="mr-2"
                             aria-label="No for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
                           />
                           No
                         </label>
@@ -975,6 +998,7 @@ const MediationBoardResponse = () => {
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="Yes for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         Yes
                       </label>
@@ -987,6 +1011,7 @@ const MediationBoardResponse = () => {
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="No for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         No
                       </label>
@@ -1028,6 +1053,7 @@ const MediationBoardResponse = () => {
                           }}
                           className="mr-2"
                           aria-label="Yes for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
                         // disabled={caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes"}
                         />
                         Yes
@@ -1055,6 +1081,7 @@ const MediationBoardResponse = () => {
                           }}
                           className="mr-2"
                           aria-label="No for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
                         />
                         No
                       </label>

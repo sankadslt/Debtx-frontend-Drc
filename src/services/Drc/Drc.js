@@ -52,3 +52,16 @@ export const Create_Pre_Negotiation = async (payload) => {
     throw error.response?.data || error;
   }
 };
+
+export const List_Pre_Negotiation = async (payload) => {
+  try {
+    const response = await axios.post(`${URL}/List_Pre_Negotiation_By_Case_Id_EXT_1`, payload);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error withdrawing Pre_Negotiation Details:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
