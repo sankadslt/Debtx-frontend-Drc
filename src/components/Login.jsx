@@ -18,10 +18,19 @@ const Login = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [timer, setTimer] = useState(0);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let interval;
+    if (otpSent && timer > 0) {
+      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, timer]);
 
   const handleGoogleLogin = (e) => {
     e.preventDefault();
@@ -45,22 +54,22 @@ const Login = () => {
   // Send OTP
   const handleSendOtp = async () => {
     setError("");
-    setLoading(true);
+    setSendingOtp(true);
     try {
       await sendOtp(mobileNumber);
       setOtpSent(true);
-      setTimer(60); // start 1-minute countdown
+      setTimer(60);
     } catch (err) {
       setError(err.message || "Failed to send OTP");
     } finally {
-      setLoading(false);
+      setSendingOtp(false);
     }
   };
 
   // Verify OTP
   const handleVerifyOtp = async () => {
     setError("");
-    setLoading(true);
+    setVerifyingOtp(true);
     try {
       const res = await verifyOtp(mobileNumber, otp);
       localStorage.setItem("accessToken", res.accessToken);
@@ -69,33 +78,23 @@ const Login = () => {
     } catch (err) {
       setError(err.message || "Invalid OTP");
     } finally {
-      setLoading(false);
+      setVerifyingOtp(false);
     }
   };
 
   // Resend OTP
   const handleResendOtp = async () => {
     setError("");
-    setLoading(true);
+    setSendingOtp(true);
     try {
       await sendOtp(mobileNumber);
-      setTimer(60); // restart countdown
+      setTimer(60);
     } catch (err) {
       setError(err.message || "Failed to resend OTP");
     } finally {
-      setLoading(false);
+      setSendingOtp(false);
     }
   };
-
-  // Countdown effect
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
 
   return (
     <div
@@ -243,15 +242,13 @@ const Login = () => {
                     value={mobileNumber}
                     onChange={(e) => {
                       const value = e.target.value;
-                      if (/^\d*$/.test(value)) {
-                        setMobileNumber(value);
-                      }
+                      if (/^\d*$/.test(value)) setMobileNumber(value);
                     }}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Enter" &&
                         mobileNumber.length === 10 &&
-                        !loading
+                        !sendingOtp
                       ) {
                         handleSendOtp();
                       }
@@ -270,18 +267,18 @@ const Login = () => {
 
                 <button
                   onClick={handleSendOtp}
-                  disabled={loading || mobileNumber.length !== 10}
+                  disabled={sendingOtp || mobileNumber.length !== 10}
                   className={`w-full py-2 rounded-md text-white ${
-                    mobileNumber.length === 10 && !loading
+                    mobileNumber.length === 10 && !sendingOtp
                       ? "bg-green-600 hover:bg-green-700"
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {loading ? "Sending..." : "Send OTP"}
+                  {sendingOtp ? "Sending..." : "Send OTP"}
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 text-center">
                 <div className="relative">
                   <FaKey className="absolute left-3 top-3 text-gray-500" />
                   <input
@@ -290,7 +287,7 @@ const Login = () => {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && otp && !loading) {
+                      if (e.key === "Enter" && otp && !verifyingOtp) {
                         handleVerifyOtp();
                       }
                     }}
@@ -301,35 +298,26 @@ const Login = () => {
 
                 <button
                   onClick={handleVerifyOtp}
-                  disabled={loading || timer === 0}
-                  className={`w-full py-2 text-white rounded-md ${
-                    timer > 0
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-gray-400 cursor-not-allowed"
-                  }`}
+                  disabled={verifyingOtp}
+                  className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  {loading ? "Verifying..." : "Verify OTP"}
+                  {verifyingOtp ? "Verifying..." : "Verify OTP"}
                 </button>
 
-                <div className="text-center mt-3">
-                  {timer > 0 ? (
-                    <p className="text-gray-600">
-                      Code expires in{" "}
-                      <span className="font-semibold">
-                        {Math.floor(timer / 60)}:
-                        {String(timer % 60).padStart(2, "0")}
-                      </span>
-                    </p>
-                  ) : (
-                    <button
-                      onClick={handleResendOtp}
-                      disabled={loading}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Resend OTP
-                    </button>
-                  )}
-                </div>
+                {/* Countdown + Resend */}
+                {timer > 0 ? (
+                  <p className="text-gray-500 text-sm mt-2">
+                    Resend OTP in {timer}s
+                  </p>
+                ) : (
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={sendingOtp}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    {sendingOtp ? "Resending..." : "Resend OTP"}
+                  </button>
+                )}
               </div>
             )}
           </div>
