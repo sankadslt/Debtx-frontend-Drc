@@ -983,7 +983,7 @@ export default function RO_DRCUserDetailsEdit() {
     if (digitsOnly.length > 10) {
       setContactNoError('Contact number cannot exceed 10 digits.');
     } else {
-      setContactNoError(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
+      setContactNoError(digitsOnly.length > 0 && digitsOnly.length < 10 ? 'Contact number must be 10 digits.' : '');
       setContactNo(cleaned);
     }
   };
@@ -999,7 +999,7 @@ export default function RO_DRCUserDetailsEdit() {
     } else if (digitsOnly.length > 10) {
       setContactNoErrorTwo('Contact number cannot exceed 10 digits.');
     } else {
-      setContactNoErrorTwo(digitsOnly.length > 0 && digitsOnly.length < 9 ? 'Contact number must be 9-10 digits.' : '');
+      setContactNoErrorTwo(digitsOnly.length > 0 && digitsOnly.length < 10 ? 'Contact number must be 10 digits.' : '');
       setContactNoTwo(cleaned);
     }
   };
@@ -1246,7 +1246,7 @@ const handleSave = async () => {
     
     // Enhanced error message handling
     let errorTitle = 'Unable to Update Details';
-    let errorMessage = 'An unexpected error occurred. Please try again.';
+    let errorMessage = 'Unable to edit User while status is "Pending_approval"';
     
     if (error.message.includes('Profile update error')) {
       errorTitle = 'Profile Update Failed';
