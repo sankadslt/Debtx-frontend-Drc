@@ -1,77 +1,9 @@
-// import { useState } from "react";
-// import logo from "../assets/images/logo.png";
-// import backgroundImage from "../assets/images/loginbg.png";
-// // import leftPanelImg from "../assets/images/left.webp";
-
-// const Login = () => {
-//   const [error] = useState("");
-//   const [socialLoading, setSocialLoading] = useState("");
-
-//   const handleGoogleLogin = (e) => {
-//     e.preventDefault();
-//     setSocialLoading("Google");
-//     window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/google`;
-//   };
-
-//   return (
-//     <div
-//       className="fixed inset-0 flex items-center justify-center bg-cover bg-center"
-//       style={{
-//         backgroundImage: `url(${backgroundImage})`,
-//         backgroundAttachment: "fixed",
-//       }}
-//     >
-//       <div className="w-11/12 md:w-4/5 h-5/6 flex rounded-xl overflow-hidden shadow-2xl bg-white/10 backdrop-blur-md border border-white/30">
-//         {/* Left Panel */}
-//         <div className="w-1/2 hidden md:flex items-center justify-center bg-white/10 backdrop-blur-sm">
-//           <img
-//             src={logo}
-//             alt="App illustration"
-//             className="w-[50%] h-[50%] object-contain rounded-lg drop-shadow-[0_0_12px_#ffffff]"
-//           />
-//         </div>
-
-//         {/* Right Panel */}
-//         <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-6 py-10 bg-white/10 backdrop-blur-xl border-l border-white/30">
-//           {/* Logo */}
-//           {/* <img src={logo} alt="Logo" className="h-24 mb-4" /> */}
-
-//           {/* Form */}
-//           <div className="w-full max-w-md">
-//             <h2 className="text-3xl font-semibold text-white mb-6 text-center drop-shadow">
-//               Welcome Back
-//             </h2>
-
-//             {error && <p className="text-red-400 text-center mb-4">{error}</p>}
-
-//             <form className="space-y-5">
-//               <button
-//                 type="button"
-//                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition-all duration-200 disabled:opacity-50"
-//                 onClick={handleGoogleLogin}
-//                 disabled={socialLoading !== ""}
-//               >
-//                 {socialLoading === "Google"
-//                   ? "Signing in..."
-//                   : "Sign in with Google"}
-//               </button>
-//             </form>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "../assets/images/logo.png";
 import backgroundImage from "../assets/images/loginbg.png";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMobileAlt, FaKey } from "react-icons/fa";
-import { loginUser, sendOtp , verifyOtp } from "../services/auth/authService";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaMobileAlt, FaKey, } from "react-icons/fa";
+import { loginUser, sendOtp, verifyOtp } from "../services/auth/authService";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
 
 const Login = () => {
   const [error, setError] = useState("");
@@ -86,9 +18,19 @@ const Login = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [timer, setTimer] = useState(0);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let interval;
+    if (otpSent && timer > 0) {
+      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, timer]);
 
   const handleGoogleLogin = (e) => {
     e.preventDefault();
@@ -109,71 +51,50 @@ const Login = () => {
     }
   };
 
-  // // Send OTP
-  // const handleSendOtp = async () => {
-  //   setError("");
-  //   setLoading(true);
-  //   try {
-  //     await axios.post(`${import.meta.env.VITE_BASE_URL}/mobile/send-otp`, {
-  //       phone_number: mobileNumber,
-  //     });
-  //     setOtpSent(true);
-  //   } catch (err) {
-  //     setError(err.response?.data?.message || "Failed to send OTP");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // // Verify OTP
-  // const handleVerifyOtp = async () => {
-  //   setError("");
-  //   setLoading(true);
-  //   try {
-  //     const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/mobile/verify-otp`, {
-  //       phone_number: mobileNumber,
-  //       otp_input: otp,
-  //     });
-
-  //     localStorage.setItem("accessToken", res.data.accessToken);
-  //     localStorage.setItem("user", JSON.stringify(res.data.user));
-  //     navigate("/dashboard");
-  //   } catch (err) {
-  //     setError(err.response?.data?.message || "Invalid OTP");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   // Send OTP
-const handleSendOtp = async () => {
-  setError("");
-  setLoading(true);
-  try {
-    await sendOtp(mobileNumber);
-    setOtpSent(true);
-  } catch (err) {
-    setError(err.message || "Failed to send OTP");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleSendOtp = async () => {
+    setError("");
+    setSendingOtp(true);
+    try {
+      await sendOtp(mobileNumber);
+      setOtpSent(true);
+      setTimer(60);
+    } catch (err) {
+      setError(err.message || "Failed to send OTP");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
 
-// Verify OTP
-const handleVerifyOtp = async () => {
-  setError("");
-  setLoading(true);
-  try {
-    const res = await verifyOtp(mobileNumber, otp);
-    localStorage.setItem("accessToken", res.accessToken);
-    localStorage.setItem("user", JSON.stringify(res.user));
-    navigate("/dashboard");
-  } catch (err) {
-    setError(err.message || "Invalid OTP");
-  } finally {
-    setLoading(false);
-  }
-};
+  // Verify OTP
+  const handleVerifyOtp = async () => {
+    setError("");
+    setVerifyingOtp(true);
+    try {
+      const res = await verifyOtp(mobileNumber, otp);
+      localStorage.setItem("accessToken", res.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Invalid OTP");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    setError("");
+    setSendingOtp(true);
+    try {
+      await sendOtp(mobileNumber);
+      setTimer(60);
+    } catch (err) {
+      setError(err.message || "Failed to resend OTP");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
 
   return (
     <div
@@ -319,21 +240,45 @@ const handleVerifyOtp = async () => {
                     type="tel"
                     placeholder="Mobile Number"
                     value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) setMobileNumber(value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        mobileNumber.length === 10 &&
+                        !sendingOtp
+                      ) {
+                        handleSendOtp();
+                      }
+                    }}
+                    maxLength={10}
                     required
                     className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
+
+                {mobileNumber.length > 0 && mobileNumber.length < 10 && (
+                  <p className="text-red-500 text-sm text-center">
+                    Enter a valid 10-digit mobile number
+                  </p>
+                )}
+
                 <button
                   onClick={handleSendOtp}
-                  disabled={loading}
-                  className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  disabled={sendingOtp || mobileNumber.length !== 10}
+                  className={`w-full py-2 rounded-md text-white ${
+                    mobileNumber.length === 10 && !sendingOtp
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
                 >
-                  {loading ? "Sending..." : "Send OTP"}
+                  {sendingOtp ? "Sending..." : "Send OTP"}
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 text-center">
                 <div className="relative">
                   <FaKey className="absolute left-3 top-3 text-gray-500" />
                   <input
@@ -341,17 +286,38 @@ const handleVerifyOtp = async () => {
                     placeholder="Enter OTP"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && otp && !verifyingOtp) {
+                        handleVerifyOtp();
+                      }
+                    }}
                     required
                     className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
+
                 <button
                   onClick={handleVerifyOtp}
-                  disabled={loading}
+                  disabled={verifyingOtp}
                   className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  {loading ? "Verifying..." : "Verify OTP"}
+                  {verifyingOtp ? "Verifying..." : "Verify OTP"}
                 </button>
+
+                {/* Countdown + Resend */}
+                {timer > 0 ? (
+                  <p className="text-gray-500 text-sm mt-2">
+                    Resend OTP in {timer}s
+                  </p>
+                ) : (
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={sendingOtp}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    {sendingOtp ? "Resending..." : "Resend OTP"}
+                  </button>
+                )}
               </div>
             )}
           </div>
