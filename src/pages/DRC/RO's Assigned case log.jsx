@@ -27,13 +27,13 @@ import { Tooltip } from "react-tooltip";
 
 
 // Import status icons with correct file extensions
-import RO_Negotiation_FMB_pending from "../../assets/images/negotiation/RO_Negotiation_FMB_pending.png";
-import RO_Negotiation_Extneded from "../../assets/images/negotiation/RO_Negotiation_Extneded.png";
-import RO_Negotiation_Extension_Pending from "../../assets/images/negotiation/RO_Negotiation_Extension_Pending.png";
-import Negotiation_Settle_Active from "../../assets/images/negotiation/Negotiation_Settle_Active.png";
-import Negotiation_Settle_Open_Pending from "../../assets/images/negotiation/Negotiation_Settle_Open-Pending.png";
-import Negotiation_Settle_Pending from "../../assets/images/negotiation/Negotiation_Settle_Pending.png";
-import RO_Negotiation from "../../assets/images/negotiation/RO_Negotiation.png";
+import RO_Negotiation_FMB_pending from "../../assets/images/Negotiation_new/RO_Negotiation_FMB_Pending.png";
+import RO_Negotiation_Extneded from "../../assets/images/Negotiation_new/RO Negotiation extended.png";
+import RO_Negotiation_Extension_Pending from "../../assets/images/Negotiation_new/RO Negotiation extend pending.png";
+import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Settle_Active.png";
+import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
+import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
+import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
 
 // Status icon mapping
 const STATUS_ICONS = {
@@ -70,7 +70,7 @@ const STATUS_ICONS = {
 // Status Icon component with tooltip 
 const StatusIcon = ({ status }) => {
   const statusInfo = STATUS_ICONS[status];
-  
+
   const tooltipId = `tooltip-${status.replace(/\s+/g, '-')}`;
   if (!statusInfo) return <span>{status}</span>;
 
@@ -87,8 +87,8 @@ const StatusIcon = ({ status }) => {
       />
       {/* <Tooltip id={tooltipId} className="tooltip"  effect="solid" /> */}
       {/* <div className="absolute invisible group-hover:visible bg-gray-800 text-white text-sm rounded px-2 py-1 left-1/2 transform -translate-x-1/2 bottom-full mb-1 whitespace-nowrap z-10"> */}
-      
-        {/* <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-gray-800 rotate-45"></div> */}
+
+      {/* <div className="absolute left-1/2 transform -translate-x-1/2 top-full w-2 h-2 bg-gray-800 rotate-45"></div> */}
       {/* </div> */}
     </div>
   );
@@ -98,9 +98,9 @@ const StatusIcon = ({ status }) => {
 export default function ROsAssignedcaselog() {
   const navigate = useNavigate();
   const [cases, setCases] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState(null);
-  const rowsPerPage = 7;
+  const rowsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -113,10 +113,19 @@ export default function ROsAssignedcaselog() {
     action_type: "",
     status: "",
   });
+  const [committedFilters, setCommittedFilters] = useState({
+    rtom: "",
+    action_type: "",
+    status: "",
+    fromDate: null,
+    toDate: null,
+  });
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
+  const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true); // For infinite scroll
+  const [maxCurrentPage, setMaxCurrentPage] = useState(0); // Track the maximum current page
 
-   // Role-Based Buttons
-   useEffect(() => {
+  // Role-Based Buttons
+  useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
@@ -252,7 +261,7 @@ export default function ROsAssignedcaselog() {
         });
         return;
       } else {
-        checkdatediffrence(date, toDate);
+        // checkdatediffrence(date, toDate);
         setFromDate(date);
       }
 
@@ -281,7 +290,7 @@ export default function ROsAssignedcaselog() {
         });
         return;
       } else {
-        checkdatediffrence(fromDate, date);
+        // checkdatediffrence(fromDate, date);
         setToDate(date);
       }
     } else {
@@ -290,29 +299,29 @@ export default function ROsAssignedcaselog() {
   };
 
 
-  const checkdatediffrence = (startDate, endDate) => {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const diffInMs = end - start;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    const diffInMonths = diffInDays / 30;
+  // const checkdatediffrence = (startDate, endDate) => {
+  //   const start = new Date(startDate).getTime();
+  //   const end = new Date(endDate).getTime();
+  //   const diffInMs = end - start;
+  //   const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  //   const diffInMonths = diffInDays / 30;
 
-    if (diffInMonths > 1) {
-      Swal.fire({
-        title: "Date Range Exceeded",
-        text: "The selected dates have more than a 1-month gap.",
-        icon: "warning",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#f1c40f",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setToDate(null);
-          console.log("Dates cleared");
-        }
-      }
-      );
-    };
-  };
+  //   if (diffInMonths > 1) {
+  //     Swal.fire({
+  //       title: "Date Range Exceeded",
+  //       text: "The selected dates have more than a 1-month gap.",
+  //       icon: "warning",
+  //       confirmButtonText: "OK",
+  //       confirmButtonColor: "#f1c40f",
+  //     }).then((result) => {
+  //       if (result.isConfirmed) {
+  //         setToDate(null);
+  //         console.log("Dates cleared");
+  //       }
+  //     }
+  //     );
+  //   };
+  // };
 
 
   // Filter handlers
@@ -348,7 +357,7 @@ export default function ROsAssignedcaselog() {
          return offsetDate.toISOString().split('T')[0];
        }; */
 
-      if (!filters.rtom && !filters.action_type && !fromDate && !toDate  && !filters.status) {
+      if (!filters.rtom && !filters.action_type && !fromDate && !toDate && !filters.status) {
         Swal.fire({
           title: "Warning",
           text: "No filter data is selected. Please, select data.",
@@ -386,11 +395,11 @@ export default function ROsAssignedcaselog() {
         // Use Number() to ensure these are numbers and not strings
         drc_id: userData.drc_id,
         ro_id: userData.ro_id, // Fixed: was using drc_id instead of ro_id
-        ...(filters.status && { status: filters.status }),
-        ...(filters.rtom && { rtom: filters.rtom }),
-        ...(filters.action_type && { action_type: filters.action_type }),
-        ...(fromDate && { from_date: fromDate.toISOString() }),
-        ...(toDate && { to_date: toDate.toISOString() }),
+        status: filters.status,
+        rtom: filters.rtom,
+        action_type: filters.action_type,
+        from_date: fromDate,
+        to_date: toDate,
       };
 
       console.log("Sending payload to fetch cases:", payload);
@@ -414,12 +423,159 @@ export default function ROsAssignedcaselog() {
     }
   };
 
-  const handleFilterClick = () => {
+  const filterValidations = () => {
     if (!userData.drc_id && !userData.ro_id) {
       setError("DRC ID or RO ID is required");
-      return;
+      return false;
     }
-    fetchCases();
+
+    if (!filters.rtom && !filters.action_type && !fromDate && !toDate && !filters.status) {
+      Swal.fire({
+        title: "Warning",
+        text: "No filter data is selected. Please, select data.",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    };
+
+    if ((fromDate && !toDate) || (!fromDate && toDate)) {
+      Swal.fire({
+        title: "Warning",
+        text: "Both From Date and To Date must be selected.",
+        icon: "warning",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonColor: "#f1c40f"
+      });
+      setToDate(null);
+      setFromDate(null);
+      return false;
+    }
+
+    return true; // No validation errors
+  };
+
+  const callAPI = async (filter) => {
+    try {
+      const payload = {
+        // Use Number() to ensure these are numbers and not strings
+        drc_id: userData.drc_id,
+        ro_id: userData.ro_id, // Fixed: was using drc_id instead of ro_id
+        status: filter.status,
+        rtom: filter.rtom,
+        action_type: filter.action_type,
+        from_date: filter.fromDate,
+        to_date: filter.toDate,
+        pages: filter.currentPage,
+      };
+
+      console.log("Sending payload to API:", payload);
+
+      setLoading(true);
+      const response = await listDRCAllCases(payload);
+      setLoading(false);
+
+      console.log("API response:", response);
+
+      if (response) {
+        // console.log("Valid data received:", response.data);
+        if (response.status === 200 && response.data && response.data.data && response.data.data.length > 0) {
+          console.log("Data received:", response.data.data);
+          if (currentPage === 1) {
+            setCases(response.data.data)
+          } else {
+            setCases((prevData) => [...prevData, ...response.data.data]);
+          }
+        }
+
+        if (response.status === 204) {
+          setIsMoreDataAvailable(false); // No more data available
+          if (currentPage === 1) {
+            Swal.fire({
+              title: "No Results",
+              text: "No matching data found for the selected filters.",
+              icon: "warning",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonColor: "#f1c40f"
+            });
+          } else if (currentPage === 2) {
+            setCurrentPage(1); // Reset to page 1 if no data found on page 2
+          }
+        } else {
+          const maxData = currentPage === 1 ? 10 : 30;
+          if (response.data.data.length < maxData) {
+            setIsMoreDataAvailable(false); // More data available
+          }
+        }
+
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "No valid Settlement data found in response.",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        setCases([]);
+      }
+
+    } catch (error) {
+      console.error("Error filtering cases:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch filtered data. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#d33"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (userData && userData.drc_id && isMoreDataAvailable && currentPage > maxCurrentPage) {
+      setMaxCurrentPage(currentPage); // Update max current page
+      // callAPI(); // Call the function whenever currentPage changes
+      callAPI({
+        ...committedFilters,
+        currentPage: currentPage
+      });
+    }
+  }, [currentPage, userData]);
+
+  const handleFilterClick = () => {
+    setIsMoreDataAvailable(true); // Reset to allow new data fetch
+    setMaxCurrentPage(0); // Reset max current page
+    const isValid = filterValidations();
+    if (!isValid) {
+      return; // Stop if validation fails
+    } else {
+      setCommittedFilters({
+        rtom: filters.rtom,
+        action_type: filters.action_type,
+        status: filters.status,
+        fromDate: fromDate,
+        toDate: toDate,
+      });
+      setCases([]); // Clear previous results
+      if (currentPage === 1) {
+        callAPI({
+          rtom: filters.rtom,
+          action_type: filters.action_type,
+          status: filters.status,
+          fromDate: fromDate,
+          toDate: toDate,
+          currentPage: 1
+        });
+      } else {
+        setCurrentPage(1); // Reset to page 1 if filters are applied
+      }
+    }
   };
 
   const handleclearfilters = () => {
@@ -433,7 +589,21 @@ export default function ROsAssignedcaselog() {
     setSearchQuery("");
     setError("");
     setCases([]); // Clear the cases when filters are cleared
-    
+    setIsMoreDataAvailable(true); // Reset to allow new data fetch
+    setMaxCurrentPage(0); // Reset max current page
+    setCommittedFilters({
+      rtom: "",
+      action_type: "",
+      status: "",
+      fromDate: null,
+      toDate: null,
+    });
+    if (currentPage != 1) {
+      setCurrentPage(1); // Reset to page 1
+    } else {
+      setCurrentPage(0); // Temp set to 0
+      setTimeout(() => setCurrentPage(1), 0); // Reset to 1 after
+    }
   }
 
 
@@ -448,21 +618,25 @@ export default function ROsAssignedcaselog() {
 
   const pages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
-    currentPage * rowsPerPage,
-    (currentPage + 1) * rowsPerPage
+    (currentPage - 1) * rowsPerPage,
+    (currentPage) * rowsPerPage
   );
 
   // Pagination handlers
   const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(0, prev - 1));
+    // setCurrentPage((prev) => Math.max(0, prev - 1));
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
+    // setCurrentPage((prev) => Math.min(pages - 1, prev + 1));
+    setCurrentPage(currentPage + 1);
   };
 
-  const handleonnegotiation = (case_id , action_type) => {
-    navigate("/drc/customer-negotiation", { state: { CaseID: case_id , ActionType: action_type } });
+  const handleonnegotiation = (case_id, action_type) => {
+    navigate("/drc/customer-negotiation", { state: { CaseID: case_id, ActionType: action_type } });
     console.log("Case ID being passed: ", case_id);
     console.log("Action Type being passed: ", action_type);
   }
@@ -477,96 +651,100 @@ export default function ROsAssignedcaselog() {
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
       {/* {error && <p className="text-red-500">{error}</p>} */}
 
-      <div  className={`${GlobalStyle.cardContainer} w-full gap-4` }>
-        <div  className="flex items-center justify-end w-full gap-1" >
-            {/* Dropdown for RTOM */}
-            <select
-              name="rtom"
-              value={filters.rtom}
-              onChange={handleFilterChange}
-              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-              style={{ color: filters.rtom === "" ? "gray" : "black" }}
-            >
-              <option value="" hidden>Rtom</option>
-              {rtoms.map((rtom) => (
-                <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
-                  {rtom.area_name}
-                </option>
-              ))}
-            </select>
-
-            {/* Dropdown for Status  */}
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-              style={{ color: filters.status === "" ? "gray" : "black" }}
-            >
-              
-              <option value="" hidden>Status</option>
-              <option value="RO Negotiation" style={{ color: "black" }}>RO Negotiation</option>
-              <option value="Negotiation Settle Pending" style={{ color: "black" }}>Negotiation Settle Pending</option>
-              <option value="Negotiation Settle Open-Pending" style={{ color: "black" }}>Negotiation Settle Open-Pending</option>
-              <option value="Negotiation Settle Active" style={{ color: "black" }}>Negotiation Settle Active</option>
-              <option value="RO Negotiation Extension Pending" style={{ color: "black" }}>RO Negotiation Extension Pending</option>
-              <option value="RO Negotiation Extended" style={{ color: "black" }}>RO Negotiation Extended</option>
-              <option value="RO Negotiation FMB Pending" style={{ color: "black" }}>RO Negotiation FMB Pending</option>
-            </select>
-              
-            {/* Dropdown for Action Type */}
-            <select
-              name="action_type"
-              value={filters.action_type}
-              onChange={handleFilterChange}
-              className={`${GlobalStyle.selectBox} w-32 md:w-40`}
-              style={{ color: filters.action_type === "" ? "gray" : "black" }}
-            >
-              <option value="" hidden>Action Type</option>
-              <option value="Arrears Collect" style={{ color: "black" }}>Arrears Collect</option>
-              <option value="Arrears and CPE Collect" style={{ color: "black" }}>
-                Arrears and CPE Collect
+      <div className={`${GlobalStyle.cardContainer} w-full  gap-4 mt-5`}>
+        <div className="flex flex-wrap items-center justify-end w-full gap-1" >
+          {/* Dropdown for RTOM */}
+          <select
+            name="rtom"
+            value={filters.rtom}
+            onChange={handleFilterChange}
+            className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+            style={{ color: filters.rtom === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>Billing Center</option>
+            {(rtoms.length > 0 ? rtoms.map((rtom) => (
+              <option key={rtom.area_name} value={rtom.area_name} style={{ color: "black" }}>
+                {rtom.area_name}
               </option>
-              <option value="CPE Collect" style={{ color: "black" }}>CPE Collect</option>
-            </select>
+            )) : (
+              <option value="" disabled style={{ color: "grey" }}>
+                No Billing Centers available
+              </option>
+            ))}
+          </select>
 
-            <div className={`${GlobalStyle.datePickerContainer} flex`}>
-              <label className={GlobalStyle.dataPickerDate}>Date:</label>
-              <DatePicker
-                selected={fromDate}
-                onChange={handlefromdatechange}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="From"
-                className={GlobalStyle.inputText}
-              />
-              <DatePicker
-                selected={toDate}
-                onChange={handletodatechange}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="To"
-                className={GlobalStyle.inputText}
-              />
-            </div>
+          {/* Dropdown for Status  */}
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+            style={{ color: filters.status === "" ? "gray" : "black" }}
+          >
 
-            <div>
-            {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
+            <option value="" hidden>Status</option>
+            <option value="RO Negotiation" style={{ color: "black" }}>RO Negotiation</option>
+            <option value="Negotiation Settle Pending" style={{ color: "black" }}>Negotiation Settle Pending</option>
+            <option value="Negotiation Settle Open-Pending" style={{ color: "black" }}>Negotiation Settle Open-Pending</option>
+            <option value="Negotiation Settle Active" style={{ color: "black" }}>Negotiation Settle Active</option>
+            {/* <option value="RO Negotiation Extension Pending" style={{ color: "black" }}>RO Negotiation Extension Pending</option> */}
+            {/* <option value="RO Negotiation Extended" style={{ color: "black" }}>RO Negotiation Extended</option> */}
+            <option value="RO Negotiation FMB Pending" style={{ color: "black" }}>RO Negotiation FMB Pending</option>
+          </select>
+
+          {/* Dropdown for Action Type */}
+          <select
+            name="action_type"
+            value={filters.action_type}
+            onChange={handleFilterChange}
+            className={`${GlobalStyle.selectBox} w-32 md:w-40`}
+            style={{ color: filters.action_type === "" ? "gray" : "black" }}
+          >
+            <option value="" hidden>Action Type</option>
+            <option value="collect arrears" style={{ color: "black" }}>Arrears Collect</option>
+            <option value="collect arrears and CPE" style={{ color: "black" }}>
+              Arrears and CPE Collect
+            </option>
+            <option value="collect CPE" style={{ color: "black" }}>CPE Collect</option>
+          </select>
+
+          {/* <div className={`${GlobalStyle.datePickerContainer} flex`}> */}
+          <label className={GlobalStyle.dataPickerDate}>Date:</label>
+          <DatePicker
+            selected={fromDate}
+            onChange={handlefromdatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="From"
+            className={`${GlobalStyle.inputText} w-full sm:w-auto`}
+          />
+          <DatePicker
+            selected={toDate}
+            onChange={handletodatechange}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="To"
+            className={`${GlobalStyle.inputText} w-full sm:w-auto`}
+          />
+          {/* </div> */}
+
+          <div>
+            {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
               <button
                 onClick={handleFilterClick}
-                className={`${GlobalStyle.buttonPrimary}`}
+                className={`${GlobalStyle.buttonPrimary} w-full sm:w-auto`}
               >
                 Filter
               </button>
-              )}
-            </div>
-
-              <div>
-                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button className={GlobalStyle.buttonRemove}  onClick={handleclearfilters}>
-                    Clear
-                      </button>
-                  )}
-                </div>
+            )}
           </div>
+
+          <div>
+            {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+              <button className={`${GlobalStyle.buttonRemove}  w-full sm:w-auto`} onClick={handleclearfilters}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Search Section */}
@@ -575,7 +753,10 @@ export default function ROsAssignedcaselog() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1); // Reset to page 1 on new search
+              setSearchQuery(e.target.value);
+            }}
             className={GlobalStyle.inputSearch}
           />
           <FaSearch className={GlobalStyle.searchBarIcon} />
@@ -583,16 +764,16 @@ export default function ROsAssignedcaselog() {
       </div>
 
       {/* Table Section */}
-      <div className={GlobalStyle.tableContainer}>
+      <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
         <table className={GlobalStyle.table}>
           <thead className={GlobalStyle.thead}>
             <tr>
               <th className={GlobalStyle.tableHeader}>Case ID</th>
               <th className={GlobalStyle.tableHeader}>Status</th>
-              
+
               <th className={GlobalStyle.tableHeader}>Name</th>
               <th className={GlobalStyle.tableHeader}>Contact No</th>
-              <th className={GlobalStyle.tableHeader}>RTOM</th>
+              <th className={GlobalStyle.tableHeader}>Billing Center</th>
               <th className={GlobalStyle.tableHeader}>Action</th>
               <th className={GlobalStyle.tableHeader}>Date</th>
               <th className={GlobalStyle.tableHeader}></th>
@@ -609,15 +790,15 @@ export default function ROsAssignedcaselog() {
               >
                 <td className={GlobalStyle.tableData}>{row.case_id}</td>
                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
-                  <StatusIcon status={row.status}  />
+                  <StatusIcon status={row.status} />
                   <Tooltip id={`tooltip-${row.status.replace(/\s+/g, '-')}`} className="tooltip" effect="solid" place="bottom" />
                 </td>
-                
+
                 <td className={GlobalStyle.tableData}>{row.ro_name}</td>
                 <td className={GlobalStyle.tableData}>
-                  {row.contact_no}
+                  {row.current_contact_details?.contact}
                 </td>
-                <td className={GlobalStyle.tableData}>{row.area}</td>
+                <td className={GlobalStyle.tableData}>{row.rtom}</td>
                 <td className={GlobalStyle.tableData}>{row.action_type}</td>
                 <td className={GlobalStyle.tableData}>
                   {row.created_dtm
@@ -626,29 +807,29 @@ export default function ROsAssignedcaselog() {
                 </td>
                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                   <div>
-                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button>
-                    <img
-                      src={edit}
-                      alt="Edit Case"
-                      data-tooltip-id="edit-tooltip"
-                      className={`w-6 h-6 cursor-pointer display: inline-block`}
-                      onClick={() => handleonedit(row.case_id)}
-                    />
-                    <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
-                    </button>
-                  )}
+                    {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      <button>
+                        <img
+                          src={edit}
+                          alt="Edit Case"
+                          data-tooltip-id="edit-tooltip"
+                          className={`w-6 h-6 cursor-pointer display: inline-block`}
+                          onClick={() => handleonedit(row.case_id)}
+                        />
+                        <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
+                      </button>
+                    )}
                   </div>
                   <div>
-                    {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button
-                      className={`${GlobalStyle.buttonPrimary}  `}
-                      style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
-                      onClick={() => handleonnegotiation(row.case_id , row.action_type)}
-                    >
-                      Negotiation
-                    </button>
-                  )}
+                    {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      <button
+                        className={`${GlobalStyle.buttonPrimary}  `}
+                        style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
+                        onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                      >
+                        Negotiation
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -656,8 +837,8 @@ export default function ROsAssignedcaselog() {
             {paginatedData.length === 0 && (
               <tr>
                 <td colSpan="8" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                    No cases found.
-                  </td>
+                  No cases found.
+                </td>
               </tr>
             )}
           </tbody>
@@ -665,22 +846,33 @@ export default function ROsAssignedcaselog() {
       </div>
 
       {/* Pagination Section */}
-      {filteredData.length > rowsPerPage && (
+      {filteredData.length > 0 && (
         <div className={GlobalStyle.navButtonContainer}>
           <button
-            className={GlobalStyle.navButton}
+            className={`${GlobalStyle.navButton} ${currentPage <= 1 ? "cursor-not-allowed" : ""}`}
             onClick={handlePrevPage}
-            disabled={currentPage === 0}
+            disabled={currentPage <= 1}
           >
             <FaArrowLeft />
           </button>
           <span>
-            Page {currentPage + 1} of {pages}
+            Page {currentPage}
           </span>
           <button
-            className={GlobalStyle.navButton}
+            // className={GlobalStyle.navButton}
             onClick={handleNextPage}
-            disabled={currentPage === pages - 1}
+            // disabled={currentPage === pages - 1}
+            disabled={
+              searchQuery
+                ? currentPage >= Math.ceil(filteredDataBySearch.length / rowsPerPage)
+                : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / rowsPerPage
+                )}
+            className={`${GlobalStyle.navButton} ${(searchQuery
+              ? currentPage >= Math.ceil(filteredDataBySearch.length / rowsPerPage)
+              : !isMoreDataAvailable && currentPage >= Math.ceil(filteredData.length / rowsPerPage))
+              ? "cursor-not-allowed"
+              : ""
+              }`}
           >
             <FaArrowRight />
           </button>

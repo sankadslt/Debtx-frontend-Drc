@@ -2,7 +2,9 @@ import { Link, useLocation } from "react-router-dom";
 import { MdSpaceDashboard } from "react-icons/md";
 import { IoIosListBox } from "react-icons/io";
 import { FaBuildingUser } from "react-icons/fa6";
-import { useState, useEffect } from "react";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { CgEditFade } from "react-icons/cg";
+import { useState, useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../services/auth/authService";
 
@@ -11,6 +13,7 @@ const Sidebar = ({ onHoverChange }) => {
   const [expandedItems, setExpandedItems] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
   const [userRole, setUserRole] = useState(null);
+    const sidebarRef = useRef(null);
 
   // Load user role from accessToken
   const loadUserRole = async () => {
@@ -52,77 +55,60 @@ const Sidebar = ({ onHoverChange }) => {
     },
     {
       icon: FaBuildingUser,
-      label: "RO List",
-      link: "/dashboard",
-      roles: ["superadmin", "admin", "user", "drc_admin"],
-      subItems: [],
+      label: "RO/DRC User List",
+      link: "/ro/ro-drc-user-list",
+      roles: ["superadmin", "admin", "user", "drc_admin", "drc_user", "DRC-Coordinator"],
     },
     {
       icon: IoIosListBox,
       label: "Case",
-      roles: ["superadmin", "admin", "user", "drc_admin", "drc_user"],
+      roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
       subItems: [
         {
-          label: "Distribution",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/assigned-case-list-for-drc",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-            {
-              label: "Distribute To RO",
-              link: "/pages/Distribute/DistributeTORO",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-            {
-              label: "RO Assigned Case List",
-              link: "/drc/assigned-ro-case-log",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user"],
-            },
-          ],
+          label: "Case List",
+          link: "/drc/assigned-case-list-for-drc",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
         },
-        { label: "Negotiation",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/ro-s-assigned-case-log",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-            },
-          ]  
+        {
+          label: "Assign RO",
+          link: "/pages/Distribute/DistributeTORO",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
         },
-        { label: "Mediation Board",
-          roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-          subItems: [
-            {
-              label: "Case List",
-              link: "/drc/mediation-board-case-list",
-              roles: ["superadmin", "admin", "drc_admin", "drc_user", "user"],
-            },
-          ]
+        {
+          label: "RO Assigned Case List",
+          link: "/drc/assigned-ro-case-log",
+          roles: ["superadmin", "DRC-Coordinator", "drc_user"],
         },
+        {
+          label: "Negotiation Case List",
+          link: "/drc/ro-s-assigned-case-log",
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user" , "recovery_officer"],
+        },
+        {
+          label: "Mediation Board List",
+          link: "/drc/mediation-board-case-list",
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user", "recovery_officer"],
+        },
+        // {
+        //   label: "RO & DRC_User List",
+        //   link: "/ro/ro-drc-user-list",
+        //   roles: [ "DRC-Coordinator", "drc_user"],
+        // },
+       
       ],
     },
   ];
 
   // Filter menu items based on user role
-  const filteredMenuItems = userRole
-    ? menuItems.filter((item) => item.roles.includes(userRole))
-    : [];
+  const filteredMenuItems = userRole ? menuItems.filter(item => item.roles.includes(userRole)) : [];
 
-  // Handle submenu toggle on click
   const handleClick = (level, index, hasSubItems) => {
     const updatedExpandedItems = [...expandedItems];
-
-    // Collapse all submenus if clicking a link
     if (!hasSubItems) {
       setIsHovered(false);
       onHoverChange(false);
       updatedExpandedItems.splice(0);
     } else {
-      // Toggle submenu on click if it has subitems
       if (updatedExpandedItems[level] === index) {
         updatedExpandedItems.splice(level);
       } else {
@@ -130,43 +116,28 @@ const Sidebar = ({ onHoverChange }) => {
         updatedExpandedItems.splice(level + 1);
       }
     }
-
     setExpandedItems(updatedExpandedItems);
   };
 
-  // Find the active path based on the current route
-  const findActivePath = (items, path) => {
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].link === path) return [i];
-      if (items[i].subItems) {
-        const subPath = findActivePath(items[i].subItems, path);
-        if (subPath) return [i, ...subPath];
-      }
-    }
-    return null;
-  };
-
-  // Find the active path to highlight the correct menu item
-  const activePath = findActivePath(menuItems, location.pathname);
-
-  // Render subitems recursively, filter based on user role
   const renderSubItems = (subItems, level) => {
     return (
       <ul className={`ml-8 mt-2 space-y-2 ${!isHovered ? "hidden" : ""}`}>
-        {subItems
-          .filter((subItem) => subItem.roles.includes(userRole)) // Filter sub-items based on user role
-          .map((subItem, subIndex) => {
-            const isExpanded = expandedItems[level] === subIndex;
+        {subItems.map((subItem, subIndex) => {
+          const isExpanded = expandedItems[level] === subIndex;
+          const isAccessible = subItem.roles ? subItem.roles.includes(userRole) : true;
+          if (isAccessible) {
             return (
               <li key={subIndex}>
                 <Link
                   to={subItem.link || "#"}
-                  onClick={() =>
-                    handleClick(level, subIndex, !!subItem.subItems)
-                  }
-                  className="block px-3 py-2 rounded-lg text-sm font-medium transition"
+                  onClick={() => handleClick(level, subIndex, !!subItem.subItems)}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition"
                 >
-                  {subItem.label}
+                  <div className="flex items-center gap-x-2">
+                    {subItem.icon ? <subItem.icon className="w-4 h-4 text-white" /> : <CgEditFade className="w-4 h-4 text-white" />}
+                    {subItem.label}
+                  </div>
+                  {subItem.subItems && (isExpanded ? <FaChevronUp className="w-4 h-4 text-white" /> : <FaChevronDown className="w-4 h-4 text-white" />)}
                 </Link>
                 {isExpanded && subItem.subItems && (
                   <div className="ml-4">
@@ -175,14 +146,17 @@ const Sidebar = ({ onHoverChange }) => {
                 )}
               </li>
             );
-          })}
+          }
+          return null;
+        })}
       </ul>
     );
   };
 
   return (
     <div
-      className={`fixed top-20 left-4 h-[calc(100%-6rem)] bg-[#095FAA] text-white flex flex-col py-10 transition-all duration-500 shadow-lg rounded-2xl font-poppins`}
+      ref={sidebarRef}
+      className={`fixed top-20 left-4 h-[calc(100%-6rem)] bg-[#1E2659] text-white flex flex-col py-10 transition-all duration-500 shadow-lg rounded-2xl font-poppins overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800`}
       onMouseEnter={() => {
         setIsHovered(true);
         onHoverChange(true);
@@ -193,23 +167,25 @@ const Sidebar = ({ onHoverChange }) => {
       }}
       style={{ width: isHovered ? "18rem" : "5rem" }}
     >
-      {/* Menu Items */}
       <ul className="flex flex-col gap-4 px-4">
         {filteredMenuItems.map((item, index) => {
-          const isActive = activePath && activePath[0] === index;
+          const isActive = expandedItems[0] === index;
           return (
             <li key={index}>
               <Link
                 to={item.link || "#"}
                 onClick={() => handleClick(0, index, !!item.subItems)}
-                className={`flex items-center gap-x-4 px-3 py-2 rounded-lg text-base font-medium transition ${
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium transition ${
                   isActive ? "bg-blue-400 shadow-lg" : "hover:bg-blue-400"
                 }`}
               >
-                <item.icon className="w-6 h-6 text-white" />
-                {isHovered && <span>{item.label}</span>}
+                <div className="flex items-center gap-x-4">
+                  <item.icon className="w-6 h-6 text-white" />
+                  {isHovered && <span>{item.label}</span>}
+                </div>
+                {item.subItems && (isActive ? <FaChevronUp className="w-4 h-4 text-white" /> : <FaChevronDown className="w-4 h-4 text-white" />)}
               </Link>
-              {expandedItems[0] === index && item.subItems && (
+              {isActive && item.subItems && (
                 <div>{renderSubItems(item.subItems, 1)}</div>
               )}
             </li>
@@ -221,6 +197,220 @@ const Sidebar = ({ onHoverChange }) => {
 };
 
 export default Sidebar;
+
+// import { Link, useLocation } from "react-router-dom";
+// import { MdSpaceDashboard } from "react-icons/md";
+// import { IoIosListBox } from "react-icons/io";
+// import { FaBuildingUser } from "react-icons/fa6";
+// import { useState, useEffect } from "react";
+// import { jwtDecode } from "jwt-decode";
+// import { refreshAccessToken } from "../services/auth/authService";
+
+// const Sidebar = ({ onHoverChange }) => {
+//   const location = useLocation();
+//   const [expandedItems, setExpandedItems] = useState([]);
+//   const [isHovered, setIsHovered] = useState(false);
+//   const [userRole, setUserRole] = useState(null);
+
+//   // Load user role from accessToken
+//   const loadUserRole = async () => {
+//     let token = localStorage.getItem("accessToken");
+//     if (!token) {
+//       setUserRole(null);
+//       return;
+//     }
+
+//     try {
+//       let decoded = jwtDecode(token);
+//       const currentTime = Date.now() / 1000;
+
+//       if (decoded.exp < currentTime) {
+//         token = await refreshAccessToken();
+//         if (!token) return;
+//         decoded = jwtDecode(token);
+//       }
+
+//       setUserRole(decoded.role);
+//     } catch (error) {
+//       console.error("Invalid token:", error);
+//       setUserRole(null);
+//     }
+//   };
+
+//   useEffect(() => {
+//     loadUserRole();
+//   }, [localStorage.getItem("accessToken")]);
+
+//   // Menu structure with nested subtopics and roles for each sub-item
+//   const menuItems = [
+//     {
+//       icon: MdSpaceDashboard,
+//       label: "Dashboard",
+//       link: "/dashboard",
+//       roles: ["superadmin", "admin", "user", "drc_admin"],
+//       subItems: [],
+//     },
+//     {
+//       icon: FaBuildingUser,
+//       label: "RO List",
+//       link: "/dashboard",
+//       roles: ["superadmin", "admin", "user", "drc_admin"],
+//       subItems: [],
+//     },
+//     {
+//       icon: IoIosListBox,
+//       label: "Case",
+//       roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+//       subItems: [
+//         {
+//           label: "Case List",
+//           link: "/drc/assigned-case-list-for-drc",
+//           roles: ["superadmin", "DRC-Coordinator", "drc_user"],
+//         },
+//         {
+//           label: "Assign RO",
+//           link: "/pages/Distribute/DistributeTORO",
+//           roles: ["superadmin", "DRC-Coordinator", "drc_user"],
+//         },
+//         {
+//           label: "RO Assigned Case List",
+//           link: "/drc/assigned-ro-case-log",
+//           roles: ["superadmin", "DRC-Coordinator", "drc_user"],
+//         },
+//         {
+//           label: "Negotiation Case List",
+//           link: "/drc/ro-s-assigned-case-log",
+//           roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+//         },
+//         {
+//           label: "Mediation Board List",
+//           link: "/drc/mediation-board-case-list",
+//           roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user"],
+//         },
+//         {
+//           label: "RO & DRC_User List",
+//           link: "/ro/ro-drc-user-list",
+//           roles: [ "DRC-Coordinator", "drc_user"],
+//         },
+       
+//       ],
+//     },
+//   ];
+
+//   // Filter menu items based on user role
+//   const filteredMenuItems = userRole
+//     ? menuItems.filter((item) => item.roles.includes(userRole))
+//     : [];
+
+//   // Handle submenu toggle on click
+//   const handleClick = (level, index, hasSubItems) => {
+//     const updatedExpandedItems = [...expandedItems];
+
+//     // Collapse all submenus if clicking a link
+//     if (!hasSubItems) {
+//       setIsHovered(false);
+//       onHoverChange(false);
+//       updatedExpandedItems.splice(0);
+//     } else {
+//       // Toggle submenu on click if it has subitems
+//       if (updatedExpandedItems[level] === index) {
+//         updatedExpandedItems.splice(level);
+//       } else {
+//         updatedExpandedItems[level] = index;
+//         updatedExpandedItems.splice(level + 1);
+//       }
+//     }
+
+//     setExpandedItems(updatedExpandedItems);
+//   };
+
+//   // Find the active path based on the current route
+//   const findActivePath = (items, path) => {
+//     for (let i = 0; i < items.length; i++) {
+//       if (items[i].link === path) return [i];
+//       if (items[i].subItems) {
+//         const subPath = findActivePath(items[i].subItems, path);
+//         if (subPath) return [i, ...subPath];
+//       }
+//     }
+//     return null;
+//   };
+
+//   // Find the active path to highlight the correct menu item
+//   const activePath = findActivePath(menuItems, location.pathname);
+
+//   // Render subitems recursively, filter based on user role
+//   const renderSubItems = (subItems, level) => {
+//     return (
+//       <ul className={`ml-8 mt-2 space-y-2 ${!isHovered ? "hidden" : ""}`}>
+//         {subItems
+//           .filter((subItem) => subItem.roles.includes(userRole)) // Filter sub-items based on user role
+//           .map((subItem, subIndex) => {
+//             const isExpanded = expandedItems[level] === subIndex;
+//             return (
+//               <li key={subIndex}>
+//                 <Link
+//                   to={subItem.link || "#"}
+//                   onClick={() =>
+//                     handleClick(level, subIndex, !!subItem.subItems)
+//                   }
+//                   className="block px-3 py-2 rounded-lg text-sm font-medium transition"
+//                 >
+//                   {subItem.label}
+//                 </Link>
+//                 {isExpanded && subItem.subItems && (
+//                   <div className="ml-4">
+//                     {renderSubItems(subItem.subItems, level + 1)}
+//                   </div>
+//                 )}
+//               </li>
+//             );
+//           })}
+//       </ul>
+//     );
+//   };
+
+//   return (
+//     <div
+//       className={`fixed top-20 left-4 h-[calc(100%-6rem)] bg-[#095FAA] text-white flex flex-col py-10 transition-all duration-500 shadow-lg rounded-2xl font-poppins`}
+//       onMouseEnter={() => {
+//         setIsHovered(true);
+//         onHoverChange(true);
+//       }}
+//       onMouseLeave={() => {
+//         setIsHovered(false);
+//         onHoverChange(false);
+//       }}
+//       style={{ width: isHovered ? "18rem" : "5rem" }}
+//     >
+//       {/* Menu Items */}
+//       <ul className="flex flex-col gap-4 px-4">
+//         {filteredMenuItems.map((item, index) => {
+//           const isActive = activePath && activePath[0] === index;
+//           return (
+//             <li key={index}>
+//               <Link
+//                 to={item.link || "#"}
+//                 onClick={() => handleClick(0, index, !!item.subItems)}
+//                 className={`flex items-center gap-x-4 px-3 py-2 rounded-lg text-base font-medium transition ${
+//                   isActive ? "bg-blue-400 shadow-lg" : "hover:bg-blue-400"
+//                 }`}
+//               >
+//                 <item.icon className="w-6 h-6 text-white" />
+//                 {isHovered && <span>{item.label}</span>}
+//               </Link>
+//               {expandedItems[0] === index && item.subItems && (
+//                 <div>{renderSubItems(item.subItems, 1)}</div>
+//               )}
+//             </li>
+//           );
+//         })}
+//       </ul>
+//     </div>
+//   );
+// };
+
+// export default Sidebar;
 
 /*
 import { Link, useLocation } from "react-router-dom";

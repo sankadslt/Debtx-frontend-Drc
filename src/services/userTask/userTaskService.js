@@ -1,25 +1,61 @@
 const BASE_URL = import.meta.env.VITE_BASE_URL ;
 const API_URL = `${BASE_URL}/taskList/task`;
+import axios from "axios";
 
 // Fetch tasks based on the user's id
-export const fetchUserTasks = async (token, userId) => {
+// export const fetchUserTasks = async (token, userId) => {
+//   try {
+//     const response = await fetch(API_URL, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       throw new Error(`Error fetching tasks: ${errorData.message}`);
+//     }
+
+//     const data = await response.json();
+//     return data.filter((task) => task.id === userId); // Filter tasks by the user ID
+//   } catch (error) {
+//     console.error("Error fetching tasks:", error);
+//     throw error;
+//   }
+// };
+
+export const fetchUserTasks = async (token, delegate_user_id) => {
   try {
-    const response = await fetch(API_URL, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${BASE_URL}/task/List_All_Open_Requests_For_To_Do_List`,
+      { delegate_user_id },
+      // {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      // }
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Error fetching tasks: ${errorData.message}`);
+    if (response.data.data) {
+      const tasks = response.data.data.map((task) => {
+        const showParamsNotEmpty =
+          Array.isArray(task.showParameters) && task.showParameters.length > 0;
+        return {
+          ...task,
+          Case_ID:
+            showParamsNotEmpty && task.parameters?.case_id !== undefined
+              ? task.parameters.case_id
+              : undefined,
+        };
+      });
+      return tasks;
+    } else {
+      const tasks = [];
+      return tasks;
     }
-
-    const data = await response.json();
-    return data.filter((task) => task.id === userId); // Filter tasks by the user ID
   } catch (error) {
-    console.error("Error fetching tasks:", error);
+    console.error("Error fetching user tasks:", error.message);
     throw error;
   }
 };
