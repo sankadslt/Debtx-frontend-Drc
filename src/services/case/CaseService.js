@@ -853,3 +853,20 @@ export const List_Settlement_Details_Owen_By_SettlementID_and_DRCID = async (
     throw error;
   }
 };
+
+export const Retrive_active_settlement_plan = async (payload) => {
+  try {
+    const response = await axios.post(
+      `${URL}/Retrive_active_settlement_plan`,
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error retrieving active settlement plan:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
