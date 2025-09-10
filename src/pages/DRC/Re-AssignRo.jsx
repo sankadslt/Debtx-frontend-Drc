@@ -93,7 +93,7 @@ export default function Re_AssignRo() {
             console.log("Case RTOM: ", caseDetailsData.rtom);
             setCaseRTOM(caseDetailsData.rtom || "");
 
-            const negotiations = caseDetailsData.ro_negotiation || [];
+            const negotiations = caseDetailsData.ro_negotiation_re_assign_ro || [];
 
             setLastNegotiationDetails(
               (negotiations || []).map((negotiation) => ({
@@ -110,7 +110,7 @@ export default function Re_AssignRo() {
               // }))
             );
 
-            setSettlementDetails(data.data.settlementData)
+            setSettlementDetails(data.data.settlementData_ro_re_assign)
 
           } else {
             // console.error("Error in API response:", data?.message || "Unknown error");
@@ -158,7 +158,7 @@ export default function Re_AssignRo() {
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
             }))
-              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name === caseRTOM));
+              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase()));
 
             setRecoveryOfficers(formattedOfficers);
             // console.log("Recovery Officers:", formattedOfficers);
@@ -490,7 +490,7 @@ export default function Re_AssignRo() {
                   const displayName = `${officer.ro_name} - ${rtomsNames}`;
 
                   return (
-                    <option key={`ro-${index}`} value={officer.ro_name}>
+                    <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
                       {displayName}
                     </option>
                   );
@@ -517,13 +517,13 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
                 <th className={GlobalStyle.tableHeader}>Date</th>
                 <th className={GlobalStyle.tableHeader}>Negotiation</th>
-                <th className={GlobalStyle.tableHeader}>Remark</th>
+                {/* <th className={GlobalStyle.tableHeader}>Remark</th> */}
               </tr>
             </thead>
             <tbody>
@@ -539,9 +539,13 @@ export default function Re_AssignRo() {
                           : GlobalStyle.tableRowOdd
                       }
                     >
-                      <td className={GlobalStyle.tableData}>{item.date}</td>
+                      <td className={GlobalStyle.tableData}>
+                        {
+                          new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")
+                        }
+                      </td>
                       <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                      <td className={GlobalStyle.tableData}>{item.remark}</td>
+                      {/* <td className={GlobalStyle.tableData}>{item.remark}</td> */}
                     </tr>
                   ))
               ) : (
@@ -575,18 +579,20 @@ export default function Re_AssignRo() {
 
       {/* Table  */}
       <div className="mb-6 ">
-        <div className={GlobalStyle.tableContainer}>
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>Date</th>
+                <th className={GlobalStyle.tableHeader}>Created Date</th>
                 <th className={GlobalStyle.tableHeader}>Status</th>
                 <th className={GlobalStyle.tableHeader}>Expires on</th>
               </tr>
             </thead>
             <tbody>
               {Array.isArray(dataInPageSettlementDetails) && dataInPageSettlementDetails.length > 0 ? (
-                dataInPageSettlementDetails.map((item, index) => (
+                dataInPageSettlementDetails
+                .sort((a, b) => new Date(b.created_dtm) - new Date(a.created_dtm)) // Sort latest first
+                .map((item, index) => (
                   <tr
                     key={index}
                     className={

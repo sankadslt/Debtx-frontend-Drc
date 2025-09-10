@@ -26,7 +26,7 @@ import {
 } from "../../services/case/CaseService";
 import { data, useParams } from "react-router-dom";
 import { format } from "date-fns"; // Suggested: add date-fns for consistent date handling
-import {getLoggedUserId} from "/src/services/auth/authService.js";
+import { getLoggedUserId } from "/src/services/auth/authService.js";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
@@ -41,11 +41,11 @@ const MediationBoardResponse = () => {
   const [error, setError] = useState(null);
   const [createdBy, setcreatedBy] = useState(null);
   const [roId, setRoId] = useState(null);
-  const location = useLocation(); 
+  const location = useLocation();
   const navigate = useNavigate(); // Initialize useNavigate
-  const caseId = location.state?.CAse_id ; // Get caseId from state if available
-  const drcId = location.state?.DRc_id ; // Get drcId from state if available
-   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
+  const caseId = location.state?.CAse_id; // Get caseId from state if available
+  const drcId = location.state?.DRc_id; // Get drcId from state if available
+  const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   console.log(" passed caseId", caseId);
   console.log("passed drcId", drcId);
   // Consolidated case details
@@ -62,18 +62,18 @@ const MediationBoardResponse = () => {
   const [nextCallingDate, setNextCallingDate] = useState("");
   const [roRequests, setRoRequests] = useState([]);
 
-  const [historyTables, setHistoryTables] = useState([]); 
+  const [historyTables, setHistoryTables] = useState([]);
   const [lastRoRequests, setLastRoRequests] = useState([]);
   const [mediationBoardHistory, setMediationBoardHistory] = useState([]);
   const [lastROPayment, setLastROPayment] = useState([]);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPage1, setCurrentPage1] = useState(1);
   const [currentPage2, setCurrentPage2] = useState(1);
 
 
-   // Role-Based Buttons
-   useEffect(() => {
+  // Role-Based Buttons
+  useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
@@ -130,7 +130,7 @@ const MediationBoardResponse = () => {
       setCurrentPage1(currentPage1 + 1);
     }
   };
-  
+
 
   // Pagination for RO Requests
 
@@ -161,6 +161,9 @@ const MediationBoardResponse = () => {
     comment: "",
     requestcomment: "",
     failComment: "",
+    nonsettlementcomment: "",
+    current_arrears_amount: "",
+    case_current_status: "",
     settle: "",
     failReason: "",
     nextCallingDate: "",
@@ -169,7 +172,7 @@ const MediationBoardResponse = () => {
     initialAmount: "",
     calendarMonth: "0",
     durationFrom: "",
-    durationTo : "",
+    durationTo: "",
     remark: "",
   });
 
@@ -187,10 +190,10 @@ const MediationBoardResponse = () => {
   const [isSettlementTableVisible, setIsSettlementTableVisible] = useState(false);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
- 
+
   const [visibleTables, setVisibleTables] = useState({}); // state for the settlement tables visibility
 
-    const toggleSettlementTable = (index) => {
+  const toggleSettlementTable = (index) => {
     setVisibleTables((prev) => ({
       ...prev,
       [index]: !prev[index],
@@ -212,7 +215,7 @@ const MediationBoardResponse = () => {
       try {
         const response = await List_Settlement_Details_Owen_By_SettlementID_and_DRCID(caseId, userData2.drc_id, userData2.ro_id);
 
-        setSettlementdata (response.data)
+        setSettlementdata(response.data)
         setSettlementCount(response.data.length)
         console.log("Settlement length :", response.data.length);
         console.log("Settlement data fetched:", response.data);
@@ -229,22 +232,22 @@ const MediationBoardResponse = () => {
 
 
 
- 
+
   // Derived state for showing settlement toggle
   const showSettlementToggle =
     //handoverNonSettlement === "No" &&
-    formData.customerRepresented === "Yes" &&
-    formData.settle === "Yes";
+    formData.customerRepresented === "yes" &&
+    formData.settle === "yes";
 
 
-    useEffect(() => {
+  useEffect(() => {
     const getuserdetails = async () => {
       try {
         const userData = await getLoggedUserId();
 
         if (userData) {
           setcreatedBy(userData.user_id);
-          
+
           setRoId(userData.ro_id);
           console.log("user id", userData.user_id);
           console.log("user drc id", userData.drc_id);
@@ -265,9 +268,9 @@ const MediationBoardResponse = () => {
 
     const fetchCaseDetails = async () => {
 
-        const userData1 = await getLoggedUserId();
+      const userData1 = await getLoggedUserId();
 
-        console.log("Within the function drc id", userData1.drc_id);
+      console.log("Within the function drc id", userData1.drc_id);
 
       if (!caseId || !drcId) { // Check if caseId and drcId are available
         setError("Case ID and DRC ID are required");
@@ -278,7 +281,7 @@ const MediationBoardResponse = () => {
       try {
         // Fetch all data in parallel
         const [casedetails, failReasonsList, roRequestsList] = await Promise.all([
-          getCaseDetailsbyMediationBoard(caseId, drcId , userData1.ro_id),
+          getCaseDetailsbyMediationBoard(caseId, drcId, userData1.ro_id),
           ListActiveMediationResponse(),
           ListActiveRORequestsMediation(), // This now fetches only mediation mode requests
         ]);
@@ -287,22 +290,26 @@ const MediationBoardResponse = () => {
         const callingRound = casedetails.callingRound;
         console.log("Calling Round:", callingRound);
 
-        console.log("Data fetched:", data);
-        
+        console.log("Data fetched here:", data);
+
         setCaseDetails({
           caseId: data[0].case_id || "",
           customerRef: data[0].customer_ref || "",
           accountNo: data[0].account_no || "",
           arrearsAmount: data[0].current_arrears_amount || "",
           lastPaymentDate: data[0].last_payment_date
+
             ? format(new Date(data[0].last_payment_date), "yyyy-MM-dd")
             : "",
           callingRound: callingRound || 0,
+          case_current_status: data[0].case_current_status || ""
         });
-        setHistoryTables(data[0]); 
-          console.log("History Tables:", historyTables);
+        setHistoryTables(data[0]);
+        console.log("History Tables:", historyTables);
         setFailReasons(failReasonsList || []);
         setRoRequests(roRequestsList || []);
+        console.log("RO Requests:", roRequestsList);
+
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching case details:", error);
@@ -351,55 +358,58 @@ const MediationBoardResponse = () => {
     const { name, value } = e.target;
 
     if (name === "request") {
-    const selectedIndex = e.target.selectedIndex;
-    const selectedOption = e.target.options[selectedIndex];
-    const requestId = selectedOption.getAttribute("data-id");
-    const interactionId = selectedOption.getAttribute("interaction_id");
+      const selectedIndex = e.target.selectedIndex;
+      const selectedOption = e.target.options[selectedIndex];
+      const requestId = selectedOption.getAttribute("data-id");
+      const interactionId = selectedOption.getAttribute("interaction_id");
 
-    setFormData({
-      ...formData,
-      [name]: value, // Store the selected request description
-      requestId: requestId, // Store the associated request ID
-      interactionId: interactionId, // Store the associated interaction ID
-    });
-  } 
-  if (name === "calendarMonth") {
-    if (value === "" || /^[0-9\b]+$/.test(value)) {
+      setFormData({
+        ...formData,
+        [name]: value, // Store the selected request description
+        requestId: requestId, // Store the associated request ID
+        interactionId: interactionId, // Store the associated interaction ID
+      });
+    }
+    if (name === "calendarMonth") {
+      if (value === "" || /^[0-9\b]+$/.test(value)) {
         const numValue = Number(value);
 
-      if (numValue >= 1 && numValue <= 12){
-         
-        // Get today's date (DD/MM/YYYY format)
-        const today = new Date();
-         const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const durationFrom = startOfNextMonth.toLocaleDateString("en-GB"); 
+        if (numValue >= 1 && numValue <= 12) {
 
-        // Calculate durationTo
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
-        const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
-        const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+          // Get today's date (DD/MM/YYYY format)
+          const today = new Date();
+          const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+          const durationFrom = startOfNextMonth.toLocaleDateString("en-GB");
 
-        setFormData((prev) => ({
-          ...prev,
-          [name]: numValue.toString(), // Store as string
-          durationFrom,
-          durationTo,
-        }));
+          // Calculate durationTo
+          const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
+          const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
 
+          const finalMonth = new Date(today.getFullYear(), today.getMonth() + 1 + (numValue - 1), 1); // first day of final month
+          const lastDayOfFinalMonth = new Date(finalMonth.getFullYear(), finalMonth.getMonth() + 1, 0); // last day of final month
+          const durationTo = lastDayOfFinalMonth.toLocaleDateString("en-GB");
+
+          setFormData((prev) => ({
+            ...prev,
+            [name]: numValue.toString(), // Store as string
+            durationFrom,
+            durationTo,
+          }));
+
+        }
+
+        // setFormData((prev) => ({
+        //   ...prev,
+        //   [name]: value, // Temporarily allow full input
+        // }));
       }
-
-      // setFormData((prev) => ({
-      //   ...prev,
-      //   [name]: value, // Temporarily allow full input
-      // }));
     }
-  }
-  else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
+    else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleBlur = (e) => {
@@ -408,33 +418,42 @@ const MediationBoardResponse = () => {
       let numValue = Number(value);
       if (numValue < 1) numValue = 1;
       if (numValue > 12) numValue = 12;
-  
-       // Get today's date (DD/MM/YYYY format)
-    const today = new Date();
-    const durationFrom = today.toLocaleDateString("en-GB"); 
 
-    // Calculate durationTo
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
-    const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
-    const durationTo = durationToDate.toLocaleDateString("en-GB"); 
+      // Get today's date (DD/MM/YYYY format)
+      const today = new Date();
+      const durationFrom = today.toLocaleDateString("en-GB");
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: numValue.toString(), // Store as string
-      durationFrom,
-      durationTo,
-    }));
+      // Calculate durationTo
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1); // Skip current month, go to next month
+      const durationToDate = new Date(nextMonth.setMonth(nextMonth.getMonth() + (numValue - 1))); // Add selected months
+      const durationTo = durationToDate.toLocaleDateString("en-GB");
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numValue.toString(), // Store as string
+        durationFrom,
+        durationTo,
+      }));
     }
   };
 
   const handleHandoverChange = (e) => {
     setHandoverNonSettlement(e.target.value);
-    if (e.target.value === "Yes") {
+    if (e.target.value === "yes") {
       setNextCallingDate("");
     }
   };
 
   const handleNextCallingDateChange = (e) => {
+    if (e.target.value < format(new Date(), "yyyy-MM-dd")) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Next calling date cannot be in the past",
+        confirmButtonColor: "#f1c40f"
+      });
+      return;
+    }
     setNextCallingDate(e.target.value);
   };
 
@@ -473,108 +492,140 @@ const MediationBoardResponse = () => {
   //   }
   // };
 
- 
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Adjust validation based on handover status
-    if (caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes") {
+    if (caseDetails.callingRound >= 0 && handoverNonSettlement === "yes") {
       // For handover cases, only validate comment
-      if (!formData.comment.trim()) {
+      if (!formData.nonsettlementcomment.trim()) {
         Swal.fire({
           icon: "warning",
           title: "Warning",
           text: "Please enter a comment",
           confirmButtonColor: "#f1c40f"
-          });
+        });
         return;
       }
 
       // Show confirmation popup
       const result = await Swal.fire({
-      title: "Confirmation",
-      text: "Are you sure you want to submit the Non-Settlement letter?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#28a745",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, submit",
-      cancelButtonText: "No",
-    });
+        title: "Confirmation",
+        text: "Are you sure you want to submit the Non-Settlement letter?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#28a745",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, submit",
+        cancelButtonText: "No",
+      });
       if (!result.isConfirmed) {
         //setShowConfirmation(true);
         return; // User clicked "No", do not submit
       }
       // Proceed with submission
       try {
-      const payload = {
-        case_id : caseId,
-        drc_id : drcId,
-        ro_id : roId,
-        customer_available : formData.customerRepresented.toLocaleLowerCase(), 
-        next_calling_date: nextCallingDate,
-        request_id : formData.requestId,
-        request_type : formData.request,
-        request_comment : formData.requestcomment,
-        handed_over_non_settlement: handoverNonSettlement,
-        intraction_id : formData.interactionId,
-        comment : formData.comment,
-        settle : formData.settle,
-        settlement_count : settlementCount,
-        initial_amount : formData.initialAmount,
-        calendar_month : formData.calendarMonth,
-        duration: formData.calendarMonth,
-        remark : formData.remark,
-        fail_reason : formData.failReason,
-        created_by : createdBy
-      };
+        const payload = {
+          case_id: caseId,
+          drc_id: drcId,
+          ro_id: roId,
+          customer_available: formData.customerRepresented.toLocaleLowerCase(),
+          next_calling_date: nextCallingDate,
+          request_id: formData.requestId,
+          request_type: formData.request,
+          request_comment: formData.requestcomment,
+          handed_over_non_settlemet: handoverNonSettlement.toLowerCase(),
+          non_settlement_comment: formData.nonsettlementcomment,
+          fail_reason_comment: formData.failComment,
+          intraction_id: formData.interactionId,
+          comment: formData.comment,
+          settle: formData.settle.toLowerCase(),
+          settlement_count: settlementCount,
+          initial_amount: formData.initialAmount,
+          calendar_month: formData.calendarMonth,
+          current_arrears_amount: caseDetails.arrearsAmount,
+          case_current_status: caseDetails.case_current_status,
+          //duration: formData.calendarMonth,
+          remark: formData.remark,
+          fail_reason: formData.failReason,
+          created_by: createdBy
+        };
 
-      console.log("Form submitted:", payload);
-      const response = await Mediation_Board(payload);
-      console.log("Response:", response);
-      Swal.fire({
-        icon: "success",
-        title: "Success",
-        text: "Data sent successfully.",
-        confirmButtonColor: "#28a745",
-      });
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      const errorMessage = error?.response?.data?.message ||
-        error?.message ||
-        "An error occurred. Please try again.";
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: errorMessage,
-        confirmButtonColor: "#d33",
-      });
-    }
+        console.log("Form submitted:", payload);
+        const response = await Mediation_Board(payload);
+        console.log("Response:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Data sent successfully.",
+          confirmButtonColor: "#28a745",
+        }).then(() => {
+          // refresh the page when submission is successful
+          window.location.reload();
+        });
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        const errorMessage = error?.response?.data?.message ||
+          error?.message ||
+          "An error occurred. Please try again.";
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorMessage,
+          confirmButtonColor: "#d33",
+        });
+      }
       return;
-    } 
+    }
 
     else {
-    // Regular validation for non-handover cases
+      // Regular validation for non-handover cases
+
+      if ( nextCallingDate === "") {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please select a next calling date",
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      
       if (formData.customerRepresented === "") {
         Swal.fire({
           icon: "warning",
           title: "Warning",
           text: "Please select whether customer is represented",
           confirmButtonColor: "#f1c40f",
-          });
+        });
+
         return;
       }
 
-      if (formData.customerRepresented === "Yes" && formData.settle === "") {
+      if (formData.customerRepresented === "yes" && formData.settle === "") {
         Swal.fire({
           icon: "warning",
           title: "Warning",
           text: "Please select whether customer agrees to settle",
           confirmButtonColor: "#f1c40f",
-          });
+        });
         return;
       }
+
+      if (formData.customerRepresented === "no" && formData.comment.trim() === "") {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment",
+          confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      
 
       if (showFailReasonFields && !formData.failReason) {
         Swal.fire({
@@ -582,19 +633,37 @@ const MediationBoardResponse = () => {
           title: "Warning",
           text: "Please select a fail reason",
           confirmButtonColor: "#f1c40f",
-          });
+        });
+        return;
+      }
+
+      if (showFailReasonFields && ! formData.failComment.trim()) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please enter a comment for the fail reason",
+           confirmButtonColor: "#f1c40f",
+        });
         return;
       }
 
       // Validate settlement table if settlements are shown
-      if (showSettlementTable) {
+      if (showSettlementFields) {
         let isValid = true;
 
-        settlements.forEach((settlement) => {
-          if (!settlement.dueDate || !settlement.amount) {
-            isValid = false;
-          }
-        });
+        // settlements.forEach((settlement) => {
+        //   if (!settlement.dueDate || !settlement.amount) {
+        //     isValid = false;
+        //   }
+        // });
+
+        if (!formData.initialAmount || !formData.calendarMonth) {
+          isValid = false;
+        }
+
+        if (!formData.remark.trim()) {
+          isValid = false;
+        }
 
         if (!isValid) {
           Swal.fire({
@@ -602,61 +671,67 @@ const MediationBoardResponse = () => {
             title: "Warning",
             text: "Please fill in all settlement details",
             confirmButtonColor: "#f1c40f",
-            });
+          });
           return;
         }
       }
-    
 
-    //regular api call
-    try {
 
-      const payload = {
-        case_id : caseId,
-        drc_id : drcId,
-        ro_id : roId,
-        customer_available : formData.customerRepresented.toLocaleLowerCase(), 
-        next_calling_date: nextCallingDate,
-        request_id : formData.requestId,
-        request_type : formData.request,
-        request_comment : formData.requestcomment,
-        handed_over_non_settlement: handoverNonSettlement,
-        intraction_id : formData.interactionId,
-        comment : formData.comment,
-        settle : formData.settle,
-        settlement_count : settlementCount,
-        initial_amount : formData.initialAmount,
-        calendar_month : formData.calendarMonth,
-        duration: formData.calendarMonth,
-        remark : formData.remark,
-        fail_reason : formData.failReason,
-        created_by : createdBy,
-        //settlements: showSettlementTable ? settlements : [],
-      };
+      //regular api call
+      try {
 
-      console.log("Form submitted:", payload);
+        const payload = {
+          case_id: caseId,
+          drc_id: drcId,
+          ro_id: roId,
+          customer_available: formData.customerRepresented.toLocaleLowerCase(),
+          next_calling_date: nextCallingDate,
+          request_id: formData.requestId,
+          request_type: formData.request,
+          request_comment: formData.requestcomment,
+          handed_over_non_settlemet: handoverNonSettlement.toLowerCase(),
+          non_settlement_comment: formData.nonsettlementcomment,
+          fail_reason_comment: formData.failComment,
+          intraction_id: formData.interactionId,
+          comment: formData.comment,
+          settle: formData.settle.toLowerCase(),
+          settlement_count: settlementCount,
+          initial_amount: parseInt(formData.initialAmount, 10),
+          calendar_month: parseInt(formData.calendarMonth, 10),
+          current_arrears_amount: caseDetails.arrearsAmount,
+          case_current_status: caseDetails.case_current_status,
+          // duration: formData.calendarMonth,
+          remark: formData.remark,
+          fail_reason: formData.failReason,
+          created_by: createdBy,
+          //settlements: showSettlementTable ? settlements : [],
+        };
 
-      const response = await Mediation_Board(payload);
-      console.log("Response:", response);
-      Swal.fire({
-        icon: "success",
-        title: "Success",
-        text: "Data sent successfully.",
-        confirmButtonColor: "#28a745",
+        console.log("Form submitted:", payload);
+
+        const response = await Mediation_Board(payload);
+        console.log("Response:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Data sent successfully.",
+          confirmButtonColor: "#28a745",
+        }).then(() => {
+          window.location.reload();
         });
-      
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      const errorMessage = error?.response?.data?.message || 
-                                    error?.message || 
-                                    "An error occurred. Please try again.";
-     Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: errorMessage,
-                confirmButtonColor: "#d33",
-                });
-                    }
+
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        const errorMessage = error?.response?.data?.message ||
+          error?.message ||
+          "An error occurred. Please try again.";
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorMessage,
+          confirmButtonColor: "#d33",
+        });
+      }
     }
   };
 
@@ -668,15 +743,15 @@ const MediationBoardResponse = () => {
 
   // Show additional fields when customer is represented and agrees to settle
   const showSettlementFields =
-    formData.customerRepresented === "Yes" && formData.settle === "Yes";
+    formData.customerRepresented === "yes" && formData.settle === "yes";
 
   // Show fail reason fields when customer is represented but doesn't agree to settle
   const showFailReasonFields =
-    formData.customerRepresented === "Yes" && formData.settle === "No";
+    formData.customerRepresented === "yes" && formData.settle === "no";
 
   // Determine if form should be simplified based on handover selection
   const isSimplifiedForm =
-    caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes";
+    caseDetails.callingRound >= 0 && handoverNonSettlement === "yes";
 
   if (isLoading) {
     return (
@@ -687,23 +762,23 @@ const MediationBoardResponse = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
-        <h2 className="text-lg font-bold mb-2">Error</h2>
-        <p>{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="text-red-500 p-4 rounded-md bg-red-50 border border-red-300">
+  //       <h2 className="text-lg font-bold mb-2">Error</h2>
+  //       <p>{error}</p>
+  //       <button
+  //         onClick={() => window.location.reload()}
+  //         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+  //       >
+  //         Retry
+  //       </button>
+  //     </div>
+  //   );
+  // }
 
-   const handleBack = () => {
-    navigate ("/drc/mediation-board-case-list") ; // Go back to the previous page
+  const handleBack = () => {
+    navigate("/drc/mediation-board-case-list"); // Go back to the previous page
   };
 
   const handleResponseHistoryClick = async () => {
@@ -712,30 +787,33 @@ const MediationBoardResponse = () => {
       try {
         const lastRequests = historyTables.ro_requests
           ? historyTables.ro_requests.map((ro_request) => ({
-              createdDtm: ro_request.created_dtm,
-              field_reason: ro_request.ro_request,
-              remark: ro_request.ro_request_remark ? ro_request.ro_request_remark :  "",
-            }))
+            createdDtm: ro_request.created_dtm,
+            field_reason: ro_request.ro_request,
+            remark: ro_request.request_remark ? ro_request.request_remark : "",
+          }))
+            .reverse() // Reverse the order to show latest first
           : [];
         setLastRoRequests(lastRequests);
 
         const mediationbordhistory = historyTables.mediation_board
-        ? historyTables.mediation_board.map((media_board) => ({
-            callingdate: media_board.mediation_board_calling_dtm,
+          ? historyTables.mediation_board.map((media_board) => ({
+            callingdate: media_board.mediation_board_calling_dtm || "",
+            createdDtm: media_board.created_dtm,
             customerrep: media_board.customer_available,
             agreetosettle: media_board.agree_to_settle || "",
-            remark: media_board.comment ? media_board.comment :  "",
+            remark: media_board.comment ? media_board.comment : "",
           }))
-        : [];
+            .reverse() // Reverse the order to show latest first
+          : [];
         setMediationBoardHistory(mediationbordhistory);
 
         const lastPayment = historyTables.money_transactions
-        ? historyTables.money_transactions.map((ro_payment) => ({
+          ? historyTables.money_transactions.map((ro_payment) => ({
             createdDtm: ro_payment.payment_Dtm,
             paid_amount: ro_payment.payment,
-            settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced :  "",
+            settled_balance: ro_payment.settle_balanced ? ro_payment.settle_balanced : "",
           }))
-        : [];
+          : [];
         setLastROPayment(lastPayment);
 
       } catch (error) {
@@ -752,123 +830,126 @@ const MediationBoardResponse = () => {
 
       {/* Case Details Card - Always visible */}
       <div className="flex justify-center items-center">
-          <div className={`${GlobalStyle.cardContainer}`}>
-            <table className="w-full  ">
-              <tbody>
-                <tr className="flex items-start py-1">
-                  <td className="font-bold w-48">Case ID</td>
-                  <td className="px-2 font-bold">:</td>
-                  <td className="text-gray-700">{caseDetails.caseId}</td>
-                </tr>
-                <tr className="flex items-start py-1">
-                  <td className="font-bold w-48">Customer Ref</td>
-                  <td className="px-2 font-bold">:</td>
-                  <td className="text-gray-700">{caseDetails.customerRef}</td>
-                </tr>
-                <tr className="flex items-start py-1">
-                  <td className="font-bold w-48">Account No</td>
-                  <td className="px-2 font-bold">:</td>
-                  <td className="text-gray-700">{caseDetails.accountNo}</td>
-                </tr>
-                <tr className="flex items-start py-1">
-                  <td className="font-bold w-48">Arrears Amount</td>
-                  <td className="px-2 font-bold">:</td>
-                  <td className="text-gray-700">{caseDetails.arrearsAmount}</td>
-                </tr>
-                <tr className="flex items-start py-1">
-                  <td className="font-bold w-48">Last Payment Date</td>
-                  <td className="px-2 font-bold">:</td>
-                  <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div className={`${GlobalStyle.cardContainer} w-full max-w-2xl`}>
+          <table className="w-full  ">
+            <tbody>
+              <tr className="flex items-start py-1">
+                <td className="font-bold w-48">Case ID</td>
+                <td className="px-2 font-bold">:</td>
+                <td className="text-gray-700">{caseDetails.caseId}</td>
+              </tr>
+              <tr className="flex items-start py-1">
+                <td className="font-bold w-48">Customer Ref</td>
+                <td className="px-2 font-bold">:</td>
+                <td className="text-gray-700">{caseDetails.customerRef}</td>
+              </tr>
+              <tr className="flex items-start py-1">
+                <td className="font-bold w-48">Account No</td>
+                <td className="px-2 font-bold">:</td>
+                <td className="text-gray-700">{caseDetails.accountNo}</td>
+              </tr>
+              <tr className="flex items-start py-1">
+                <td className="font-bold w-48">Arrears Amount</td>
+                <td className="px-2 font-bold">:</td>
+                <td className="text-gray-700">{caseDetails.arrearsAmount}</td>
+              </tr>
+              <tr className="flex items-start py-1">
+                <td className="font-bold w-48">Last Payment Date</td>
+                <td className="px-2 font-bold">:</td>
+                <td className="text-gray-700">{caseDetails.lastPaymentDate}</td>
+
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Calling Round Card - Always visible */}
       <div className="flex justify-center items-center  ">
-          <div
-          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[60%] max-w-[1200px] mx-auto`}
+        <div
+          className={`${GlobalStyle.tableContainer} bg-white bg-opacity-50 p-8 w-[70%] max-w-[1200px] mx-auto`}
         >
 
-            <h2 className={`${GlobalStyle.headingMedium} mb-4 text-center`}>
-              <strong>Mediation Board Form </strong>
-            </h2>
-            <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
-              <table className="w-full">
-                <tbody>
-                  <tr className="flex items-start py-1">
-                    <td className="font-semibold w-48">Calling Round</td>
-                    <td className="px-4 font-semibold">:</td>
-                    <td className="text-gray-700">{caseDetails.callingRound}</td>
-                  </tr>
+          <h2 className={`${GlobalStyle.headingMedium} mb-4 text-center`}>
+            <strong>Mediation Board Form </strong>
+          </h2>
+          <div className="p-4 rounded-lg shadow-xl mb-6 bg-white bg-opacity-15 border-2 border-zinc-300 max-w-4xl">
+            <table className="w-full table-auto">
+              <tbody>
+                <tr>
+                  <td className="font-semibold w-48 align-top">Calling Round</td>
+                  <td className="px-4 font-semibold align-top">:</td>
+                  <td className="text-gray-700">{caseDetails.callingRound}</td>
+                </tr>
 
-                  {caseDetails.callingRound >= 3 && (
-                    <tr className="flex items-start py-1">
-                      <td className="font-semibold w-48">Handover Non-Settlement</td>
-                      <td className="px-4 font-semibold">:</td>
+                {caseDetails.callingRound >= 0 && (
+                  <tr>
+                    <td className="font-semibold w-48 align-top">Handover Non-Settlement</td>
+                    <td className="px-4 font-semibold align-top">:</td>
+                    <td>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="handoverNonSettlement"
+                            value="yes"
+                            checked={handoverNonSettlement === "yes"}
+                            onChange={handleHandoverChange}
+                            className="mr-2"
+                            aria-label="Yes for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="handoverNonSettlement"
+                            value="no"
+                            checked={handoverNonSettlement === "no"}
+                            onChange={handleHandoverChange}
+                            className="mr-2"
+                            aria-label="No for handover non-settlement"
+                            disabled={formData.nonsettlementcomment || nextCallingDate || formData.request || formData.customerRepresented}
+                          />
+                          No
+                        </label>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {(caseDetails.callingRound < 0 ||
+                  (caseDetails.callingRound >= 0 &&
+                    handoverNonSettlement === "no")) && (
+                    <tr>
+                      <td className="font-semibold w-48 align-top">Next Calling Date</td>
+                      <td className="px-4 font-semibold align-top">:</td>
                       <td>
-                        <div className="flex gap-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="handoverNonSettlement"
-                              value="Yes"
-                              checked={handoverNonSettlement === "Yes"}
-                              onChange={handleHandoverChange}
-                              className="mr-2"
-                              aria-label="Yes for handover non-settlement"
-                            />
-                            Yes
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="handoverNonSettlement"
-                              value="No"
-                              checked={handoverNonSettlement === "No"}
-                              onChange={handleHandoverChange}
-                              className="mr-2"
-                              aria-label="No for handover non-settlement"
-                            />
-                            No
-                          </label>
-                        </div>
+                        <input
+                          type="date"
+                          value={nextCallingDate}
+                          onChange={handleNextCallingDateChange}
+                          className="p-2 border rounded-md w-full max-w-xs"
+                          disabled={
+                            caseDetails.callingRound >= 3 &&
+                            handoverNonSettlement === "yes"
+                          }
+                          aria-label="Next calling date"
+                        />
                       </td>
                     </tr>
                   )}
+              </tbody>
+            </table>
+          </div>
 
-                  {/* Only show Next Calling Date when needed */}
-                  {(caseDetails.callingRound < 3 ||
-                    (caseDetails.callingRound >= 3 &&
-                      handoverNonSettlement === "No")) && (
-                      <tr className="flex items-start py-1">
-                        <td className="font-semibold w-48">Next Calling Date</td>
-                        <td className="px-4 font-semibold">:</td>
-                        <td>
-                          <input
-                            type="date"
-                            value={nextCallingDate}
-                            onChange={handleNextCallingDateChange}
-                            className="p-2 border rounded-md w-72"
-                            disabled={
-                              caseDetails.callingRound >= 3 &&
-                              handoverNonSettlement === "Yes"
-                            }
-                            aria-label="Next calling date"
-                          />
-                        </td>
-                      </tr>
-                    )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Main Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Only show these fields when NOT in simplified mode */}
-              {!isSimplifiedForm && (
-                <>
+          {/* Main Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Only show these fields when NOT in simplified mode */}
+            {!isSimplifiedForm && (
+              <>
+                {handoverNonSettlement === "no" && (
                   <div className="flex items-center">
                     <span className="w-48 font-semibold">Request : </span>
                     <select
@@ -881,27 +962,30 @@ const MediationBoardResponse = () => {
                     >
                       <option value="" hidden>Select Request</option>
                       {roRequests && roRequests.map((request) => (
-                        <option key={request._id} value={request.request_description } data-id={request.ro_request_id} interaction_id={request.intraction_id} style={{ color: "black" }}>
+                        <option key={request._id} value={request.request_description} data-id={request.ro_request_id} interaction_id={request.intraction_id} style={{ color: "black" }}>
                           {request.request_description || "Unnamed Request"}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
 
-                  {formData.request && (
-                    <div className="flex">
-                      <span className="w-48 font-semibold">Request Remark:</span>
-                      <textarea
-                        name="requestcomment"
-                        value={formData.requestcomment}
-                        onChange={handleInputChange}
-                        className={GlobalStyle.remark}
-                        rows="5"
-                        aria-label="Comment"
-                      />
-                    </div>
-                  )}
+                {formData.request && (
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Request Remark:</span>
+                    <textarea
+                      name="requestcomment"
+                      value={formData.requestcomment}
+                      onChange={handleInputChange}
+                      className={GlobalStyle.remark}
+                      rows="5"
+                      aria-label="Comment"
+                    />
+                  </div>
+                )}
 
+
+                {handoverNonSettlement === "no" && (
                   <div className="flex items-center">
                     <span className="font-semibold">Customer Represented : </span>
                     <div className="ml-4 flex gap-4">
@@ -909,11 +993,12 @@ const MediationBoardResponse = () => {
                         <input
                           type="radio"
                           name="customerRepresented"
-                          value="Yes"
-                          checked={formData.customerRepresented === "Yes"}
+                          value="yes"
+                          checked={formData.customerRepresented === "yes"}
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="Yes for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         Yes
                       </label>
@@ -921,11 +1006,12 @@ const MediationBoardResponse = () => {
                         <input
                           type="radio"
                           name="customerRepresented"
-                          value="No"
-                          checked={formData.customerRepresented === "No"}
+                          value="no"
+                          checked={formData.customerRepresented === "no"}
                           onChange={handleInputChange}
                           className="mr-2"
                           aria-label="No for customer represented"
+                          disabled={formData.comment || formData.settle}
                         />
                         No
                       </label>
@@ -934,141 +1020,144 @@ const MediationBoardResponse = () => {
 
                     </div>
                   </div>
+                )}
 
 
-                  {/* Comment section - Moved directly below customer represented */}
+                {/* Comment section - Moved directly below customer represented */}
 
-                  {formData.customerRepresented === "Yes" && (
-                    
+                {formData.customerRepresented === "yes" && (
+
+                  <div className="flex items-center">
+                    <span className="w-48 font-semibold mb-6">Agree to Settle : </span>
+                    <div className="ml-4 flex gap-4">
+                      <label className="flex items-center mb-6">
+                        <input
+                          type="radio"
+                          name="settle"
+                          value="yes"
+                          checked={formData.settle === "yes"}
+                          onChange={(e) => {
+                            if (caseDetails.callingRound >= 0 && (!handoverNonSettlement || handoverNonSettlement === "")) {
+
+                              Swal.fire({
+                                icon: "warning",
+                                title: "Warning",
+                                text: "Handover Non-settlement has not been provided.",
+                                confirmButtonColor: "#f1c40f",
+                              });
+                              e.preventDefault();
+                            }
+                            else {
+                              handleInputChange(e);
+                            }
+                          }}
+                          className="mr-2"
+                          aria-label="Yes for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
+                        // disabled={caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes"}
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center mb-6">
+                        <input
+                          type="radio"
+                          name="settle"
+                          value="no"
+                          checked={formData.settle === "no"}
+
+                          onChange={(e) => {
+                            if (caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")) {
+                              Swal.fire({
+                                icon: "warning",
+                                title: "Warning",
+                                text: "Handover Non-settlement has not been provided.",
+                                confirmButtonColor: "#f1c40f",
+                              });
+                              e.preventDefault();
+                            }
+                            else {
+                              handleInputChange(e);
+                            }
+                          }}
+                          className="mr-2"
+                          aria-label="No for settle"
+                          disabled={formData.failReason || formData.failComment || formData.initialAmount || (formData.calendarMonth) != 0 || formData.remark}
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Comment section - Only shown when customer is not represented */}
+                {formData.customerRepresented === "no" && (
+                  <div className="flex">
+                    <span className="w-48 font-semibold">Comment:</span>
+                    <textarea
+                      name="comment"
+                      value={formData.comment}
+                      onChange={handleInputChange}
+                      className={GlobalStyle.remark}
+                      rows="5"
+                      aria-label="Comment"
+                    />
+                  </div>
+                )}
+
+                {showFailReasonFields && (
+                  <div>
                     <div className="flex items-center">
-                      <span className="w-48 font-semibold mb-6">Agree to Settle : </span>
-                      <div className="ml-4 flex gap-4">
-                        <label className="flex items-center mb-6">
-                          <input
-                            type="radio"
-                            name="settle"
-                            value="Yes"
-                            checked={formData.settle === "Yes"}
-                            onChange={(e) => {
-                              if(caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")){
-                                
-                                Swal.fire({
-                                  icon: "warning",
-                                  title: "Warning",
-                                  text: "Handover Non-settlement has not been provided.",
-                                  confirmButtonColor: "#f1c40f",
-                                });
-                                e.preventDefault();
-                              }
-                              else{
-                                handleInputChange(e);
-                              }
-                            }}
-                            className="mr-2"
-                            aria-label="Yes for settle"
-                            // disabled={caseDetails.callingRound >= 3 && handoverNonSettlement === "Yes"}
-                          />
-                          Yes
-                        </label>
-                        <label className="flex items-center mb-6">
-                          <input
-                            type="radio"
-                            name="settle"
-                            value="No"
-                            checked={formData.settle === "No"}
-                            
-                            onChange={(e) => {
-                              if(caseDetails.callingRound >= 3 && (!handoverNonSettlement || handoverNonSettlement === "")){
-                                Swal.fire({
-                                  icon: "warning",
-                                  title: "Warning",
-                                  text: "Handover Non-settlement has not been provided.",
-                                  confirmButtonColor: "#f1c40f",
-                                });
-                                e.preventDefault();
-                              }
-                              else{
-                                handleInputChange(e);
-                              }
-                            }}
-                            className="mr-2"
-                            aria-label="No for settle"
-                          />
-                          No
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Comment section - Only shown when customer is not represented */}
-                  {formData.customerRepresented === "No" && (
-                    <div className="flex">
-                      <span className="w-48 font-semibold">Comment:</span>
-                      <textarea
-                        name="comment"
-                        value={formData.comment}
+                      <span className="w-48 font-semibold">Fail Reason:</span>
+                      <select
+                        name="failReason"
+                        value={formData.failReason}
                         onChange={handleInputChange}
-                        className={GlobalStyle.remark}
-                        rows="5"
-                        aria-label="Comment"
-                      />
+                        className={GlobalStyle.selectBox}
+                        aria-label="Fail reason"
+                        style={{ color: formData.failReason === "" ? "gray" : "black" }}
+                      >
+                        <option value="" hidden>Select Response</option>
+                        {failReasons && failReasons.map((failReason, index) => (
+                          <option key={index} value={failReason.mediation_description || ""} style={{ color: "black" }}>
+                            {failReason.mediation_description || "Unnamed Reason"}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  )}
 
-                  {showFailReasonFields && (
-                    <div>
-                      <div className="flex items-center">
-                        <span className="w-48 font-semibold">Fail Reason:</span>
-                        <select
-                          name="failReason"
-                          value={formData.failReason}
+                    {formData.failReason && (
+                      <div className="flex mt-2">
+                        <span className="w-48 font-semibold">Comment:</span>
+                        <textarea
+                          name="failComment"
+                          value={formData.failComment}
                           onChange={handleInputChange}
-                          className={GlobalStyle.selectBox}
-                          aria-label="Fail reason"
-                          style={{ color: formData.failReason === "" ? "gray" : "black" }}
-                        >
-                          <option value="" hidden>Select Response</option>
-                          {failReasons && failReasons.map((failReason, index) => (
-                            <option key={index} value={failReason.mediation_description || ""} style={{ color: "black" }}>
-                              {failReason.mediation_description || "Unnamed Reason"}
-                            </option>
-                          ))}
-                        </select>
+                          className={GlobalStyle.remark}
+                          rows="4"
+                          aria-label="Fail reason comment"
+                        />
                       </div>
+                    )}
+                  </div>
+                )}
 
-                      {formData.failReason && (
-                        <div className="flex mt-2">
-                          <span className="w-48 font-semibold">Comment:</span>
-                          <textarea
-                            name="failComment"
-                            value={formData.failComment}
-                            onChange={handleInputChange}
-                            className={GlobalStyle.remark}
-                            rows="4"
-                            aria-label="Fail reason comment"
-                          />
-                        </div>
-                      )}
+                {showSettlementFields && (
+                  <>
+                    <div >
+                      <h2 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
+                        <strong>Settlement Plan Creation</strong>
+                      </h2>
                     </div>
-                  )}
+                    <div className="flex items-center">
+                      <span className="w-48 font-semibold">Settlement Count:</span>
+                      <span
+                        className="w-72 p-2 border rounded-md "
+                        aria-label="Settlement count"
+                      >
+                        {settlementCount}
+                      </span>
 
-                  {showSettlementFields && (
-                    <>
-                      <div >
-                        <h2 className={`${GlobalStyle.headingMedium} mt-6 mb-4 text-center underline`}>
-                          <strong>Settlement Plan Creation</strong>
-                        </h2>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-48 font-semibold">Settlement Count:</span>
-                         <span
-                            className="w-72 p-2 border rounded-md "
-                            aria-label="Settlement count"
-                          >
-                            {settlementCount}
-                          </span>
-
-                        {/* <input
+                      {/* <input
                           type="number"
                           name="settlementCount"
                           value={formData.settlementCount}
@@ -1076,117 +1165,124 @@ const MediationBoardResponse = () => {
                           className="w-72 p-2 border rounded-md"
                           aria-label="Settlement count"
                         /> */}
-                      </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <span className="w-48 font-semibold">Initial Amount:</span>
+                    <div className="flex items-center">
+                      <span className="w-48 font-semibold">Initial Amount:</span>
+                      <input
+                        type="number"
+                        name="initialAmount"
+                        min="0"
+
+                        value={formData.initialAmount}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (["-", "+", "e"].includes(e.key)) {
+                            e.preventDefault(); // block minus, plus, exponential notation, 
+                          }
+                        }}
+                        className="w-72 p-2 border rounded-md"
+                        aria-label="Initial amount"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <span className="w-48 font-semibold">Calendar Month:</span>
+                      <input
+                        type="number"
+                        name="calendarMonth"
+                        value={formData.calendarMonth}
+                        onChange={handleInputChange}
+                        //onBlur={handleBlur}
+                        className="w-20 p-2 border rounded-md"
+                        min="0"
+                        max="12"
+                        onKeyDown={(e) => e.preventDefault()} //  Prevent keyboard input
+                        aria-label="Calendar month"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <span className="w-48 font-semibold">Duration:</span>
+                      <div className="flex items-center space-x-4">
+                        <span>From:</span>
                         <input
-                          type="number"
-                          name="initialAmount"
-                          value={formData.initialAmount}
+                          type="text"
+                          name="durationFrom"
+                          value={formData.durationFrom}
                           onChange={handleInputChange}
-                          className="w-72 p-2 border rounded-md"
-                          aria-label="Initial amount"
+                          className="w-32 p-2 border rounded-md"
+                          aria-label="Duration from"
+                          readOnly
                         />
-                      </div>
-
-                      <div className="flex items-center">
-                        <span className="w-48 font-semibold">Calendar Month:</span>
+                        <span>To:</span>
                         <input
-                          type="number"
-                          name="calendarMonth"
-                          value={formData.calendarMonth}
+                          type="text"
+                          name="durationTo"
+                          value={formData.durationTo}
                           onChange={handleInputChange}
-                          //onBlur={handleBlur}
-                          className="w-20 p-2 border rounded-md"
-                          min="0"
-                          max="12"
-                          onKeyDown={(e) => e.preventDefault()} //  Prevent keyboard input
-                          aria-label="Calendar month"
+                          className="w-32 p-2 border rounded-md"
+                          aria-label="Duration to"
+                          readOnly
                         />
                       </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <span className="w-48 font-semibold">Duration:</span>
-                        <div className="flex items-center space-x-4">
-                          <span>From:</span>
-                          <input
-                            type="text"
-                            name="durationFrom"
-                            value={formData.durationFrom}
-                            onChange={handleInputChange}
-                            className="w-32 p-2 border rounded-md"
-                            aria-label="Duration from"
-                            readOnly
-                          />
-                          <span>To:</span>
-                          <input
-                            type="text"
-                            name="durationTo"
-                            value={formData.durationTo}
-                            onChange={handleInputChange}
-                            className="w-32 p-2 border rounded-md"
-                            aria-label="Duration to" 
-                            readOnly
-                          />
-                        </div>
-                      </div>
+                    <div className="flex">
+                      <span className="w-48 font-semibold">Remark:</span>
+                      <textarea
+                        name="remark"
+                        value={formData.remark}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border rounded-md"
+                        rows="4"
+                        aria-label="Remark"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
-                      <div className="flex">
-                        <span className="w-48 font-semibold">Remark:</span>
-                        <textarea
-                          name="remark"
-                          value={formData.remark}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border rounded-md"
-                          rows="4"
-                          aria-label="Remark"
-                        />
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+            {/* Comment section for simplified form only */}
+            {isSimplifiedForm && (
+              <div className="flex">
+                <span className="w-48 font-semibold">Non-settlement comment:</span>
+                <textarea
+                  name="nonsettlementcomment"
+                  value={formData.nonsettlementcomment}
+                  onChange={handleInputChange}
+                  className={GlobalStyle.remark}
+                  rows="5"
+                  aria-label="Non-settlement comment"
+                />
+              </div>
+            )}
 
-              {/* Comment section for simplified form only */}
-              {isSimplifiedForm && (
-                <div className="flex">
-                  <span className="w-48 font-semibold">Non-settlement comment:</span>
-                  <textarea
-                    name="comment"
-                    value={formData.comment}
-                    onChange={handleInputChange}
-                    className={GlobalStyle.remark}
-                    rows="5"
-                    aria-label="Comment"
-                  />
-                </div>
-              )}
+            {/* Submit and Response History buttons - Always visible */}
+            <div className="flex justify-end mt-6">
 
-              {/* Submit and Response History buttons - Always visible */}
-              <div className="flex justify-end mt-6">
-
-                 <div>
-                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button
-                        type="submit"
-                        className={GlobalStyle.buttonPrimary}
-                        aria-label="Submit form"
-                      >
-                        Submit
-                </button>
-                  )}
-                </div>
-                {/* <button
+              <div>
+                {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                  <button
+                    type="submit"
+                    className={GlobalStyle.buttonPrimary}
+                    aria-label="Submit form"
+                  >
+                    Submit
+                  </button>
+                )}
+              </div>
+              {/* <button
                   type="submit"
                   className={GlobalStyle.buttonPrimary}
                   aria-label="Submit form"
                 >
                   Submit
                 </button> */}
-              </div>
-            </form>
-          </div>
+            </div>
+          </form>
+        </div>
       </div>
       {/* Settlement 1 toggle - Only shown when conditions are met */}
       {showSettlementToggle && (
@@ -1203,59 +1299,59 @@ const MediationBoardResponse = () => {
                 <span>{visibleTables[index] ? "▲" : "▼"}</span>
               </button>
 
-          { visibleTables[index] && (
-            <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-200">
-              <div className={GlobalStyle.tableContainer}>
-                <table className={GlobalStyle.table}>
-                  <thead className={GlobalStyle.thead}>
-                    <tr>
-                      <th scope="col" className={GlobalStyle.tableHeader}>
-                        Seq. No
-                      </th>
-                      <th scope="col" className={GlobalStyle.tableHeader}>
-                        Installment Settle Amount
-                      </th>
-                      <th scope="col" className={GlobalStyle.tableHeader}>
-                        Plan Date
-                      </th>
-                      <th scope="col" className={GlobalStyle.tableHeader}>
-                        Installment Paid Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {settlement.settlement_plan?.map((installment, i) => (
-                      <tr key={i} className="bg-white bg-opacity-75 border-b">
-                        <td className={GlobalStyle.tableData}>{installment.installment_seq}</td>
-                        <td className={GlobalStyle.tableCurrency}>{installment.Installment_Settle_Amount}</td>
-                        <td className={GlobalStyle.tableData}>{new Date (installment.Plan_Date).toLocaleDateString("en-GB")}</td>
-                        <td className={GlobalStyle.tableCurrency}>{installment.Installment_Paid_Amount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {visibleTables[index] && (
+                <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                  <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+                    <table className={GlobalStyle.table}>
+                      <thead className={GlobalStyle.thead}>
+                        <tr>
+                          <th scope="col" className={GlobalStyle.tableHeader}>
+                            Seq. No
+                          </th>
+                          <th scope="col" className={GlobalStyle.tableHeader}>
+                            Installment Settle Amount
+                          </th>
+                          <th scope="col" className={GlobalStyle.tableHeader}>
+                            Plan Date
+                          </th>
+                          <th scope="col" className={GlobalStyle.tableHeader}>
+                            Installment Paid Amount
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {settlement.settlement_plan?.map((installment, i) => (
+                          <tr key={i} className="bg-white bg-opacity-75 border-b">
+                            <td className={GlobalStyle.tableData}>{installment.installment_seq}</td>
+                            <td className={GlobalStyle.tableCurrency}>{installment.Installment_Settle_Amount}</td>
+                            <td className={GlobalStyle.tableData}>{new Date(installment.Plan_Date).toLocaleDateString("en-GB")}</td>
+                            <td className={GlobalStyle.tableCurrency}>{installment.Installment_Paid_Amount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
           ))}
         </div>
       )}
 
       <div className="mt-6  mb-8">
-         <div>
-                  {["admin", "superadmin", "slt" , "drc_user", "drc_admin"].includes(userRole) && (
-                    <button
-                    type="button"
-                    // onClick={() => setShowResponseHistory(!showResponseHistory)}
-                    className={`${GlobalStyle.buttonPrimary} ml-16`}
-                  onClick={handleResponseHistoryClick}
-                    
-                  >
-          Response History
-        </button>
-                  )}
-                </div>
+        <div>
+          {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+            <button
+              type="button"
+              // onClick={() => setShowResponseHistory(!showResponseHistory)}
+              className={`${GlobalStyle.buttonPrimary} ml-16`}
+              onClick={handleResponseHistoryClick}
+
+            >
+              Response History
+            </button>
+          )}
+        </div>
         {/* <button
           type="button"
           // onClick={() => setShowResponseHistory(!showResponseHistory)}
@@ -1267,267 +1363,275 @@ const MediationBoardResponse = () => {
         </button> */}
       </div>
 
-      
+
 
       {/* Response History Popup */}
       {showResponseHistory && (
         <div className="mb-8">
           {/* <div className="bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-auto relative"> */}
-            {/* Close Button with X Icon */}
-            {/* <button
+          {/* Close Button with X Icon */}
+          {/* <button
               className="absolute top-4 right-4 text-gray-700 hover:text-gray-900"
               onClick={() => setShowResponseHistory(false)}
               aria-label="Close response history"
             >
               <X size={24} />
             </button> */}
-        
-            {/* Mediation Board Response History Table */}
-            <h3 className={`${GlobalStyle.headingMedium} mt-10 mb-4`}>
-              Mediation Board Response History
-            </h3>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead}>
+
+          {/* Mediation Board Response History Table */}
+          <h3 className={`${GlobalStyle.headingMedium} mt-10 mb-4`}>
+            Mediation Board Response History
+          </h3>
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            <table className={GlobalStyle.table}>
+              <thead className={GlobalStyle.thead}>
+                <tr>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Next Calling Date
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Created Date
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Customer Represented
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Agree to Settle
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Remarks
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {currentRows.length > 0 ? (
+                  currentRows.map((entry, index) => (
+
+                    <tr
+                      key={index}
+                      className={
+                        index % 2 === 0
+                          ? GlobalStyle.tableRowEven
+                          : GlobalStyle.tableRowOdd
+                      }
+                    >
+                      <td className={GlobalStyle.tableData}>
+                        {entry.callingdate
+                          ? new Date(entry.callingdate).toLocaleDateString("en-GB")
+                          : ""}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.customerrep}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.agreetosettle}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.remark}
+                      </td>
+
+                    </tr>
+                  ))
+
+                ) : (
                   <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Calling Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Customer Represented
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Agree to Settle
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Remarks
-                    </th>
+                    <td colSpan="4" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No response history available.
+                    </td>
                   </tr>
-                </thead>
-                
-                <tbody>
-                  {currentRows.length > 0 ? (
-                    currentRows.map((entry, index) => (
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                      <tr
-                        key={index}
-                        className={
-                          index % 2 === 0
-                            ? GlobalStyle.tableRowEven
-                            : GlobalStyle.tableRowOdd
-                        }
-                      >
-                         <td className={GlobalStyle.tableData}>
-                          {new Date(entry.callingDate).toLocaleDateString("en-GB")}
-                        </td>
-                        <td className={GlobalStyle.tableData}>
-                          {entry.customerrep}
-                        </td>
-                        <td className={GlobalStyle.tableData}>
-                          {entry.agreetosettle}
-                        </td>
-                        <td className={GlobalStyle.tableData}>
-                          {entry.remark}
-                        </td>
+          {/* Pagnation for the Mediation Borard table  */}
+          <div className={GlobalStyle.navButtonContainer}>
+            <button
+              onClick={() => handlePrevNext("prev")}
+              disabled={currentPage === 1}
+              className={`${GlobalStyle.navButton} ${currentPage === 1 ? "cursor-not-allowed" : ""
+                }`}
+            >
+              <FaArrowLeft />
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
 
-                      </tr>
-                    ))
-                  
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className= {GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                        No response history available.
+            <button
+              onClick={() => handlePrevNext("next")}
+              disabled={currentPage === totalPages}
+              className={`${GlobalStyle.navButton} ${currentPage === totalPages ? "cursor-not-allowed" : ""
+                }`}
+            >
+              <FaArrowRight />
+            </button>
+          </div>
+
+
+          {/* Payment Details Table */}
+          <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+            Payment Details
+          </h3>
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            <table className={GlobalStyle.table}>
+              <thead className={GlobalStyle.thead} >
+                <tr>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Date
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Paid Amount
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Settled Balance
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {currentRows1.length > 0 ? (
+                  currentRows1.map((entry, index) => (
+                    <tr
+                      key={index}
+                      className={
+                        index % 2 === 0
+                          ? GlobalStyle.tableRowEven
+                          : GlobalStyle.tableRowOdd
+                      }
+                    >
+                      <td className={GlobalStyle.tableData}>
+                        {entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
+                      </td>
+                      <td className={GlobalStyle.tableCurrency}>
+                        {entry.paid_amount}
+                      </td>
+                      <td className={GlobalStyle.tableCurrency}>
+                        {entry.settled_balance}
                       </td>
                     </tr>
-                  )}
-                  </tbody>
-              </table>
-            </div>
-
-            {/* Pagnation for the Mediation Borard table  */}
-             <div className={GlobalStyle.navButtonContainer}>
-              <button
-                onClick= {() => handlePrevNext ("prev")}
-                disabled={currentPage === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage === 1 ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowLeft />
-                </button>
-                <span>
-                Page {currentPage} of {totalPages}
-              </span>
-
-              <button
-                onClick={() => handlePrevNext("next")}
-                disabled={currentPage === totalPages}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage === totalPages ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowRight />
-              </button>
-            </div>
-
-
-            {/* Payment Details Table */}
-            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
-              Payment Details
-            </h3>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead} >
+                  ))
+                ) : (
                   <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Paid Amount
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Settled Balance
-                    </th>
+                    <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No payment history available.
+                    </td>
                   </tr>
-                </thead>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                <tbody>
-                  {currentRows1.length > 0 ? (
-                    currentRows1.map((entry, index) => (
-                      <tr
-                        key={index}
-                        className={
-                          index % 2 === 0
-                            ? GlobalStyle.tableRowEven
-                            : GlobalStyle.tableRowOdd
-                        }
-                      >
-                        <td className={GlobalStyle.tableData}>
-                          {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
-                        </td>
-                        <td className={GlobalStyle.tableCurrency}>
-                          {entry.paid_amount}
-                        </td>
-                        <td className={GlobalStyle.tableCurrency}>
-                          {entry.settled_balance}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                        No payment history available.
+          {/* Pagnation for the Payment table  */}
+
+          <div className={GlobalStyle.navButtonContainer}>
+            <button
+
+              onClick={() => handlePrevNext1("prev")}
+              disabled={currentPage1 === 1}
+              className={`${GlobalStyle.navButton} ${currentPage1 === 1 ? "cursor-not-allowed" : ""
+                }`}
+            >
+              <FaArrowLeft />
+            </button>
+            <span>
+              Page {currentPage1} of {totalPages1}
+            </span>
+            <button
+
+              onClick={() => handlePrevNext1("next")}
+              disabled={currentPage1 === totalPages1}
+              className={`${GlobalStyle.navButton} ${currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
+                }`}
+            >
+              <FaArrowRight />
+            </button>
+          </div>
+
+          {/* Requested Additional Details Table */}
+          <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
+            Requested Additional Details
+          </h3>
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            <table className={GlobalStyle.table}>
+              <thead className={GlobalStyle.thead} >
+                <tr>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Date
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Request
+                  </th>
+                  <th scope="col" className={GlobalStyle.tableHeader}>
+                    Remarks
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {currentRows2.length > 0 ? (
+                  currentRows2.map((entry, index) => (
+                    <tr
+                      key={index}
+                      className={
+                        index % 2 === 0
+                          ? GlobalStyle.tableRowEven
+                          : GlobalStyle.tableRowOdd
+                      }
+                    >
+                      <td className={GlobalStyle.tableData}>
+                        {entry.createdDtm
+                          ? new Date(entry.createdDtm).toLocaleDateString("en-GB")
+                          : ""}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.field_reason}
+                      </td>
+                      <td className={GlobalStyle.tableData}>
+                        {entry.remark}
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagnation for the Payment table  */}
-
-            <div className={GlobalStyle.navButtonContainer}>
-              <button
-
-                onClick= {() => handlePrevNext1 ("prev")}
-                disabled={currentPage1 === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage1 === 1 ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowLeft />
-                </button>
-                <span>
-                Page {currentPage1} of {totalPages1}
-              </span>
-              <button
-
-                onClick={() => handlePrevNext1("next")}
-                disabled={currentPage1 === totalPages1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage1 === totalPages1 ? "cursor-not-allowed" : ""
-                }`}
-              >
-                <FaArrowRight />
-              </button>
-            </div>
-
-            {/* Requested Additional Details Table */}
-            <h3 className={`${GlobalStyle.headingMedium} mt-8 mb-4`}>
-              Requested Additional Details
-            </h3>
-            <div className={GlobalStyle.tableContainer}>
-              <table className={GlobalStyle.table}>
-                <thead className={GlobalStyle.thead} >
+                  ))
+                ) : (
                   <tr>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Date
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Request
-                    </th>
-                    <th scope="col" className={GlobalStyle.tableHeader}>
-                      Remarks
-                    </th>
+                    <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No requested additional details available.
+                    </td>
                   </tr>
-                </thead>
-                
-                <tbody>
-                  {currentRows2.length > 0 ? (
-                    currentRows2.map((entry, index) => (
-                      <tr
-                        key={index}
-                        className={
-                          index % 2 === 0
-                            ? GlobalStyle.tableRowEven
-                            : GlobalStyle.tableRowOdd
-                        }
-                      >
-                        <td className={GlobalStyle.tableData}>
-                          {new Date(entry.createdDtm).toLocaleDateString("en-GB")}
-                        </td>
-                        <td className={GlobalStyle.tableData}>
-                          {entry.field_reason}
-                        </td>
-                        <td className={GlobalStyle.tableData}>
-                          {entry.remark}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                        No requested additional details available.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagnation for the Requested Additional Details table  */}
-            <div className={GlobalStyle.navButtonContainer}>
-              <button
-                onClick={() => handlePrevNext2("prev")}
-                disabled={currentPage2 === 1}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage2 === 1 ? "cursor-not-allowed" : ""
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagnation for the Requested Additional Details table  */}
+          <div className={GlobalStyle.navButtonContainer}>
+            <button
+              onClick={() => handlePrevNext2("prev")}
+              disabled={currentPage2 === 1}
+              className={`${GlobalStyle.navButton} ${currentPage2 === 1 ? "cursor-not-allowed" : ""
                 }`}
-              >
-                <FaArrowLeft />
-                </button>
-                <span>
-                Page {currentPage2} of {totalPages2}
-              </span>
-              <button
-                onClick={() => handlePrevNext2("next")}
-                disabled={currentPage2 === totalPages2}
-                className={`${GlobalStyle.navButton} ${
-                  currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
+            >
+              <FaArrowLeft />
+            </button>
+            <span>
+              Page {currentPage2} of {totalPages2}
+            </span>
+            <button
+              onClick={() => handlePrevNext2("next")}
+              disabled={currentPage2 === totalPages2}
+              className={`${GlobalStyle.navButton} ${currentPage2 === totalPages2 ? "cursor-not-allowed" : ""
                 }`}
-              >
-                <FaArrowRight />
-              </button>
-            </div>
+            >
+              <FaArrowRight />
+            </button>
+          </div>
 
           {/* </div> */}
         </div>
@@ -1566,16 +1670,16 @@ const MediationBoardResponse = () => {
       )} */}
 
       <div className="mt-4" style={{ cursor: 'pointer' }}>
-          {/* <img
+        {/* <img
             src={back}
             alt="Back"
             title="Back"
             style={{ width: "50px", height: "auto" }}
           /> */}
-           <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
-         <FaArrowLeft className="mr-2" />
+        <button className={GlobalStyle.buttonPrimary} onClick={handleBack}>
+          <FaArrowLeft className="mr-2" />
         </button>
-        </div>
+      </div>
     </div>
   );
 

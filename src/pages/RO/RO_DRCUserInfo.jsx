@@ -6,24 +6,30 @@ import { List_RO_Info_Own_By_RO_Id } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 import gmailIcon from "../../assets/images/google.png";
 import editIcon from "../../assets/images/edit-info.svg";
+import tickIcon from "../../assets/images/Tick.jpeg";
+import crossIcon from "../../assets/images/Cross.png";
 
 export default function RO_DRCUserInfo() {
   const location = useLocation();
-  const { itemType, itemData } = location.state || {};
+  const { itemType, itemData = {} } = location.state || {};
   const [activeUserType, setActiveUserType] = useState("");
+  const [activeUserRole, setActiveUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [userData, setUserData] = useState(null);
 
   const navigate = useNavigate();
-
   // Check if the user is terminated
-  const isTerminated = itemData?.drcUser_status === "Terminate" || itemData?.status === "Terminate";
+  const isTerminated = userData?.drcUser_status === "Terminate" || userData?.status === "Terminate";
 
   useEffect(() => {
     if (itemType) {
       setActiveUserType(itemType);
+      // if you already have the role on itemData, initialize it here
+      if (itemType === "drcUser" && itemData?.user_role) {
+        setActiveUserRole(itemData.user_role);
+      }
     }
   }, [itemType]);
 
@@ -43,21 +49,35 @@ export default function RO_DRCUserInfo() {
         if (!itemData.ro_id) throw new Error("Missing ro_id");
         payload = { ro_id: itemData.ro_id };
       } else if (activeUserType === "drcUser") {
-        if (!itemData.drcUser_id) throw new Error("Missing drcUser_id");
-        payload = { drcUser_id: itemData.drcUser_id };
+        if (!itemData.drc_officer_id) throw new Error("Missing drc_officer_id");
+        payload = { drc_officer_id: itemData.drc_officer_id };
       }
+
+      console.log("Sending payload:", payload); // Debug log
 
       setIsLoading(true);
       const response = await List_RO_Info_Own_By_RO_Id(payload);
 
+      console.log("API Response:", response); // Debug log
+
       setIsLoading(false);
 
-      if (response && response.data) {
-        setUserData(response.data);
+      // Updated response handling to match your backend structure
+      if (response && response.status === "success" && response.data) {
+        const data = response.data;
+        setUserData(data);
+        
+        // Set the user role from the API response
+        if (data.user_role) {
+          setActiveUserRole(data.user_role);
+        }
+        
+        console.log("User data set:", data); // Debug log
       } else {
+        console.log("No data in response or unsuccessful response"); // Debug log
         Swal.fire({
           title: "No Results",
-          text: "No matching data found.",
+          text: response?.message || "No matching data found.",
           icon: "warning",
         });
         setUserData(null);
@@ -76,6 +96,7 @@ export default function RO_DRCUserInfo() {
 
   useEffect(() => {
     if (activeUserType && itemData) {
+      console.log("Fetching data with:", { activeUserType, itemData }); // Debug log
       fetchData();
     }
   }, [activeUserType, itemData]);
@@ -90,6 +111,11 @@ export default function RO_DRCUserInfo() {
 
   const handleEnd = () => {
     if (isTerminated) {
+      Swal.fire({
+        title: 'Action Not Allowed',
+        text: 'Cannot perform this action on a terminated user.',
+        icon: 'warning',
+      });
       return; // Prevent action for terminated users
     }
     if (!userData || !activeUserType) {
@@ -101,7 +127,7 @@ export default function RO_DRCUserInfo() {
     } else {
       const userDataToPass = {
         ...userData,
-        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drcUser_id: itemData.drcUser_id }),
+        ...(activeUserType === 'RO' ? { ro_id: itemData.ro_id } : { drc_officer_id: itemData.drc_officer_id }),
       };
 
       navigate('/ro/ro-drc-user-info-end', { state: { userData: userDataToPass, activeUserType } });
@@ -110,6 +136,11 @@ export default function RO_DRCUserInfo() {
 
   const handleEdit = () => {
     if (isTerminated) {
+      Swal.fire({
+        title: 'Action Not Allowed',
+        text: 'Cannot edit a terminated user.',
+        icon: 'warning',
+      });
       return; // Prevent action for terminated users
     }
     if (!userData || !activeUserType || !itemData) {
@@ -125,7 +156,7 @@ export default function RO_DRCUserInfo() {
       itemType: activeUserType,
       itemData: {
         ro_id: activeUserType === 'RO' ? itemData.ro_id : undefined,
-        drcUser_id: activeUserType === 'drcUser' ? itemData.drcUser_id : undefined,
+        drc_officer_id: activeUserType === 'drcUser' ? itemData.drc_officer_id : undefined,
       },
     };
 
@@ -133,6 +164,26 @@ export default function RO_DRCUserInfo() {
 
     navigate('/ro/ro-drc-user-info-edit', { state: { dataToPass } });
   };
+
+  // Function to get user role display text
+  const getUserRoleDisplayText = (role) => {
+    const roleMapping = {
+      'DRC Coordinator': 'DRC Coordinator',
+      'call center': 'Call Center',
+      'user staff': 'User Staff'
+    };
+    return roleMapping[role] || role || 'N/A';
+  };
+
+  // Debug render
+  console.log("Render state:", { 
+    isLoading, 
+    userData, 
+    activeUserType, 
+    activeUserRole, 
+    isTerminated,
+    itemData 
+  });
 
   if (isLoading) {
     return (
@@ -145,7 +196,11 @@ export default function RO_DRCUserInfo() {
   if (!userData) {
     return (
       <div className="flex justify-center items-center h-64 text-gray-500">
-        No user data available.
+        <div className="text-center">
+          <p>No user data available.</p>
+          <p className="text-sm mt-2">Active User Type: {activeUserType || 'None'}</p>
+          <p className="text-sm">Item Data: {JSON.stringify(itemData)}</p>
+        </div>
       </div>
     );
   }
@@ -153,8 +208,12 @@ export default function RO_DRCUserInfo() {
   return (
     <div className={GlobalStyle.fontPoppins}>
       <h2 className={`${GlobalStyle.headingLarge} text-xl sm:text-2xl lg:text-3xl mt-8`}>
-        {activeUserType === "drcUser" ? "DRC User" : "Recovery Officer"}
+        {activeUserType === "drcUser" 
+          ? getUserRoleDisplayText(activeUserRole) 
+          : "Recovery Officer"}
       </h2>
+      
+      
       <h2 className={`${GlobalStyle.headingMedium} pl-4 sm:pl-6 md:pl-10 text-lg sm:text-xl`}>
         DRC Name : {userData?.drc_name || 'N/A'}
       </h2>
@@ -164,7 +223,7 @@ export default function RO_DRCUserInfo() {
           <img
             src={editIcon}
             alt="Edit"
-            title="Edit"
+            title={isTerminated ? "Cannot edit terminated user" : "Edit"}
             className={`w-5 h-5 sm:w-6 sm:h-6 absolute top-2 right-2 ${isTerminated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-110 transition-transform'}`}
             onClick={handleEdit}
           />
@@ -176,6 +235,29 @@ export default function RO_DRCUserInfo() {
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.added_date || 'N/A'}</div>
               </div>
+
+              <div className="table-row">
+                <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">User Type</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{
+                activeUserType === "RO" ? "Recovery Officer" : activeUserType === "drcUser" ? "DRC User" : "N/A"
+                }</div>
+              </div>
+
+              {activeUserType === "drcUser" && (
+                <div className="table-row">
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    User Role
+                  </div>
+                  <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">
+                    :
+                  </div>
+                  <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">
+                    {getUserRoleDisplayText(activeUserRole)}
+                  </div>
+                </div>
+              )}
+
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
@@ -198,9 +280,15 @@ export default function RO_DRCUserInfo() {
               </div>
 
               <div className="table-row">
-                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No</div>
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No 1</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no || 'N/A'}</div>
+              </div>
+
+              <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Contact No 2</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.contact_no_two }</div>
               </div>
 
               <div className="table-row">
@@ -211,11 +299,11 @@ export default function RO_DRCUserInfo() {
             </div>
           </div>
 
-          {activeUserType === "RO" && userData?.rtom_areas && (
+          {activeUserType === "RO" && userData?.rtom_areas && userData.rtom_areas.length > 0 && (
             <>
               <div className="table w-full mt-4">
                 <div className="table-row">
-                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">RTOM Areas :</div>
+                  <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">Billing Center Areas :</div>
                   <div className="table-cell px-2 sm:px-4 py-2" />
                 </div>
               </div>
@@ -224,44 +312,30 @@ export default function RO_DRCUserInfo() {
                 <table className={`${GlobalStyle.table} table-auto w-full`} style={{ fontSize: '0.875rem' }}>
                   <thead className={GlobalStyle.thead}>
                     <tr>
-                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>RTOM Area</th>
+                      <th className={`${GlobalStyle.tableHeader} min-w-[120px]`}>Billing Center Area</th>
                       <th className={`${GlobalStyle.tableHeader} min-w-[100px]`}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {userData.rtom_areas.length > 0 ? (
-                      userData.rtom_areas.map((area, index) => (
-                        <tr
-                          key={index}
-                          className={`${
-                            index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
-                          } border-b`}
-                        >
-                          <td className={`${GlobalStyle.tableData} text-center`}>
-                            {area.name}
-                          </td>
-                          <td className={`${GlobalStyle.tableData} text-center`}>
-                            <div className="flex items-center justify-center gap-2">
-                              <div
-                                className={`inline-block w-8 h-4 sm:w-11 sm:h-6 rounded-full transition-colors ${area.status ? "bg-green-500" : "bg-gray-400"} relative`}
-                              >
-                                <div
-                                  className={`w-3 h-3 sm:w-5 sm:h-5 rounded-full bg-white absolute top-[2px] transition-all ${area.status ? "left-[18px] sm:left-[26px]" : "left-[2px]"}`}
-                                />
-                              </div>
-                              <span className={`text-xs sm:text-sm font-semibold ${area.status ? "text-green-600" : "text-gray-500"}`}>
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={2} className="text-center py-4 text-sm">
-                          No RTOM areas available
+                    {userData.rtom_areas.map((area, index) => (
+                      <tr
+                        key={index}
+                        className={`${
+                          index % 2 === 0 ? "bg-white bg-opacity-75" : "bg-gray-50 bg-opacity-50"
+                        } border-b`}
+                      >
+                        <td className={`${GlobalStyle.tableData} text-center`}>
+                          {area.name}
+                        </td>
+                        <td className={`${GlobalStyle.tableData} text-center`}>
+                          <img
+                            src={area.status === "Active" ? tickIcon : crossIcon}
+                            alt={area.status === "Active" ? "Active" : "Inactive"}
+                            className="w-6 h-6 mx-auto"
+                          />
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -270,19 +344,21 @@ export default function RO_DRCUserInfo() {
         </div>
       </div>
 
-      <div className="flex justify-end mt-6 px-4">
+      <div className="flex justify-between items-center mt-6 mb-6 px-4">
+        <button 
+          className={GlobalStyle.buttonPrimary} 
+          onClick={() => setShowPopup(true)}
+        >
+          Log History
+        </button>
+
         <button 
           className={`${GlobalStyle.buttonPrimary} ${isTerminated ? 'opacity-50 cursor-not-allowed' : ''}`} 
           onClick={handleEnd}
           disabled={isTerminated}
+          title={isTerminated ? "Cannot end terminated user" : "End"}
         >
           End
-        </button>
-      </div>
-
-      <div className="flex justify-start mt-6 mb-6 px-4">
-        <button className={GlobalStyle.buttonPrimary} onClick={() => setShowPopup(true)}>
-          Log History
         </button>
       </div>
 
@@ -306,6 +382,7 @@ export default function RO_DRCUserInfo() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={GlobalStyle.inputSearch}
+                  placeholder="Search log history..."
                 />
                 <FaSearch className={GlobalStyle.searchBarIcon} />
               </div>
