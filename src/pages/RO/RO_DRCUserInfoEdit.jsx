@@ -640,6 +640,8 @@ export default function RO_DRCUserDetailsEdit() {
   const [contactNoError, setContactNoError] = useState('');
   const [contactNoTwo, setContactNoTwo] = useState('');
   const [contactNoErrorTwo, setContactNoErrorTwo] = useState('');
+  const [messageNumber, setMessageNumber] = useState('');
+  const [messageNumberError, setMessageNumberError] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
@@ -656,6 +658,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [initialUserNic, setInitialUserNic] = useState('');
   const [initialContactNo, setInitialContactNo] = useState('');
   const [initialContactNoTwo, setInitialContactNoTwo] = useState('');
+  const [initialMessageNumber, setInitialMessageNumber] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
   const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
@@ -827,6 +830,9 @@ export default function RO_DRCUserDetailsEdit() {
           setEmail(response.data.email || '');
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
+          // added the message number
+          setMessageNumber(response.data.message_number);
+          setInitialMessageNumber(response.data.message_number || '');
 
           // Enhanced user creation date handling and 24-hour restriction check
           const createdAt = response.data.createdAt || response.data.created_at || response.data.added_date;
@@ -1004,6 +1010,22 @@ export default function RO_DRCUserDetailsEdit() {
     }
   };
 
+  const handleMessageNumberAdd = (value) => {
+    const cleaned = value.replace(/[^+\d]/g, '');
+    const digitsOnly = cleaned.replace(/\D/g, '');
+
+    if (cleaned === '') {
+      // Allow empty value since it's optional
+      setMessageNumber('');
+      setMessageNumberError('');
+    } else if (digitsOnly.length > 10) {                                                                              
+      setMessageNumberError('Contact number cannot exceed 10 digits.');
+    } else {
+      setMessageNumberError(digitsOnly.length > 0 && digitsOnly.length < 10 ? 'Contact number must be 10 digits.' : '');
+      setMessageNumber(cleaned);
+    }
+  };
+
   const handleEmailChange = (value) => {
     setEmail(value);
     if (!value) {
@@ -1060,6 +1082,16 @@ export default function RO_DRCUserDetailsEdit() {
       setContactNoErrorTwo('');
     }
 
+    // The Message number is optional - only validate if it's provided
+    if (messageNumber && !/^\+?\d{9,10}$/.test(messageNumber)) {
+      setMessageNumberError('Please enter a valid contact number (e.g., +94771234567).'); 
+      funtion
+      isValid = false;
+    } else if (!messageNumber) {
+      // Clear error if field is empty (since it's optional)
+      setMessageNumberError('');
+    }
+
     // Validate remark
     if (!remark.trim()) {
       Swal.fire({
@@ -1080,6 +1112,7 @@ export default function RO_DRCUserDetailsEdit() {
       (canEditNic && userNic !== initialUserNic) ||
       contactNo !== initialContactNo ||
       contactNoTwo !== initialContactNoTwo ||
+      messageNumber !== initialMessageNumber ||
       email !== initialEmail ||
       drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
@@ -1182,6 +1215,7 @@ const handleSave = async () => {
       login_email: email,
       login_contact_no: contactNo,
       login_contact_no_two: contactNoTwo || '', // Always include, even if empty
+      login_message_number: messageNumber || '', // Include even if empty
       drcUser_status: drcUserStatus,
       create_by: create_by,
       remark: remark || 'Updated user details',
@@ -1573,6 +1607,31 @@ const handleSave = async () => {
                 )}
               </div>
               </div>
+
+              {/* Message contact number */}
+
+              <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  Receive Message Number <span className="text-gray-500 font-normal">(Optional)</span>
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base font-medium text-gray-700">{initialMessageNumber || 'Set Number'}</span>
+                  <input
+                    type="text"
+                    value={messageNumber}
+                    onChange={(e) => handleMessageNumberAdd(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${messageNumberError ? 'border-red-500' : ''}`}
+                    placeholder="Number to receive messages"
+                  />
+                </div>
+                {messageNumberError && (
+                  <p className="text-red-500 text-xs mt-1">{messageNumberError}</p> 
+                )}
+              </div>
+              </div>
+
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
                   Email <span className="text-red-500">*</span>
