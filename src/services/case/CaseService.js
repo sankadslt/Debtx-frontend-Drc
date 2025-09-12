@@ -275,13 +275,22 @@ export const fetchAssignedRoCaseLogs = async (payload) => {
 
 export const ListALLMediationCasesownnedbyDRCRO = async (payload) => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     if (!payload.drc_id && !payload.ro_id) {
       throw new Error("DRC ID or RO ID is required.");
     }
 
     const result = await axios.post(
       `${URL}/List_All_DRC_Mediation_Board_Cases`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (result.data.status === "error") {
@@ -359,6 +368,9 @@ export const getCaseDetailsbyMediationBoard = async (
   Ro_id
 ) => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     if (!Case_id || !Drc_id) {
       throw new Error("Case ID and DRC ID are required.");
     }
@@ -375,7 +387,14 @@ export const getCaseDetailsbyMediationBoard = async (
       case_id: Case_id,
       drc_id: Drc_id,
       ro_id: Ro_id,
-    });
+    },
+ {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+  );
 
     if (response.data.status === "error") {
       throw new Error(response.data.message);
@@ -439,7 +458,17 @@ export const getCaseDetailsbyMediationBoard = async (
 
 export const ListActiveMediationResponse = async () => {
   try {
-    const response = await axios.get(`${URL}/List_Active_Mediation_Response`);
+
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.get(`${URL}/List_Active_Mediation_Response`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (response.data.status === "error") {
       throw new Error(response.data.message);
@@ -532,13 +561,22 @@ export const updateLastRoDetails = async (case_id, drc_id, remark) => {
 
 export const listDRCAllCases = async (payload) => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     if (!payload.drc_id && !payload.ro_id) {
       throw new Error("DRC ID or RO ID is required.");
     }
 
     const response = await axios.post(
       `${URL}/List_All_DRC_Negotiation_Cases`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "error") {
@@ -572,11 +610,21 @@ export const listDRCAllCases = async (payload) => {
 // Get Case Details by Case ID
 export const drcCaseDetails = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken");
+
     if (!payload.drc_id || !payload.case_id) {
       throw new Error("DRC ID and Case ID are required.");
     }
 
-    const response = await axios.post(`${URL}/Case_Details_for_DRC`, payload);
+    const response = await axios.post(`${URL}/Case_Details_for_DRC`, 
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     // console.log("Response from handler: ", response.data);
 
     if (response.data.status === "error") {
@@ -599,6 +647,8 @@ export const drcCaseDetails = async (payload) => {
 // Add Negotiation Case
 export const addNegotiationCase = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken");
+
     console.log("this is the service one", payload);
     // if (!payload.case_id || !payload.reason || !payload.request) {
     //   throw new Error("Case ID, reason, and request are required.");
@@ -622,7 +672,13 @@ export const addNegotiationCase = async (payload) => {
       // field_reason: formData.reason,
       // field_reason_remark: formData.nego_remark || null,
       // created_by: formData.created_by || "null",
-    payload
+    payload,
+    {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "error") {
@@ -641,8 +697,17 @@ export const addNegotiationCase = async (payload) => {
 // Fetch active negotiations
 export const fetchActiveNegotiations = async () => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     const response = await axios.post(
-      `${URL}/list_Active_Customer_Negotiations`
+      `${URL}/list_Active_Customer_Negotiations`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     const data = response.data.data;
 
@@ -694,9 +759,19 @@ export const getActiveRORequestsforNegotiationandMediation = async (
   request_mode
 ) => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     const response = await axios.post(`${URL}/List_Active_RO_Requests`, {
       request_mode,
-    });
+    },
+     {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     const data = response.data.data;
 
     // Format the response data
@@ -719,6 +794,7 @@ export const getActiveRORequestsforNegotiationandMediation = async (
 // Get Case Details by Case ID
 export const caseDetailsforDRC = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken");
     // Validate inputs
     if (!payload.case_id || !payload.drc_id) {
       throw new Error("Both Case ID and DRC ID are required.");
@@ -729,7 +805,14 @@ export const caseDetailsforDRC = async (payload) => {
       case_id: payload.case_id,
       drc_id: payload.drc_id,
       ro_id: payload.ro_id,
-    });
+    },
+    {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     const data = caseData.data.data;
     // Check if the response indicates an error
@@ -767,6 +850,7 @@ export const caseDetailsforDRC = async (payload) => {
 // Update Customer Profile
 export const updateCustomerContacts = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken");
     // Validate required fields
     // if (!payload.case_id) {
     //   throw new Error("Case ID is required");
@@ -790,7 +874,13 @@ export const updateCustomerContacts = async (payload) => {
     // Send a POST request to update customer contacts
     const updatedData = await axios.patch(
       `${URL}/Update_Customer_Contacts`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     console.log("Update Response:", updatedData);
 
@@ -807,11 +897,18 @@ export const updateCustomerContacts = async (payload) => {
 // List Active RO Requests Mediation Board
 export const ListActiveRORequestsMediation = async () => {
   try {
+    const token = localStorage.getItem("accessToken");
     // Specify that we only want requests with request_mode = "Mediation Board"
     const response = await axios.post(
       `${URL}/List_Active_RO_Requests_Mediation`,
       {
         request_mode: "Mediation Board",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -862,7 +959,17 @@ export const addCpeNegotiation = async (
 
 export const Mediation_Board = async (payload) => {
   try {
-    const response = await axios.post(`${URL}/Mediation_Board`, payload);
+
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.post(`${URL}/Mediation_Board`, payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error(
@@ -875,7 +982,18 @@ export const Mediation_Board = async (payload) => {
 
 export const RO_CPE_Collection = async (payload) => {
   try {
-    const response = await axios.post(`${URL}/RO_CPE_Collection`, payload);
+
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.post(`${URL}/RO_CPE_Collection`, 
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error(
@@ -892,12 +1010,21 @@ export const List_Settlement_Details_Owen_By_SettlementID_and_DRCID = async (
   Ro_id
 ) => {
   try {
+
+    const token = localStorage.getItem("accessToken");
+
     const response = await axios.post(
       `${URL}/List_Settlement_Details_Owen_By_SettlementID_and_DRCID`,
       {
         case_id: Case_id,
         drc_id: Drc_id,
         ro_id: Ro_id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -913,9 +1040,17 @@ export const List_Settlement_Details_Owen_By_SettlementID_and_DRCID = async (
 
 export const Retrive_active_settlement_plan = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken"); 
+
     const response = await axios.post(
       `${URL}/Retrive_active_settlement_plan`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     return response.data;
