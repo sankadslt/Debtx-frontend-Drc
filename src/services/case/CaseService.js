@@ -76,6 +76,8 @@ export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
       };
     });
 
