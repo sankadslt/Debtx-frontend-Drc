@@ -370,7 +370,9 @@ const DistributeTORO = () => {
       };
 
       setLoading(true);
+     // console.log("Payload for filtering:", payload);
       const response = await List_Handling_Cases_By_DRC_Without_RO(payload);
+      console.log("API Response:", response);
 
       if (Array.isArray(response)) {
         // setFilteredData(response);
@@ -972,6 +974,7 @@ const DistributeTORO = () => {
               <th className={GlobalStyle.tableHeader}>Billing Center</th>
               {/* <th className={GlobalStyle.tableHeader}>RO</th> */}
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
+              <th className={GlobalStyle.tableHeader}>Product Billing Center</th>
             </tr>
           </thead>
           <tbody>
@@ -1001,6 +1004,24 @@ const DistributeTORO = () => {
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
                     ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
                     : ""}  </td>
+                  <td className={GlobalStyle.tableData}
+                   data-tooltip-id={`tooltip-${index}`}
+                  > 
+                  {item.ref_product_rtom_count || ""} 
+                  
+                  </td>
+
+                 <Tooltip id={`tooltip-${index}`} place="bottom" effect="solid">
+                  {item.ref_product_rtom_list && item.ref_product_rtom_list.length > 0 ? (
+                    <ul className="list-disc pl-4">
+                      {item.ref_product_rtom_list.slice(0, 5).map((ref, i) => (
+                        <li key={i}>{ref}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span>No items</span>
+                  )}
+                </Tooltip>
                 </tr>
               ))
             ) : (
