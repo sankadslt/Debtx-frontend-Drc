@@ -36,6 +36,7 @@ import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new
 import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
 import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
 import info from "../../assets/images/info.svg"
+import nego from "../../assets/images/negotiation.png"
 
 
 // Status icon mapping
@@ -934,18 +935,30 @@ export default function ROsAssignedcaselog() {
                   </div>
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
-                      <button
-                        className={`${GlobalStyle.buttonPrimary}  `}
-                        style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
-                        onClick={() => handleonnegotiation(row.case_id, row.action_type)}
-                      >
-                        Negotiation
+                      // <button
+                      //   className={`${GlobalStyle.buttonPrimary}  `}
+                      //   style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
+                      //   onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                      // >
+                      //   Negotiation
+                      // </button>
+                      <button>
+                        <img
+                          src={nego}
+                          alt="Negotiation"
+                          data-tooltip-id="negotiation-tooltip"
+                          className={`w-6 h-6 cursor-pointer display: inline-block`}
+                          onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                          style={{ width: "40px", height: "30px" }}
+                        />
+                        <Tooltip id="negotiation-tooltip" className="tooltip" effect="solid" place="bottom" content="Negotiation" />
                       </button>
                     )}
                   </div>
 
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      <button>
                      <img
                       src={info}
                       alt="View"
@@ -957,12 +970,12 @@ export default function ROsAssignedcaselog() {
                         cursor: "pointer",
                         marginLeft: "5px",
                       }}
-
-                      
                     />
+                    <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View Settlement Details" />
+                     </button>
                     
                     )}
-                    <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View Settlement Plan" />
+                   
                   </div>
                 </td>
               </tr>
