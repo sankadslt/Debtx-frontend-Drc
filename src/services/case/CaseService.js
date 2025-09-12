@@ -7,13 +7,21 @@ const URL = `${BASE_URL}/case`;
 // List Handling Cases By DRC
 export const listHandlingCasesByDRC = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     if (!payload.drc_id) {
       throw new Error("DRC ID is required.");
     }
 
     const response = await axios.post(
       `${URL}/List_Handling_Cases_By_DRC`,
-      payload
+      payload,
+          {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "error") {
@@ -49,13 +57,21 @@ export const listHandlingCasesByDRC = async (payload) => {
 
 export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     if (!payload.drc_id) {
       throw new Error("DRC ID is required.");
     }
 
     const response = await axios.post(
       `${URL}/List_Handling_Cases_By_DRC_Without_RO`,
-      payload
+      payload,
+          {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "error") {
@@ -91,13 +107,21 @@ export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
 
 export const List_Handling_Cases_By_DRC_With_RO = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     if (!payload.drc_id) {
       throw new Error("DRC ID is required.");
     }
 
     const response = await axios.post(
       `${URL}/List_Handling_Cases_By_DRC_With_RO`,
-      payload
+      payload,
+          {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "error") {
@@ -134,12 +158,20 @@ export const List_Handling_Cases_By_DRC_With_RO = async (payload) => {
 // Assign Recovery Officer to Case
 export const assignROToCase = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     const response = await axios.patch(`${URL}/Assign_RO_To_Case`, {
       drc_id: payload.drcId,
       case_ids: payload.caseIds,
       ro_id: payload.roId,
       assigned_by: payload.assigned_by,
-    });
+    },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      });
     return response.data;
   } catch (error) {
     console.error(
@@ -191,7 +223,16 @@ export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
 // Fetch all arrears bands
 export const fetchAllArrearsBands = async () => {
   try {
-    const response = await axios.get(`${URL}/List_All_Arrears_Bands`);
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.get(`${URL}/List_All_Arrears_Bands`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     const data = response.data.data;
 
     // Exclude the _id key and return both the key-value pairs
@@ -417,13 +458,21 @@ export const ListActiveMediationResponse = async () => {
 
 export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     if (!payload.drc_id || !payload.case_id) {
       throw new Error("DRC ID and Case ID are required.");
     }
 
     const response = await axios.post(
       `${URL}/List_Behaviors_Of_Case_During_DRC`,
-      payload
+      payload,
+          {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     console.log("Response from handler: ", response.data);
 
@@ -445,6 +494,8 @@ export const fetchBehaviorsOfCaseDuringDRC = async (payload) => {
 
 export const updateLastRoDetails = async (case_id, drc_id, remark) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     // if (!case_id || !drc_id || !remark) {
     //   throw new Error("All Fields are required.")
     // }
@@ -459,7 +510,13 @@ export const updateLastRoDetails = async (case_id, drc_id, remark) => {
       case_id: case_id_int,
       drc_id: drc_id_int,
       remark: remark,
-    });
+    },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      });
 
     console.log("Response from handler: ", response.data);
 
