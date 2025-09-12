@@ -34,6 +34,8 @@ export const listHandlingCasesByDRC = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
       };
     });
 
