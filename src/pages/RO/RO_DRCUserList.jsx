@@ -1099,7 +1099,7 @@ export default function RO_DRCUserList() {
                         <button
                             className={GlobalStyle.buttonPrimary}
                             onClick={() =>
-                                navigate("/ro/ro-add-ro", { state: { from: "drcCoordination" } })
+                                navigate("/ro/ro-add-ro", { state: { from: "drc coordinator" } })
                             }
                         >
                             Add DRC - Coordinator
