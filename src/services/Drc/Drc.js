@@ -24,9 +24,17 @@ export const List_DRC_Details_By_DRC_ID = async (payload) => {
 
 export const List_Pre_Negotiation_By_Case_Id = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
+
     const response = await axios.post(
       `${URL}/List_Pre_Negotiation_By_Case_Id`,
-      payload
+      payload,
+      {eaders: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -40,7 +48,19 @@ export const List_Pre_Negotiation_By_Case_Id = async (payload) => {
 
 export const Create_Pre_Negotiation = async (payload) => {
   try {
-    const response = await axios.post(`${URL}/Create_Pre_Negotiation`, payload);
+// get token from localStorage
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.post(
+      `${URL}/Create_Pre_Negotiation`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     // return the response status
     return response.data.status;
@@ -55,7 +75,19 @@ export const Create_Pre_Negotiation = async (payload) => {
 
 export const List_Pre_Negotiation = async (payload) => {
   try {
-    const response = await axios.post(`${URL}/List_Pre_Negotiation_By_Case_Id_EXT_1`, payload);
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.post(
+      `${URL}/List_Pre_Negotiation_By_Case_Id_EXT_1`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error(

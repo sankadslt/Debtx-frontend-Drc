@@ -16,10 +16,11 @@ import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
-import { listDRCAllCases } from "../../services/case/CaseService";
+import { listDRCAllCases , Retrive_active_settlement_plan } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import Swal from 'sweetalert2';
+import ReactDOMServer from "react-dom/server";
 
 import { jwtDecode } from "jwt-decode";
 import { refreshAccessToken } from "../../services/auth/authService";
@@ -34,6 +35,9 @@ import Negotiation_Settle_Active from "../../assets/images/Negotiation_new/RO_Se
 import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new/RO_Settle_Open_Pending.png";
 import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
 import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
+import info from "../../assets/images/info.svg"
+import nego from "../../assets/images/negotiation.png"
+
 
 // Status icon mapping
 const STATUS_ICONS = {
@@ -123,6 +127,7 @@ export default function ROsAssignedcaselog() {
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
   const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true); // For infinite scroll
   const [maxCurrentPage, setMaxCurrentPage] = useState(0); // Track the maximum current page
+  const [viewdata, setviewdata] = useState([]);
 
   // Role-Based Buttons
   useEffect(() => {
@@ -607,9 +612,117 @@ export default function ROsAssignedcaselog() {
   }
 
 
+  const handleonview = (case_id) => { 
 
-  // Data filtering and pagination
-  const filteredData = cases.filter((row) =>
+    if (!case_id) {
+      Swal.fire({
+        title: "Error",
+        text: "No Case ID provided for viewing.",
+        icon: "error",
+        confirmButtonColor: "#d33"
+      });
+      return;
+    }
+
+   const apicall = async () => {
+    try {
+      const payload = {
+        case_id: case_id,
+        drc_id: userData.drc_id,
+        ro_id: userData.ro_id,
+      };
+
+      const response = await Retrive_active_settlement_plan(payload);
+
+      console.log("Settlement Plan response:", response);
+      const settlementPlan = response?.data?.settlement_plan || [];
+
+      if (settlementPlan.length === 0) {
+        Swal.fire({
+          title: "No Data",
+          text: "No settlement plan found for this case.",
+          icon: "info",
+           confirmButtonColor: "#f1c40f",
+        });
+        return;
+      }
+
+      // React component for styled table
+      const TableComponent = (
+        <div
+          className={`${GlobalStyle.tableContainer} overflow-x-auto`}
+          style={{
+            maxHeight: "400px", // fixed height
+            overflowY: "auto", // scroll vertically
+          }}
+        >
+          <table className={GlobalStyle.table}>
+            <thead className={GlobalStyle.thead}>
+              <tr>
+                <th className={GlobalStyle.tableHeader}>Sequence </th>
+                <th className={GlobalStyle.tableHeader}>Installment Amount</th>
+                <th className={GlobalStyle.tableHeader}>Cumulative Amount</th>
+                <th className={GlobalStyle.tableHeader}>Plan Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {settlementPlan.map((plan, index) => (
+                <tr
+                  key={plan._id}
+                  className={`${
+                    index % 2 === 0
+                      ? "bg-white bg-opacity-75"
+                      : "bg-gray-50 bg-opacity-50"
+                  } border-b`}
+                >
+                  <td className={GlobalStyle.tableData}>{plan.installment_seq}</td>
+                  <td className={GlobalStyle.tableCurrency}>
+                    {plan.Installment_Settle_Amount}
+                  </td>
+                  <td className={GlobalStyle.tableCurrency}>
+                    {plan.cumulative_Settle_Amount}
+                  </td>
+                  <td className={GlobalStyle.tableData}>
+                    {new Date(plan.Plan_Date).toLocaleDateString("en-GB")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
+      // Convert React component to string for SweetAlert
+      const tableHTML = ReactDOMServer.renderToString(TableComponent);
+
+      Swal.fire({
+        title: "Settlement Plan",
+        html: tableHTML,
+        width: "80%",
+        showConfirmButton: false,  // remove "Close" button
+        showCloseButton: true, // enable X button
+        closeButtonHtml: '<span style="color:red; font-size:2rem; font-weight:bold;">&times;</span>',
+      
+      });
+    } catch (error) {
+      console.error("Error viewing case:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch case details. Please try again.";
+      Swal.fire({
+        title: "Error",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+    apicall();
+  }
+
+      const filteredData = cases.filter((row) =>
     Object.values(row)
       .join(" ")
       .toLowerCase()
@@ -822,14 +935,47 @@ export default function ROsAssignedcaselog() {
                   </div>
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
-                      <button
-                        className={`${GlobalStyle.buttonPrimary}  `}
-                        style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
-                        onClick={() => handleonnegotiation(row.case_id, row.action_type)}
-                      >
-                        Negotiation
+                      // <button
+                      //   className={`${GlobalStyle.buttonPrimary}  `}
+                      //   style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
+                      //   onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                      // >
+                      //   Negotiation
+                      // </button>
+                      <button>
+                        <img
+                          src={nego}
+                          alt="Negotiation"
+                          data-tooltip-id="negotiation-tooltip"
+                          className={`w-6 h-6 cursor-pointer display: inline-block`}
+                          onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                          style={{ width: "40px", height: "30px" }}
+                        />
+                        <Tooltip id="negotiation-tooltip" className="tooltip" effect="solid" place="bottom" content="Negotiation" />
                       </button>
                     )}
+                  </div>
+
+                  <div>
+                    {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      <button>
+                     <img
+                      src={info}
+                      alt="View"
+                      onClick={() => handleonview(row.case_id)}
+                      data-tooltip-id="view-tooltip"
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        cursor: "pointer",
+                        marginLeft: "5px",
+                      }}
+                    />
+                    <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View Settlement Details" />
+                     </button>
+                    
+                    )}
+                   
                   </div>
                 </td>
               </tr>
