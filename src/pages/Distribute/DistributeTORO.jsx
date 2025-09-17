@@ -728,11 +728,17 @@ useEffect(() => {
     (officer) => String(officer.ro_id) === String(selectedRO)
   );
 
+  // Find the full RTOM object by name
+  const selectedRTOMData = RTOMS.find(
+    (rtom) => String(rtom.rtom) === String(selectedRTOMS)
+  );
+
   const entry = Array.from(selectedRows).map((case_id) => ({
     case_id,  // ✅ add case_id
     rtom: selectedRTOMS,
     recovery_officer_id: selectedRO,
     recovery_officer_name: selectedROData?.ro_name || "",
+     product_bearer_ids: selectedRTOMData?.product_bearer_ids || [],
   }));
 
 
