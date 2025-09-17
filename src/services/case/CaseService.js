@@ -1066,3 +1066,20 @@ export const Retrive_active_settlement_plan = async (payload) => {
     throw error;
   }
 };
+
+export const Retrive_Rtom_list_owned_by_products = async (payload) => {
+  try {
+    const response = await axios.post(
+      `${URL}/Retrive_Rtom_list_owned_by_products`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error retrieving RTOM list owned by products:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+  
