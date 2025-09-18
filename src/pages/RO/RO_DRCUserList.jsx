@@ -711,7 +711,7 @@ export default function RO_DRCUserList() {
     const [drcTotalAPIPages, setDrcTotalAPIPages] = useState(1);
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
-    const [activeTab, setActiveTab] = useState("RO"); // Default to "RO" initially
+    const [activeTab, setActiveTab] = useState("RO"); // Default to "RO" initially  
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -834,28 +834,106 @@ export default function RO_DRCUserList() {
         }
     };
 
+    // changed the handleFilter function for the one below
+
+    // const handleFilter = async () => {
+    //     try {
+    //         if (!userData) return;
+
+    //         // const payload = {
+    //         //     drc_id: userData.drc_id,
+    //         //     drcUser_type: activeTab,
+    //         //     drcUser_status: getUserStatus(),
+    //         //     pages: getCurrentPage(),
+    //         // };
+
+    //         // const { type, role } = TAB_TO_API[activeTab];
+    //         //     const payload = {
+    //         //         drc_id: userData.drc_id,
+    //         //         drcUser_type: type,                 // 'ro' or 'drc_officer'
+    //         //         user_role: role,                    // required for drc_officer tabs
+    //         //         drcUser_status: getUserStatus(),
+    //         //         pages: getCurrentPage(),
+    //         // };
+
+    //         // console.log("Payload sent to API: ", payload);
+    //         // setIsLoading(true);
+
+    //         const tabConfig = TAB_TO_API[activeTab];
+    //         if (!tabConfig) {
+    //             console.error("Unknown tab:", activeTab);
+    //             Swal.fire({
+    //                 title: "Error",
+    //                 text: "Unknown tab selected. Please refresh.",
+    //                 icon: "error",
+    //             });
+    //               return;
+    //             }
+            
+    //             const { type, role } = tabConfig;
+
+    //             const payload = {
+    //               drc_id: userData.drc_id,
+    //               drcUser_type: type,      // 'ro' or 'drc_officer'
+    //               user_role: role,         // role only for 'drc_officer'
+    //               drcUser_status: getUserStatus(),
+    //               pages: getCurrentPage(),
+    //             };
+            
+    //         setIsLoading(true);
+    //         const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
+    //             if (error.response && error.response.status === 404) {
+    //                 if (activeTab === "RO") {
+    //                     setRoData([]);
+    //                 } else {
+    //                     setDrcData([]);
+    //                 }
+
+    //                 Swal.fire({
+    //                     title: "No Results",
+    //                     text: `No ${getUserStatus() ? getUserStatus().replace('_', ' ') + ' ' : ''}${activeTab} found.`,
+    //                     icon: "warning",
+    //                     confirmButtonText: "OK",
+    //                     confirmButtonColor: "#f1c40f"
+    //                 });
+
+    //                 return null;
+    //             } else {
+    //                 throw error;
+    //             }
+    //         });
+
+    //         console.log("Response from API:", response);
+
+    //         setIsLoading(false);
+
+    //         if (response && response.data) {
+    //             const list = response.data;
+    //             console.log("Valid data received:", list);
+
+    //             if (activeTab === "RO") {
+    //                 setRoData((prev) => [...prev, ...list]);
+    //                 setRoTotalPages(Math.ceil(response.total_records / rowsPerPage));
+    //                 setRoTotalAPIPages(response.total_records);
+    //             } else {
+    //                 setDrcData((prev) => [...prev, ...list]);
+    //                 setDrcTotalPages(Math.ceil(response.total_records / rowsPerPage));
+    //                 setDrcTotalAPIPages(response.total_records);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.error("Error filtering cases:", error);
+    //         Swal.fire({
+    //             title: "Error",
+    //             text: "Failed to fetch filtered data. Please try again.",
+    //             icon: "error"
+    //         });
+    //     }
+    // };
+
     const handleFilter = async () => {
         try {
             if (!userData) return;
-
-            // const payload = {
-            //     drc_id: userData.drc_id,
-            //     drcUser_type: activeTab,
-            //     drcUser_status: getUserStatus(),
-            //     pages: getCurrentPage(),
-            // };
-
-            // const { type, role } = TAB_TO_API[activeTab];
-            //     const payload = {
-            //         drc_id: userData.drc_id,
-            //         drcUser_type: type,                 // 'ro' or 'drc_officer'
-            //         user_role: role,                    // required for drc_officer tabs
-            //         drcUser_status: getUserStatus(),
-            //         pages: getCurrentPage(),
-            // };
-
-            // console.log("Payload sent to API: ", payload);
-            // setIsLoading(true);
 
             const tabConfig = TAB_TO_API[activeTab];
             if (!tabConfig) {
@@ -865,21 +943,24 @@ export default function RO_DRCUserList() {
                     text: "Unknown tab selected. Please refresh.",
                     icon: "error",
                 });
-                  return;
-                }
-            
-                const { type, role } = tabConfig;
+                return;
+            }
 
-                const payload = {
-                  drc_id: userData.drc_id,
-                  drcUser_type: type,      // 'ro' or 'drc_officer'
-                  user_role: role,         // role only for 'drc_officer'
-                  drcUser_status: getUserStatus(),
-                  pages: getCurrentPage(),
-                };
-            
+            const { type, role } = tabConfig;
+
+            const payload = {
+                drc_id: userData.drc_id,
+                drcUser_type: type,      // 'ro' or 'drc_officer'
+                user_role: role,         // role only for 'drc_officer'
+                drcUser_status: getUserStatus(),
+                pages: getCurrentPage(),
+            };
+
+            console.log("Payload sent to API for tab", activeTab, ":", payload);  // DEBUG: Check what’s sent
             setIsLoading(true);
+
             const response = await List_All_RO_and_DRCuser_Details_to_DRC(payload).catch((error) => {
+                console.error("API error:", error);  // DEBUG: Log errors
                 if (error.response && error.response.status === 404) {
                     if (activeTab === "RO") {
                         setRoData([]);
@@ -889,7 +970,7 @@ export default function RO_DRCUserList() {
 
                     Swal.fire({
                         title: "No Results",
-                        text: `No ${getUserStatus() ? getUserStatus().replace('_', ' ') + ' ' : ''}${activeTab} found.`,
+                        text: `No ${getUserStatus() ? getUserStatus().replace('_', ' ') + ' ' : ''}${TAB_LABELS[activeTab]} found.`,
                         icon: "warning",
                         confirmButtonText: "OK",
                         confirmButtonColor: "#f1c40f"
@@ -901,13 +982,13 @@ export default function RO_DRCUserList() {
                 }
             });
 
-            console.log("Response from API:", response);
+            console.log("Response from API for tab", activeTab, ":", response);  // DEBUG: Check what’s returned
 
             setIsLoading(false);
 
             if (response && response.data) {
                 const list = response.data;
-                console.log("Valid data received:", list);
+                console.log("Valid data received for tab", activeTab, ":", list);
 
                 if (activeTab === "RO") {
                     setRoData((prev) => [...prev, ...list]);
@@ -954,12 +1035,15 @@ export default function RO_DRCUserList() {
     };
 
     const handleClear = () => {
-        localStorage.setItem("activeTab", activeTab); // Persist current tab
-        window.location.reload(); // Refresh the page
+        localStorage.setItem("activeTab", activeTab); // Store current tab
+        localStorage.setItem("clearRefresh", "true"); // Set flag for Clear-triggered refresh
+        window.location.href = window.location.pathname; // Refresh without changing path
     };
-
+    
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+        setRoStatus("");         // Reset RO filter
+        setDrcUserStatus("");    // Reset DRC filter (affects all DRC tabs)
     };
 
     // useEffect(() => {
@@ -1003,6 +1087,19 @@ export default function RO_DRCUserList() {
             }
         }
     };
+
+    useEffect(() => {
+        const isClearRefresh = localStorage.getItem("clearRefresh");
+        if (isClearRefresh) {
+            const savedTab = localStorage.getItem("activeTab");
+            if (savedTab && TABS.includes(savedTab)) {
+                setActiveTab(savedTab);
+            }
+            localStorage.removeItem("clearRefresh"); // Clear the flag after use
+            localStorage.removeItem("activeTab"); // Optional: Clear saved tab if not needed further
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array for one-time execution on mount
 
     const getStatusIcon = (status) => {
         switch (status) {
