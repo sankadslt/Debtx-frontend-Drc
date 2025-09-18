@@ -149,9 +149,18 @@ export const getRTOMsByDRCID = async (drc_id) => {
 // RtomService.js
 export const getActiveRTOMsByDRCID = async (drc_id) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     const response = await axios.post(`${URL}/List_ALL_Active_RTOM_Ownned_By_DRC`, {
       drc_id: drc_id
-    });
+    },
+        {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+  );
 
     if (response.data?.status === "success" && response.data?.data) {
       // Transform the response to match the area field from the model
