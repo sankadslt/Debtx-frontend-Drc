@@ -672,7 +672,7 @@
 // After Responsive
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { List_All_RO_and_DRCuser_Details_to_DRC } from "../../services/Ro/RO.js";
@@ -711,9 +711,11 @@ export default function RO_DRCUserList() {
     const [drcTotalAPIPages, setDrcTotalAPIPages] = useState(1);
     const [isDrcFilterApplied, setIsDrcFilterApplied] = useState(false);
 
-    const [activeTab, setActiveTab] = useState(() => {
-        return localStorage.getItem("activeTab") || "RO";
-    });
+    const [activeTab, setActiveTab] = useState("RO"); // Default to "RO" initially
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -727,7 +729,7 @@ export default function RO_DRCUserList() {
     const drcPaginatedData = drcData.slice(drcStartIndex, drcEndIndex);
 
     const currentStatus = activeTab === "RO" ? roStatus : drcUserStatus;
-    const navigate = useNavigate();
+
 
     const TABS = ["RO", "drcCoordinator", "drcCallCenter", "drcStaff"];
 
@@ -817,6 +819,11 @@ export default function RO_DRCUserList() {
     const getUserStatus = () => (
         activeTab === "RO" ? roStatus : drcUserStatus
     );
+
+    // Handle sidebar navigation
+    const handleSidebarNavigate = () => {
+        navigate("/ro-drc-user-list", { state: { fromSidebar: true } });
+    };
 
 
     const getCurrentPage = () => {
@@ -947,27 +954,12 @@ export default function RO_DRCUserList() {
     };
 
     const handleClear = () => {
-        // if (activeTab === "RO") {
-        //     setRoData([]);
-        //     setRoCurrentPage(1);
-        //     setRoMaxPage(0);
-        //     setRoTotalPages(1);
-        //     setRoTotalAPIPages(1);
-        //     setRoStatus("");
-        // } else {
-        //     setDrcData([]);
-        //     setDrcCurrentPage(1);
-        //     setDrcMaxPage(0);
-        //     setDrcTotalPages(1);
-        //     setDrcTotalAPIPages(1);
-        //     setDrcUserStatus("");
-        // }
+        localStorage.setItem("activeTab", activeTab); // Persist current tab
+        window.location.reload(); // Refresh the page
+    };
 
-        // Store the current tab in localStorage
-        localStorage.setItem("activeTab", activeTab);
-
-        // Refresh the page
-        window.location.reload();
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
     };
 
     // useEffect(() => {
@@ -995,7 +987,6 @@ export default function RO_DRCUserList() {
         handleFilterButton();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, userData]);
-
 
     const handlePrevNext = (direction) => {
         if (activeTab === "RO") {
@@ -1191,13 +1182,13 @@ export default function RO_DRCUserList() {
             <div className="flex border-b mb-4 mt-4 overflow-x-auto">
                 {TABS.map((tab) => (
                     <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 whitespace-nowrap ${
-                        activeTab === tab ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
-                    }`}
+                        key={tab}
+                        onClick={() => handleTabChange(tab)}
+                        className={`px-4 py-2 whitespace-nowrap ${
+                            activeTab === tab ? "border-b-2 border-blue-500 font-bold" : "text-gray-500"
+                        }`}
                     >
-                    {TAB_LABELS[tab]} List
+                        {TAB_LABELS[tab]} List
                     </button>
                 ))}
             </div>

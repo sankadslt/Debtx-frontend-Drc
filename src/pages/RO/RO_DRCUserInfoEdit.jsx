@@ -640,7 +640,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [contactNoError, setContactNoError] = useState('');
   const [contactNoTwo, setContactNoTwo] = useState('');
   const [contactNoErrorTwo, setContactNoErrorTwo] = useState('');
-  const [messageNumber, setMessageNumber] = useState('');
+  const [messageNumber, setMessageNumber] = useState(itemData?.message_number || '');
   const [messageNumberError, setMessageNumberError] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -830,9 +830,10 @@ export default function RO_DRCUserDetailsEdit() {
           setEmail(response.data.email || '');
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
-          // added the message number
-          setMessageNumber(response.data.message_number);
-          setInitialMessageNumber(response.data.message_number || '');
+          // Set message number with fallbacks
+          const smsNumber = response.data.message_number || response.data.sms_number || response.data.contact_no || '';
+          setMessageNumber(smsNumber);
+          setInitialMessageNumber(smsNumber);
 
           // Enhanced user creation date handling and 24-hour restriction check
           const createdAt = response.data.createdAt || response.data.created_at || response.data.added_date;
@@ -1215,7 +1216,7 @@ const handleSave = async () => {
       login_email: email,
       login_contact_no: contactNo,
       login_contact_no_two: contactNoTwo || '', // Always include, even if empty
-      login_message_number: messageNumber || '', // Include even if empty
+      sms_number: messageNumber || '', // Include even if empty
       drcUser_status: drcUserStatus,
       create_by: create_by,
       remark: remark || 'Updated user details',
@@ -1612,7 +1613,7 @@ const handleSave = async () => {
 
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
-                  Receive Message Number <span className="text-gray-500 font-normal">(Optional)</span>
+                  SMS Number <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -1623,7 +1624,7 @@ const handleSave = async () => {
                     value={messageNumber}
                     onChange={(e) => handleMessageNumberAdd(e.target.value)}
                     className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${messageNumberError ? 'border-red-500' : ''}`}
-                    placeholder="Number to receive messages"
+                    placeholder="Enter SMS number"
                   />
                 </div>
                 {messageNumberError && (
