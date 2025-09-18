@@ -133,7 +133,19 @@ export const getActiveRODetailsByDrcID = async (drc_id) => {
 
 export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
     try {
-        const response = await axios.post(`${URL}/List_All_RO_and_DRCuser_Details_to_DRC`, payload);
+         const token = localStorage.getItem("accessToken"); 
+         console.log("Access Token from localStorag list:", token || "No token found");
+
+    const response = await axios.post(
+      `${URL}/List_All_RO_and_DRCuser_Details_to_DRC`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,  
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
         if (response.data.status === "error") {
             throw new Error(response.data.message);
@@ -148,7 +160,19 @@ export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
 
 export const List_RO_Info_Own_By_RO_Id = async (payload) => {
     try {
-        const response = await axios.post(`${URL}/List_RO_Info_Own_By_RO_Id`, payload);
+         const token = localStorage.getItem("accessToken");
+         console.log("Access Token from localStorage:", token || "No token found");
+
+         const response = await axios.post(
+      `${URL}/List_RO_Info_Own_By_RO_Id`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,  
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
         if (response.data.status === "error") {
             throw new Error(response.data.message);
