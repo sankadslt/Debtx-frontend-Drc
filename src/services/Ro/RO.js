@@ -165,7 +165,16 @@ export const List_RO_Info_Own_By_RO_Id = async (payload) => {
 // Terminate Recovery Officer
 export const terminateRO = async (terminationDetails) => {
     try {
-        const response = await axios.patch(`${URL}/Terminate_RO`, terminationDetails);
+         const token = localStorage.getItem("accessToken");
+        console.log("Authorization header will be:", `Bearer ${token}`);
+        
+        const response = await axios.patch(`${URL}/Terminate_RO`, terminationDetails, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
 
         if (response.data.status === 'success') {
             return response.data;
@@ -197,8 +206,16 @@ export const updateROorDRCUserDetails = async (data) => {
 
 export const createNewDRCUserOrRO = async (data) => {
     try {
-        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data);
+        const token = localStorage.getItem("accessToken");
 
+        console.log("Authorization header will be:", `Bearer ${token}`);
+
+        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
         if (response.data.success) {
             return response.data;
         } else {
