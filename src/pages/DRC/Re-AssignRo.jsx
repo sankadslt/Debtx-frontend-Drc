@@ -25,6 +25,12 @@ export default function Re_AssignRo() {
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    rtom: '',
+    ro: '',
+    remark: ''
+  });
+  const [tableRows, setTableRows] = useState([]);
 
   // State to manage case details
   const [caseDetails, setCaseDetails] = useState({
@@ -38,6 +44,8 @@ export default function Re_AssignRo() {
   const [caseRTOM, setCaseRTOM] = useState("");
 
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
+  const [selectedRTOM, setSelectedRTOM] = useState("");
+
   const [settlementDetails, setSettlementDetails] = useState([]);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
@@ -224,8 +232,50 @@ export default function Re_AssignRo() {
   }
 
   //Handle submit button
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddRow = () => {
+    if (!formData.rtom || !formData.ro) {
+      Swal.fire({
+        title: "Error",
+        text: "RTOM and RO fields are required",
+        icon: "error",
+        confirmButtonColor: "#d33"
+      });
+      return;
+    }
+
+    setTableRows(prev => [...prev, { ...formData }]);
+    
+    // Clear form
+    setFormData({
+      rtom: '',
+      ro: '',
+      remark: ''
+    });
+  };
+
+  const handleRemoveRow = (index) => {
+    setTableRows(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     try {
+      if (tableRows.length === 0) {
+        Swal.fire({
+          title: "Error",
+          text: "Please add at least one RO assignment",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        return;
+      }
       // Ensure selectedRO is available (the value from the dropdown)
       const selectedRtom = selectedRO; // The selected RO name from the dropdown
       if (!selectedRtom) {
@@ -423,12 +473,17 @@ export default function Re_AssignRo() {
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
-      </div>
+       <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
+      <div className="flex flex-row gap-4 w-full items-stretch">
+        </div>
+        
+  
 
-      <div className="flex justify-center items-center mb-4">
-        <div className={`${GlobalStyle.cardContainer || ""}`}>
+      <div className="flex gap-6 mb-4 w-full">
+        {/* Case Data Card */}
+        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
+          <div className="flex flex-col w-full">
+          <h2 className="text-lg font-semibold mb-4">Case Data</h2>
           {[
             { label: "Case ID", value: caseDetails?.caseId },
             { label: "Customer Ref", value: caseDetails?.customerRef },
@@ -447,66 +502,204 @@ export default function Re_AssignRo() {
               <span className="flex-1">{item.value || "N/A"}</span>
             </p>
           ))}
+          </div>
+          
         </div>
+
+        {/* Last RO Details Card */}
+
+        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] `}>
+         <div className="flex flex-col w-full">
+    <h2 className="text-lg font-semibold mb-4">Last RO Details</h2>
+    <textarea
+      value={textareaValue}
+      onChange={(e) => setTextareaValue(e.target.value)}
+      className={`${GlobalStyle.remark} w-full`}
+      rows="5"
+    ></textarea>
+  </div>
       </div>
+        
+
+      </div>
+      {/* Form Section */}
 
       <div className="flex items-center justify-center mb-4 w-full">
         <div className={`${GlobalStyle.cardContainer}`}>
-          {/* remark box */}
-          <div className="mb-6 items-center space-x-6">
-            <label className={GlobalStyle.remarkTopic}>Last RO details</label>
-            <div>
+          {/* ADD RO */}
+          <h2 className={`${GlobalStyle.headingMedium} mb-4 text-center`}>
+            <strong> ADD RO </strong>
+          </h2>
+
+          
+{/* RTOM & RO in one row */}
+<div className="flex gap-6 mb-4 w-full">
+          {/* Select RTOM */}
+<div className="flex flex-col w-1/2">
+  <label className={GlobalStyle.remarkTopic}>Select RTOM</label>
+  <select
+    id="rtom-select"
+    className={`${GlobalStyle.selectBox}`}
+    style={{ color: selectedRTOM === "" ? "gray" : "black" }}
+    value={selectedRTOM || ""}
+    onChange={(e) => {
+      const selectedName = e.target.value;
+      if (selectedName) {
+        setSelectedRTOM(selectedName);
+      }
+    }}
+  >
+    <option value="" hidden>
+      Select RTOM
+    </option>
+    {recoveryOfficers && recoveryOfficers.length > 0 ? (
+      recoveryOfficers.map((officer, index) => {
+        const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+        const displayName = `${officer.rtom_name} - ${rtomsNames}`;
+
+        return (
+          <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
+            {displayName}
+          </option>
+        );
+      })
+    ) : (
+      <option value="" disabled>
+        No officers available
+      </option>
+    )}
+  </select>
+</div>
+
+
+
+          {/* Assign RO */}
+<div className="flex flex-col w-1/2">
+  <label className={GlobalStyle.remarkTopic}>Assign RO</label>
+  <select
+    id="ro-select"
+    className={`${GlobalStyle.selectBox}`}
+    style={{ color: selectedRO === "" ? "gray" : "black" }}
+    value={selectedRO || ""}
+    onChange={(e) => {
+      const selectedName = e.target.value;
+      if (selectedName) {
+        setSelectedRO(selectedName);
+      }
+    }}
+  >
+    <option value="" hidden>
+      Select RO
+    </option>
+    {recoveryOfficers && recoveryOfficers.length > 0 ? (
+      recoveryOfficers.map((officer, index) => {
+        const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
+        const displayName = `${officer.ro_name} - ${rtomsNames}`;
+
+        return (
+          <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
+            {displayName}
+          </option>
+        );
+      })
+    ) : (
+      <option value="" disabled>
+        No officers available
+      </option>
+    )}
+  </select>
+</div>
+</div>
+
+          
+          <div className="flex flex-col space-y-4">
+            {/* Remark Input */}
+            <div className="flex flex-col">
+              <label className={GlobalStyle.remarkTopic}>Remark</label>
               <textarea
-                value={textareaValue}
-                onChange={(e) => setTextareaValue(e.target.value)}
+                name="remark"
+                value={formData.remark}
+                onChange={handleFormChange}
                 className={`${GlobalStyle.remark} w-full`}
-                rows="5"
-              ></textarea>
+                rows="2"
+                placeholder="Enter remark"
+              />
             </div>
           </div>
 
-          {/* dropdown */}
-          <div className="flex gap-10">
-            <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
-            <select
-              id="ro-select"
-              className={`${GlobalStyle.selectBox}`}
-              // style={{ width: "600px" }}
-              style={{ color: selectedRO === "" ? "gray" : "black" }}
-              value={selectedRO || ""}
-              onChange={(e) => {
-                const selectedName = e.target.value;
-                if (selectedName) {
-                  setSelectedRO(selectedName);
+          {/* Add Button */}
+          <div className="flex justify-end mt-3">
+            <button
+              className={`${GlobalStyle.buttonPrimary}`}
+              onClick={() => {
+                if (!selectedRTOM || !selectedRO) {
+                  Swal.fire({
+                    title: "Error",
+                    text: "Please select both RTOM and RO",
+                    icon: "error",
+                    confirmButtonColor: "#d33"
+                  });
+                  return;
                 }
+
+                setTableRows(prev => [...prev, {
+                  rtom: selectedRTOM,
+                  ro: selectedRO,
+                  remark: formData.remark
+                }]);
+
+                // Clear selections and remark
+                setSelectedRTOM("");
+                setSelectedRO("");
+                setFormData(prev => ({
+                  ...prev,
+                  remark: ""
+                }));
               }}
             >
-              <option value="" hidden>
-                Select RO
-              </option>
-              {recoveryOfficers && recoveryOfficers.length > 0 ? (
-                recoveryOfficers.map((officer, index) => {
-                  const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-                  const displayName = `${officer.ro_name} - ${rtomsNames}`;
-
-                  return (
-                    <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
-                      {displayName}
-                    </option>
-                  );
-                })
-              ) : (
-                <option value="" disabled>
-                  No officers available
-                </option>
-              )}
-            </select>
+              Add
+            </button>
           </div>
+
+    {/* Table Section */}
+    <div className={`${GlobalStyle.tableContainer} mb-6 overflow-x-auto`}>
+      <table className={GlobalStyle.table}>
+        <thead className={GlobalStyle.thead}>
+          <tr>
+            <th className={GlobalStyle.tableHeader}>RTOM</th>
+            <th className={GlobalStyle.tableHeader}>RO</th>
+            <th className={GlobalStyle.tableHeader}>Remark</th>
+            <th className={GlobalStyle.tableHeader}>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tableRows.map((row, index) => (
+            <tr key={index} className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}>
+              <td className={GlobalStyle.tableData}>{row.rtom}</td>
+              <td className={GlobalStyle.tableData}>{row.ro}</td>
+              <td className={GlobalStyle.tableData}>{row.remark}</td>
+              <td className={GlobalStyle.tableData}>
+                <button
+                  onClick={() => handleRemoveRow(index)}
+                  className={`${GlobalStyle.buttonDanger} px-2 py-1`}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+
 
           {/* Submit Button */}
-          <div className="flex justify-end items-center w-full mt-6">
-            <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
-          </div>
+<div className="flex justify-end items-center w-full mt-6">
+  <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>
+    Submit
+  </button>
+</div>
         </div>
       </div>
 

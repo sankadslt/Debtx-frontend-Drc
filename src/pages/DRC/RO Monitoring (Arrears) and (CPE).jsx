@@ -303,6 +303,7 @@ export default function RO_Monitoring_CPE() {
                                                     <th className={GlobalStyle.tableHeader}>Date</th>
                                                     {/* <th className={GlobalStyle.tableHeader}>Negotiation</th> */}
                                                     <th className={GlobalStyle.tableHeader}>Remark</th>
+                                                    <th className={GlobalStyle.tableHeader}>RO Name</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -319,6 +320,7 @@ export default function RO_Monitoring_CPE() {
                                                                 </td>
                                                                 {/* <td className={GlobalStyle.tableData}></td> */}
                                                                 <td className={GlobalStyle.tableData}>{item.remark || ""}</td>
+                                                                <td className={GlobalStyle.tableData}>{item.ro_name || ""}</td>
                                                             </tr>
                                                         ))) : (
                                                     <tr>

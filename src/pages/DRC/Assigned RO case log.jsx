@@ -934,13 +934,13 @@ export default function AssignedROcaselog() {
                           />
                           <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
 
-                          {/* <button
+                          <button
                             className={`${GlobalStyle.buttonPrimary} mx-auto`}
                             style={{ whiteSpace: "nowrap" }}
                             onClick={() => handleonreassign(item.case_id)}
                           >
                             Re-Assign
-                          </button> */}
+                          </button>
                         </div>
                       </td>
                     </tr>
