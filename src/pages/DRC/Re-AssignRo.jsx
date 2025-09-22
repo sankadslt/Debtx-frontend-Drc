@@ -18,6 +18,8 @@ import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { Tooltip } from "react-tooltip";
+import removeIcon from "../../assets/images/remove.svg";
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
@@ -679,12 +681,17 @@ export default function Re_AssignRo() {
               <td className={GlobalStyle.tableData}>{row.ro}</td>
               <td className={GlobalStyle.tableData}>{row.remark}</td>
               <td className={GlobalStyle.tableData}>
-                <button
-                  onClick={() => handleRemoveRow(index)}
-                  className={`${GlobalStyle.buttonDanger} px-2 py-1`}
-                >
-                  Delete
-                </button>
+                <div className="flex justify-center items-center">
+                  <button
+                    onClick={() => handleRemoveRow(index)}
+                    data-tooltip-id="delete-tooltip"
+                  >
+                    <img src={removeIcon} alt="Delete Icon" className="h-6 w-6" />
+                  </button>
+                  <Tooltip id="delete-tooltip" place="bottom" effect="solid">
+                    <span>Delete</span>
+                  </Tooltip>
+                </div>
               </td>
             </tr>
           ))}
