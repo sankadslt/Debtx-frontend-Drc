@@ -628,6 +628,7 @@ export default function AssignedCaseListforDRC() {
               <th className={GlobalStyle.tableHeader}>Billing Center</th>
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
               <th className={GlobalStyle.tableHeader}>RO</th>
+              <th className={GlobalStyle.tableHeader}>Product Billing Center</th>
               <th scope="col" className={GlobalStyle.tableHeader}></th>
             </tr>
           </thead>
@@ -658,6 +659,24 @@ export default function AssignedCaseListforDRC() {
                       : ""}
                   </td>
                   <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                  <td className={GlobalStyle.tableData}
+                   data-tooltip-id={`tooltip-${index}`}
+                  > 
+                  {item.ref_product_rtom_count || ""} 
+                   <Tooltip id={`tooltip-${index}`} place="bottom" effect="solid">
+                  {item.ref_product_rtom_list && item.ref_product_rtom_list.length > 0 ? (
+                    <ul className="list-disc pl-4">
+                      {item.ref_product_rtom_list.slice(0, 5).map((ref, i) => (
+                        <li key={i}>{ref}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span>No items</span>
+                  )}
+                </Tooltip>
+                  </td>
+          
+               
                   <td className={GlobalStyle.tableData}>
                     <div className="px-8 flex items-center gap-2">
                       <FaPhone
