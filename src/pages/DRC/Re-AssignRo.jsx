@@ -26,6 +26,7 @@ export default function Re_AssignRo() {
   const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
+  const [rtoms, setRtoms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     rtom: '',
@@ -167,10 +168,19 @@ export default function Re_AssignRo() {
               ro_id: officer.ro_id,
               ro_name: officer.ro_name,
               rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
-            }))
-              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase()));
+            }));
 
-            setRecoveryOfficers(formattedOfficers);
+            // Extract unique RTOMs from all ROs
+            const allRTOMs = formattedOfficers.flatMap(ro => ro.rtoms_for_ro.map(r => r.name));
+            const uniqueRTOMs = [...new Set(allRTOMs)].filter(rtom => rtom !== null && rtom !== undefined);
+            setRtoms(uniqueRTOMs);
+            
+            // Filter officers based on case RTOM
+            const filteredOfficers = formattedOfficers.filter((officer) => 
+              officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase())
+            );
+
+            setRecoveryOfficers(filteredOfficers);
             // console.log("Recovery Officers:", formattedOfficers);
           } else {
             // console.error("Invalid response format:", officers);
@@ -546,28 +556,24 @@ export default function Re_AssignRo() {
     value={selectedRTOM || ""}
     onChange={(e) => {
       const selectedName = e.target.value;
-      if (selectedName) {
-        setSelectedRTOM(selectedName);
-      }
+      setSelectedRTOM(selectedName);
+      setSelectedRO(""); // Reset RO selection when RTOM changes
     }}
   >
     <option value="" hidden>
       Select RTOM
     </option>
-    {recoveryOfficers && recoveryOfficers.length > 0 ? (
-      recoveryOfficers.map((officer, index) => {
-        const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-        const displayName = `${officer.rtom_name} - ${rtomsNames}`;
-
+    {rtoms && rtoms.length > 0 ? (
+      rtoms.map((rtom, index) => {
         return (
-          <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
-            {displayName}
+          <option key={`rtom-${index}`} value={rtom} style={{ color: "black" }}>
+            {rtom}
           </option>
         );
       })
     ) : (
       <option value="" disabled>
-        No officers available
+        No RTOMs available
       </option>
     )}
   </select>
@@ -589,21 +595,23 @@ export default function Re_AssignRo() {
         setSelectedRO(selectedName);
       }
     }}
+    disabled={!selectedRTOM}
   >
     <option value="" hidden>
       Select RO
     </option>
     {recoveryOfficers && recoveryOfficers.length > 0 ? (
-      recoveryOfficers.map((officer, index) => {
-        const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-        const displayName = `${officer.ro_name} - ${rtomsNames}`;
-
-        return (
-          <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
-            {displayName}
-          </option>
-        );
-      })
+      recoveryOfficers
+        .filter(officer => officer.rtoms_for_ro.some(rtom => rtom.name === selectedRTOM))
+        .map((officer, index) => {
+          const rtomsNames = officer.rtoms_for_ro.map(rtom => rtom.name).join(", ");
+          const displayName = `${officer.ro_name} - ${rtomsNames}`;
+          return (
+            <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
+              {displayName}
+            </option>
+          );
+        })
     ) : (
       <option value="" disabled>
         No officers available
