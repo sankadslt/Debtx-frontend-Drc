@@ -50,6 +50,7 @@ export default function Re_AssignRo() {
   const [selectedRTOM, setSelectedRTOM] = useState("");
 
   const [settlementDetails, setSettlementDetails] = useState([]);
+  const [lastRODetails, setLastRODetails] = useState(null);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const rowsPerPage = 5;
@@ -121,7 +122,16 @@ export default function Re_AssignRo() {
               // }))
             );
 
-            setSettlementDetails(data.data.settlementData_ro_re_assign)
+            setSettlementDetails(data.data.settlementData_ro_re_assign);
+
+            // Log the entire response data to see what we're getting
+            console.log("API Response Data:", data.data);
+            
+            // Check for last RO details in formattedCaseDetails
+            const lastROData = caseDetailsData.lastRODetails || {};
+            console.log("Last RO Details:", lastROData);
+            
+            setLastRODetails(lastROData);
 
           } else {
             // console.error("Error in API response:", data?.message || "Unknown error");
@@ -519,19 +529,27 @@ export default function Re_AssignRo() {
         </div>
 
         {/* Last RO Details Card */}
-
-        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px] `}>
-         <div className="flex flex-col w-full">
-    <h2 className="text-lg font-semibold mb-4">Last RO Details</h2>
-    <textarea
-      value={textareaValue}
-      onChange={(e) => setTextareaValue(e.target.value)}
-      className={`${GlobalStyle.remark} w-full`}
-      rows="5"
-    ></textarea>
-  </div>
-      </div>
-        
+        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
+          <h2 className="text-lg font-semibold mb-4">Last RO Details</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <p><strong>Name:</strong> {lastRODetails?.ro_name || "N/A"}</p>
+            <p><strong>NIC:</strong> {lastRODetails?.ro_nic || "N/A"}</p>
+            <p><strong>Contact:</strong> {lastRODetails?.ro_contact_no || "N/A"}</p>
+            <p><strong>Status:</strong> {lastRODetails?.ro_status || "N/A"}</p>
+            <p><strong>End Date:</strong> {lastRODetails?.ro_end_date || "N/A"}</p>
+            <p className="col-span-2"><strong>Remarks:</strong> {lastRODetails?.remark?.join(", ") || "None"}</p>
+            <div className="col-span-2 mt-4">
+              <label className="block mb-2">New Remark:</label>
+              <textarea
+                value={textareaValue}
+                onChange={(e) => setTextareaValue(e.target.value)}
+                className={`${GlobalStyle.remark} w-full`}
+                rows="3"
+                placeholder="Add new remark"
+              />
+            </div>
+          </div>
+        </div>
 
       </div>
       {/* Form Section */}
