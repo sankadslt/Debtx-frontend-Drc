@@ -42,6 +42,8 @@ export const listHandlingCasesByDRC = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
       };
     });
 
@@ -92,6 +94,8 @@ export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
       };
     });
 
@@ -1062,3 +1066,20 @@ export const Retrive_active_settlement_plan = async (payload) => {
     throw error;
   }
 };
+
+export const Retrive_Rtom_list_owned_by_products = async (payload) => {
+  try {
+    const response = await axios.post(
+      `${URL}/Retrive_Rtom_list_owned_by_products`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error retrieving RTOM list owned by products:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+  
