@@ -18,8 +18,8 @@ import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { Tooltip } from "react-tooltip";
 import removeIcon from "../../assets/images/remove.svg";
+import { Tooltip } from 'react-tooltip';
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
@@ -28,6 +28,7 @@ export default function Re_AssignRo() {
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
   const [rtoms, setRtoms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [roList, setRoList] = useState([]);
   const [formData, setFormData] = useState({
     rtom: '',
     ro: '',
@@ -177,13 +178,20 @@ export default function Re_AssignRo() {
             const formattedOfficers = officers.map((officer) => ({
               ro_id: officer.ro_id,
               ro_name: officer.ro_name,
-              rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
+              ro_nic: officer.ro_nic,
+              ro_contact_no: officer.ro_contact_no,
+              ro_status: officer.ro_status,
+              ro_end_date: officer.ro_end_date,
+              remark: officer.remark || [],
+              rtoms_for_ro: officer.rtoms_for_ro || [],
+              rtoms_for: officer.rtoms_for_ro?.map(r => r.name) || []
             }));
 
             // Extract unique RTOMs from all ROs
             const allRTOMs = formattedOfficers.flatMap(ro => ro.rtoms_for_ro.map(r => r.name));
             const uniqueRTOMs = [...new Set(allRTOMs)].filter(rtom => rtom !== null && rtom !== undefined);
             setRtoms(uniqueRTOMs);
+            setRoList(formattedOfficers);
             
             // Filter officers based on case RTOM
             const filteredOfficers = formattedOfficers.filter((officer) => 
@@ -495,12 +503,7 @@ export default function Re_AssignRo() {
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
-       <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
-      <div className="flex flex-row gap-4 w-full items-stretch">
-        </div>
-        
-  
-
+      <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
       <div className="flex gap-6 mb-4 w-full">
         {/* Case Data Card */}
         <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
@@ -531,29 +534,78 @@ export default function Re_AssignRo() {
         {/* Last RO Details Card */}
         <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
           <h2 className="text-lg font-semibold mb-4">Last RO Details</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <p><strong>Name:</strong> {lastRODetails?.ro_name || "N/A"}</p>
-            <p><strong>NIC:</strong> {lastRODetails?.ro_nic || "N/A"}</p>
-            <p><strong>Contact:</strong> {lastRODetails?.ro_contact_no || "N/A"}</p>
-            <p><strong>Status:</strong> {lastRODetails?.ro_status || "N/A"}</p>
-            <p><strong>End Date:</strong> {lastRODetails?.ro_end_date || "N/A"}</p>
-            <p className="col-span-2"><strong>Remarks:</strong> {lastRODetails?.remark?.join(", ") || "None"}</p>
-            <div className="col-span-2 mt-4">
-              <label className="block mb-2">New Remark:</label>
-              <textarea
-                value={textareaValue}
-                onChange={(e) => setTextareaValue(e.target.value)}
-                className={`${GlobalStyle.remark} w-full`}
-                rows="3"
-                placeholder="Add new remark"
-              />
-            </div>
+          {/* RO History Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 rounded-lg">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border">#</th>
+                  <th className="px-4 py-2 border">Name</th>
+                  <th className="px-4 py-2 border">NIC</th>
+                  <th className="px-4 py-2 border">Contact</th>
+                  <th className="px-4 py-2 border">Status</th>
+                  <th className="px-4 py-2 border">End Date</th>
+                  <th className="px-4 py-2 border">Remarks</th>
+                  <th className="px-4 py-2 border">RTOMs</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roList?.length > 0 ? (
+                  roList.map((ro, index) => (
+                    <tr key={ro.ro_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">{index + 1}</td>
+                      <td className="px-4 py-2 border">{ro.ro_name || "N/A"}</td>
+                      <td className="px-4 py-2 border">{ro.ro_nic || "N/A"}</td>
+                      <td className="px-4 py-2 border">{ro.ro_contact_no || "N/A"}</td>
+                      <td className="px-4 py-2 border">{ro.ro_status || "N/A"}</td>
+                      <td className="px-4 py-2 border">{ro.ro_end_date || "N/A"}</td>
+                      <td className="px-4 py-2 border">
+                        {ro.remark?.length > 0 ? ro.remark.join(", ") : "None"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {ro.rtoms_for?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {ro.rtoms_for.map((rtom, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+                              >
+                                {rtom}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          "None"
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="text-center py-4 text-gray-500">
+                      No RO records found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Add new remark section */}
+          <div className="mt-4">
+            <label className="block mb-2 font-medium">New Remark:</label>
+            <textarea
+              value={textareaValue}
+              onChange={(e) => setTextareaValue(e.target.value)}
+              className={`${GlobalStyle.remark} w-full`}
+              rows="3"
+              placeholder="Add new remark"
+            />
           </div>
         </div>
-
       </div>
-      {/* Form Section */}
 
+      {/* Form Section */}
       <div className="flex items-center justify-center mb-4 w-full">
         <div className={`${GlobalStyle.cardContainer}`}>
           {/* ADD RO */}
@@ -736,57 +788,54 @@ export default function Re_AssignRo() {
         </div>
       </div>
 
-      {/* Heading  */}
-      <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
-        Last Negotiation Detail :
-      </h2>
-
-      {/* Table  */}
-      <div className="mb-6 ">
-        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
-          <table className={GlobalStyle.table}>
-            <thead className={GlobalStyle.thead}>
-              <tr>
-                <th className={GlobalStyle.tableHeader}>Date</th>
-                <th className={GlobalStyle.tableHeader}>Negotiation</th>
-                {/* <th className={GlobalStyle.tableHeader}>Remark</th> */}
-              </tr>
-            </thead>
-            <tbody>
-              {dataInPageNegotiationDetails.length > 0 ? (
-                dataInPageNegotiationDetails
-                  .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort latest first
-                  .map((item, index) => (
-                    <tr
-                      key={index}
-                      className={
-                        index % 2 === 0
-                          ? GlobalStyle.tableRowEven
-                          : GlobalStyle.tableRowOdd
-                      }
-                    >
-                      <td className={GlobalStyle.tableData}>
-                        {
-                          new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")
-                        }
-                      </td>
-                      <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                      {/* <td className={GlobalStyle.tableData}>{item.remark}</td> */}
-                    </tr>
-                  ))
-              ) : (
+      {/* Negotiation Section */}
+      <div className="negotiation-section">
+        <h2 className={`${GlobalStyle.remarkTopic} mb-4`}>
+          Last Negotiation Detail:
+        </h2>
+        <div>
+        {/* Table  */}
+        <div className="mb-6">
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            <table className={GlobalStyle.table}>
+              <thead className={GlobalStyle.thead}>
                 <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                    No negotiation details available
-                  </td>
+                  <th className={GlobalStyle.tableHeader}>Date</th>
+                  <th className={GlobalStyle.tableHeader}>Negotiation</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {dataInPageNegotiationDetails.length > 0 ? (
+                  dataInPageNegotiationDetails
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map((item, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className={GlobalStyle.tableData}>{item.negotiation}</td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr>
+                    <td colSpan="2" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No negotiation details available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <div className={GlobalStyle.navButtonContainer}>
+        <div className={GlobalStyle.navButtonContainer}>
         <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
           <FaArrowLeft />
         </button>
@@ -799,12 +848,13 @@ export default function Re_AssignRo() {
       </div>
 
       {/* Settlement details section */}
-      <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
-        Settlement details :
-      </h2>
-
-      {/* Table  */}
-      <div className="mb-6 ">
+      <div className="settlement-section">
+        <h2 className={`${GlobalStyle.remarkTopic} mb-4`}>
+          Settlement details:
+        </h2>
+        
+        {/* Table  */}
+        <div className="mb-6">
         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
@@ -908,16 +958,19 @@ export default function Re_AssignRo() {
         </select>
       </div> */}
 
-      {/* Submit Button */}
-      {/* <div className="flex justify-end items-center w-full mt-6">
-        <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
-      </div> */}
-      <button
-        onClick={() => navigate("/drc/assigned-ro-case-log")}
-        className={`${GlobalStyle.buttonPrimary} `}
-      >
-        <FaArrowLeft className="mr-2" />
-      </button>
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <div className="mt-6">
+          <button
+            onClick={() => navigate("/drc/assigned-ro-case-log")}
+            className={`${GlobalStyle.buttonPrimary}`}
+          >
+            <FaArrowLeft className="mr-2" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
