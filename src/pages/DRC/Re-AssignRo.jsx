@@ -550,48 +550,51 @@ export default function Re_AssignRo() {
                 </tr>
               </thead>
               <tbody>
-                {roList?.length > 0 ? (
-                  roList.map((ro, index) => (
-                    <tr key={ro.ro_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border">{index + 1}</td>
-                      <td className="px-4 py-2 border">{ro.ro_name || "N/A"}</td>
-                      <td className="px-4 py-2 border">{ro.ro_nic || "N/A"}</td>
-                      <td className="px-4 py-2 border">{ro.ro_contact_no || "N/A"}</td>
-                      <td className="px-4 py-2 border">{ro.ro_status || "N/A"}</td>
-                      <td className="px-4 py-2 border">{ro.ro_end_date || "N/A"}</td>
-                      <td className="px-4 py-2 border">
-                        {ro.remark?.length > 0 ? ro.remark.join(", ") : "None"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {ro.rtoms_for?.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {ro.rtoms_for.map((rtom, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
-                              >
-                                {rtom}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          "None"
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center py-4 text-gray-500">
-                      No RO records found
-                    </td>
-                  </tr>
-                )}
+               {lastRODetails && Object.keys(lastRODetails).length > 0 ? (
+          <tr className="hover:bg-gray-50">
+            <td className="px-4 py-2 border">1</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_name || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_nic || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_contact_no || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_status || "N/A"}</td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.ro_end_date
+                ? new Date(lastRODetails.ro_end_date).toLocaleDateString("en-GB")
+                : "N/A"}
+            </td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.remark?.length > 0 ? lastRODetails.remark.join(", ") : "None"}
+            </td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.rtoms_for?.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {lastRODetails.rtoms_for.map((rtom, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+                    >
+                      {rtom}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "None"
+              )}
+            </td>
+          </tr>
+        ) : (
+          <tr>
+            <td colSpan="8" className="text-center py-4 text-gray-500">
+              No RO assigned to this case
+            </td>
+          </tr>
+        )}
               </tbody>
             </table>
           </div>
 
           {/* Add new remark section */}
+          {/*
           <div className="mt-4">
             <label className="block mb-2 font-medium">New Remark:</label>
             <textarea
@@ -602,8 +605,11 @@ export default function Re_AssignRo() {
               placeholder="Add new remark"
             />
           </div>
+          */}
         </div>
-      </div>
+        
+    
+    </div>
 
       {/* Form Section */}
       <div className="flex items-center justify-center mb-4 w-full">
