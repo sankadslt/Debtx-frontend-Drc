@@ -292,6 +292,12 @@ export default function RO_DRCUserInfo() {
               </div>
 
               <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">SMS Number</div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base">{userData?.sms_number }</div>
+              </div>
+
+              <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">Email</div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2 text-sm sm:text-base break-all">{userData?.email || 'N/A'}</div>
