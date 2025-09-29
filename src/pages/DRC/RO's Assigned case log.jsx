@@ -16,7 +16,7 @@ import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService.js";
-import { listDRCAllCases , Retrive_active_settlement_plan } from "../../services/case/CaseService";
+import { listDRCAllCases , Retrive_active_settlement_plan , check_main_rtom_equal_to_product_rtom } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import edit from "../../assets/images/mediationBoard/edit.png";
 import Swal from 'sweetalert2';
@@ -36,6 +36,7 @@ import Negotiation_Settle_Open_Pending from "../../assets/images/Negotiation_new
 import Negotiation_Settle_Pending from "../../assets/images/Negotiation_new/RO_Settle_Pending.png";
 import RO_Negotiation from "../../assets/images/Negotiation_new/RO_Negotiation.png";
 import info from "../../assets/images/info.svg"
+import nego from "../../assets/images/negotiation.png"
 
 
 // Status icon mapping
@@ -127,6 +128,7 @@ export default function ROsAssignedcaselog() {
   const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true); // For infinite scroll
   const [maxCurrentPage, setMaxCurrentPage] = useState(0); // Track the maximum current page
   const [viewdata, setviewdata] = useState([]);
+  const [roMatches, setRoMatches] = useState({});
 
   // Role-Based Buttons
   useEffect(() => {
@@ -207,6 +209,10 @@ export default function ROsAssignedcaselog() {
 
     loadUser();
   }, []);
+
+
+  
+
 
 
   // Then update your useEffect that fetches RTOMs
@@ -758,6 +764,34 @@ export default function ROsAssignedcaselog() {
     console.log("Case ID being passed: ", case_id);
   }
 
+
+  //Checking IF main ro 
+
+  useEffect(() => {
+  const checkROMatches = async () => {
+    if (userData?.ro_id) {
+      const results = {};
+      for (const row of paginatedData) {
+        try {
+          const payload = 
+          { 
+            ro_id: userData.ro_id,
+            case_id: row.case_id
+          };
+          const response = await check_main_rtom_equal_to_product_rtom(payload);
+          results[row.case_id] = response.data?.isMatch || false;
+        } catch (err) {
+          console.error("Error checking RO match:", err);
+          results[row.case_id] = false;
+        }
+      }
+      setRoMatches(results);
+    }
+  };
+
+  checkROMatches();
+}, [userData, paginatedData]);
+
   return (
     <div className={`p-4 ${GlobalStyle.fontPoppins}`}>
       <h1 className={GlobalStyle.headingLarge}>Negotiation Case List</h1>
@@ -920,12 +954,18 @@ export default function ROsAssignedcaselog() {
                 <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
-                      <button>
+                      <button
+                         disabled={
+                            userData?.ro_id && !roMatches[row.case_id] // disable if RO logged in and not main
+                          }
+                      >
                         <img
                           src={edit}
                           alt="Edit Case"
                           data-tooltip-id="edit-tooltip"
-                          className={`w-6 h-6 cursor-pointer display: inline-block`}
+                           className={`w-6 h-6 ${
+                            userData?.ro_id && !roMatches[row.case_id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                          }`}
                           onClick={() => handleonedit(row.case_id)}
                         />
                         <Tooltip id="edit-tooltip" className="tooltip" effect="solid" place="bottom" content="Edit" />
@@ -934,18 +974,37 @@ export default function ROsAssignedcaselog() {
                   </div>
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      // <button
+                      //   className={`${GlobalStyle.buttonPrimary}  `}
+                      //   style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
+                      //   onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                      // >
+                      //   Negotiation
+                      // </button>
                       <button
-                        className={`${GlobalStyle.buttonPrimary}  `}
-                        style={{ whiteSpace: "nowrap", cursor: "pointer", marginLeft: "2px" }}
-                        onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                        disabled={
+                          userData?.ro_id && !roMatches[row.case_id] // disable if RO logged in and not main
+                        }
                       >
-                        Negotiation
+                        <img
+                          src={nego}
+                          alt="Negotiation"
+                          data-tooltip-id="negotiation-tooltip"
+                          className={`w-6 h-6 ${
+                            userData?.ro_id && !roMatches[row.case_id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                          }`}
+                  
+                          onClick={() => handleonnegotiation(row.case_id, row.action_type)}
+                          style={{ width: "40px", height: "30px" }}
+                        />
+                        <Tooltip id="negotiation-tooltip" className="tooltip" effect="solid" place="bottom" content="Negotiation" />
                       </button>
                     )}
                   </div>
 
                   <div>
                     {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
+                      <button>
                      <img
                       src={info}
                       alt="View"
@@ -957,12 +1016,12 @@ export default function ROsAssignedcaselog() {
                         cursor: "pointer",
                         marginLeft: "5px",
                       }}
-
-                      
                     />
+                    <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View Settlement Details" />
+                     </button>
                     
                     )}
-                    <Tooltip id="view-tooltip" className="tooltip" effect="solid" place="bottom" content="View Settlement Plan" />
+                   
                   </div>
                 </td>
               </tr>

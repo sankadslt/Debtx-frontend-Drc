@@ -117,7 +117,16 @@ export const fetchRODataByDRCWithQueryParams = async (drc_id) => {
 
 export const getActiveRODetailsByDrcID = async (drc_id) => {
     try {
-        const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, { drc_id });
+        // get token from localStorage
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, { drc_id },
+        {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+        );
 
         if (response.data.status === "success") {
             return response.data?.data || [];
