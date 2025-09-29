@@ -735,7 +735,7 @@ export const fetchActiveNegotiations = async () => {
     const token = localStorage.getItem("accessToken");
 
     const response = await axios.post(
-      `${URL}/list_Active_Customer_Negotiations`,
+      `${URL}/list_Active_Customer_Negotiations`,{},
       {
         headers: {
           Authorization: `Bearer ${token}`, // attach JWT
