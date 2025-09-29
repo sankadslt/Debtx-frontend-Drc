@@ -281,8 +281,8 @@ const [isMatch, setIsMatch] = useState(true);
     const getproductreferences = async () => {
       try {
         const payload = {
-          ro_id: 241,
-          case_id: 804,
+          ro_id: roId,
+          case_id: caseid,
           //drc_id: drcId,
         };
 
