@@ -30,7 +30,8 @@ export const List_Pre_Negotiation_By_Case_Id = async (payload) => {
     const response = await axios.post(
       `${URL}/List_Pre_Negotiation_By_Case_Id`,
       payload,
-      {eaders: {
+      {
+        headers: {
           Authorization: `Bearer ${token}`, // attach JWT
           "Content-Type": "application/json",
         },
