@@ -1131,9 +1131,18 @@ export const check_main_rtom_equal_to_product_rtom = async (payload) => {
 
 export const List_Product_References_By_RO = async (payload) => {
   try {
+
+     const token = localStorage.getItem("accessToken"); 
+
     const response = await axios.post(
       `${URL}/List_Product_References_By_RO`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error) {
