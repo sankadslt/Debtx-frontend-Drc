@@ -71,6 +71,8 @@ const [isMatch, setIsMatch] = useState(true);
 
   const caseid = location.state?.CaseID;
 
+  const Type = location.state?.Page;
+
   const actiontype = location.state?.ActionType;
 
   //console.log("Case details passed to the paghe:", caseDetails);
@@ -665,8 +667,14 @@ const [isMatch, setIsMatch] = useState(true);
 
   };
 
-  const handleBack = () => {
-    navigate("/drc/ro-s-assigned-case-log"); // Go back to the previous page
+   const handleBack = () => {
+    if (Type === "Type1") {
+      navigate("/drc/assigned-ro-case-log"); 
+    } else if (Type === "Type2") {
+      navigate("/drc/ro-s-assigned-case-log"); 
+    } else {
+      navigate(-1); 
+    }
   };
 
 
