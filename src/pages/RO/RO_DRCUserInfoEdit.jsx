@@ -1208,30 +1208,62 @@ const handleSave = async () => {
       throw new Error('Unable to identify current user. Please login again.');
     }
 
-    // Build payload with proper validation
+    // Build base payload
     const basePayload = {
       ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
       drc_id: drcId,
-      user_role: activeUserRole,
-      login_email: email,
-      login_contact_no: contactNo,
-      login_contact_no_two: contactNoTwo || '', // Always include, even if empty
-      sms_number: messageNumber || '', // Include even if empty
-      drcUser_status: drcUserStatus,
       create_by: create_by,
       remark: remark || 'Updated user details',
     };
 
-    // Only add name if it can be edited AND has changed
+    // Add name only if changed and editable
     if (canEditName && userName !== initialUserName && userName.trim()) {
-      basePayload.name = userName.trim();
+      basePayload[itemType === 'RO' ? 'ro_name' : 'name'] = userName.trim();
     }
 
-    // Only add NIC if it can be edited AND has changed
+    // Add NIC only if changed and editable
     if (canEditNic && userNic !== initialUserNic && userNic.trim()) {
       basePayload.nic = userNic.trim();
     }
 
+    // Add email only if changed
+    if (email !== initialEmail) {
+      basePayload.login_email = email;
+    }
+
+    // Add contact numbers if changed - MUST include existing values
+    if (contactNo !== initialContactNo) {
+      basePayload.login_contact_no = contactNo;
+      // Include existing contact for backend to end it
+      if (initialContactNo) {
+        basePayload.existing_login_contact_no = initialContactNo;
+      }
+    }
+
+    // Contact Number 2 - handle optional field
+    if (contactNoTwo !== initialContactNoTwo) {
+      basePayload.login_contact_no_two = contactNoTwo || '';
+      // Include existing contact for backend to end it
+      if (initialContactNoTwo) {
+        basePayload.existing_login_contact_no_two = initialContactNoTwo;
+      }
+    }
+
+    // SMS Number - handle optional field
+    if (messageNumber !== initialMessageNumber) {
+      basePayload.sms_number = messageNumber || '';
+      // Include existing SMS number for backend to end it
+      if (initialMessageNumber) {
+        basePayload.existing_sms_number = initialMessageNumber;
+      }
+    }
+
+    // Add status only if changed
+    if (drcUserStatus !== initialDrcUserStatus) {
+      basePayload.drcUser_status = drcUserStatus;
+    }
+
+    // Add RTOMs for RO type
     const payload = itemType === 'RO' ? {
       ...basePayload,
       rtoms: rtomAreas.map(area => {
@@ -1261,8 +1293,9 @@ const handleSave = async () => {
         const succeededCalls = Object.entries(response.pythonCallsSucceeded)
           .filter(([, succeeded]) => succeeded)
           .map(([call]) => call);
+        
+        console.log('Python API calls succeeded:', succeededCalls);
       }
-      
       
       Swal.fire({
         title: 'Success',
@@ -1281,12 +1314,12 @@ const handleSave = async () => {
     
     // Enhanced error message handling
     let errorTitle = 'Unable to Update Details';
-    let errorMessage = 'Unable to edit User while status is "Pending_approval"';
+    let errorMessage = error.message || 'An unexpected error occurred. Please try again.';
     
-    if (error.message.includes('Profile update error')) {
+    if (error.message.includes('Profile update error') || error.message.includes('Profile update failed')) {
       errorTitle = 'Profile Update Failed';
       errorMessage = 'There was an issue updating the profile information. Please check your input and try again.';
-    } else if (error.message.includes('Contact update error')) {
+    } else if (error.message.includes('Contact update error') || error.message.includes('Contact update failed')) {
       errorTitle = 'Contact Update Failed';
       errorMessage = 'There was an issue updating the contact information. Please verify the contact numbers and try again.';
     } else if (error.message.includes('Status update error') || error.message.includes('Status validation error')) {
@@ -1301,6 +1334,9 @@ const handleSave = async () => {
     } else if (error.message.includes('Missing') || error.message.includes('required')) {
       errorTitle = 'Missing Information';
       errorMessage = error.message;
+    } else if (error.message.includes('Pending_approval')) {
+      errorTitle = 'Cannot Edit User';
+      errorMessage = 'Unable to edit user while status is "Pending_approval". Please wait for approval or change the status first.';
     }
     
     Swal.fire({
@@ -1313,6 +1349,7 @@ const handleSave = async () => {
     });
   }
 };
+
   const toggleStatus = () => {
     setDrcUserStatus(prev => prev === 'Active' ? 'Inactive' : 'Active');
   };
