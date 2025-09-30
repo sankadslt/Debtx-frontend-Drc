@@ -885,6 +885,7 @@ export default function RO_DRCUserDetailsEdit() {
           if (itemType === 'RO') {
             const areas = (response.data.rtom_areas || []).map(area => ({
               ...area,
+              status: area.rtom_status === 'Active' || area.rtom_status === true || area.status === 'Active' || area.status === true,
               isNew: false,
             }));
             setRtomAreas(areas);
