@@ -721,6 +721,20 @@ const DistributeTORO = () => {
       return;
     }
 
+    const isDuplicate = tabledata.some(
+      (item) =>
+       String(item.rtom) === String(selectedRTOMS) 
+    );
+
+    if (isDuplicate) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: `The RTOM "${selectedRTOMS}" is already added`,
+        confirmButtonColor: "#ffc107",
+      });
+      return;
+    }
 
     // Find the full officer object by ID
     // Ensure both sides are same type
@@ -753,10 +767,10 @@ const DistributeTORO = () => {
   }
 
 
-  const handleDelete = (rtom, recovery_officer_id) => {
+  const handleDelete = (rtom, ro_id) => {
     setTabledata(
       tabledata.filter(
-        (item) => !(item.rtom === rtom && item.recovery_officer_id === recovery_officer_id)
+        (item) => !(item.rtom === rtom && item.ro_id === ro_id)
       )
     );
   };
@@ -933,6 +947,8 @@ const DistributeTORO = () => {
         confirmButtonText: "Ok",
         confirmButtonColor: "#28a745",
       });
+      
+      window.location.reload(); // Reload the page 
 
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -1350,13 +1366,13 @@ const DistributeTORO = () => {
                   >
                     <td className={GlobalStyle.tableData}>{item.case_id}</td>
                     <td className={GlobalStyle.tableData}>{item.rtom}</td>
-                    <td className={GlobalStyle.tableData}>{item.recovery_officer_name}</td>
+                    <td className={GlobalStyle.tableData}>{item.ro_name}</td>
                     <td className={GlobalStyle.tableData}>
                       <div className="flex justify-center items-center">
 
                         <button
                           src={deleteIcon}
-                          onClick={() => handleDelete(item.rtom, item.recovery_officer_id)}
+                          onClick={() => handleDelete(item.rtom, item.ro_id)}
                           data-tooltip-id="delete-tooltip"
                         >
                           <img src={deleteIcon} alt="Delete Icon" className="h-6 w-6" />
