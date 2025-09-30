@@ -1099,9 +1099,16 @@ export const Retrive_active_settlement_plan = async (payload) => {
 
 export const Retrive_Rtom_list_owned_by_products = async (payload) => {
   try {
+    const token = localStorage.getItem("accessToken");
     const response = await axios.post(
       `${URL}/Retrive_Rtom_list_owned_by_products`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error) {
