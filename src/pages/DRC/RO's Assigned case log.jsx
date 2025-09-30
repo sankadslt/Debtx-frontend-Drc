@@ -754,7 +754,7 @@ export default function ROsAssignedcaselog() {
   };
 
   const handleonnegotiation = (case_id, action_type) => {
-    navigate("/drc/customer-negotiation", { state: { CaseID: case_id, ActionType: action_type } });
+    navigate("/drc/customer-negotiation", { state: { CaseID: case_id, ActionType: action_type , Page: "Type2" } });
     console.log("Case ID being passed: ", case_id);
     console.log("Action Type being passed: ", action_type);
   }
