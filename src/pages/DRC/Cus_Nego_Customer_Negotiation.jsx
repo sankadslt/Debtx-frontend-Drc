@@ -285,7 +285,7 @@ const [isMatch, setIsMatch] = useState(true);
         const payload = {
           ro_id: roId,
           case_id: caseid,
-          //drc_id: drcId,
+          drc_id: drcId
         };
 
         const productReferences = await List_Product_References_By_RO(payload);
