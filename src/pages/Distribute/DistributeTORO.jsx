@@ -752,7 +752,7 @@ const DistributeTORO = () => {
       rtom: selectedRTOMS,
       ro_id: selectedRO,
       ro_name: selectedROData?.ro_name || "",
-      product_bearer_id_list: selectedRTOMData?.product_bearer_ids || [],
+      Order_id_list: selectedRTOMData?.Order_ids || [],
     }));
 
 
