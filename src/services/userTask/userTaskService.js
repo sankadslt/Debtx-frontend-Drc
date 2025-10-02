@@ -32,7 +32,8 @@ export const fetchUserTasks = async (token, delegate_user_id) => {
       { delegate_user_id },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
         },
       }
     );

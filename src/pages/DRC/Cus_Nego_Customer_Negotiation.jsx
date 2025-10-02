@@ -18,6 +18,8 @@ import {
   addNegotiationCase,
   fetchActiveNegotiations,
   getActiveRORequestsforNegotiationandMediation,
+  check_main_rtom_equal_to_product_rtom,
+  List_Product_References_By_RO
 } from "../../services/case/CaseService";
 
 import {List_Pre_Negotiation} from "../../services/Drc/Drc.js";
@@ -60,10 +62,16 @@ const Cus_Nego_Customer_Negotiation = () => {
   const [roId, setRoId] = useState(null);
   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   const [preNegotiation, setPreNegotiation] = useState([]);
+  const [productReferences, setProductReferences] = useState([]);
+
 //  const [PRENegotiation, setPRENegotiation] = useState([]);
+
+const [isMatch, setIsMatch] = useState(true); 
 
 
   const caseid = location.state?.CaseID;
+
+  const Type = location.state?.Page;
 
   const actiontype = location.state?.ActionType;
 
@@ -269,6 +277,31 @@ const Cus_Nego_Customer_Negotiation = () => {
     fetchRORequests();
     fetchPreNegotiation();
   }, [drcId, roId]);
+
+
+  useEffect(() => {
+    const getproductreferences = async () => {
+      try {
+        const payload = {
+          ro_id: roId,
+          case_id: caseid,
+          //drc_id: drcId,
+        };
+
+        const productReferences = await List_Product_References_By_RO(payload);
+        setProductReferences(productReferences.data || []);
+        console.log("Product References by RO:", productReferences.data);
+      } catch (error) {
+        console.error(
+          "Error retrieving product references by RO:",
+          error.response?.data || error.message
+        );
+        throw error;
+      }
+    };
+
+    getproductreferences();
+  }, [roId, caseid, drcId]);
 
 
   // useEffect(() => {
@@ -634,8 +667,14 @@ const Cus_Nego_Customer_Negotiation = () => {
 
   };
 
-  const handleBack = () => {
-    navigate("/drc/ro-s-assigned-case-log"); // Go back to the previous page
+   const handleBack = () => {
+    if (Type === "Type1") {
+      navigate("/drc/assigned-ro-case-log"); 
+    } else if (Type === "Type2") {
+      navigate("/drc/ro-s-assigned-case-log"); 
+    } else {
+      navigate(-1); 
+    }
   };
 
 
@@ -644,6 +683,31 @@ const Cus_Nego_Customer_Negotiation = () => {
     thStyle: "text-left font-bold text-black text-l",
     tdStyle: "text-left text-l text-black px-2",
   };
+
+
+
+  useEffect(() => {
+        const checkROMatch = async () => {
+            if (userData?.ro_id && caseid) {
+            try {
+                const payload = 
+                    { 
+                    ro_id: userData.ro_id,
+                    case_id: Number(caseid) 
+                    };
+                const response = await check_main_rtom_equal_to_product_rtom(payload);
+                setIsMatch(response.data?.isMatch || false); 
+            } catch (err) {
+                console.error("Error checking RO match:", err);
+                setIsMatch(false);
+            }
+            }
+        };
+
+        checkROMatch();
+        }, [userData, caseid]);
+
+        
 
   const renderNegotiationView = () => (
     <div>
@@ -899,7 +963,13 @@ const Cus_Nego_Customer_Negotiation = () => {
               {["admin", "superadmin", "slt", "drc_user", "drc_admin"].includes(userRole) && (
                 <button
                   onClick={handleNegotiationSubmit}
-                  className={GlobalStyle.buttonPrimary}
+                  className={`${GlobalStyle.buttonPrimary} ${
+                    userData?.ro_id && !isMatch ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  
+                  disabled={userData?.ro_id && !isMatch} 
+                              
+
                 >
                   Submit
                 </button>
@@ -1264,8 +1334,8 @@ const Cus_Nego_Customer_Negotiation = () => {
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(caseDetails.ref_products) && caseDetails.ref_products.length > 0 ? (
-                caseDetails.ref_products.map((product, index) => {
+              {Array.isArray(productReferences) && productReferences.length > 0 ? (
+                productReferences.map((product, index) => {
                   const isEvenRow = index % 2 === 0;
                   const rowClass = isEvenRow
                     ? "bg-white bg-opacity-75"
