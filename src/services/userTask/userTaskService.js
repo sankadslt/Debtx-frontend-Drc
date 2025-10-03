@@ -30,11 +30,12 @@ export const fetchUserTasks = async (token, delegate_user_id) => {
     const response = await axios.post(
       `${BASE_URL}/task/List_All_Open_Requests_For_To_Do_List`,
       { delegate_user_id },
-      // {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.data) {

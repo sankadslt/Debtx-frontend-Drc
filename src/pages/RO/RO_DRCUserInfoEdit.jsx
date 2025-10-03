@@ -640,6 +640,8 @@ export default function RO_DRCUserDetailsEdit() {
   const [contactNoError, setContactNoError] = useState('');
   const [contactNoTwo, setContactNoTwo] = useState('');
   const [contactNoErrorTwo, setContactNoErrorTwo] = useState('');
+  const [messageNumber, setMessageNumber] = useState(itemData?.message_number || '');
+  const [messageNumberError, setMessageNumberError] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [remark, setRemark] = useState('');
@@ -656,6 +658,7 @@ export default function RO_DRCUserDetailsEdit() {
   const [initialUserNic, setInitialUserNic] = useState('');
   const [initialContactNo, setInitialContactNo] = useState('');
   const [initialContactNoTwo, setInitialContactNoTwo] = useState('');
+  const [initialMessageNumber, setInitialMessageNumber] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
   const [initialDrcUserStatus, setInitialDrcUserStatus] = useState('Inactive');
   const [initialRtomAreas, setInitialRtomAreas] = useState([]);
@@ -827,6 +830,10 @@ export default function RO_DRCUserDetailsEdit() {
           setEmail(response.data.email || '');
           setInitialEmail(response.data.email || '');
           setRemark(response.data.remark || '');
+          // Set message number with fallbacks
+          const smsNumber = response.data.message_number || response.data.sms_number || response.data.contact_no || '';
+          setMessageNumber(smsNumber);
+          setInitialMessageNumber(smsNumber);
 
           // Enhanced user creation date handling and 24-hour restriction check
           const createdAt = response.data.createdAt || response.data.created_at || response.data.added_date;
@@ -878,6 +885,7 @@ export default function RO_DRCUserDetailsEdit() {
           if (itemType === 'RO') {
             const areas = (response.data.rtom_areas || []).map(area => ({
               ...area,
+              status: area.rtom_status === 'Active' || area.rtom_status === true || area.status === 'Active' || area.status === true,
               isNew: false,
             }));
             setRtomAreas(areas);
@@ -1004,6 +1012,22 @@ export default function RO_DRCUserDetailsEdit() {
     }
   };
 
+  const handleMessageNumberAdd = (value) => {
+    const cleaned = value.replace(/[^+\d]/g, '');
+    const digitsOnly = cleaned.replace(/\D/g, '');
+
+    if (cleaned === '') {
+      // Allow empty value since it's optional
+      setMessageNumber('');
+      setMessageNumberError('');
+    } else if (digitsOnly.length > 10) {                                                                              
+      setMessageNumberError('Contact number cannot exceed 10 digits.');
+    } else {
+      setMessageNumberError(digitsOnly.length > 0 && digitsOnly.length < 10 ? 'Contact number must be 10 digits.' : '');
+      setMessageNumber(cleaned);
+    }
+  };
+
   const handleEmailChange = (value) => {
     setEmail(value);
     if (!value) {
@@ -1060,6 +1084,16 @@ export default function RO_DRCUserDetailsEdit() {
       setContactNoErrorTwo('');
     }
 
+    // The Message number is optional - only validate if it's provided
+    if (messageNumber && !/^\+?\d{9,10}$/.test(messageNumber)) {
+      setMessageNumberError('Please enter a valid contact number (e.g., +94771234567).'); 
+      funtion
+      isValid = false;
+    } else if (!messageNumber) {
+      // Clear error if field is empty (since it's optional)
+      setMessageNumberError('');
+    }
+
     // Validate remark
     if (!remark.trim()) {
       Swal.fire({
@@ -1080,6 +1114,7 @@ export default function RO_DRCUserDetailsEdit() {
       (canEditNic && userNic !== initialUserNic) ||
       contactNo !== initialContactNo ||
       contactNoTwo !== initialContactNoTwo ||
+      messageNumber !== initialMessageNumber ||
       email !== initialEmail ||
       drcUserStatus !== initialDrcUserStatus ||
       (itemType === 'RO' &&
@@ -1174,29 +1209,62 @@ const handleSave = async () => {
       throw new Error('Unable to identify current user. Please login again.');
     }
 
-    // Build payload with proper validation
+    // Build base payload
     const basePayload = {
       ...(itemType === 'RO' ? { ro_id: roId } : { drc_officer_id: drcUserId }),
       drc_id: drcId,
-      user_role: activeUserRole,
-      login_email: email,
-      login_contact_no: contactNo,
-      login_contact_no_two: contactNoTwo || '', // Always include, even if empty
-      drcUser_status: drcUserStatus,
       create_by: create_by,
       remark: remark || 'Updated user details',
     };
 
-    // Only add name if it can be edited AND has changed
+    // Add name only if changed and editable
     if (canEditName && userName !== initialUserName && userName.trim()) {
-      basePayload.name = userName.trim();
+      basePayload[itemType === 'RO' ? 'ro_name' : 'name'] = userName.trim();
     }
 
-    // Only add NIC if it can be edited AND has changed
+    // Add NIC only if changed and editable
     if (canEditNic && userNic !== initialUserNic && userNic.trim()) {
       basePayload.nic = userNic.trim();
     }
 
+    // Add email only if changed
+    if (email !== initialEmail) {
+      basePayload.login_email = email;
+    }
+
+    // Add contact numbers if changed - MUST include existing values
+    if (contactNo !== initialContactNo) {
+      basePayload.login_contact_no = contactNo;
+      // Include existing contact for backend to end it
+      if (initialContactNo) {
+        basePayload.existing_login_contact_no = initialContactNo;
+      }
+    }
+
+    // Contact Number 2 - handle optional field
+    if (contactNoTwo !== initialContactNoTwo) {
+      basePayload.login_contact_no_two = contactNoTwo || '';
+      // Include existing contact for backend to end it
+      if (initialContactNoTwo) {
+        basePayload.existing_login_contact_no_two = initialContactNoTwo;
+      }
+    }
+
+    // SMS Number - handle optional field
+    if (messageNumber !== initialMessageNumber) {
+      basePayload.sms_number = messageNumber || '';
+      // Include existing SMS number for backend to end it
+      if (initialMessageNumber) {
+        basePayload.existing_sms_number = initialMessageNumber;
+      }
+    }
+
+    // Add status only if changed
+    if (drcUserStatus !== initialDrcUserStatus) {
+      basePayload.drcUser_status = drcUserStatus;
+    }
+
+    // Add RTOMs for RO type
     const payload = itemType === 'RO' ? {
       ...basePayload,
       rtoms: rtomAreas.map(area => {
@@ -1226,8 +1294,9 @@ const handleSave = async () => {
         const succeededCalls = Object.entries(response.pythonCallsSucceeded)
           .filter(([, succeeded]) => succeeded)
           .map(([call]) => call);
+        
+        console.log('Python API calls succeeded:', succeededCalls);
       }
-      
       
       Swal.fire({
         title: 'Success',
@@ -1246,12 +1315,12 @@ const handleSave = async () => {
     
     // Enhanced error message handling
     let errorTitle = 'Unable to Update Details';
-    let errorMessage = 'Unable to edit User while status is "Pending_approval"';
+    let errorMessage = error.message || 'An unexpected error occurred. Please try again.';
     
-    if (error.message.includes('Profile update error')) {
+    if (error.message.includes('Profile update error') || error.message.includes('Profile update failed')) {
       errorTitle = 'Profile Update Failed';
       errorMessage = 'There was an issue updating the profile information. Please check your input and try again.';
-    } else if (error.message.includes('Contact update error')) {
+    } else if (error.message.includes('Contact update error') || error.message.includes('Contact update failed')) {
       errorTitle = 'Contact Update Failed';
       errorMessage = 'There was an issue updating the contact information. Please verify the contact numbers and try again.';
     } else if (error.message.includes('Status update error') || error.message.includes('Status validation error')) {
@@ -1266,6 +1335,9 @@ const handleSave = async () => {
     } else if (error.message.includes('Missing') || error.message.includes('required')) {
       errorTitle = 'Missing Information';
       errorMessage = error.message;
+    } else if (error.message.includes('Pending_approval')) {
+      errorTitle = 'Cannot Edit User';
+      errorMessage = 'Unable to edit user while status is "Pending_approval". Please wait for approval or change the status first.';
     }
     
     Swal.fire({
@@ -1278,6 +1350,7 @@ const handleSave = async () => {
     });
   }
 };
+
   const toggleStatus = () => {
     setDrcUserStatus(prev => prev === 'Active' ? 'Inactive' : 'Active');
   };
@@ -1573,6 +1646,31 @@ const handleSave = async () => {
                 )}
               </div>
               </div>
+
+              {/* Message contact number */}
+
+              <div className="table-row">
+                <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
+                  SMS Number <span className="text-red-500">*</span>
+                </div>
+                <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
+                <div className="table-cell px-2 sm:px-4 py-2">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
+                  <span className="text-sm sm:text-base font-medium text-gray-700">{initialMessageNumber || 'Set Number'}</span>
+                  <input
+                    type="text"
+                    value={messageNumber}
+                    onChange={(e) => handleMessageNumberAdd(e.target.value)}
+                    className={`${GlobalStyle.inputText} w-full sm:w-[150px] md:w-[200px] mt-[-2px] sm:mt-0 ${messageNumberError ? 'border-red-500' : ''}`}
+                    placeholder="Enter SMS number"
+                  />
+                </div>
+                {messageNumberError && (
+                  <p className="text-red-500 text-xs mt-1">{messageNumberError}</p> 
+                )}
+              </div>
+              </div>
+
               <div className="table-row">
                 <div className="table-cell px-4 sm:px-8 py-2 font-semibold text-sm sm:text-base">
                   Email <span className="text-red-500">*</span>
