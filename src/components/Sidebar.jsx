@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MdSpaceDashboard } from "react-icons/md";
 import { IoIosListBox } from "react-icons/io";
 import { FaBuildingUser } from "react-icons/fa6";
@@ -13,7 +13,8 @@ const Sidebar = ({ onHoverChange }) => {
   const [expandedItems, setExpandedItems] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
   const [userRole, setUserRole] = useState(null);
-    const sidebarRef = useRef(null);
+  const sidebarRef = useRef(null);
+  const navigate = useNavigate();
 
   // Load user role from accessToken
   const loadUserRole = async () => {
@@ -176,15 +177,15 @@ const Sidebar = ({ onHoverChange }) => {
                 to={item.link || "#"}
                 onClick={() => handleClick(0, index, !!item.subItems)}
                 className={`flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium transition ${
-                  isActive ? "bg-blue-400 shadow-lg" : "hover:bg-blue-400"
+                    isActive ? "bg-blue-400 shadow-lg" : "hover:bg-blue-400"
                 }`}
-              >
+            >
                 <div className="flex items-center gap-x-4">
-                  <item.icon className="w-6 h-6 text-white" />
-                  {isHovered && <span>{item.label}</span>}
+                    <item.icon className="w-6 h-6 text-white" />
+                    {isHovered && <span>{item.label}</span>}
                 </div>
                 {item.subItems && (isActive ? <FaChevronUp className="w-4 h-4 text-white" /> : <FaChevronDown className="w-4 h-4 text-white" />)}
-              </Link>
+            </Link>
               {isActive && item.subItems && (
                 <div>{renderSubItems(item.subItems, 1)}</div>
               )}

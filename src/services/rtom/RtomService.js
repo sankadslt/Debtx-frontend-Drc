@@ -149,9 +149,18 @@ export const getRTOMsByDRCID = async (drc_id) => {
 // RtomService.js
 export const getActiveRTOMsByDRCID = async (drc_id) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
     const response = await axios.post(`${URL}/List_ALL_Active_RTOM_Ownned_By_DRC`, {
       drc_id: drc_id
-    });
+    },
+        {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+  );
 
     if (response.data?.status === "success" && response.data?.data) {
       // Transform the response to match the area field from the model
@@ -174,12 +183,23 @@ export const getActiveRTOMsByDRCID = async (drc_id) => {
 
 export const getAllActiveRTOMs = async () => {
   try {
-    const response = await axios.get(`${URL}/List_All_Active_RTOMs`);
+    // Retrieve token from localStorage
+    const token = localStorage.getItem("accessToken");
+    console.log("Access Token from localStorage:", token || "No token found");
+
+    // Add token to headers
+    const response = await axios.get(`${URL}/List_All_Active_RTOMs`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     if (response.data?.status === "success" && response.data?.data) {
       const transformedRTOMs = response.data.data.map((rtom) => ({
         rtom_id: rtom.rtom_id,
         area_name: rtom.rtom_name,
-        rtom: rtom.rtom_name, // Optional alias if you need it in UI
+        rtom: rtom.rtom_name, // alias for UI use
         billing_center_code: rtom.billing_center_code,
         rtom_email: rtom.rtom_email,
         rtom_status: rtom.rtom_status,

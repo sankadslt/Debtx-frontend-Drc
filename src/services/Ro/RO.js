@@ -117,7 +117,16 @@ export const fetchRODataByDRCWithQueryParams = async (drc_id) => {
 
 export const getActiveRODetailsByDrcID = async (drc_id) => {
     try {
-        const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, { drc_id });
+        // get token from localStorage
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.post(`${URL}/List_Active_RO_Owned_By_DRC`, { drc_id },
+        {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+        );
 
         if (response.data.status === "success") {
             return response.data?.data || [];
@@ -133,7 +142,19 @@ export const getActiveRODetailsByDrcID = async (drc_id) => {
 
 export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
     try {
-        const response = await axios.post(`${URL}/List_All_RO_and_DRCuser_Details_to_DRC`, payload);
+         const token = localStorage.getItem("accessToken"); 
+         console.log("Access Token from localStorag list:", token || "No token found");
+
+    const response = await axios.post(
+      `${URL}/List_All_RO_and_DRCuser_Details_to_DRC`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,  
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
         if (response.data.status === "error") {
             throw new Error(response.data.message);
@@ -148,7 +169,19 @@ export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
 
 export const List_RO_Info_Own_By_RO_Id = async (payload) => {
     try {
-        const response = await axios.post(`${URL}/List_RO_Info_Own_By_RO_Id`, payload);
+         const token = localStorage.getItem("accessToken");
+         console.log("Access Token from localStorage:", token || "No token found");
+
+         const response = await axios.post(
+      `${URL}/List_RO_Info_Own_By_RO_Id`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,  
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
         if (response.data.status === "error") {
             throw new Error(response.data.message);
@@ -165,7 +198,16 @@ export const List_RO_Info_Own_By_RO_Id = async (payload) => {
 // Terminate Recovery Officer
 export const terminateRO = async (terminationDetails) => {
     try {
-        const response = await axios.patch(`${URL}/Terminate_RO`, terminationDetails);
+         const token = localStorage.getItem("accessToken");
+        console.log("Authorization header will be:", `Bearer ${token}`);
+        
+        const response = await axios.patch(`${URL}/Terminate_RO`, terminationDetails, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
 
         if (response.data.status === 'success') {
             return response.data;
@@ -197,8 +239,16 @@ export const updateROorDRCUserDetails = async (data) => {
 
 export const createNewDRCUserOrRO = async (data) => {
     try {
-        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data);
+        const token = localStorage.getItem("accessToken");
 
+        console.log("Authorization header will be:", `Bearer ${token}`);
+
+        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
         if (response.data.success) {
             return response.data;
         } else {
