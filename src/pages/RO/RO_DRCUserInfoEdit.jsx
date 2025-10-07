@@ -1217,19 +1217,28 @@ const handleSave = async () => {
       remark: remark || 'Updated user details',
     };
 
-    // Add name only if changed and editable
+    // Always include name - use updated value if changed and editable, otherwise use initial value
     if (canEditName && userName !== initialUserName && userName.trim()) {
       basePayload[itemType === 'RO' ? 'ro_name' : 'name'] = userName.trim();
+    } else if (initialUserName) {
+      // Pass existing name even if not changed
+      basePayload[itemType === 'RO' ? 'ro_name' : 'name'] = initialUserName;
     }
 
-    // Add NIC only if changed and editable
+    // Always include NIC - use updated value if changed and editable, otherwise use initial value
     if (canEditNic && userNic !== initialUserNic && userNic.trim()) {
       basePayload.nic = userNic.trim();
+    } else if (initialUserNic) {
+      // Pass existing NIC even if not changed
+      basePayload.nic = initialUserNic;
     }
 
-    // Add email only if changed
+    // Always include email - use updated value if changed, otherwise use initial value
     if (email !== initialEmail) {
       basePayload.login_email = email;
+    } else if (initialEmail) {
+      // Pass existing email even if not changed
+      basePayload.login_email = initialEmail;
     }
 
     // Add contact numbers if changed - MUST include existing values
@@ -1251,13 +1260,22 @@ const handleSave = async () => {
     }
 
     // SMS Number - handle optional field
-    if (messageNumber !== initialMessageNumber) {
-      basePayload.sms_number = messageNumber || '';
-      // Include existing SMS number for backend to end it
-      if (initialMessageNumber) {
-        basePayload.existing_sms_number = initialMessageNumber;
+      if (messageNumber !== initialMessageNumber) {
+        // User changed the SMS number - use the new value
+        if (messageNumber && messageNumber.trim()) {
+          basePayload.sms_number = messageNumber.trim();
+        } else {
+          throw new Error('SMS number is required and cannot be empty.');
+        }
+        
+        // Include existing SMS number for backend to end it
+        if (initialMessageNumber && initialMessageNumber.trim()) {
+          basePayload.existing_sms_number = initialMessageNumber.trim();
+        }
+      } else if (initialMessageNumber && initialMessageNumber.trim()) {
+        // No change, but pass the existing SMS number anyway
+        basePayload.sms_number = initialMessageNumber.trim();
       }
-    }
 
     // Add status only if changed
     if (drcUserStatus !== initialDrcUserStatus) {
