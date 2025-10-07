@@ -773,6 +773,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
     caseDetailsforDRC,
     updateCustomerContacts,
+    check_main_rtom_equal_to_product_rtom
 } from "../../services/case/CaseService";
 import back from "../../assets/images/back.png";
 import { getLoggedUserId } from "../../services/auth/authService.js";
@@ -837,6 +838,10 @@ export default function EditCustomerProfile() {
     const [PPError, setPPError] = useState("");
     const [DrivingLicense, setDrivingLicense] = useState("");
     const [DrivingLicenseError, setDrivingLicenseError] = useState("");
+
+    
+    const [isMatch, setIsMatch] = useState(true); // default true so admins can submit
+
 
     // const [isEdited, setIsEdited] = useState(false);
 
@@ -1452,6 +1457,27 @@ export default function EditCustomerProfile() {
         navigate("/drc/ro-s-assigned-case-log"); // Go back to the previous page
     };
 
+        useEffect(() => {
+        const checkROMatch = async () => {
+            if (userData?.ro_id && case_id) {
+            try {
+                const payload = 
+                    { 
+                    ro_id: userData.ro_id,
+                    case_id: Number(case_id) 
+                    };
+                const response = await check_main_rtom_equal_to_product_rtom(payload);
+                setIsMatch(response.data?.isMatch || false); 
+            } catch (err) {
+                console.error("Error checking RO match:", err);
+                setIsMatch(false);
+            }
+            }
+        };
+
+        checkROMatch();
+        }, [userData, case_id]);
+
     return (
         <>
             <div className={GlobalStyle.fontPoppins}>
@@ -1913,7 +1939,9 @@ export default function EditCustomerProfile() {
                                         addressError ||
                                         NICError ||
                                         DrivingLicenseError ||
-                                        PPError) ? "opacity-50 cursor-not-allowed" : ""}`}
+                                        PPError ||
+                                        (userData?.ro_id && !isMatch)
+                                    ) ? "opacity-50 cursor-not-allowed" : ""}`}
                                     onClick={handleSubmit}
                                     disabled={
                                         phoneError ||
@@ -1921,7 +1949,8 @@ export default function EditCustomerProfile() {
                                         addressError ||
                                         NICError ||
                                         DrivingLicenseError ||
-                                        PPError
+                                        PPError||
+                                        (userData?.ro_id && !isMatch) 
                                     }
                                 >
                                     Submit
