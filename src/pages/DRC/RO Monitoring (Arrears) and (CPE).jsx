@@ -307,7 +307,7 @@ export default function RO_Monitoring_CPE() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {product?.negotiation.length > 0 ? (
+                                                {Array.isArray(product?.negotiation) && product.negotiation.length > 0 ? (
                                                     product?.negotiation
                                                         .sort((a, b) => new Date(b.collected_date) - new Date(a.collected_date)) // Sort latest first
                                                         .map((item, idx) => (
