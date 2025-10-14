@@ -18,10 +18,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
-import { listHandlingCasesByDRC, List_Handling_Cases_By_DRC_Without_RO } from "../../services/case/CaseService";
+import { listHandlingCasesByDRC, List_Handling_Cases_By_DRC_Without_RO, Retrive_Rtom_list_owned_by_products } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
-import { assignROToCase } from "../../services/case/CaseService";
+import { assignROToCase, assignROToCaseSubmit } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
@@ -45,12 +45,18 @@ import MB_Settle_Open_Pending from "../../assets/images/Mediation _Board/MB Sett
 import MB_Settle_Active from "../../assets/images/Mediation _Board/MB Settle Active.png";
 import MB_Fail_with_Pending_Non_Settlement from "../../assets/images/Mediation _Board/MB Fail with Pending Non Settlement.png";
 
+// Delete Icon
+import deleteIcon from "../../assets/images/minorc.png";
+
+
 
 const DistributeTORO = () => {
   const [rtoms, setRtoms] = useState([]);
+  const [RTOMS, setRTOMS] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRTOM, setSelectedRTOM] = useState("");
+  const [selectedRTOMS, setSelectedRTOMS] = useState("");
   const [selectedRO, setSelectedRO] = useState("");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -68,6 +74,7 @@ const DistributeTORO = () => {
   const [filteredOfficers, setFilteredOfficers] = useState([]);
   const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true);
   const [maxCurrentPage, setMaxCurrentPage] = useState(0);
+  const [tabledata, setTabledata] = useState([]);
   const [committedFilters, setCommittedFilters] = useState({
     selectedRTOM: "",
     selectedArrearsBand: "",
@@ -165,6 +172,7 @@ const DistributeTORO = () => {
 
           setLoading(true);
           const officers = await getActiveRODetailsByDrcID(numericDrcId);
+          console.log("Fetched Recovery Officers:", officers);
 
           if (Array.isArray(officers)) {
             // Map recovery officers with ro_id and other details
@@ -220,6 +228,8 @@ const DistributeTORO = () => {
     fetchRecoveryOfficers();
 
   }, [userData?.drc_id]);
+
+
 
 
 
@@ -370,7 +380,9 @@ const DistributeTORO = () => {
       };
 
       setLoading(true);
+      // console.log("Payload for filtering:", payload);
       const response = await List_Handling_Cases_By_DRC_Without_RO(payload);
+      console.log("API Response:", response);
 
       if (Array.isArray(response)) {
         // setFilteredData(response);
@@ -562,10 +574,10 @@ const DistributeTORO = () => {
     if (newSelectedRows.has(case_id)) {
       newSelectedRows.delete(case_id);
     } else {
-      if (newSelectedRows.size >= 5) {
+      if (newSelectedRows.size >= 1) {
         Swal.fire({
           title: "Limit Reached",
-          text: "You can select a maximum of 5 rows at a time.",
+          text: "You can select one record at a time.",
           icon: "warning",
           allowOutsideClick: false,
           allowEscapeKey: false,
@@ -578,6 +590,7 @@ const DistributeTORO = () => {
     }
 
     setSelectedRows(newSelectedRows);
+    console.log("Selected Rows:", newSelectedRows);
 
     // Update filtered officers based on selected rows
     const selectedItems = currentData.filter(item => newSelectedRows.has(item.case_id));
@@ -585,49 +598,325 @@ const DistributeTORO = () => {
 
     // Update select all checkbox state
     setSelectAll(newSelectedRows.size === currentData.length);
+
+    // Trigger the rtom api call when one record is selected
+    if (newSelectedRows.size === 1) {
+      fetchrtomlist(case_id);
+    }
   };
 
-  // Filter Recovery Officers based on selected RTOM Areas
-  const updateFilteredOfficers = (selectedItems) => {
-    if (selectedItems.length === 0) {
+
+  const fetchrtomlist = async (case_id) => {
+
+    try {
+      const payload = {
+        case_id: case_id
+      };
+      const response = await Retrive_Rtom_list_owned_by_products(payload);
+      console.log("Fetched RTOM list for products:", response.data);
+      setRTOMS(response.data);
+
+    } catch (error) {
+      console.error("Error fetching RTOM list for products:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch RTOM list for products.",
+        icon: "error",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#d33",
+      });
+    }
+  }
+
+  // // Filter Recovery Officers based on selected RTOM Areas
+  // const updateFilteredOfficers = (selectedItems) => {
+  //   if (selectedItems.length === 0) {
+  //     setFilteredOfficers(recoveryOfficers);
+  //     return;
+  //   }
+
+  //   // Get RTOM areas of the selected rows
+  //   const selectedAreas = selectedItems.map((item) => item.area);
+
+  //   // Filter officers who have matching RTOM areas
+  //   const officers = recoveryOfficers.filter((officer) => {
+  //     return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
+  //       officer.rtoms_for_ro.some(rtom => selectedAreas.some(area => area.toLowerCase() === rtom.name.toLowerCase()));
+  //   });
+
+  //   setFilteredOfficers(officers);
+
+  //   // Reset selected RO if it's no longer in the filtered list
+  //   if (selectedRO && !officers.some(officer => officer.ro_id.toString() === selectedRO.toString())) {
+  //     setSelectedRO("");
+  //   }
+  // };
+
+  // // Update filtered officers when selected rows change
+  // useEffect(() => {
+  //   const selectedItems = filteredData.filter(item => selectedRows.has(item.case_id));
+  //   updateFilteredOfficers(selectedItems);
+  // }, [selectedRows]);
+
+  // // Initialize filtered officers with all officers
+  // useEffect(() => {
+  //   setFilteredOfficers(recoveryOfficers);
+  // }, [recoveryOfficers]);
+
+
+
+  // Filter Recovery Officers based on selected RTOM from dropdown
+  const updateFilteredOfficers = (selectedRTOM) => {
+    // Ensure selectedRTOM is a valid string
+    if (!selectedRTOM || typeof selectedRTOM !== "string" || selectedRTOM.trim() === "") {
       setFilteredOfficers(recoveryOfficers);
       return;
     }
 
-    // Get RTOM areas of the selected rows
-    const selectedAreas = selectedItems.map((item) => item.area);
-
-    // Filter officers who have matching RTOM areas
     const officers = recoveryOfficers.filter((officer) => {
-      return officer.rtoms_for_ro && Array.isArray(officer.rtoms_for_ro) &&
-        officer.rtoms_for_ro.some(rtom => selectedAreas.some(area => area.toLowerCase() === rtom.name.toLowerCase()));
+      return (
+        officer.rtoms_for_ro &&
+        Array.isArray(officer.rtoms_for_ro) &&
+        officer.rtoms_for_ro.some(
+          (rtom) =>
+            typeof rtom.name === "string" &&
+            rtom.name.toLowerCase() === selectedRTOM.toLowerCase() &&
+            rtom.status?.toLowerCase() === "active"
+        )
+      );
     });
 
     setFilteredOfficers(officers);
 
-    // Reset selected RO if it's no longer in the filtered list
-    if (selectedRO && !officers.some(officer => officer.ro_id.toString() === selectedRO.toString())) {
+    if (
+      selectedRO &&
+      !officers.some(
+        (officer) => officer.ro_id.toString() === selectedRO.toString()
+      )
+    ) {
       setSelectedRO("");
     }
   };
 
-  // Update filtered officers when selected rows change
-  useEffect(() => {
-    const selectedItems = filteredData.filter(item => selectedRows.has(item.case_id));
-    updateFilteredOfficers(selectedItems);
-  }, [selectedRows]);
 
-  // Initialize filtered officers with all officers
+  // Update filtered officers when RTOM dropdown changes
   useEffect(() => {
-    setFilteredOfficers(recoveryOfficers);
-  }, [recoveryOfficers]);
+    updateFilteredOfficers(selectedRTOMS);
+  }, [selectedRTOMS, recoveryOfficers]);
+
+
+
+  const handleAdd = () => {
+
+
+    if (!selectedRTOMS || !selectedRO) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "Please select both RTOM and Recovery Officer.",
+        confirmButtonColor: "#ffc107",
+      });
+      return;
+    }
+
+    const isDuplicate = tabledata.some(
+      (item) =>
+       String(item.rtom) === String(selectedRTOMS) 
+    );
+
+    if (isDuplicate) {
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: `The RTOM "${selectedRTOMS}" is already added`,
+        confirmButtonColor: "#ffc107",
+      });
+      return;
+    }
+
+    // Find the full officer object by ID
+    // Ensure both sides are same type
+    const selectedROData = filteredOfficers.find(
+      (officer) => String(officer.ro_id) === String(selectedRO)
+    );
+
+    // Find the full RTOM object by name
+    const selectedRTOMData = RTOMS.find(
+      (rtom) => String(rtom.rtom) === String(selectedRTOMS)
+    );
+
+    const entry = Array.from(selectedRows).map((case_id) => ({
+      case_id,  // ✅ add case_id
+      rtom: selectedRTOMS,
+      ro_id: selectedRO,
+      ro_name: selectedROData?.ro_name || "",
+      Order_id_list: selectedRTOMData?.Order_ids || [],
+    }));
+
+
+    console.log("Entry to be added:", entry);
+    setTabledata((prev) => [...prev, ...entry]);
+
+    // Clear selections after adding
+    setSelectedRTOMS("");
+    setSelectedRO("");
+    setSelectedRows(new Set());
+
+  }
+
+
+  const handleDelete = (rtom, ro_id) => {
+    setTabledata(
+      tabledata.filter(
+        (item) => !(item.rtom === rtom && item.ro_id === ro_id)
+      )
+    );
+  };
+
+  // const handleSubmit = async () => {
+  //   try {
+  //     if (!selectedRO) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "No Recovery Officer selected!",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!selectedRows || selectedRows.size === 0) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "Please select at least one row before submitting!",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     // Find the selected recovery officer by ro_id
+  //     const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_id.toString() === selectedRO.toString());
+
+  //     if (!selectedOfficer) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "Selected Recovery Officer not found!",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     const ro_id = selectedOfficer.ro_id;
+
+  //     if (!ro_id) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "Recovery Officer ID is missing.",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     const selectedCaseIds = Array.from(selectedRows);
+
+  //     if (selectedCaseIds.length === 0) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "No cases selected!",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     const userId = await getLoggedUserId();
+
+  //     // Create the payload object with all required parameters
+  //     const assignmentPayload = {
+  //       caseIds: selectedCaseIds,
+  //       drcId: userData?.drc_id,
+  //       roId: ro_id,
+  //       assigned_by: userId, // Include assigned_by in the payload
+  //     };
+
+  //     // Update the API call to pass the complete payload
+  //     const response = await assignROToCase(assignmentPayload);
+
+  //     if (response.details?.failed_cases?.length > 0) {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: "The RTOM area does not match any RTOM area assigned to Recovery Officer",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#d33",
+  //       });
+  //       return;
+  //     }
+
+  //     if (response.status === 'success') {
+  //       Swal.fire({
+  //         title: "Success",
+  //         text: "Cases assigned successfully!",
+  //         icon: "success",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#28a745"
+  //       });
+  //       navigate(`/drc/assigned-ro-case-log`);
+  //     } else {
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: response.message || "An error occurred while assigning cases.",
+  //         icon: "error",
+  //         allowOutsideClick: false,
+  //         allowEscapeKey: false,
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#d33",
+  //       });
+  //     }
+
+  //   } catch (error) {
+  //     // console.error("Error in handleSubmit:", error);
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: "An error occurred while assigning cases.",
+  //       icon: "error",
+  //       allowOutsideClick: false,
+  //       allowEscapeKey: false,
+  //       confirmButtonText: "Ok",
+  //       confirmButtonColor: "#d33",
+  //     });
+  //   }
+  // };
 
   const handleSubmit = async () => {
+
     try {
-      if (!selectedRO) {
+      if (tabledata.length === 0) {
         Swal.fire({
           title: "Error",
-          text: "No Recovery Officer selected!",
+          text: "No data to submit! Please add at least one entry.",
           icon: "error",
           allowOutsideClick: false,
           allowEscapeKey: false,
@@ -636,118 +925,39 @@ const DistributeTORO = () => {
         });
         return;
       }
-
-      if (!selectedRows || selectedRows.size === 0) {
-        Swal.fire({
-          title: "Error",
-          text: "Please select at least one row before submitting!",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      // Find the selected recovery officer by ro_id
-      const selectedOfficer = recoveryOfficers.find((officer) => officer.ro_id.toString() === selectedRO.toString());
-
-      if (!selectedOfficer) {
-        Swal.fire({
-          title: "Error",
-          text: "Selected Recovery Officer not found!",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      const ro_id = selectedOfficer.ro_id;
-
-      if (!ro_id) {
-        Swal.fire({
-          title: "Error",
-          text: "Recovery Officer ID is missing.",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      const selectedCaseIds = Array.from(selectedRows);
-
-      if (selectedCaseIds.length === 0) {
-        Swal.fire({
-          title: "Error",
-          text: "No cases selected!",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
       const userId = await getLoggedUserId();
 
-      // Create the payload object with all required parameters
-      const assignmentPayload = {
-        caseIds: selectedCaseIds,
-        drcId: userData?.drc_id,
-        roId: ro_id,
-        assigned_by: userId, // Include assigned_by in the payload
+      console.log("userId:", userId);
+      const payload = {
+        assignments: tabledata,
+        drc_id: userData?.drc_id,
+        assigned_by: userId.user_id,
       };
 
-      // Update the API call to pass the complete payload
-      const response = await assignROToCase(assignmentPayload);
+      // Call the API to submit the assignments
+      const response = await assignROToCaseSubmit(payload);
 
-      if (response.details?.failed_cases?.length > 0) {
-        Swal.fire({
-          title: "Error",
-          text: "The RTOM area does not match any RTOM area assigned to Recovery Officer",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      if (response.status === 'success') {
-        Swal.fire({
-          title: "Success",
-          text: "Cases assigned successfully!",
-          icon: "success",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#28a745"
-        });
-        navigate(`/drc/assigned-ro-case-log`);
-      } else {
-        Swal.fire({
-          title: "Error",
-          text: response.message || "An error occurred while assigning cases.",
-          icon: "error",
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#d33",
-        });
-      }
+      console.log("Submission Payload:", payload);
+      Swal.fire({
+        title: "Success",
+        text: "Assignments submitted successfully!",
+        icon: "success",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#28a745",
+      });
+      
+      window.location.reload(); // Reload the page 
 
     } catch (error) {
-      // console.error("Error in handleSubmit:", error);
+      console.error("Error in handleSubmit:", error);
+
+      const errormessage = error?.response?.data || "An error occurred while submitting assignments.";
       Swal.fire({
+
         title: "Error",
-        text: "An error occurred while assigning cases.",
+        text: errormessage,
         icon: "error",
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -783,6 +993,7 @@ const DistributeTORO = () => {
   //       return <span className="text-gray-500">N/A</span>;
   //   }
   // };
+
 
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
@@ -972,6 +1183,7 @@ const DistributeTORO = () => {
               <th className={GlobalStyle.tableHeader}>Billing Center</th>
               {/* <th className={GlobalStyle.tableHeader}>RO</th> */}
               <th className={GlobalStyle.tableHeader}>Expire Date</th>
+              <th className={GlobalStyle.tableHeader}>Product Billing Center</th>
             </tr>
           </thead>
           <tbody>
@@ -1001,6 +1213,24 @@ const DistributeTORO = () => {
                   <td className={GlobalStyle.tableData}>  {item.expire_dtm
                     ? new Date(item.expire_dtm).toLocaleDateString("en-GB")
                     : ""}  </td>
+                  <td className={GlobalStyle.tableData}
+                    data-tooltip-id={`tooltip-${index}`}
+                  >
+                    {item.ref_product_rtom_count || ""}
+
+                  </td>
+
+                  <Tooltip id={`tooltip-${index}`} place="bottom" effect="solid">
+                    {item.ref_product_rtom_list && item.ref_product_rtom_list.length > 0 ? (
+                      <ul className="list-disc pl-4">
+                        {item.ref_product_rtom_list.slice(0, 5).map((ref, i) => (
+                          <li key={i}>{ref}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span>No items</span>
+                    )}
+                  </Tooltip>
                 </tr>
               ))
             ) : (
@@ -1046,13 +1276,38 @@ const DistributeTORO = () => {
 
       {/* RO Selection and Submit Section */}
       <div className="flex justify-end gap-4 mt-4">
+
+        {/* The Rtoms Dropdown */}
+        <select
+          id="rtom-select"
+          className={GlobalStyle.selectBox}
+          value={selectedRTOMS}
+          onChange={(e) => setSelectedRTOMS(e.target.value)}
+          disabled={selectedRows.size === 0}
+          style={{ color: selectedRTOMS === "" ? "gray" : "black" }}
+        >
+          <option value="" hidden>Select RTOM</option>
+          {RTOMS && RTOMS.length > 0 ? (
+            RTOMS.map((item, index) => (
+              <option key={index} value={item.rtom} style={{ color: "black" }}>
+                {item.rtom}
+              </option>
+            ))
+          ) : (
+            <option value="" disabled>No RTOMs available</option>
+          )}
+        </select>
+
         {/* Recovery Officer (RO) Select Dropdown */}
+
+        {/* {console.log("RTOM:", selectedRTOMS, "RO:", selectedRO)} */}
+
         <select
           id="ro-select"
           className={GlobalStyle.selectBox}
           value={selectedRO}
           onChange={(e) => setSelectedRO(e.target.value)}
-          disabled={selectedRows.size === 0}
+          disabled={selectedRTOMS === ""}
           style={{ color: selectedRO === "" ? "gray" : "black" }}
         >
           <option value="" hidden>Select RO</option>
@@ -1066,11 +1321,94 @@ const DistributeTORO = () => {
           )}
         </select>
 
-        {/* Submit Button */}
+
+
+        {/* Add button */}
+
+        <button
+          onClick={handleAdd}
+          className={`${GlobalStyle.buttonPrimary} ${(selectedRTOMS === "" || selectedRO === "") ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={selectedRTOMS === "" || selectedRO === ""}
+        >
+          Add
+        </button>
+
+
+
+
+      </div>
+
+
+      {/* Table Section */}
+      <div className="flex flex-col mt-6">
+
+        {/* Table Container */}
+        <div className={`${GlobalStyle.tableContainer} overflow-x-auto w-3/4 mx-auto`}>
+          <table className={GlobalStyle.table}>
+            <thead className={GlobalStyle.thead}>
+              <tr>
+                <th className={GlobalStyle.tableHeader}>Case ID</th>
+                <th className={GlobalStyle.tableHeader}>RTOM</th>
+                <th className={GlobalStyle.tableHeader}>Recovery Officer</th>
+                <th className={GlobalStyle.tableHeader}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {tabledata.length > 0 ? (
+                tabledata.map((item, index) => (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? GlobalStyle.tableRowEven
+                        : GlobalStyle.tableRowOdd
+                    }
+                  >
+                    <td className={GlobalStyle.tableData}>{item.case_id}</td>
+                    <td className={GlobalStyle.tableData}>{item.rtom}</td>
+                    <td className={GlobalStyle.tableData}>{item.ro_name}</td>
+                    <td className={GlobalStyle.tableData}>
+                      <div className="flex justify-center items-center">
+
+                        <button
+                          src={deleteIcon}
+                          onClick={() => handleDelete(item.rtom, item.ro_id)}
+                          data-tooltip-id="delete-tooltip"
+                        >
+                          <img src={deleteIcon} alt="Delete Icon" className="h-6 w-6" />
+                        </button>
+                        <Tooltip id="delete-tooltip" place="bottom" effect="solid">
+                          <span>Delete</span>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className={GlobalStyle.tableData}
+                    style={{ textAlign: "center" }}
+                  >
+                    No data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+
+      {/* Submit Button */}
+      <div className="flex justify-end mt-4 mx-auto">
         <button
           onClick={handleSubmit}
-          className={`${GlobalStyle.buttonPrimary} ${selectedRows.size === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={selectedRows.size === 0}
+          className={`${GlobalStyle.buttonPrimary} ${tabledata.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          //disabled= {selectedRTOMS === "" || selectedRO === ""}
+          disabled={tabledata.length === 0}
         >
           Submit
         </button>

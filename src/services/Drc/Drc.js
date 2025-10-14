@@ -5,9 +5,18 @@ const URL = `${BASE_URL}/DRC`;
 
 export const List_DRC_Details_By_DRC_ID = async (payload) => {
   try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
+
     const response = await axios.post(
       `${URL}/List_DRC_Details_By_DRC_ID`,
-      payload
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (response.data.status === "success") {
@@ -17,10 +26,14 @@ export const List_DRC_Details_By_DRC_ID = async (payload) => {
       throw new Error(response.data.message);
     }
   } catch (error) {
-    console.error("Error Getting details of DRC:", error.message);
+    console.error(
+      "Error Getting details of DRC:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
+
 
 export const List_Pre_Negotiation_By_Case_Id = async (payload) => {
   try {
@@ -30,7 +43,8 @@ export const List_Pre_Negotiation_By_Case_Id = async (payload) => {
     const response = await axios.post(
       `${URL}/List_Pre_Negotiation_By_Case_Id`,
       payload,
-      {eaders: {
+      {
+        headers: {
           Authorization: `Bearer ${token}`, // attach JWT
           "Content-Type": "application/json",
         },

@@ -42,6 +42,8 @@ export const listHandlingCasesByDRC = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
       };
     });
 
@@ -92,6 +94,8 @@ export const List_Handling_Cases_By_DRC_Without_RO = async (payload) => {
         remark: caseData.remark || null,
         expire_dtm: caseData.expire_dtm,
         ro_name: caseData.ro_name || null,
+        ref_product_rtom_list: caseData.ref_product_rtom_list || null, // New field for Product Billing Center
+        ref_product_rtom_count: caseData.ref_product_rtom_count || null, // New field for count
       };
     });
 
@@ -181,6 +185,36 @@ export const assignROToCase = async (payload) => {
     throw error;
   }
 };
+
+// New Api for the Assign RO to Case Submit
+
+export const assignROToCaseSubmit = async (payload) => {
+  try {
+    // get token from localStorage
+    const token = localStorage.getItem("accessToken");
+    console.log("Payload in service:", payload);
+    const response = await axios.post(`${URL}/Asign_Ro_to_case_submited`, {
+      drc_id: payload.drc_id,
+      assigned_by: payload.assigned_by,
+      assigned_list: payload.assignments,
+    },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      });
+
+      
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error assigning Recovery Officer to cases:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+}
 
 // List All Active ROs By DRC and RTOM
 export const listAllActiveRosByDRCID = async (drcId, rtomArea) => {
@@ -701,7 +735,7 @@ export const fetchActiveNegotiations = async () => {
     const token = localStorage.getItem("accessToken");
 
     const response = await axios.post(
-      `${URL}/list_Active_Customer_Negotiations`,
+      `${URL}/list_Active_Customer_Negotiations`,{},
       {
         headers: {
           Authorization: `Bearer ${token}`, // attach JWT
@@ -1057,6 +1091,70 @@ export const Retrive_active_settlement_plan = async (payload) => {
   } catch (error) {
     console.error(
       "Error retrieving active settlement plan:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export const Retrive_Rtom_list_owned_by_products = async (payload) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(
+      `${URL}/Retrive_Rtom_list_owned_by_products`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error retrieving RTOM list owned by products:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export const check_main_rtom_equal_to_product_rtom = async (payload) => {
+  try {
+    const response = await axios.post(
+      `${URL}/check_main_rtom_equal_to_product_rtom`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error in checking main RTOM:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export const List_Product_References_By_RO = async (payload) => {
+  try {
+
+     const token = localStorage.getItem("accessToken"); 
+
+    const response = await axios.post(
+      `${URL}/List_Product_References_By_RO`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // attach JWT
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error retrieving product references by RO:",
       error.response?.data || error.message
     );
     throw error;

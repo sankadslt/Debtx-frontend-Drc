@@ -921,6 +921,7 @@ export default function AssignedROcaselog() {
                                   state: {
                                     CaseID: item.case_id,
                                     ActionType: item.action_type,
+                                    Page: "Type1"
                                   },
                                 });
                               }
