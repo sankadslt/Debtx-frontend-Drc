@@ -507,7 +507,9 @@ const [isMatch, setIsMatch] = useState(true);
         title: "Success",
         text: "Negotiation submitted successfully.",
         confirmButtonColor: "#28a745",
-      });
+      }).then(() => {
+         window.location.reload();
+         });
       setFormData(initialFormData);
     } catch (error) {
       const backendData = error?.response?.data;
