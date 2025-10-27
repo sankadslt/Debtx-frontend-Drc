@@ -516,9 +516,9 @@ export default function RO_ADDro() {
   const ROLE_LABEL = {
     RO: "Recovery Officer",
     "drcUser": "DRC User",
-    "drc coordinator": "DRC Coordinator",
+    "drc coordinator": "drc coordinator",
     "call center": "call center",
-    "drc staff": "DRC staff",
+    "drc staff": "drc staff",
   };
 
   useEffect(() => {
@@ -830,7 +830,7 @@ if (contactNoTwo && contactNoTwo.length !== 10) {
                     value={userType}
                     onChange={(e) => setUserType(e.target.value)}
                   >
-                    <option value="drcUser">DRC User</option>
+                    <option value="drcUser">DRC Officer</option>
                     <option value="RO">RO</option>
                   </select>
                 </div>
