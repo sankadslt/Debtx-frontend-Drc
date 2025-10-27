@@ -1096,7 +1096,7 @@ export default function EditCustomerProfile() {
         payload.Driving_License = caseDetails.DrivingLicense;
         payload.Passport = caseDetails.PP;
         payload.NIC = caseDetails.NIC;
-        payload.Remark = caseDetails.remark;
+        payload.remark = caseDetails.remark;
         payload.edited_by = userDataID.user_id;
         // };
         let isEdited = false;
