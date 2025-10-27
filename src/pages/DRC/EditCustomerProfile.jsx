@@ -1071,7 +1071,7 @@ export default function EditCustomerProfile() {
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
 
-        if (!contact_no || !email || !address || !NIC || !caseDetails.remark) {
+        if (!contact_no || !address || !NIC || !caseDetails.remark) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Warning',
@@ -1837,7 +1837,8 @@ export default function EditCustomerProfile() {
                                     </div>
                                 </td>
                                 <td className={`${GlobalStyle.tableData} font-medium whitespace-nowrap hidden sm:table-cell w-1/3 sm:w-1/4`}>
-                                    Email <span style={{ color: "red" }}>*</span>
+                                    Email
+                                     {/* <span style={{ color: "red" }}>*</span> */}
                                 </td>
                                 <td className="w-4 text-left hidden sm:table-cell">:</td>
                                 <td className={`${GlobalStyle.tableData} hidden sm:table-cell`}>
