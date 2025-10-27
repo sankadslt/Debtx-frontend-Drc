@@ -1,6 +1,6 @@
 import axios from "axios";
-import api from "../../../../Debtx-frontend-DRC/src/services/auth/axiosInstance";
-// import api from "../auth/axiosInstance";
+// import api from "../../../../Debtx-frontend-DRC/src/services/auth/axiosInstance";
+import api from "../auth/axiosInstance";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const URL = `${BASE_URL}/recovery_officer`;
