@@ -257,15 +257,7 @@ export const updateROorDRCUserDetails = async (data) => {
 
 export const createNewDRCUserOrRO = async (data) => {
     try {
-        const token = localStorage.getItem("accessToken");
-
-        console.log("Authorization header will be:", `Bearer ${token}`);
-
-        const response = await api.post(`${URL}/Create_New_DRCUser_or_RO`, data, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+        const response = await api.post(`${URL}/Create_New_DRCUser_or_RO`, data, { 
         });
         if (response.data.success) {
             return response.data;
