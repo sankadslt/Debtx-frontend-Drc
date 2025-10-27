@@ -645,9 +645,40 @@ const [isMatch, setIsMatch] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate(); // Initialize navigate function
 
-  const handleIconClickbutton = (actionType, product) => {
-    if (actionType === "Not Submit") {
-      console.log("this is the form data ", formData);
+  // const handleIconClickbutton = (actionType, product) => {
+  //   if (actionType === "Not Submit") {
+  //     console.log("this is the form data ", formData);
+  //     setSelectedProduct(product);
+  //     setShowDetailedView(false);
+  //     navigate("/drc/customer-negotiation-editcpe", {
+  //       state: {
+
+  //         product: product,
+  //         caseId: payload.case_id,
+  //         drcId: formData.drcId,  // Pass drcId here
+  //         customerRef: caseDetails.customer_ref,
+  //         accountNo: formData.accountNo,  // Assuming product object has caseId, customerRef, Service_address
+  //         serviceAddress: product.Service_address,
+  //       }
+  //     });
+
+  //   } else {
+  //     setSelectedProduct(product);
+  //     setShowDetailedView(true);
+  //   }
+
+
+  // };
+
+
+  const handleviewicon = (product) => {
+    setSelectedProduct(product);
+    console.log("this is the view icon data  ", product);
+    setShowDetailedView(true);
+  };
+
+  const handleediticon = (product) => {
+     console.log("this is the form data ", formData);
       setSelectedProduct(product);
       setShowDetailedView(false);
       navigate("/drc/customer-negotiation-editcpe", {
@@ -661,14 +692,9 @@ const [isMatch, setIsMatch] = useState(true);
           serviceAddress: product.Service_address,
         }
       });
-
-    } else {
-      setSelectedProduct(product);
-      setShowDetailedView(true);
-    }
+    };
 
 
-  };
 
    const handleBack = () => {
     if (Type === "Type1") {
@@ -1317,6 +1343,11 @@ const [isMatch, setIsMatch] = useState(true);
                   <td className={style.tdStyle}>:</td>
                   <td className={style.tdStyle}>{caseDetails.customer_ref}</td>
                 </tr>
+                <tr>
+                  <th className={style.thStyle}>Account No</th>
+                  <td className={style.tdStyle}>:</td>
+                  <td className={style.tdStyle}>{caseDetails.account_no}</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1327,8 +1358,8 @@ const [isMatch, setIsMatch] = useState(true);
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
               <tr>
-                <th className={GlobalStyle.tableHeader}>Telephone No</th>
-                <th className={GlobalStyle.tableHeader}>Account No</th>
+                <th className={GlobalStyle.tableHeader}>Product Label</th>
+                {/* <th className={GlobalStyle.tableHeader}>Account No</th> */}
                 <th className={GlobalStyle.tableHeader}>Service Type</th>
                 <th className={GlobalStyle.tableHeader}>Ownership</th>
                 <th className={GlobalStyle.tableHeader}>RTOM</th>
@@ -1352,15 +1383,15 @@ const [isMatch, setIsMatch] = useState(true);
                       <td className={GlobalStyle.tableData}>
                         {product.Product_Label || ""}
                       </td>
-                      <td className={GlobalStyle.tableData}>{""}</td>  {/*  the account number feild should come here */}
+                      {/* <td className={GlobalStyle.tableData}>{""}</td>   the account number feild should come here */}
                       <td className={GlobalStyle.tableData}>{product.Service_Type || ""}</td>
                       <td className={GlobalStyle.tableData}>
                         {product.Equipment_Ownership || ""}
                       </td>
                       <td className={GlobalStyle.tableData}>{product.RTOM || ""}</td>
-                      <td className={GlobalStyle.tableData}>{""}</td>
+                      <td className={GlobalStyle.tableData}>{ product.RCMP_status?.RCMP_status || null}</td>
                       <td className={GlobalStyle.tableData}>
-                        <img
+                        {/* <img
                           src={product.product_status === "Not Submit" ? editIcon : viewIcon}
                           alt="Product Icon"
                           width={24}
@@ -1369,8 +1400,36 @@ const [isMatch, setIsMatch] = useState(true);
                           data-tooltip-id="tooltip"
                           data-tooltip-content={product.product_status === "Not Submit" ? "Edit" : "View"}
                           onClick={() => handleIconClickbutton(product.product_status, product)}
+                        /> */}
+                        <div className="flex items-center">
+                        <img
+                          src={viewIcon}
+                          alt="View Icon"
+                          width={24}
+                          height={24}
+                          style={{ cursor: "pointer" }}
+                          data-tooltip-id="view tooltip"
+                          data-tooltip-content="View"
+                          onClick={() => handleviewicon(product)}
                         />
-                        <Tooltip id="tooltip" place="bottom" className="tooltip" />
+                        <Tooltip id="view tooltip" place="bottom" className="tooltip" />
+
+                        {product.RCMP_status?.RCMP_status !== "Submitted" && (
+                          <>
+                        <img
+                          src={editIcon}
+                          alt="Edit Icon"
+                          width={24}
+                          height={24}
+                          style={{ cursor: "pointer", marginLeft: "10px" }}
+                          data-tooltip-id="edit tooltip"
+                          data-tooltip-content="Edit"
+                          onClick={() => handleediticon(product)}
+                        />
+                        <Tooltip id="edit tooltip" place="bottom" className="tooltip" />
+                          </>
+                        )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1407,7 +1466,7 @@ const [isMatch, setIsMatch] = useState(true);
             <tr>
               <th className={style.thStyle}>Service Address</th>
               <td className={style.tdStyle}>:</td>
-              <td className={style.tdStyle}>{selectedProduct.service_address}</td>
+              <td className={style.tdStyle}>{selectedProduct.Service_Address}</td>
             </tr>
           </tbody>
         </table>
@@ -1415,9 +1474,9 @@ const [isMatch, setIsMatch] = useState(true);
         <table>
           <tbody>
             <tr>
-              <th className={style.thStyle}>Telephone No</th>
+              <th className={style.thStyle}>Product Label</th>
               <td className={style.tdStyle}>:</td>
-              <td className={style.tdStyle}>{selectedProduct.product_label}</td>
+              <td className={style.tdStyle}>{selectedProduct.Product_Label}</td>
             </tr>
             {/* <tr>
               <th className={style.thStyle}>Account No</th>
@@ -1427,12 +1486,12 @@ const [isMatch, setIsMatch] = useState(true);
             <tr>
               <th className={style.thStyle}>Service Type</th>
               <td className={style.tdStyle}>:</td>
-              <td className={style.tdStyle}>{selectedProduct.service || "N/A"}</td>
+              <td className={style.tdStyle}>{selectedProduct.Service_Type || "N/A"}</td>
             </tr>
             <tr>
               <th className={style.thStyle}>Ownership</th>
               <td className={style.tdStyle}>:</td>
-              <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
+              <td className={style.tdStyle}>{selectedProduct.Equipment_Ownership || "N/A"}</td>
             </tr>
           </tbody>
         </table>
