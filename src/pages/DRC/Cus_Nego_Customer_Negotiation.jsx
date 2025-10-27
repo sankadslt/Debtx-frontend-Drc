@@ -244,6 +244,7 @@ const [isMatch, setIsMatch] = useState(true);
     const fetchRORequests = async () => {
       try {
         const RO_Requests = await getActiveRORequestsforNegotiationandMediation("Negotiation");
+        console.log("Active RO Requests for Negotiation:", RO_Requests);
         setActiveRORequests(RO_Requests);
       } catch (error) {
         console.error("Error fetching active requests:", error.message);
