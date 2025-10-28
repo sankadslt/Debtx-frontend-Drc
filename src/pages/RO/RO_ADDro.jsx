@@ -859,7 +859,7 @@ if (contactNoTwo && contactNoTwo.length !== 10) {
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {userType === "drcUser" ? "DRC User Name" : "Recovery Officer Name"} <span className="text-red-500">*</span>
+                  {userType === "drcUser" ? "Name" : "Name"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">
@@ -875,7 +875,7 @@ if (contactNoTwo && contactNoTwo.length !== 10) {
 
               <div className="table-row">
                 <div className="table-cell px-2 sm:px-4 py-2 font-semibold text-sm sm:text-base">
-                  {userType === "drcUser" ? "DRC Coordinator NIC" : "RO NIC"} <span className="text-red-500">*</span>
+                  {userType === "drcUser" ? "NIC" : "NIC"} <span className="text-red-500">*</span>
                 </div>
                 <div className="table-cell px-1 sm:px-4 py-2 font-semibold text-sm sm:text-base">:</div>
                 <div className="table-cell px-2 sm:px-4 py-2">

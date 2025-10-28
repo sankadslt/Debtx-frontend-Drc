@@ -1,4 +1,6 @@
 import axios from "axios";
+// import api from "../../../../Debtx-frontend-DRC/src/services/auth/axiosInstance";
+import api from "../auth/axiosInstance";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const URL = `${BASE_URL}/recovery_officer`;
@@ -145,7 +147,7 @@ export const List_All_RO_and_DRCuser_Details_to_DRC = async (payload) => {
          const token = localStorage.getItem("accessToken"); 
          console.log("Access Token from localStorag list:", token || "No token found");
 
-    const response = await axios.post(
+    const response = await api.post(
       `${URL}/List_All_RO_and_DRCuser_Details_to_DRC`,
       payload,
       {
@@ -172,7 +174,7 @@ export const List_RO_Info_Own_By_RO_Id = async (payload) => {
          const token = localStorage.getItem("accessToken");
          console.log("Access Token from localStorage:", token || "No token found");
 
-         const response = await axios.post(
+         const response = await api.post(
       `${URL}/List_RO_Info_Own_By_RO_Id`,
       payload,
       {
@@ -201,7 +203,7 @@ export const terminateRO = async (terminationDetails) => {
          const token = localStorage.getItem("accessToken");
         console.log("Authorization header will be:", `Bearer ${token}`);
         
-        const response = await axios.patch(`${URL}/Terminate_RO`, terminationDetails, {
+        const response = await api.patch(`${URL}/Terminate_RO`, terminationDetails, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -220,34 +222,42 @@ export const terminateRO = async (terminationDetails) => {
         throw new Error(error.response?.data?.message || 'Error terminating Recovery Officer.');
     }
 };
+
 // Update RO or DRC user details
 export const updateROorDRCUserDetails = async (data) => {
-    try {
-        const response = await axios.patch(`${URL}/Update_RO_or_DRCuser_Details`, data);
+  try {
+    const token = localStorage.getItem("accessToken");
 
-        if (response.data.success) {
-            return response.data;
-        } else {
-            console.error(response.data.message);
-            throw new Error(response.data.message);
-        }
-    } catch (error) {
-        console.error("Error updating RO or DRC user:", error.response?.data?.message || error.message);
-        throw new Error(error.response?.data?.message || 'Error updating RO or DRC user.');
+    console.log("Authorization header will be:", `Bearer ${token}`);
+
+    const response = await api.patch(`${URL}/Update_RO_or_DRCuser_Details`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    // support both response formats: { status: "success" } or { success: true }
+    if (response.data?.status === "success" || response.data?.success) {
+      return response.data;
+    } else {
+      throw new Error(response.data?.message || "Failed to update RO or DRC user details");
     }
+  } catch (error) {
+    console.error("Error updating RO or DRC user:", {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
+    });
+
+    throw error?.response?.data?.message || "An error occurred while updating RO or DRC user details";
+  }
 };
+
 
 export const createNewDRCUserOrRO = async (data) => {
     try {
-        const token = localStorage.getItem("accessToken");
-
-        console.log("Authorization header will be:", `Bearer ${token}`);
-
-        const response = await axios.post(`${URL}/Create_New_DRCUser_or_RO`, data, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+        const response = await api.post(`${URL}/Create_New_DRCUser_or_RO`, data, { 
         });
         if (response.data.success) {
             return response.data;
