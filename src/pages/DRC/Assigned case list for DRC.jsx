@@ -114,6 +114,13 @@ export default function AssignedCaseListforDRC() {
     loadUser();
   }, []);
 
+  const handleCaseClickDrc = (caseId, drcId, roId) => {
+  navigate("/drc/case-details", {
+    state: { caseId, drc_id: drcId, ro_id: roId || null },
+  });
+  console.log("Navigating with:", caseId, drcId, roId);
+};
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -643,8 +650,13 @@ export default function AssignedCaseListforDRC() {
                       : GlobalStyle.tableRowOdd
                   }
                 >
-
-                  <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || ""}</td>
+                <td
+  className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+  onClick={() => handleCaseClickDrc(item.case_id, userData?.drc_id, item.ro_id)}
+>
+  {item.case_id || ""}
+</td>
+                  
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status, index)}</td>
                   <td className={GlobalStyle.tableData}>{item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
