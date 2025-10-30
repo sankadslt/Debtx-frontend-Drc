@@ -14,11 +14,13 @@ import { useState, useEffect } from "react";
 
 import { AiFillEye } from "react-icons/ai";
 import { FaPhone } from "react-icons/fa";
+import { refreshAccessToken } from "../../services/auth/authService.js";
 import {
   FaAlignCenter,
   FaArrowLeft,
   FaArrowRight,
   FaSearch,
+  FaDownload
 } from "react-icons/fa";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx"; // Importing GlobalStyle
 import DatePicker from "react-datepicker";
@@ -32,6 +34,7 @@ import Swal from "sweetalert2";
 import { Create_Task_Assigned_Case_for_DRC } from "../../services/task/taskService.js";
 import { Tooltip } from "react-tooltip";
 // import { Tooltip } from "react-tooltip";
+import { jwtDecode } from "jwt-decode";
 
 //Status Icons
 import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
@@ -59,6 +62,7 @@ export default function AssignedCaseListforDRC() {
 
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   //State for dropdowns
   const [arrearsAmounts, setArrearsAmounts] = useState([]);
@@ -71,6 +75,7 @@ export default function AssignedCaseListforDRC() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,6 +119,13 @@ export default function AssignedCaseListforDRC() {
     loadUser();
   }, []);
 
+  const handleCaseClickDrc = (caseId, drcId, roId) => {
+  navigate("/drc/case-details", {
+    state: { caseId, drc_id: drcId, ro_id: roId || null },
+  });
+  console.log("Navigating with:", caseId, drcId, roId);
+};
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -150,6 +162,27 @@ export default function AssignedCaseListforDRC() {
       }
     };
     fetchData();
+
+    const token = localStorage.getItem("accessToken");
+        if (!token) return;
+    
+        try {
+          let decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+    
+          if (decoded.exp < currentTime) {
+            refreshAccessToken().then((newToken) => {
+              if (!newToken) return;
+              const newDecoded = jwtDecode(newToken);
+              setUserRole(newDecoded.role);
+            });
+          } else {
+            setUserRole(decoded.role);
+          }
+        } catch (error) {
+          console.error("Invalid token:", error);
+        }
+
   }, [userData?.drc_id]);
 
 
@@ -404,6 +437,79 @@ export default function AssignedCaseListforDRC() {
     }
   };
 
+  const HandleCreateTaskDownloadCaseList = async () => {
+      if(!fromDate && !toDate && !selectedArrearsAmount && !selectedRo){
+        Swal.fire({
+          title: "Warning",
+          text: "Please select at least one filter before creating a task.",
+          icon: "warning",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          confirmButtonColor: "#f1c40f"
+        });
+        return;
+      }
+      else if (toDate) {
+            // Calculate month gap
+            const diffInMs = toDate - fromDate;
+            const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+      
+            if (diffInDays > 31) {
+              Swal.fire({
+                title: "Warning",
+                text: "The selected range is more than 1 month.",
+                icon: "warning",
+                confirmButtonColor: "#f1c40f",
+              });
+      
+              return;
+            }
+           }
+      
+  
+      setIsCreatingTask(true);
+      try {
+        // Set FROM date to midnight (00:00:00.000 local time)
+        const formatStartOfDay = (date) => {
+          if (!date) return null;
+          const localStart = new Date(date);
+          localStart.setHours(0, 0, 0, 0); // midnight local
+          return localStart.toISOString(); // convert to UTC ISO string
+        };
+  
+        // Set TO date to end of day (23:59:59.999 local time)
+        const formatEndOfDay = (date) => {
+          if (!date) return null;
+          const localEnd = new Date(date);
+          localEnd.setHours(23, 59, 59, 999); // 11:59:59 PM local
+          return localEnd.toISOString(); // convert to UTC ISO string
+        };
+  
+        const response = await Create_Task_Assigned_Case_for_DRC({
+          FromDate: formatStartOfDay(fromDate),
+          ToDate: formatEndOfDay(toDate),
+          arrears_band: selectedArrearsAmount,
+          ro_id: selectedRo
+        });
+         console.log("Task Creation Response:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Task Created Successfully!",
+          text: "Task ID: " + response.data.Task_Id,
+          confirmButtonColor: "#28a745",
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Error",
+          text: error.message || "Failed to create task.",
+          icon: "error",
+          confirmButtonColor: "#dc3545"
+        });
+      } finally {
+        setIsCreatingTask(false);
+      }
+    };
+
   useEffect(() => {
     if (userData?.drc_id && isMoreDataAvailable && currentPage > maxCurrentPage) {
       setMaxCurrentPage(currentPage); // Update max current page
@@ -584,18 +690,24 @@ export default function AssignedCaseListforDRC() {
             placeholderText="To"
             className={GlobalStyle.inputText}
           />
+          {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && (
           <button
-            onClick={handleFilter}
-            className={`${GlobalStyle.buttonPrimary}`}
+          onClick={handleFilter}
+          className={`${GlobalStyle.buttonPrimary}`}
           >
             Filter
           </button>
-          <button
+          )}
+          
+          {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && (
+            <button
             onClick={handleClear}
             className={`${GlobalStyle.buttonRemove}`}
           >
             Clear
-          </button>
+          </button>  
+          )}
+          
         </div>
       </div>
 
@@ -643,8 +755,13 @@ export default function AssignedCaseListforDRC() {
                       : GlobalStyle.tableRowOdd
                   }
                 >
-
-                  <td className={`${GlobalStyle.tableData}  text-black hover:underline cursor-pointer`}>{item.case_id || ""}</td>
+                <td
+  className={`${GlobalStyle.tableData} text-black hover:underline cursor-pointer`}
+  onClick={() => handleCaseClickDrc(item.case_id, userData?.drc_id, item.ro_id)}
+>
+  {item.case_id || ""}
+</td>
+                  
                   <td className={`${GlobalStyle.tableData} flex justify-center items-center`}>{renderStatusIcon(item.status, index)}</td>
                   <td className={GlobalStyle.tableData}>{item.created_dtm
                     ? new Date(item.created_dtm).toLocaleDateString("en-GB")
@@ -737,6 +854,21 @@ export default function AssignedCaseListforDRC() {
         >
           <FaArrowRight />
         </button>
+      </div>
+      <div className="flex justify-end mt-6">
+        {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && filteredData.length !== 0 && (
+          <button
+            onClick={HandleCreateTaskDownloadCaseList}
+            className={`${GlobalStyle.buttonPrimary} ${isCreatingTask ? 'opacity-50' : ''}`}
+            disabled={isCreatingTask}
+            
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
+            {!isCreatingTask && <FaDownload style={{ marginRight: '8px' }} />}
+            {isCreatingTask ? 'Creating Tasks...' : 'Create task and let me know'}
+       
+          </button>
+        )}
       </div>
     </div>
   );

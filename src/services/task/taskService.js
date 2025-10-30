@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getUserData } from "../auth/authService";
 import { getLoggedUserId } from "../auth/authService";
+import api from "../auth/axiosInstance";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL; 
 const TASK_URL = `${BASE_URL}/task`;
@@ -155,20 +156,114 @@ export const Task_for_Download_Incidents = async (incidentData) => {
 
   export const Create_Task_Assigned_Case_for_DRC = async (filteredParams) => {
     try {
-      // const user = await getUserData();
+      //const user = await getUserData();
       const user = await getLoggedUserId();
-  
+      
+      // normalize to plain id (handles object or primitive)
+    const createdByRaw = user && typeof user === "object" ? (user.user_id ?? user.id ?? user) : user;
+    // convert to type backend expects: use Number(...) if backend expects a number
+    const Created_By = createdByRaw != null ? String(createdByRaw) : createdByRaw;
+
       const taskData = {
-        Template_Task_Id: 34,
+        Template_Task_Id: 63,
         task_type: "Create Task for Download Assign Case List For DRC",
-        Created_By: user.user_id,
+        Created_By,
         task_status: "open",
-        Incident_Status: "Assign Case for DRC",
-        filteredParams: { ...filteredParams }
+        drc_id: user.drc_id,
+        ...filteredParams,
       };
       console.log("Task Data:", taskData); 
   
-      const response = await axios.post(`${TASK_URL}/Create_Task`, taskData);
+      const response = await api.post(`${TASK_URL}/Create_Task`, taskData);
+      return response; 
+    } catch (error) {
+      console.error("Error creating task:", error.response?.data || error.message);
+      throw error.response?.data || error; 
+    }
+  };
+
+  export const Create_Task_Distribute_To_RO = async (filteredParams) => {
+    try {
+      //const user = await getUserData();
+      const user = await getLoggedUserId();
+      
+      // normalize to plain id (handles object or primitive)
+      const createdByRaw = user && typeof user === "object" ? (user.user_id ?? user.id ?? user) : user;
+      // convert to type backend expects: use Number(...) if backend expects a number
+      const Created_By = createdByRaw != null ? String(createdByRaw) : createdByRaw;
+
+      const taskData = {
+        Template_Task_Id: 63,
+        task_type: "Create Task for Download Distribute to RO",
+        Created_By,
+        task_status: "open",
+        current_case_status: "Open With Agent",
+        drc_id: user.drc_id,
+        ...filteredParams,
+      };
+      console.log("Task Data:", taskData); 
+  
+      const response = await api.post(`${TASK_URL}/Create_Task`, taskData);
+      return response; 
+    } catch (error) {
+      console.error("Error creating task:", error.response?.data || error.message);
+      throw error.response?.data || error; 
+    }
+  };
+
+  export const Create_Task_Negotiation_Case_List = async (filteredParams) => {
+    try {
+      //const user = await getUserData();
+      const user = await getLoggedUserId();
+      
+      // normalize to plain id (handles object or primitive)
+      const createdByRaw = user && typeof user === "object" ? (user.user_id ?? user.id ?? user) : user;
+      // convert to type backend expects: use Number(...) if backend expects a number
+      const Created_By = createdByRaw != null ? String(createdByRaw) : createdByRaw;
+
+      const taskData = {
+        Template_Task_Id: 63,
+        task_type: "Create Task for Download Negotiation Case List",
+        Created_By,
+        task_status: "open",
+        current_case_phase: "Negotiation",
+        drc_id: user.drc_id,
+        ro_id: user.ro_id,
+        ...filteredParams,
+      };
+      console.log("Task Data:", taskData); 
+  
+      const response = await api.post(`${TASK_URL}/Create_Task`, taskData);
+      return response; 
+    } catch (error) {
+      console.error("Error creating task:", error.response?.data || error.message);
+      throw error.response?.data || error; 
+    }
+  };
+
+  export const Create_Task_Mediation_Case_List = async (filteredParams) => {
+    try {
+      //const user = await getUserData();
+      const user = await getLoggedUserId();
+      
+      // normalize to plain id (handles object or primitive)
+      const createdByRaw = user && typeof user === "object" ? (user.user_id ?? user.id ?? user) : user;
+      // convert to type backend expects: use Number(...) if backend expects a number
+      const Created_By = createdByRaw != null ? String(createdByRaw) : createdByRaw;
+
+      const taskData = {
+        Template_Task_Id: 63,
+        task_type: "Create Task for Download Mediation Case List",
+        Created_By,
+        task_status: "open",
+        current_case_phase: "Mediation Board",
+        drc_id: user.drc_id,
+        ro_id: user.ro_id,
+        ...filteredParams,
+      };
+      console.log("Task Data:", taskData); 
+  
+      const response = await api.post(`${TASK_URL}/Create_Task`, taskData);
       return response; 
     } catch (error) {
       console.error("Error creating task:", error.response?.data || error.message);

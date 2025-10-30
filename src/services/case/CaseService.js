@@ -988,3 +988,20 @@ export const List_Product_References_By_RO = async (payload) => {
     throw error;
   }
 };
+
+export const listCaseDetailsForDRC = async (payload) => {
+  try {
+    const token = localStorage.getItem("accessToken"); // ← use the correct key
+
+    const res = await axios.post(`${URL}/listCaseDetailsForDRC`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching case details:", error);
+    throw error.response?.data || error;
+  }
+};
