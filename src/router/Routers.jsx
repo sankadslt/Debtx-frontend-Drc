@@ -39,7 +39,6 @@ import RODRCUserInfoEnd from "../pages/RO/RO_DRCUserInfoEnd";
 import RODRCUserInfoEdit from "../pages/RO/RO_DRCUserInfoEdit";
 import RO_ADDro from "../pages/RO/RO_ADDro";
 import Pre_Negotiation from "../pages/DRC/Pre_Negotiation";
-import CaseDetailsForDRC from "../pages/DRC/Case_Details_for_DRC.jsx";
 
 import PaymentDetails from "../pages/Money_Transaction/PaymentDetails";
 
@@ -282,19 +281,6 @@ const Routers = () => {
           />
         }
       />
-<<<<<<< Updated upstream
-
-           <Route
-        path="/drc/case-details"
-        element={
-          <ProtectedRoute
-            element={<CaseDetailsForDRC />}
-            allowedRoles={["superadmin", "drc_user", "RO", "DRC-Coordinator"]}
-          />
-        }
-      />
-
-=======
       {/* //MONEY TRANSACTIONS */}
       <Route
         path="pages/Money_Transaction/MoneyTransaction"
@@ -305,7 +291,6 @@ const Routers = () => {
           />
         }
       />
->>>>>>> Stashed changes
     </Routes>
   );
 };
