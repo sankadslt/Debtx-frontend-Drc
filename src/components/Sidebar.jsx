@@ -90,6 +90,14 @@ const Sidebar = ({ onHoverChange }) => {
           link: "/drc/mediation-board-case-list",
           roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user", "recovery_officer"],
         },
+        
+         {
+          icon: CgEditFade,
+          label: "Payment",
+          link: "/pages/Money_Transaction/MoneyTransaction",
+          roles: ["superadmin", "admin"],
+        },
+
         // {
         //   label: "RO & DRC_User List",
         //   link: "/ro/ro-drc-user-list",
@@ -98,6 +106,7 @@ const Sidebar = ({ onHoverChange }) => {
        
       ],
     },
+   
   ];
 
   // Filter menu items based on user role

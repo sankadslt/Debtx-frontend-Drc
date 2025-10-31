@@ -41,6 +41,8 @@ import RO_ADDro from "../pages/RO/RO_ADDro";
 import Pre_Negotiation from "../pages/DRC/Pre_Negotiation";
 import CaseDetailsForDRC from "../pages/DRC/Case_Details_for_DRC.jsx";
 
+import PaymentDetails from "../pages/Money_Transaction/PaymentDetails";
+
 const Routers = () => {
   return (
     <Routes>
@@ -71,6 +73,7 @@ const Routers = () => {
           />
         }
       />
+      
       <Route
         path="/prototypeA"
         element={
@@ -279,6 +282,7 @@ const Routers = () => {
           />
         }
       />
+<<<<<<< Updated upstream
 
            <Route
         path="/drc/case-details"
@@ -290,6 +294,18 @@ const Routers = () => {
         }
       />
 
+=======
+      {/* //MONEY TRANSACTIONS */}
+      <Route
+        path="pages/Money_Transaction/MoneyTransaction"
+        element={
+          <ProtectedRoute
+            element={<PaymentDetails />}
+            allowedRoles={["superadmin", "drc_user", "drc_admin"]}
+          />
+        }
+      />
+>>>>>>> Stashed changes
     </Routes>
   );
 };
