@@ -15,17 +15,20 @@ Notes: This page includes a filter and a table */
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearch, FaDownload } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 import { listHandlingCasesByDRC, List_Handling_Cases_By_DRC_Without_RO, Retrive_Rtom_list_owned_by_products } from "../../services/case/CaseService";
 import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getActiveRTOMsByDRCID } from "../../services/rtom/RtomService";
+import { Create_Task_Distribute_To_RO } from "../../services/task/taskService.js";
 import { assignROToCase, assignROToCaseSubmit } from "../../services/case/CaseService";
 import { fetchAllArrearsBands } from "../../services/case/CaseService";
 import { getLoggedUserId } from "../../services/auth/authService.js";
 import Swal from 'sweetalert2';
 import { Tooltip } from "react-tooltip";
+import { refreshAccessToken } from "../../services/auth/authService.js";
+import {jwtDecode} from "jwt-decode";
 
 //Status Icons
 import Open_With_Agent from "../../assets/images/Distribution/Open_With_Agent.png";
@@ -75,6 +78,8 @@ const DistributeTORO = () => {
   const [isMoreDataAvailable, setIsMoreDataAvailable] = useState(true);
   const [maxCurrentPage, setMaxCurrentPage] = useState(0);
   const [tabledata, setTabledata] = useState([]);
+  const [userRole, setUserRole] = useState("");
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [committedFilters, setCommittedFilters] = useState({
     selectedRTOM: "",
     selectedArrearsBand: "",
@@ -123,8 +128,26 @@ const DistributeTORO = () => {
         setLoading(false);
       }
     };
-
     fetchUserData();
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+        
+    try {
+      let decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+        
+      if (decoded.exp < currentTime) {
+        refreshAccessToken().then((newToken) => {
+          if (!newToken) return;
+          const newDecoded = jwtDecode(newToken);
+          setUserRole(newDecoded.role);
+        });
+      } else {
+        setUserRole(decoded.role);
+      }
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
   }, [userData?.drc_id]);
 
   // Fetch data and RTOMs when drc_id changes
@@ -226,6 +249,8 @@ const DistributeTORO = () => {
     };
     fetchData();
     fetchRecoveryOfficers();
+
+
 
   }, [userData?.drc_id]);
 
@@ -438,6 +463,80 @@ const DistributeTORO = () => {
       setLoading(false);
     }
   };
+
+  const handleCreateTaskDownloadDistributetoRO = async () => {
+        if(!fromDate && !toDate && !selectedArrearsBand && !selectedRTOM){
+          Swal.fire({
+            title: "Warning",
+            text: "Please select at least one filter before creating a task.",
+            icon: "warning",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            confirmButtonColor: "#f1c40f"
+          });
+          return;
+        }
+        else if (toDate) {
+              // Calculate month gap
+              const diffInMs = toDate - fromDate;
+              const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+        
+              if (diffInDays > 31) {
+                Swal.fire({
+                  title: "Warning",
+                  text: "The selected range is more than 1 month.",
+                  icon: "warning",
+                  confirmButtonColor: "#f1c40f",
+                });
+        
+                return;
+              }
+             }
+        
+    
+        setIsCreatingTask(true);
+        try {
+          // Set FROM date to midnight (00:00:00.000 local time)
+          const formatStartOfDay = (date) => {
+            if (!date) return null;
+            const localStart = new Date(date);
+            localStart.setHours(0, 0, 0, 0); // midnight local
+            return localStart.toISOString(); // convert to UTC ISO string
+          };
+    
+          // Set TO date to end of day (23:59:59.999 local time)
+          const formatEndOfDay = (date) => {
+            if (!date) return null;
+            const localEnd = new Date(date);
+            localEnd.setHours(23, 59, 59, 999); // 11:59:59 PM local
+            return localEnd.toISOString(); // convert to UTC ISO string
+          };
+    
+          const response = await Create_Task_Distribute_To_RO({
+            FromDate: formatStartOfDay(fromDate),
+            ToDate: formatEndOfDay(toDate),
+            arrears_band: selectedArrearsBand,
+            rtom: selectedRTOM
+            
+          });
+           console.log("Task Creation Response:", response);
+          Swal.fire({
+            icon: "success",
+            title: "Task Created Successfully!",
+            text: "Task ID: " + response.data.Task_Id,
+            confirmButtonColor: "#28a745",
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "Error",
+            text: error.message || "Failed to create task.",
+            icon: "error",
+            confirmButtonColor: "#dc3545"
+          });
+        } finally {
+          setIsCreatingTask(false);
+        }
+      };
 
   useEffect(() => {
     if (userData?.drc_id && isMoreDataAvailable && currentPage > maxCurrentPage) {
@@ -1135,12 +1234,18 @@ const DistributeTORO = () => {
           />
 
           {/* Filter Button */}
+          
+          {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && (
           <button onClick={handleFilter} className={`${GlobalStyle.buttonPrimary}`}>
             Filter
           </button>
-          <button onClick={handleClear} className={`${GlobalStyle.buttonRemove}`}>
+          )}
+          
+          {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && (
+            <button onClick={handleClear} className={`${GlobalStyle.buttonRemove}`}>
             Clear
-          </button>
+          </button> 
+          )}
         </div>
       </div>
 
@@ -1421,6 +1526,21 @@ const DistributeTORO = () => {
       >
         <FaArrowLeft className="mr-2" />
       </button>
+      <div className="flex justify-end mt-6">
+        {["drc coordinator", "drc staff", "call center", "superadmin"].includes(userRole) && filteredData.length !== 0 && (
+          <button
+            onClick={handleCreateTaskDownloadDistributetoRO}
+            className={`${GlobalStyle.buttonPrimary} ${isCreatingTask ? 'opacity-50' : ''}`}
+            disabled={isCreatingTask}
+            
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
+            {!isCreatingTask && <FaDownload style={{ marginRight: '8px' }} />}
+            {isCreatingTask ? 'Creating Tasks...' : 'Create task and let me know'}
+       
+          </button>
+        )}
+      </div>
     </div>
   );
 };
