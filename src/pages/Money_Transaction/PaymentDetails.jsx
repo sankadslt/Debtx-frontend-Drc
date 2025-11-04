@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import more from "../../assets/images/imagefor1.a.13(one).png";
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "../../services/auth/authService";
-import { List_All_Payment_Cases } from "../../services/Transaction/Money_TransactionService";
+import { previewPaymentCases } from "../../services/Transaction/Money_TransactionService";
 import { Create_task_for_Download_Payment_Case_List } from "../../services/Transaction/Money_TransactionService";
 import { Tooltip } from "react-tooltip";
 import { jwtDecode } from "jwt-decode";
@@ -153,6 +153,42 @@ const PaymentDetails = () => {
 
   const CallAPI = async (filters) => {
     try {
+      // Get user data to retrieve drc_id and ro_id
+      const userData = await getLoggedUserId();
+      if (!userData) {
+        Swal.fire({
+          title: "Error",
+          text: "Unable to retrieve user information. Please login again.",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        return;
+      }
+
+      console.log("User Data: ", userData); // Debug user data
+
+      // For superadmin users, if both drc_id and ro_id are null, 
+      // we might need to set a default or handle differently
+      let drc_id = userData.drc_id;
+      let ro_id = userData.ro_id;
+      
+      // If user is superadmin and both IDs are null, you might want to set a default
+      // or allow viewing all data by setting one of the IDs
+      if (userData.role === 'superadmin' && !drc_id && !ro_id) {
+        // Option 1: Set a default DRC ID for superadmin to view all data
+        // drc_id = 1; // You can set this to a specific DRC ID
+        
+        // Option 2: Show warning to superadmin to select a specific DRC/RO
+        Swal.fire({
+          title: "Warning",
+          text: "As a superadmin, please specify filters to view specific DRC or RO data.",
+          icon: "warning",
+          confirmButtonColor: "#f1c40f"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Format the date to 'YYYY-MM-DD' format
       const formatDate = (date) => {
         if (!date) return null;
@@ -161,6 +197,8 @@ const PaymentDetails = () => {
       };
 
       const payload = {
+        drc_id: drc_id,
+        ro_id: ro_id,
         case_id: filters.caseId,
         account_num: filters.accountNo,
         case_phase: filters.phase,
@@ -171,7 +209,7 @@ const PaymentDetails = () => {
       console.log("Payload sent to API: ", payload);
 
       setIsLoading(true); // Set loading state to true
-      const response = await List_All_Payment_Cases(payload);
+      const response = await previewPaymentCases(payload);
 
       // Updated response handling
       if (response && response.data) {

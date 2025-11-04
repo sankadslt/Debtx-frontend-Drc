@@ -6,12 +6,11 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const URL = `${BASE_URL}/money`;
 
 
-// Fetching payment cases based on filters
-export const List_All_Payment_Cases = async (payload) => {
-  
+// Fetching payment cases by DRC or RO based on filters
+export const previewPaymentCases = async (payload) => {
   try {
     const response = await api.post(
-      `${URL}/List_All_Payment_Cases`, 
+      `${URL}/payments/drc-or-ro`, 
       payload
     );
     return response.data;
