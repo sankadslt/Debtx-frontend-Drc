@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 function App() {
   return (
-    <BrowserRouter basename="/test/drc">
+    <BrowserRouter basename="/drc">
       <Layout />
     </BrowserRouter>
   );
