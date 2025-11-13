@@ -59,25 +59,27 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   };
   const location = useLocation();
   const { product, caseId, customerRef, accountNo, drcId, serviceAddress } = location.state || {};
+ //console.log("this is the prodiuct", product);
   const navigate = useNavigate();
   const [roId, setRoId] = useState("");
   const [DRC, setDRCID] = useState("");
+  const [createdBy, setCreatedBy] = useState("");
   const [userRole, setUserRole] = useState(null); // Role-Based Buttons
   useEffect(() => {
     if (product) {
       setSelectedProduct({
-        Service_address: product.service_address || "",
-        product_label: product.product_label || "",
-        service: product.service || "",
-        product_ownership: product.product_ownership || "",
-        service_address: product.service_address || "",
+        Service_address: serviceAddress || "",
+        product_label: product.Product_Label || "",
+        service: product.Service_Type || "",
+        product_ownership: product.Equipment_Ownership || "",
+        service_address: product.Service_Address || "",
       });
       setFormData((prevData) => ({
         ...prevData,
         caseId: caseId || "",
         customerRef: customerRef || "",
         accountNo: accountNo || "",
-        service: product.service || "",
+        service: product.Service_Type || "",
         drcId: drcId || "",  // Set drcId 
       }));
     };
@@ -136,6 +138,7 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
   useEffect(() => {
     const loadUser = async () => {  
       const userId = await getLoggedUserId();
+      setCreatedBy(userId.user_id);
       setRoId(userId.ro_id);
       setDRCID(userId.drc_id);
       console.log("RO ID:", roId);
@@ -151,13 +154,16 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
       case_id: caseId,
       drc_id: DRC ,
       ro_id: roId || null,
-      order_id: null,
+      order_id: product.Order_Id || null,
       product_label: selectedProduct.product_label,
       service_type: selectedProduct.service,
       cp_type: formData.type,
       cpe_model: formData.cpemodel,
       serial_no: formData.serialNo,
       remark: formData.nego_remark,
+      Customer_Ref: product.Customer_Ref || null,
+      Product_Seq: product.Product_Seq || null,
+      Created_By: createdBy || null,
     };
 
     console.log("CPE Data:", cpeData);
@@ -171,7 +177,10 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
           title: "Success",
           text: "Data sent successfully.",
           confirmButtonColor: "#28a745",
+        }).then(() => {
+          window.location.reload();
         });
+
       } catch (error) {
         console.error("Error submitting CPE data:", error);
         const errorMessage = error?.response?.data?.message || error?.message || "An error occurred. Please try again.";
@@ -210,7 +219,7 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
             <tr>
               <th className={style.thStyle}>Service Address</th>
               <td className={style.tdStyle}>:</td>
-              <td className={style.tdStyle}>{selectedProduct.Service_address}</td>
+              <td className={style.tdStyle}>{product?.Service_Address}</td>
             </tr>
           </tbody>
         </table>
@@ -220,17 +229,17 @@ const CpeEditPage = ({ setActiveTab, setShowDetailedView, setIsEditMode }) => {
           <tr>
           <th className={style.thStyle}>Product Label</th>
           <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.product_label}</td>
+          <td className={style.tdStyle}>{product?.Product_Label}</td>
         </tr>
         <tr>
           <th className={style.thStyle}>Service Type</th>
           <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.service || "N/A"}</td>
+          <td className={style.tdStyle}>{product?.Service_Type || "N/A"}</td>
         </tr>
         <tr>
           <th className={style.thStyle}>Ownership</th>
           <td className={style.tdStyle}>:</td>
-          <td className={style.tdStyle}>{selectedProduct.product_ownership || "N/A"}</td>
+          <td className={style.tdStyle}>{product?.Equipment_Ownership || "N/A"}</td>
         </tr>
           </tbody>
         </table>
