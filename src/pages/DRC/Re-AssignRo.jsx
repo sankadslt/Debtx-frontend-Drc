@@ -18,13 +18,23 @@ import { getActiveRODetailsByDrcID } from "../../services/Ro/RO";
 import { getLoggedUserId } from "../../services/auth/authService";
 import Swal from 'sweetalert2';
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import removeIcon from "../../assets/images/remove.svg";
+import { Tooltip } from 'react-tooltip';
 
 export default function Re_AssignRo() {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedRO, setSelectedRO] = useState("");
   const [recoveryOfficers, setRecoveryOfficers] = useState([]);
+  const [rtoms, setRtoms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [roList, setRoList] = useState([]);
+  const [formData, setFormData] = useState({
+    rtom: '',
+    ro: '',
+    remark: ''
+  });
+  const [tableRows, setTableRows] = useState([]);
 
   // State to manage case details
   const [caseDetails, setCaseDetails] = useState({
@@ -38,7 +48,10 @@ export default function Re_AssignRo() {
   const [caseRTOM, setCaseRTOM] = useState("");
 
   const [lastNegotiationDetails, setLastNegotiationDetails] = useState([]);
+  const [selectedRTOM, setSelectedRTOM] = useState("");
+
   const [settlementDetails, setSettlementDetails] = useState([]);
+  const [lastRODetails, setLastRODetails] = useState(null);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const rowsPerPage = 5;
@@ -110,7 +123,16 @@ export default function Re_AssignRo() {
               // }))
             );
 
-            setSettlementDetails(data.data.settlementData_ro_re_assign)
+            setSettlementDetails(data.data.settlementData_ro_re_assign);
+
+            // Log the entire response data to see what we're getting
+            console.log("API Response Data:", data.data);
+            
+            // Check for last RO details in formattedCaseDetails
+            const lastROData = caseDetailsData.lastRODetails || {};
+            console.log("Last RO Details:", lastROData);
+            
+            setLastRODetails(lastROData);
 
           } else {
             // console.error("Error in API response:", data?.message || "Unknown error");
@@ -156,11 +178,27 @@ export default function Re_AssignRo() {
             const formattedOfficers = officers.map((officer) => ({
               ro_id: officer.ro_id,
               ro_name: officer.ro_name,
-              rtoms_for_ro: officer.rtoms_for_ro || [], // Ensure rtoms_for_ro is never undefined
-            }))
-              .filter((officer) => officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase()));
+              ro_nic: officer.ro_nic,
+              ro_contact_no: officer.ro_contact_no,
+              ro_status: officer.ro_status,
+              ro_end_date: officer.ro_end_date,
+              remark: officer.remark || [],
+              rtoms_for_ro: officer.rtoms_for_ro || [],
+              rtoms_for: officer.rtoms_for_ro?.map(r => r.name) || []
+            }));
 
-            setRecoveryOfficers(formattedOfficers);
+            // Extract unique RTOMs from all ROs
+            const allRTOMs = formattedOfficers.flatMap(ro => ro.rtoms_for_ro.map(r => r.name));
+            const uniqueRTOMs = [...new Set(allRTOMs)].filter(rtom => rtom !== null && rtom !== undefined);
+            setRtoms(uniqueRTOMs);
+            setRoList(formattedOfficers);
+            
+            // Filter officers based on case RTOM
+            const filteredOfficers = formattedOfficers.filter((officer) => 
+              officer.rtoms_for_ro.some((rtom) => rtom.name?.toLowerCase() === caseRTOM.toLowerCase())
+            );
+
+            setRecoveryOfficers(filteredOfficers);
             // console.log("Recovery Officers:", formattedOfficers);
           } else {
             // console.error("Invalid response format:", officers);
@@ -224,8 +262,50 @@ export default function Re_AssignRo() {
   }
 
   //Handle submit button
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddRow = () => {
+    if (!formData.rtom || !formData.ro) {
+      Swal.fire({
+        title: "Error",
+        text: "RTOM and RO fields are required",
+        icon: "error",
+        confirmButtonColor: "#d33"
+      });
+      return;
+    }
+
+    setTableRows(prev => [...prev, { ...formData }]);
+    
+    // Clear form
+    setFormData({
+      rtom: '',
+      ro: '',
+      remark: ''
+    });
+  };
+
+  const handleRemoveRow = (index) => {
+    setTableRows(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     try {
+      if (tableRows.length === 0) {
+        Swal.fire({
+          title: "Error",
+          text: "Please add at least one RO assignment",
+          icon: "error",
+          confirmButtonColor: "#d33"
+        });
+        return;
+      }
       // Ensure selectedRO is available (the value from the dropdown)
       const selectedRtom = selectedRO; // The selected RO name from the dropdown
       if (!selectedRtom) {
@@ -423,12 +503,12 @@ export default function Re_AssignRo() {
 
   return (
     <div className={`${GlobalStyle.fontPoppins}`}>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
-      </div>
-
-      <div className="flex justify-center items-center mb-4">
-        <div className={`${GlobalStyle.cardContainer || ""}`}>
+      <h1 className={GlobalStyle.headingLarge}>Re-Assign RO</h1>
+      <div className="flex gap-6 mb-4 w-full">
+        {/* Case Data Card */}
+        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
+          <div className="flex flex-col w-full">
+          <h2 className="text-lg font-semibold mb-4">Case Data</h2>
           {[
             { label: "Case ID", value: caseDetails?.caseId },
             { label: "Customer Ref", value: caseDetails?.customerRef },
@@ -447,120 +527,321 @@ export default function Re_AssignRo() {
               <span className="flex-1">{item.value || "N/A"}</span>
             </p>
           ))}
+          </div>
+          
         </div>
-      </div>
 
+        {/* Last RO Details Card */}
+        <div className={`${GlobalStyle.cardContainer} flex-1 min-h-[300px]`}>
+          <h2 className="text-lg font-semibold mb-4">Last RO Details</h2>
+          {/* RO History Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 rounded-lg">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border">#</th>
+                  <th className="px-4 py-2 border">Name</th>
+                  <th className="px-4 py-2 border">NIC</th>
+                  <th className="px-4 py-2 border">Contact</th>
+                  <th className="px-4 py-2 border">Status</th>
+                  <th className="px-4 py-2 border">End Date</th>
+                  <th className="px-4 py-2 border">Remarks</th>
+                  <th className="px-4 py-2 border">RTOMs</th>
+                </tr>
+              </thead>
+              <tbody>
+               {lastRODetails && Object.keys(lastRODetails).length > 0 ? (
+          <tr className="hover:bg-gray-50">
+            <td className="px-4 py-2 border">1</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_name || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_nic || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_contact_no || "N/A"}</td>
+            <td className="px-4 py-2 border">{lastRODetails.ro_status || "N/A"}</td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.ro_end_date
+                ? new Date(lastRODetails.ro_end_date).toLocaleDateString("en-GB")
+                : "N/A"}
+            </td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.remark?.length > 0 ? lastRODetails.remark.join(", ") : "None"}
+            </td>
+            <td className="px-4 py-2 border">
+              {lastRODetails.rtoms_for?.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {lastRODetails.rtoms_for.map((rtom, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+                    >
+                      {rtom}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "None"
+              )}
+            </td>
+          </tr>
+        ) : (
+          <tr>
+            <td colSpan="8" className="text-center py-4 text-gray-500">
+              No RO assigned to this case
+            </td>
+          </tr>
+        )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Add new remark section */}
+          {/*
+          <div className="mt-4">
+            <label className="block mb-2 font-medium">New Remark:</label>
+            <textarea
+              value={textareaValue}
+              onChange={(e) => setTextareaValue(e.target.value)}
+              className={`${GlobalStyle.remark} w-full`}
+              rows="3"
+              placeholder="Add new remark"
+            />
+          </div>
+          */}
+        </div>
+        
+    
+    </div>
+
+      {/* Form Section */}
       <div className="flex items-center justify-center mb-4 w-full">
         <div className={`${GlobalStyle.cardContainer}`}>
-          {/* remark box */}
-          <div className="mb-6 items-center space-x-6">
-            <label className={GlobalStyle.remarkTopic}>Last RO details</label>
-            <div>
+          {/* ADD RO */}
+          <h2 className={`${GlobalStyle.headingMedium} mb-4 text-center`}>
+            <strong> ADD RO </strong>
+          </h2>
+
+          
+{/* RTOM & RO in one row */}
+<div className="flex gap-6 mb-4 w-full">
+          {/* Select RTOM */}
+<div className="flex flex-col w-1/2">
+  <label className={GlobalStyle.remarkTopic}>Select RTOM</label>
+  <select
+    id="rtom-select"
+    className={`${GlobalStyle.selectBox}`}
+    style={{ color: selectedRTOM === "" ? "gray" : "black" }}
+    value={selectedRTOM || ""}
+    onChange={(e) => {
+      const selectedName = e.target.value;
+      setSelectedRTOM(selectedName);
+      setSelectedRO(""); // Reset RO selection when RTOM changes
+    }}
+  >
+    <option value="" hidden>
+      Select RTOM
+    </option>
+    {rtoms && rtoms.length > 0 ? (
+      rtoms.map((rtom, index) => {
+        return (
+          <option key={`rtom-${index}`} value={rtom} style={{ color: "black" }}>
+            {rtom}
+          </option>
+        );
+      })
+    ) : (
+      <option value="" disabled>
+        No RTOMs available
+      </option>
+    )}
+  </select>
+</div>
+
+
+
+          {/* Assign RO */}
+<div className="flex flex-col w-1/2">
+  <label className={GlobalStyle.remarkTopic}>Assign RO</label>
+  <select
+    id="ro-select"
+    className={`${GlobalStyle.selectBox}`}
+    style={{ color: selectedRO === "" ? "gray" : "black" }}
+    value={selectedRO || ""}
+    onChange={(e) => {
+      const selectedName = e.target.value;
+      if (selectedName) {
+        setSelectedRO(selectedName);
+      }
+    }}
+    disabled={!selectedRTOM}
+  >
+    <option value="" hidden>
+      Select RO
+    </option>
+    {recoveryOfficers && recoveryOfficers.length > 0 ? (
+      recoveryOfficers
+        .filter(officer => officer.rtoms_for_ro.some(rtom => rtom.name === selectedRTOM))
+        .map((officer, index) => {
+          const rtomsNames = officer.rtoms_for_ro.map(rtom => rtom.name).join(", ");
+          const displayName = `${officer.ro_name} - ${rtomsNames}`;
+          return (
+            <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
+              {displayName}
+            </option>
+          );
+        })
+    ) : (
+      <option value="" disabled>
+        No officers available
+      </option>
+    )}
+  </select>
+</div>
+</div>
+
+          
+          <div className="flex flex-col space-y-4">
+            {/* Remark Input */}
+            <div className="flex flex-col">
+              <label className={GlobalStyle.remarkTopic}>Remark</label>
               <textarea
-                value={textareaValue}
-                onChange={(e) => setTextareaValue(e.target.value)}
+                name="remark"
+                value={formData.remark}
+                onChange={handleFormChange}
                 className={`${GlobalStyle.remark} w-full`}
-                rows="5"
-              ></textarea>
+                rows="2"
+                placeholder="Enter remark"
+              />
             </div>
           </div>
 
-          {/* dropdown */}
-          <div className="flex gap-10">
-            <h1 className={GlobalStyle.remarkTopic}>Assign RO</h1>
-            <select
-              id="ro-select"
-              className={`${GlobalStyle.selectBox}`}
-              // style={{ width: "600px" }}
-              style={{ color: selectedRO === "" ? "gray" : "black" }}
-              value={selectedRO || ""}
-              onChange={(e) => {
-                const selectedName = e.target.value;
-                if (selectedName) {
-                  setSelectedRO(selectedName);
+          {/* Add Button */}
+          <div className="flex justify-end mt-3">
+            <button
+              className={`${GlobalStyle.buttonPrimary}`}
+              onClick={() => {
+                if (!selectedRTOM || !selectedRO) {
+                  Swal.fire({
+                    title: "Error",
+                    text: "Please select both RTOM and RO",
+                    icon: "error",
+                    confirmButtonColor: "#d33"
+                  });
+                  return;
                 }
+
+                setTableRows(prev => [...prev, {
+                  rtom: selectedRTOM,
+                  ro: selectedRO,
+                  remark: formData.remark
+                }]);
+
+                // Clear selections and remark
+                setSelectedRTOM("");
+                setSelectedRO("");
+                setFormData(prev => ({
+                  ...prev,
+                  remark: ""
+                }));
               }}
             >
-              <option value="" hidden>
-                Select RO
-              </option>
-              {recoveryOfficers && recoveryOfficers.length > 0 ? (
-                recoveryOfficers.map((officer, index) => {
-                  const rtomsNames = officer.rtoms_for_ro.map((rtom) => rtom.name).join(", ");
-                  const displayName = `${officer.ro_name} - ${rtomsNames}`;
-
-                  return (
-                    <option key={`ro-${index}`} value={officer.ro_name} style={{ color: "black" }}>
-                      {displayName}
-                    </option>
-                  );
-                })
-              ) : (
-                <option value="" disabled>
-                  No officers available
-                </option>
-              )}
-            </select>
+              Add
+            </button>
           </div>
+
+    {/* Table Section */}
+    <div className={`${GlobalStyle.tableContainer} mb-6 overflow-x-auto`}>
+      <table className={GlobalStyle.table}>
+        <thead className={GlobalStyle.thead}>
+          <tr>
+            <th className={GlobalStyle.tableHeader}>RTOM</th>
+            <th className={GlobalStyle.tableHeader}>RO</th>
+            <th className={GlobalStyle.tableHeader}>Remark</th>
+            <th className={GlobalStyle.tableHeader}>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tableRows.map((row, index) => (
+            <tr key={index} className={index % 2 === 0 ? GlobalStyle.tableRowEven : GlobalStyle.tableRowOdd}>
+              <td className={GlobalStyle.tableData}>{row.rtom}</td>
+              <td className={GlobalStyle.tableData}>{row.ro}</td>
+              <td className={GlobalStyle.tableData}>{row.remark}</td>
+              <td className={GlobalStyle.tableData}>
+                <div className="flex justify-center items-center">
+                  <button
+                    onClick={() => handleRemoveRow(index)}
+                    data-tooltip-id="delete-tooltip"
+                  >
+                    <img src={removeIcon} alt="Delete Icon" className="h-6 w-6" />
+                  </button>
+                  <Tooltip id="delete-tooltip" place="bottom" effect="solid">
+                    <span>Delete</span>
+                  </Tooltip>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+
 
           {/* Submit Button */}
-          <div className="flex justify-end items-center w-full mt-6">
-            <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
+<div className="flex justify-end items-center w-full mt-6">
+  <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>
+    Submit
+  </button>
+</div>
+        </div>
+      </div>
+
+      {/* Negotiation Section */}
+      <div className="negotiation-section">
+        <h2 className={`${GlobalStyle.remarkTopic} mb-4`}>
+          Last Negotiation Detail:
+        </h2>
+        <div>
+        {/* Table  */}
+        <div className="mb-6">
+          <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
+            <table className={GlobalStyle.table}>
+              <thead className={GlobalStyle.thead}>
+                <tr>
+                  <th className={GlobalStyle.tableHeader}>Date</th>
+                  <th className={GlobalStyle.tableHeader}>Negotiation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dataInPageNegotiationDetails.length > 0 ? (
+                  dataInPageNegotiationDetails
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map((item, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? GlobalStyle.tableRowEven
+                            : GlobalStyle.tableRowOdd
+                        }
+                      >
+                        <td className={GlobalStyle.tableData}>
+                          {new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className={GlobalStyle.tableData}>{item.negotiation}</td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr>
+                    <td colSpan="2" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
+                      No negotiation details available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
 
-      {/* Heading  */}
-      <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
-        Last Negotiation Detail :
-      </h2>
-
-      {/* Table  */}
-      <div className="mb-6 ">
-        <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
-          <table className={GlobalStyle.table}>
-            <thead className={GlobalStyle.thead}>
-              <tr>
-                <th className={GlobalStyle.tableHeader}>Date</th>
-                <th className={GlobalStyle.tableHeader}>Negotiation</th>
-                {/* <th className={GlobalStyle.tableHeader}>Remark</th> */}
-              </tr>
-            </thead>
-            <tbody>
-              {dataInPageNegotiationDetails.length > 0 ? (
-                dataInPageNegotiationDetails
-                  .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort latest first
-                  .map((item, index) => (
-                    <tr
-                      key={index}
-                      className={
-                        index % 2 === 0
-                          ? GlobalStyle.tableRowEven
-                          : GlobalStyle.tableRowOdd
-                      }
-                    >
-                      <td className={GlobalStyle.tableData}>
-                        {
-                          new Date(item.date) && new Date(item.date).toLocaleDateString("en-GB")
-                        }
-                      </td>
-                      <td className={GlobalStyle.tableData}>{item.negotiation}</td>
-                      {/* <td className={GlobalStyle.tableData}>{item.remark}</td> */}
-                    </tr>
-                  ))
-              ) : (
-                <tr>
-                  <td colSpan="3" className={GlobalStyle.tableData} style={{ textAlign: "center" }}>
-                    No negotiation details available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className={GlobalStyle.navButtonContainer}>
+        <div className={GlobalStyle.navButtonContainer}>
         <button className={GlobalStyle.navButton} onClick={handleNegotiationPageChange("prev")} disabled={currentNegotiationPage === 0}>
           <FaArrowLeft />
         </button>
@@ -573,12 +854,13 @@ export default function Re_AssignRo() {
       </div>
 
       {/* Settlement details section */}
-      <h2 className={`${GlobalStyle.remarkTopic} mb-4 `}>
-        Settlement details :
-      </h2>
-
-      {/* Table  */}
-      <div className="mb-6 ">
+      <div className="settlement-section">
+        <h2 className={`${GlobalStyle.remarkTopic} mb-4`}>
+          Settlement details:
+        </h2>
+        
+        {/* Table  */}
+        <div className="mb-6">
         <div className={`${GlobalStyle.tableContainer} overflow-x-auto`}>
           <table className={GlobalStyle.table}>
             <thead className={GlobalStyle.thead}>
@@ -682,16 +964,19 @@ export default function Re_AssignRo() {
         </select>
       </div> */}
 
-      {/* Submit Button */}
-      {/* <div className="flex justify-end items-center w-full mt-6">
-        <button className={`${GlobalStyle.buttonPrimary} ml-4`} onClick={handleSubmit}>Submit</button>
-      </div> */}
-      <button
-        onClick={() => navigate("/drc/assigned-ro-case-log")}
-        className={`${GlobalStyle.buttonPrimary} `}
-      >
-        <FaArrowLeft className="mr-2" />
-      </button>
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <div className="mt-6">
+          <button
+            onClick={() => navigate("/drc/assigned-ro-case-log")}
+            className={`${GlobalStyle.buttonPrimary}`}
+          >
+            <FaArrowLeft className="mr-2" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
