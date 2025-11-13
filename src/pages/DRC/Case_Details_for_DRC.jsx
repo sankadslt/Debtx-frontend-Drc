@@ -8,7 +8,11 @@ import GlobalStyle from "../../assets/prototype/GlobalStyle.jsx";
 export default function CaseDetailsForDRC() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { caseId, drc_id, ro_id } = location.state || {};
+  const locState = location.state || {};
+  // Accept either `caseId` or legacy `CaseID` key
+  const caseId = locState.caseId || locState.CaseID || null;
+  const drc_id = locState.drc_id || null;
+  const ro_id = locState.ro_id || null;
 
   const [caseData, setCaseData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +23,11 @@ export default function CaseDetailsForDRC() {
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
 
   useEffect(() => {
-    if (caseId && drc_id) {
+    if (!caseId || !drc_id) {
+      // Nothing to fetch
+      setLoading(false);
+      return;
+    }
       const fetchData = async () => {
         try {
           const payload = { caseId, drc_id, ro_id };
@@ -43,7 +51,6 @@ export default function CaseDetailsForDRC() {
         }
       };
       fetchData();
-    }
   }, [caseId, drc_id, ro_id]);
 
   const formatDate = (dateString) =>

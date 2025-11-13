@@ -90,6 +90,11 @@ const Sidebar = ({ onHoverChange }) => {
           link: "/drc/mediation-board-case-list",
           roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user", "recovery_officer"],
         },
+          {
+          label: "Settelement Case List",
+          link: "/pages/Settlement/Monitor_Settlement_For_DRC",
+          roles: ["superadmin", "RO", "DRC-Coordinator", "drc_user", "recovery_officer"],
+        },
         // {
         //   label: "RO & DRC_User List",
         //   link: "/ro/ro-drc-user-list",
