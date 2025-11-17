@@ -674,7 +674,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import GlobalStyle from "../../assets/prototype/GlobalStyle";
-import { FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearch, FaDownload } from "react-icons/fa";
 import { List_All_RO_and_DRCuser_Details_to_DRC } from "../../services/Ro/RO.js";
 import Swal from 'sweetalert2';
 import { getLoggedUserId } from "/src/services/auth/authService.js";
@@ -689,6 +689,7 @@ import RO_Pending_Approval from "../../assets/images/status/RO_DRC_Status_Icons/
 import moreInfoIcon from "../../assets/images/more-info.svg";
 
 import { Tooltip } from "react-tooltip";
+import { Create_Task_RO_and_DRCuser_List } from "../../services/task/taskService";
 
 export default function RO_DRCUserList() {
     const [userData, setUserData] = useState(null);
@@ -718,6 +719,7 @@ export default function RO_DRCUserList() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreatingTask, setIsCreatingTask] = useState(false);
 
     const rowsPerPage = 10;
     const roStartIndex = (roCurrentPage - 1) * rowsPerPage;
@@ -930,6 +932,37 @@ export default function RO_DRCUserList() {
     //         });
     //     }
     // };
+
+      const handleCreateTaskForDownload = async () => {
+        setIsCreatingTask(true);
+        try {
+          // Get current filters to include in the task
+          const currentFilters = {
+            user_type: activeTab,
+            user_status: getUserStatus() || "all",
+            drc_id: userData?.drc_id,
+          };
+    
+          const response = await Create_Task_RO_and_DRCuser_List(currentFilters);
+    
+          Swal.fire({
+            icon: "success",
+            title: "Task Created Successfully!",
+            text: "Task ID: " + (response?.data?.Task_Id ?? response?.Task_Id ?? ""),
+            confirmButtonColor: "#28a745",
+          });
+        } catch (error) {
+          console.error("Error creating task:", error);
+          Swal.fire({
+            title: "Error",
+            text: error.message || "Failed to create task.",
+            icon: "error",
+            confirmButtonColor: "#dc3545"
+          });
+        } finally {
+          setIsCreatingTask(false);
+        }
+      };
 
     const handleFilter = async () => {
         try {
@@ -1766,6 +1799,18 @@ export default function RO_DRCUserList() {
                     </div>
                 )}
 
+            </div>
+
+            <div className="flex justify-end mt-6">
+                <button
+                    onClick={handleCreateTaskForDownload}
+                    className={`${GlobalStyle.buttonPrimary} ${isCreatingTask ? 'opacity-50' : ''}`}
+              disabled={isCreatingTask}
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              {!isCreatingTask && <FaDownload style={{ marginRight: '8px' }} />}
+              {isCreatingTask ? 'Creating Tasks...' : 'Create task and let me know'}
+            </button>
             </div>
         </div>
     );
