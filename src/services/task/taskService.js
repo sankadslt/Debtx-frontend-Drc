@@ -270,3 +270,37 @@ export const Task_for_Download_Incidents = async (incidentData) => {
       throw error.response?.data || error; 
     }
   };
+
+
+export const Create_Task_RO_and_DRCuser_List = async (filteredParams) => {
+    try {
+      //const user = await getUserData();
+      const user = await getLoggedUserId();
+      
+      // normalize to plain id (handles object or primitive)
+      const createdByRaw = user && typeof user === "object" ? (user.user_id ?? user.id ?? user) : user;
+      // convert to type backend expects: use Number(...) if backend expects a number
+      const Created_By = createdByRaw != null ? String(createdByRaw) : createdByRaw;
+
+      const taskData = {
+        Template_Task_Id: 65,
+        task_type: "Create Task for Download RO List",
+        Created_By,
+        task_status: "open",
+        current_case_phase: "RO List",
+        drc_id: user.drc_id,
+        ro_id: user.ro_id,
+        ...filteredParams,
+      };
+      console.log("Task Data:", taskData); 
+  
+      const response = await api.post(`${TASK_URL}/Create_Task`, taskData);
+      return response; 
+    } catch (error) {
+      console.error("Error creating task:", error.response?.data || error.message);
+      throw error.response?.data || error; 
+    }
+  };
+
+
+
