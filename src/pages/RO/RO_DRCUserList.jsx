@@ -936,9 +936,15 @@ export default function RO_DRCUserList() {
       const handleCreateTaskForDownload = async () => {
         setIsCreatingTask(true);
         try {
+          // Get the tab configuration to extract user type and role
+          const tabConfig = TAB_TO_API[activeTab];
+          const { type, role } = tabConfig || {};
+          
           // Get current filters to include in the task
           const currentFilters = {
-            user_type: activeTab,
+            user_type: type || (activeTab === "RO" ? "ro" : "drc_officer"),
+            user_role: role || null,
+            active_tab: activeTab,
             user_status: getUserStatus() || "all",
             drc_id: userData?.drc_id,
           };
